@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/core/components/providers/convex-client-provider";
 import { getToken } from "@/lib/auth-server";
 import { TooltipProvider } from "@/core/components/ui/tooltip";
+import Script from "next/script";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -31,6 +32,13 @@ export default async function RootLayout({
   const token = await getToken();
   return (
     <html lang="es">
+      <head>
+        <Script
+          src="//unpkg.com/react-scan/dist/auto.global.js"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body
         className={`${dmSans.variable} ${spaceGrotesk.variable} antialiased`}
       >

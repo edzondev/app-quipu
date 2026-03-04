@@ -1,4 +1,5 @@
 import { api } from "@/convex/_generated/api";
+import QuickExpenseFAB from "@/core/components/shared/quick-expense-fab";
 import {
   SidebarInset,
   SidebarProvider,
@@ -33,6 +34,7 @@ export default async function DashboardLayout({ children }: Props) {
           <div className="container max-w-full mx-auto p-4 md:p-6">
             {children}
           </div>
+          <QuickExpenseFAB />
         </main>
       </SidebarInset>
     </SidebarProvider>

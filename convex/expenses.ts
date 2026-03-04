@@ -81,6 +81,7 @@ export const getMonthlyTotals = query({
     const monthExpenses = expenses.filter((e) => e.date.startsWith(month));
 
     return {
+      total: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
       needs: monthExpenses
         .filter((e) => e.envelope === "needs")
         .reduce((sum, e) => sum + e.amount, 0),
@@ -124,7 +125,7 @@ export const getCurrentMonthCount = query({
 export const registerExpense = mutation({
   args: {
     amount: v.number(),
-    description: v.string(),
+    description: v.optional(v.string()),
     envelope: v.union(
       v.literal("needs"),
       v.literal("wants"),

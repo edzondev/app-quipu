@@ -74,6 +74,92 @@ export function currentMonthString(): string {
 }
 
 /**
+ * Computes envelope balances for a given profile and month.
+ * Shared between getDashboardData and getEnvelopes to avoid duplication.
+ *
+ * Returns allocated/spent/available per envelope plus juntos when couple mode
+ * is active. `juntos` is null when couple mode is disabled.
+ */
+export async function computeEnvelopes(
+  ctx: QueryCtx | MutationCtx,
+  profile: {
+    _id: import("./_generated/dataModel").Id<"profiles">;
+    monthlyIncome: number;
+    allocationNeeds: number;
+    allocationWants: number;
+    allocationSavings: number;
+    coupleModeEnabled: boolean;
+    coupleMonthlyBudget: number;
+  },
+  month: string,
+) {
+  const commitments = await ctx.db
+    .query("fixedCommitments")
+    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+    .collect();
+
+  const fixedNeeds = commitments
+    .filter((c) => c.envelope === "needs")
+    .reduce((sum, c) => sum + c.amount, 0);
+  const fixedWants = commitments
+    .filter((c) => c.envelope === "wants")
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  const netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
+
+  const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
+  const allocatedWants = netIncome * (profile.allocationWants / 100);
+  const allocatedSavings = netIncome * (profile.allocationSavings / 100);
+
+  const allMonthExpenses = await ctx.db
+    .query("expenses")
+    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+    .collect()
+    .then((rows) => rows.filter((e) => e.date.startsWith(month)));
+
+  const spentNeeds = allMonthExpenses
+    .filter((e) => e.envelope === "needs")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const spentWants = allMonthExpenses
+    .filter((e) => e.envelope === "wants")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const spentJuntos = allMonthExpenses
+    .filter((e) => e.envelope === "juntos")
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  return {
+    fixedNeeds,
+    fixedWants,
+    totalFixed: fixedNeeds + fixedWants,
+    netIncome,
+    envelopes: {
+      needs: {
+        allocated: allocatedNeeds,
+        fixedCommitments: fixedNeeds,
+        spent: spentNeeds,
+        available: allocatedNeeds - spentNeeds,
+      },
+      wants: {
+        allocated: allocatedWants,
+        fixedCommitments: fixedWants,
+        spent: spentWants,
+        available: allocatedWants - spentWants,
+      },
+      savings: {
+        allocated: allocatedSavings,
+      },
+      juntos: profile.coupleModeEnabled
+        ? {
+            budget: profile.coupleMonthlyBudget,
+            spent: spentJuntos,
+            available: profile.coupleMonthlyBudget - spentJuntos,
+          }
+        : null,
+    },
+  };
+}
+
+/**
  * Returns YYYY-MM-DD string for today (UTC).
  */
 export function todayString(): string {

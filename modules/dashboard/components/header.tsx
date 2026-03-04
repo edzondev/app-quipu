@@ -1,8 +1,4 @@
-"use client";
-
-import { api } from "@/convex/_generated/api";
 import { Button } from "@/core/components/ui/button";
-import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import { Plus } from "lucide-react";
 
 type HeaderProps = {

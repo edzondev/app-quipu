@@ -8,8 +8,8 @@
  * @module
  */
 
-import type * as auth from "../auth.js";
 import type * as coach from "../coach.js";
+import type * as envelopes from "../envelopes.js";
 import type * as expenses from "../expenses.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as helpers from "../helpers.js";
@@ -28,8 +28,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
   coach: typeof coach;
+  envelopes: typeof envelopes;
   expenses: typeof expenses;
   fixedCommitments: typeof fixedCommitments;
   helpers: typeof helpers;

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { getProfileOrThrow, currentMonthString } from "./helpers";
+import { getProfileOrThrow, currentMonthString, computeEnvelopes } from "./helpers";
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
@@ -32,48 +32,7 @@ export const getDashboardData = query({
     const month = currentMonthString();
     const today = new Date().toISOString().slice(0, 10);
 
-    // Fixed commitments (premium users only have them, but query is safe for all)
-    const commitments = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-
-    const fixedNeeds = commitments
-      .filter((c) => c.envelope === "needs")
-      .reduce((sum, c) => sum + c.amount, 0);
-    const fixedWants = commitments
-      .filter((c) => c.envelope === "wants")
-      .reduce((sum, c) => sum + c.amount, 0);
-
-    // Current month expenses
-    const allExpenses = await ctx.db
-      .query("expenses")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-
-    const monthExpenses = allExpenses.filter((e) => e.date.startsWith(month));
-    const spentNeeds = monthExpenses
-      .filter((e) => e.envelope === "needs")
-      .reduce((sum, e) => sum + e.amount, 0);
-    const spentWants = monthExpenses
-      .filter((e) => e.envelope === "wants")
-      .reduce((sum, e) => sum + e.amount, 0);
-    const spentJuntos = monthExpenses
-      .filter((e) => e.envelope === "juntos")
-      .reduce((sum, e) => sum + e.amount, 0);
-
-    // Net income after fixed commitments
-    const totalFixed = fixedNeeds + fixedWants;
-    const netIncome = profile.monthlyIncome - totalFixed;
-
-    // Allocated per envelope (based on net income)
-    const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
-    const allocatedWants = netIncome * (profile.allocationWants / 100);
-    const allocatedSavings = netIncome * (profile.allocationSavings / 100);
-
-    // Available balance per envelope
-    const availableNeeds = allocatedNeeds - spentNeeds;
-    const availableWants = allocatedWants - spentWants;
+    const computed = await computeEnvelopes(ctx, profile, month);
 
     // Savings sub-envelopes (accumulated balance, not reset monthly)
     const savingsSubEnvelopes = await ctx.db
@@ -83,7 +42,6 @@ export const getDashboardData = query({
 
     // Determine if today is a payday
     const dayOfMonth = new Date().getDate();
-    // Edge case: day 31 in a month with 30 days → use last day
     const daysInMonth = new Date(
       new Date().getFullYear(),
       new Date().getMonth() + 1,
@@ -93,38 +51,26 @@ export const getDashboardData = query({
     const isPayday = profile.paydays.includes(effectiveDay);
 
     // Recent expenses (last 5) for the dashboard preview
-    const recentExpenses = allExpenses
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 5);
+    const recentExpenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect()
+      .then((rows) =>
+        rows.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5),
+      );
 
     return {
       profile,
+      isCoupleModeEnabled: profile.coupleModeEnabled,
       envelopes: {
-        needs: {
-          allocated: allocatedNeeds,
-          fixedCommitments: fixedNeeds,
-          spent: spentNeeds,
-          available: availableNeeds,
-        },
-        wants: {
-          allocated: allocatedWants,
-          fixedCommitments: fixedWants,
-          spent: spentWants,
-          available: availableWants,
-        },
+        ...computed.envelopes,
         savings: {
-          allocated: allocatedSavings,
+          ...computed.envelopes.savings,
           subEnvelopes: savingsSubEnvelopes,
         },
-        juntos: profile.coupleModeEnabled
-          ? {
-              budget: profile.coupleMonthlyBudget,
-              spent: spentJuntos,
-              available: profile.coupleMonthlyBudget - spentJuntos,
-            }
-          : null,
       },
       isPayday,
+      commitmentsForEnvelope: computed.totalFixed,
       today,
       month,
       recentExpenses,
@@ -186,17 +132,17 @@ export const getRescueStatus = query({
       // Suggested actions ordered by least impact on long-term goals
       suggestedActions: isInRescueMode
         ? [
-            wantsOverflow > 0 && {
-              type: "transfer_from_wants",
-              description: `Mover S/ ${wantsOverflow.toFixed(2)} de Gustos a Necesidades`,
-              amount: wantsOverflow,
-            },
-            {
-              type: "reduce_savings",
-              description: `Pausar aporte a Inversión este mes (S/ ${(netIncome * (profile.allocationSavings / 100) / 3).toFixed(2)})`,
-              amount: netIncome * (profile.allocationSavings / 100) / 3,
-            },
-          ].filter(Boolean)
+          wantsOverflow > 0 && {
+            type: "transfer_from_wants",
+            description: `Mover S/ ${wantsOverflow.toFixed(2)} de Gustos a Necesidades`,
+            amount: wantsOverflow,
+          },
+          {
+            type: "reduce_savings",
+            description: `Pausar aporte a Inversión este mes (S/ ${(netIncome * (profile.allocationSavings / 100) / 3).toFixed(2)})`,
+            amount: netIncome * (profile.allocationSavings / 100) / 3,
+          },
+        ].filter(Boolean)
         : [],
     };
   },

@@ -76,7 +76,7 @@ export default defineSchema({
   expenses: defineTable({
     profileId: v.id("profiles"),
     amount: v.number(),
-    description: v.string(),
+    description: v.optional(v.string()),
     envelope: expenseEnvelope,
     date: v.string(),
     registeredBy: v.optional(registeredBy),
