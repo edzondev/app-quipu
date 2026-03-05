@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/core/components/ui/card";
 import { usePreloadedQuery, Preloaded } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useProfile } from "@/core/hooks/use-profile";
+import { cn } from "@/lib/utils";
 
 type Props = {
   preloaded: Preloaded<typeof api.expenses.getMonthlyTotals>;
@@ -22,7 +23,10 @@ export default function SummaryCard({ preloaded }: Props) {
     <Card className="mb-6">
       <CardContent>
         <div
-          className={`grid gap-4 text-center ${hasJuntos ? "grid-cols-4" : "grid-cols-3"}`}
+          className={cn(
+            "grid gap-4 text-center",
+            hasJuntos ? "grid-cols-4" : "grid-cols-3",
+          )}
         >
           <div>
             <p className="text-2xl font-bold">{data?.total}</p>

@@ -3,9 +3,16 @@
 import { Card, CardContent } from "@/core/components/ui/card";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Receipt } from "lucide-react";
+import { Loader2, Receipt } from "lucide-react";
 import { Badge } from "@/core/components/ui/badge";
 import { useProfile } from "@/core/hooks/use-profile";
+
+type Envelope = "needs" | "wants" | "juntos";
+
+type Props = {
+  envelope?: Envelope;
+  month?: string; // "YYYY-MM"
+};
 
 const getBadgeClass = (envelope: string) => {
   if (envelope === "needs")
@@ -24,35 +31,29 @@ const getEnvelopeLabel = (envelope: string) => {
   return envelope;
 };
 
-export default function ListCard() {
-  const data = usePaginatedQuery(
+export default function ListCard({ envelope, month }: Props) {
+  const { results, isLoading, loadMore, status } = usePaginatedQuery(
     api.expenses.listExpenses,
-    { month: "2026-03" }, // filtros opcionales
-    { initialNumItems: 5 },
+    { envelope, month },
+    { initialNumItems: 20 },
   );
   const { profile } = useProfile();
-
-  const isLoading = data === undefined;
-
-  if (isLoading) {
-    return null;
-  }
-
-  console.log({ data });
 
   return (
     <Card>
       <CardContent>
-        {data.results.length === 0 ? (
+        {!isLoading && results && results.length === 0 && (
           <div className="text-center py-12 space-y-2">
             <Receipt className="w-10 h-10 text-muted-foreground/40 mx-auto" />
             <p className="text-sm text-muted-foreground">
-              No se encontraron gastos con los filtros seleccionados.
+              No se encontraron gastos.
             </p>
           </div>
-        ) : (
+        )}
+
+        {!isLoading && results && results.length > 0 && (
           <div className="divide-y divide-border">
-            {data.results.map((expense) => (
+            {results.map((expense) => (
               <div
                 key={expense._id}
                 className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
@@ -88,6 +89,19 @@ export default function ListCard() {
               </div>
             ))}
           </div>
+        )}
+
+        {isLoading && <Loader2 className="w-8 h-8 animate-spin mx-auto" />}
+
+        {status === "CanLoadMore" && (
+          <button
+            type="button"
+            onClick={() => loadMore(20)}
+            className="mt-4 w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+            disabled={status !== "CanLoadMore"}
+          >
+            Cargar más
+          </button>
         )}
       </CardContent>
     </Card>
