@@ -53,6 +53,7 @@ export default defineSchema({
     polarSubscriptionId: v.optional(v.string()),
     polarCustomerId: v.optional(v.string()),
     planActivatedAt: v.optional(v.number()),
+    lastPaydayProcessedAt: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   fixedCommitments: defineTable({

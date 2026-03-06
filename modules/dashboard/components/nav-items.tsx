@@ -7,6 +7,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/core/components/ui/sidebar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function NavItems({
   items,
@@ -17,17 +20,23 @@ export function NavItems({
     icon: LucideIcon;
   }[];
 }) {
+  const pathname = usePathname();
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:block">
       <SidebarGroupLabel>MENU</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
-          <SidebarMenuItem key={item.name}>
+          <SidebarMenuItem
+            key={item.name}
+            className={cn("group/menu-item relative", {
+              "bg-primary rounded-md text-white": pathname === item.url,
+            })}
+          >
             <SidebarMenuButton tooltip={item.name} asChild>
-              <a href={item.url}>
+              <Link href={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

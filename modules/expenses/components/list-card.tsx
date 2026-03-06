@@ -6,12 +6,14 @@ import { api } from "@/convex/_generated/api";
 import { Loader2, Receipt } from "lucide-react";
 import { Badge } from "@/core/components/ui/badge";
 import { useProfile } from "@/core/hooks/use-profile";
+import { cn } from "@/lib/utils";
 
 type Envelope = "needs" | "wants" | "juntos";
 
 type Props = {
   envelope?: Envelope;
   month?: string; // "YYYY-MM"
+  className?: string;
 };
 
 const getBadgeClass = (envelope: string) => {
@@ -31,7 +33,7 @@ const getEnvelopeLabel = (envelope: string) => {
   return envelope;
 };
 
-export default function ListCard({ envelope, month }: Props) {
+export default function ListCard({ envelope, month, className }: Props) {
   const { results, isLoading, loadMore, status } = usePaginatedQuery(
     api.expenses.listExpenses,
     { envelope, month },
@@ -40,7 +42,7 @@ export default function ListCard({ envelope, month }: Props) {
   const { profile } = useProfile();
 
   return (
-    <Card>
+    <Card className={cn(className)}>
       <CardContent>
         {!isLoading && results && results.length === 0 && (
           <div className="text-center py-12 space-y-2">

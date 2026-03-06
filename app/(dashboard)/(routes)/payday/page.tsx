@@ -3,11 +3,13 @@ import { preloadAuthQuery } from "@/lib/auth-server";
 import PaydayView from "@/modules/payday/components/PaydayView";
 
 export default async function PaydayPage() {
-  const preloadedProfile = await preloadAuthQuery(api.profiles.getMyProfile);
+  const preloadedPaydayStatus = await preloadAuthQuery(
+    api.payday.getPaydayStatus,
+  );
 
   return (
     <>
-      <PaydayView preloadedProfile={preloadedProfile} />
+      <PaydayView preloadedPaydayStatus={preloadedPaydayStatus} />
     </>
   );
 }

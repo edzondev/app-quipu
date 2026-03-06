@@ -30,12 +30,12 @@ export default async function DashboardLayout({ children }: Props) {
             <SidebarTrigger />
           </div>
         </header>
-        <main className="flex-1 overflow-auto">
-          <div className="container max-w-full mx-auto p-4 md:p-6">
+        <section className="flex-1 overflow-auto mb-12 md:pb-0">
+          <div className="container w-full md:max-w-4xl lg:max-w-7xl mx-auto p-4  md:p-6 h-full">
             {children}
           </div>
           <QuickExpenseFAB />
-        </main>
+        </section>
       </SidebarInset>
     </SidebarProvider>
   );

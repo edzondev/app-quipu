@@ -6,31 +6,29 @@ import { usePayday } from "../hooks/use-payday";
 import PaydayStep from "./PaydayStep";
 import AssigningStep from "./AssigningStep";
 import DoneStep from "./DoneStep";
+import NextPaydayView from "./NextPaydayView";
+import AlreadyProcessedView from "./AlreadyProcessedView";
 
 type Props = {
-  preloadedProfile: Preloaded<typeof api.profiles.getMyProfile>;
+  preloadedPaydayStatus: Preloaded<typeof api.payday.getPaydayStatus>;
 };
 
-export default function PaydayView({ preloadedProfile }: Props) {
-  const profile = usePreloadedQuery(preloadedProfile);
+export default function PaydayView({ preloadedPaydayStatus }: Props) {
+  const status = usePreloadedQuery(preloadedPaydayStatus);
   const { step, handleAssign } = usePayday();
 
-  if (!profile) return null;
+  if (!status) return null;
 
-  const { currencySymbol, monthlyIncome, allocationNeeds, allocationWants, allocationSavings } =
+  const { isPayday, hasProcessedCurrentPayday, nextPaydayDate, daysUntilNextPayday, profile } =
+    status;
+
+  const { currencySymbol, monthlyIncome, allocationNeeds, allocationWants, allocationSavings, payFrequency } =
     profile;
 
-  return (
-    <section className="animate-in fade-in duration-200">
-      {step === "idle" && (
-        <PaydayStep
-          currencySymbol={currencySymbol}
-          monthlyIncome={monthlyIncome}
-          onAssign={handleAssign}
-        />
-      )}
-
-      {step === "assigning" && (
+  // While an animation is in progress, always show it through to completion
+  if (step === "assigning") {
+    return (
+      <section className="animate-in fade-in duration-200">
         <AssigningStep
           currencySymbol={currencySymbol}
           monthlyIncome={monthlyIncome}
@@ -38,9 +36,46 @@ export default function PaydayView({ preloadedProfile }: Props) {
           allocationWants={allocationWants}
           allocationSavings={allocationSavings}
         />
-      )}
+      </section>
+    );
+  }
 
-      {step === "done" && <DoneStep />}
+  if (step === "done") {
+    return (
+      <section className="animate-in fade-in duration-200">
+        <DoneStep />
+      </section>
+    );
+  }
+
+  // step === "idle": gate on server state
+  if (!isPayday) {
+    return (
+      <section className="animate-in fade-in duration-200">
+        <NextPaydayView
+          nextPaydayDate={nextPaydayDate}
+          daysUntilNextPayday={daysUntilNextPayday}
+          payFrequency={payFrequency}
+        />
+      </section>
+    );
+  }
+
+  if (hasProcessedCurrentPayday) {
+    return (
+      <section className="animate-in fade-in duration-200">
+        <AlreadyProcessedView />
+      </section>
+    );
+  }
+
+  return (
+    <section className="animate-in fade-in duration-200">
+      <PaydayStep
+        currencySymbol={currencySymbol}
+        monthlyIncome={monthlyIncome}
+        onAssign={handleAssign}
+      />
     </section>
   );
 }
