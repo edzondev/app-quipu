@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@/convex/_generated/api";
 import {
   Calendar,
   DollarSign,
@@ -9,6 +10,7 @@ import {
   PlusCircle,
   Trophy,
 } from "lucide-react";
+import { useQuery } from "convex/react";
 
 import {
   Sidebar,
@@ -27,7 +29,27 @@ const data = {
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  projects: [
+};
+
+export default function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const profile = useQuery(api.profiles.getMyProfile);
+
+  const paydayOrIncomeItem =
+    profile?.workerType === "independent"
+      ? {
+          name: "Registrar Ingreso",
+          url: "/register-income",
+          icon: PlusCircle,
+        }
+      : {
+          name: "Día de pago",
+          url: "/payday",
+          icon: Calendar,
+        };
+
+  const navItems = [
     {
       name: "Dashboard",
       url: "/dashboard",
@@ -48,11 +70,7 @@ const data = {
       url: "/achievements",
       icon: Trophy,
     },
-    {
-      name: "Día de pago",
-      url: "/payday",
-      icon: Calendar,
-    },
+    paydayOrIncomeItem,
     {
       name: "Ingreso extra",
       url: "/extra-income",
@@ -63,17 +81,13 @@ const data = {
       url: "/add-expense",
       icon: PlusCircle,
     },
-  ],
-};
+  ];
 
-export default function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>L</SidebarHeader>
       <SidebarContent>
-        <NavItems items={data.projects} />
+        <NavItems items={navItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

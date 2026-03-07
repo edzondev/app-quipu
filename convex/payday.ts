@@ -1,10 +1,10 @@
-import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
+import { internalMutation, mutation, query } from "./_generated/server";
 import {
-  getProfileOrThrow,
-  currentMonthString,
   computeEnvelopes,
+  currentMonthString,
+  getProfileOrThrow,
   todayString,
 } from "./helpers";
 
@@ -93,17 +93,21 @@ export const getPaydayStatus = query({
       todayDate.getMonth() + 1,
       0,
     ).getDate();
+    const paydays = profile.paydays ?? [];
+    const payFrequency = profile.payFrequency ?? "monthly";
+
     const effectiveDay = Math.min(dayOfMonth, daysInMonth);
-    const isPayday = profile.paydays.includes(effectiveDay);
+    const isPayday = paydays.includes(effectiveDay);
 
     const hasProcessedCurrentPayday = computeHasProcessed(
       profile.lastPaydayProcessedAt,
-      profile.payFrequency,
+      payFrequency,
       today,
       currentMonth,
     );
 
-    const nextPaydayDate = computeNextPaydayDate(profile.paydays, todayDate);
+    const nextPaydayDate =
+      paydays.length > 0 ? computeNextPaydayDate(paydays, todayDate) : today;
     const nextPaydayDateObj = new Date(nextPaydayDate + "T00:00:00");
     const todayDateObj = new Date(today + "T00:00:00");
     const daysUntilNextPayday = Math.round(
@@ -122,8 +126,8 @@ export const getPaydayStatus = query({
         allocationNeeds: profile.allocationNeeds,
         allocationWants: profile.allocationWants,
         allocationSavings: profile.allocationSavings,
-        payFrequency: profile.payFrequency,
-        paydays: profile.paydays,
+        payFrequency,
+        paydays,
       },
     };
   },
@@ -163,13 +167,16 @@ export const getDashboardData = query({
       new Date().getMonth() + 1,
       0,
     ).getDate();
+    const paydays = profile.paydays ?? [];
+    const payFrequency = profile.payFrequency ?? "monthly";
+
     const effectiveDay = Math.min(dayOfMonth, daysInMonth);
-    const isPayday = profile.paydays.includes(effectiveDay);
+    const isPayday = paydays.includes(effectiveDay);
     const daysRemaining = daysInMonth - dayOfMonth;
 
     const hasProcessedCurrentPayday = computeHasProcessed(
       profile.lastPaydayProcessedAt,
-      profile.payFrequency,
+      payFrequency,
       today,
       month,
     );
@@ -358,7 +365,7 @@ export const processPayday = mutation({
     if (
       computeHasProcessed(
         profile.lastPaydayProcessedAt,
-        profile.payFrequency,
+        profile.payFrequency ?? "monthly",
         today,
         currentMonth,
       )
@@ -433,5 +440,42 @@ export const processPayday = mutation({
     }
 
     return null;
+  },
+});
+
+/**
+ * Registers an ad-hoc income for independent workers.
+ * Distributes the amount across envelopes based on allocation percentages
+ * and accumulates into the profile's envelope fields.
+ */
+export const registerIncome = mutation({
+  args: {
+    amount: v.number(),
+  },
+  returns: v.object({
+    needs: v.number(),
+    wants: v.number(),
+    savings: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const profile = await getProfileOrThrow(ctx);
+
+    if (profile.workerType !== "independent") {
+      throw new ConvexError(
+        "registerIncome solo está disponible para trabajadores independientes",
+      );
+    }
+
+    const needs = args.amount * (profile.allocationNeeds / 100);
+    const wants = args.amount * (profile.allocationWants / 100);
+    const savings = args.amount * (profile.allocationSavings / 100);
+
+    await ctx.db.patch(profile._id, {
+      envelopeNeeds: (profile.envelopeNeeds ?? 0) + needs,
+      envelopeWants: (profile.envelopeWants ?? 0) + wants,
+      envelopeSavings: (profile.envelopeSavings ?? 0) + savings,
+    });
+
+    return { needs, wants, savings };
   },
 });
