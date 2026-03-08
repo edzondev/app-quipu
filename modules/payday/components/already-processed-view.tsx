@@ -23,7 +23,11 @@ export default function AlreadyProcessedView() {
         </p>
       </div>
 
-      <Button size="lg" className="mt-4" onClick={() => router.push("/dashboard")}>
+      <Button
+        size="lg"
+        className="mt-4"
+        onClick={() => router.push("/dashboard")}
+      >
         Ver dashboard
       </Button>
     </div>

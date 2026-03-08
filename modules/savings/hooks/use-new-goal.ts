@@ -11,9 +11,30 @@ import { z } from "zod";
 // ─── Static constants (module-level — computed once, never re-created) ─────────
 
 export const GOAL_EMOJIS = [
-  "💻", "✈️", "🏠", "🚗", "💍", "🎮", "📸", "🎸",
-  "👗", "🎓", "🏄", "💎", "🏋️", "🐶", "📱", "🌴",
-  "🎯", "🚲", "🏖️", "🎪", "🛒", "🏥", "🚀", "🎁",
+  "💻",
+  "✈️",
+  "🏠",
+  "🚗",
+  "💍",
+  "🎮",
+  "📸",
+  "🎸",
+  "👗",
+  "🎓",
+  "🏄",
+  "💎",
+  "🏋️",
+  "🐶",
+  "📱",
+  "🌴",
+  "🎯",
+  "🚲",
+  "🏖️",
+  "🎪",
+  "🛒",
+  "🏥",
+  "🚀",
+  "🎁",
 ];
 
 export const MONTH_OPTIONS = generateMonthOptions();
@@ -83,8 +104,14 @@ export function useNewGoal() {
   });
 
   // Watched values for the live estimate — no useMemo needed, simple derivation
-  const targetAmount = useWatch({ control: form.control, name: "targetAmount" });
-  const deadlineMonth = useWatch({ control: form.control, name: "deadlineMonth" });
+  const targetAmount = useWatch({
+    control: form.control,
+    name: "targetAmount",
+  });
+  const deadlineMonth = useWatch({
+    control: form.control,
+    name: "deadlineMonth",
+  });
 
   const monthsUntil = monthsUntilDeadline(deadlineMonth);
   // null when inputs are not yet filled — prevents NaN in the UI
@@ -109,7 +136,9 @@ export function useNewGoal() {
         name: data.name,
         targetAmount: data.targetAmount,
         deadline: toLastDayOfMonth(data.deadlineMonth),
-        monthlyRequired: Math.ceil(data.targetAmount / monthsUntilDeadline(data.deadlineMonth)),
+        monthlyRequired: Math.ceil(
+          data.targetAmount / monthsUntilDeadline(data.deadlineMonth),
+        ),
       });
       handleOpenChange(false);
     } catch (err) {

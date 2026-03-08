@@ -1,7 +1,13 @@
 import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "./_generated/server";
-import { getProfile, getProfileOrThrow, currentMonthString, todayString } from "./helpers";
+import {
+  getProfile,
+  getProfileOrThrow,
+  currentMonthString,
+  todayString,
+} from "./helpers";
+import { unlockExpenseAchievements } from "./streaks";
 
 // Free plan limit: 20 expenses per month
 const FREE_PLAN_MONTHLY_LIMIT = 20;
@@ -166,7 +172,7 @@ export const registerExpense = mutation({
       throw new ConvexError("Couple mode is not enabled");
     }
 
-    return await ctx.db.insert("expenses", {
+    const expenseId = await ctx.db.insert("expenses", {
       profileId: profile._id,
       amount: args.amount,
       description: args.description,
@@ -174,6 +180,14 @@ export const registerExpense = mutation({
       date: args.date ?? todayString(),
       registeredBy: args.registeredBy ?? "user",
     });
+
+    const allExpenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+    await unlockExpenseAchievements(ctx, profile._id, allExpenses.length);
+
+    return expenseId;
   },
 });
 

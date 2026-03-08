@@ -19,11 +19,22 @@ export default function PaydayView({ preloadedPaydayStatus }: Props) {
 
   if (!status) return null;
 
-  const { isPayday, hasProcessedCurrentPayday, nextPaydayDate, daysUntilNextPayday, profile } =
-    status;
+  const {
+    isPayday,
+    hasProcessedCurrentPayday,
+    nextPaydayDate,
+    daysUntilNextPayday,
+    profile,
+  } = status;
 
-  const { currencySymbol, monthlyIncome, allocationNeeds, allocationWants, allocationSavings, payFrequency } =
-    profile;
+  const {
+    currencySymbol,
+    monthlyIncome,
+    allocationNeeds,
+    allocationWants,
+    allocationSavings,
+    payFrequency,
+  } = profile;
 
   // While an animation is in progress, always show it through to completion
   if (step === "assigning") {

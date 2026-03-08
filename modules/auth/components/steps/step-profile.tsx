@@ -23,9 +23,18 @@ type Props = {
 };
 
 export default function StepProfile({ form }: Props) {
-  const currencyCode = useWatch({ control: form.control, name: "currencyCode" });
-  const currencyName = useWatch({ control: form.control, name: "currencyName" });
-  const currencySymbol = useWatch({ control: form.control, name: "currencySymbol" });
+  const currencyCode = useWatch({
+    control: form.control,
+    name: "currencyCode",
+  });
+  const currencyName = useWatch({
+    control: form.control,
+    name: "currencyName",
+  });
+  const currencySymbol = useWatch({
+    control: form.control,
+    name: "currencySymbol",
+  });
 
   return (
     <div className="space-y-6">
@@ -52,9 +61,7 @@ export default function StepProfile({ form }: Props) {
                 placeholder="¿Cómo te llamas?"
                 aria-invalid={fieldState.invalid}
               />
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
@@ -97,9 +104,7 @@ export default function StepProfile({ form }: Props) {
                   ))}
                 </SelectContent>
               </Select>
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />

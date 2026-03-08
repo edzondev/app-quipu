@@ -175,36 +175,42 @@ export const getDashboardData = query({
     );
 
     // All DB reads are independent once we have profile._id — run in parallel
-    const [computed, savingsSubEnvelopes, recentExpenses, streak, achievements, coachMessage] =
-      await Promise.all([
-        computeEnvelopes(ctx, profile, month),
-        ctx.db
-          .query("savingsSubEnvelopes")
-          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-          .collect(),
-        ctx.db
-          .query("expenses")
-          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-          .collect()
-          .then((rows) =>
-            [...rows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20),
-          ),
-        ctx.db
-          .query("streaks")
-          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-          .unique(),
-        ctx.db
-          .query("achievements")
-          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-          .collect(),
-        ctx.db
-          .query("coachMessages")
-          .withIndex("by_profileId_read", (q) =>
-            q.eq("profileId", profile._id).eq("read", false),
-          )
-          .order("desc")
-          .first(),
-      ]);
+    const [
+      computed,
+      savingsSubEnvelopes,
+      recentExpenses,
+      streak,
+      achievements,
+      coachMessage,
+    ] = await Promise.all([
+      computeEnvelopes(ctx, profile, month),
+      ctx.db
+        .query("savingsSubEnvelopes")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+      ctx.db
+        .query("expenses")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect()
+        .then((rows) =>
+          [...rows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20),
+        ),
+      ctx.db
+        .query("streaks")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .unique(),
+      ctx.db
+        .query("achievements")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+      ctx.db
+        .query("coachMessages")
+        .withIndex("by_profileId_read", (q) =>
+          q.eq("profileId", profile._id).eq("read", false),
+        )
+        .order("desc")
+        .first(),
+    ]);
 
     // Post-fetch derivations (no I/O)
     const lastAchievement =
@@ -217,9 +223,7 @@ export const getDashboardData = query({
     const totalSpent =
       computed.envelopes.needs.spent + computed.envelopes.wants.spent;
     const budgetUsedPercent =
-      totalAllocated > 0
-        ? Math.round((totalSpent / totalAllocated) * 100)
-        : 0;
+      totalAllocated > 0 ? Math.round((totalSpent / totalAllocated) * 100) : 0;
 
     const needsOverflow = Math.max(
       0,

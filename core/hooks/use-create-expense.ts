@@ -17,7 +17,7 @@ export default function useCreateExpense() {
     defaultValues: {
       amount: 0,
       envelope: "needs",
-      description: "Gasto rápido"
+      description: "Gasto rápido",
     },
   });
 

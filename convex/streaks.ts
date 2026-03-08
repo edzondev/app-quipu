@@ -4,6 +4,81 @@ import type { MutationCtx } from "./_generated/server";
 import { getProfile, getProfileOrThrow, currentMonthString } from "./helpers";
 import type { Id } from "./_generated/dataModel";
 
+// ─── Achievement Catalog ───────────────────────────────────────────────────────
+
+export const ACHIEVEMENT_CATALOG = [
+  {
+    achievementId: "first_expense",
+    title: "Primer Paso",
+    description: "Registra tu primer gasto",
+    icon: "📝",
+    category: "milestone",
+  },
+  {
+    achievementId: "expenses_10",
+    title: "Registrador Activo",
+    description: "Registra 10 gastos",
+    icon: "🔢",
+    category: "milestone",
+  },
+  {
+    achievementId: "first_savings",
+    title: "Primer Ahorro",
+    description: "Realiza tu primera asignación al ahorro",
+    icon: "💰",
+    category: "savings",
+  },
+  {
+    achievementId: "emergency_25",
+    title: "Red de Seguridad",
+    description: "Fondo de emergencia al 25%",
+    icon: "🛡️",
+    category: "savings",
+  },
+  {
+    achievementId: "emergency_50",
+    title: "Medio Camino",
+    description: "Fondo de emergencia al 50%",
+    icon: "⚡",
+    category: "savings",
+  },
+  {
+    achievementId: "emergency_75",
+    title: "Casi Blindado",
+    description: "Fondo de emergencia al 75%",
+    icon: "🏰",
+    category: "savings",
+  },
+  {
+    achievementId: "emergency_100",
+    title: "Blindaje Total",
+    description: "Fondo de emergencia al 100%",
+    icon: "🏆",
+    category: "savings",
+  },
+  {
+    achievementId: "perfect_week",
+    title: "Semana Perfecta",
+    description: "Una semana sin exceder el presupuesto",
+    icon: "✅",
+    category: "streak",
+  },
+  {
+    achievementId: "streak_1",
+    title: "Mes Completo",
+    description: "Un mes completo dentro del presupuesto",
+    icon: "📅",
+    category: "streak",
+  },
+  {
+    achievementId: "streak_3",
+    title: "Racha Imparable",
+    description: "3 meses consecutivos cumpliendo el plan",
+    icon: "🔥",
+    category: "streak",
+  },
+] as const;
+
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 export const getStreakData = query({
@@ -36,6 +111,51 @@ export const getAchievements = query({
       .query("achievements")
       .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
       .collect();
+  },
+});
+
+export const getAchievementsData = query({
+  args: {},
+  handler: async (ctx) => {
+    const profile = await getProfile(ctx);
+    if (!profile) return null;
+
+    const streak = await ctx.db
+      .query("streaks")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .unique();
+
+    const dbAchievements = await ctx.db
+      .query("achievements")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    const unlockedMap = new Map(
+      dbAchievements.map((a) => [a.achievementId, a]),
+    );
+
+    const achievements = ACHIEVEMENT_CATALOG.map((item) => {
+      const db = unlockedMap.get(item.achievementId);
+      return {
+        achievementId: item.achievementId,
+        title: item.title,
+        description: item.description,
+        icon: item.icon,
+        category: item.category,
+        unlocked: !!db,
+        unlockedAt: db?.unlockedAt,
+      };
+    });
+
+    return {
+      streak: streak
+        ? {
+            currentStreak: streak.currentStreak,
+            longestStreak: streak.longestStreak,
+          }
+        : null,
+      achievements,
+    };
   },
 });
 
@@ -92,7 +212,8 @@ export const evaluateMonthCompliance = internalMutation({
     const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
     const allocatedWants = netIncome * (profile.allocationWants / 100);
 
-    const compliant = spentNeeds <= allocatedNeeds && spentWants <= allocatedWants;
+    const compliant =
+      spentNeeds <= allocatedNeeds && spentWants <= allocatedWants;
 
     // Record history
     await ctx.db.insert("streakMonthlyHistory", {
@@ -117,7 +238,11 @@ export const evaluateMonthCompliance = internalMutation({
         lastComplianceDate: month,
       });
       // Check for streak achievements
-      await unlockStreakAchievements(ctx as MutationCtx, args.profileId, newStreak);
+      await unlockStreakAchievements(
+        ctx as MutationCtx,
+        args.profileId,
+        newStreak,
+      );
     } else {
       await ctx.db.patch(streak._id, { currentStreak: 0 });
     }
@@ -125,6 +250,53 @@ export const evaluateMonthCompliance = internalMutation({
     return null;
   },
 });
+
+// ─── Exported helpers ─────────────────────────────────────────────────────────
+
+export async function unlockExpenseAchievements(
+  ctx: MutationCtx,
+  profileId: Id<"profiles">,
+  totalCount: number,
+) {
+  const toCheck = [
+    {
+      count: 1,
+      achievementId: "first_expense",
+      title: "Primer Paso",
+      description: "Registra tu primer gasto",
+      icon: "📝",
+      category: "milestone" as const,
+    },
+    {
+      count: 10,
+      achievementId: "expenses_10",
+      title: "Registrador Activo",
+      description: "Registra 10 gastos",
+      icon: "🔢",
+      category: "milestone" as const,
+    },
+  ];
+
+  for (const item of toCheck) {
+    if (totalCount < item.count) continue;
+    const existing = await ctx.db
+      .query("achievements")
+      .withIndex("by_profileId_achievementId", (q) =>
+        q.eq("profileId", profileId).eq("achievementId", item.achievementId),
+      )
+      .unique();
+    if (existing) continue;
+    await ctx.db.insert("achievements", {
+      profileId,
+      achievementId: item.achievementId,
+      title: item.title,
+      description: item.description,
+      icon: item.icon,
+      category: item.category,
+      unlockedAt: new Date().toISOString().slice(0, 10),
+    });
+  }
+}
 
 // ─── Private helpers ──────────────────────────────────────────────────────────
 
@@ -140,15 +312,15 @@ async function unlockStreakAchievements(
   > = {
     1: {
       achievementId: "streak_1",
-      title: "Primer mes",
-      description: "Completaste tu primer mes dentro del presupuesto",
-      icon: "🌱",
+      title: "Mes Completo",
+      description: "Un mes completo dentro del presupuesto",
+      icon: "📅",
     },
     3: {
       achievementId: "streak_3",
-      title: "Tres meses",
-      description: "3 meses consecutivos con disciplina",
-      icon: "🌿",
+      title: "Racha Imparable",
+      description: "3 meses consecutivos cumpliendo el plan",
+      icon: "🔥",
     },
     6: {
       achievementId: "streak_6",
@@ -171,9 +343,7 @@ async function unlockStreakAchievements(
   const existing = await ctx.db
     .query("achievements")
     .withIndex("by_profileId_achievementId", (q) =>
-      q
-        .eq("profileId", profileId)
-        .eq("achievementId", milestone.achievementId),
+      q.eq("profileId", profileId).eq("achievementId", milestone.achievementId),
     )
     .unique();
 

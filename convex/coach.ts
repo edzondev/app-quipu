@@ -73,9 +73,7 @@ export const createCoachMessage = internalMutation({
 
       const recent = await ctx.db
         .query("coachMessages")
-        .withIndex("by_profileId", (q) =>
-          q.eq("profileId", args.profileId),
-        )
+        .withIndex("by_profileId", (q) => q.eq("profileId", args.profileId))
         .collect();
 
       const hasRecentMessage = recent.some((m) => m.date >= sevenDaysAgo);
