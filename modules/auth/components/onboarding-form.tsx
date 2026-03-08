@@ -11,11 +11,10 @@ import {
 import { cn } from "@/lib/utils";
 import StepWelcome from "./steps/step-welcome";
 import StepProfile from "./steps/step-profile";
-import StepWorkerType from "./steps/step-worker-type";
 import StepIncome from "./steps/step-income";
 import StepPlan from "./steps/step-plan";
 
-const TOTAL_INDICATOR_STEPS = 4;
+const TOTAL_INDICATOR_STEPS = 3;
 
 export function OnboardingForm() {
   const {
@@ -36,9 +35,8 @@ export function OnboardingForm() {
   const stepContent = {
     1: <StepWelcome />,
     2: <StepProfile form={form} />,
-    3: <StepWorkerType form={form} />,
-    4: <StepIncome form={form} />,
-    5: <StepPlan form={form} />,
+    3: <StepIncome form={form} />,
+    4: <StepPlan form={form} />,
   };
 
   const animationClass =

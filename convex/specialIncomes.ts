@@ -38,7 +38,8 @@ export const checkIfExtraordinary = query({
   ),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
-    const threshold = profile.monthlyIncome * EXTRAORDINARY_INCOME_MULTIPLIER;
+    const threshold =
+      profile.monthlyIncome * EXTRAORDINARY_INCOME_MULTIPLIER;
 
     if (args.amount <= threshold) {
       return { isExtraordinary: false as const };
@@ -97,7 +98,9 @@ export const registerSpecialIncome = mutation({
         );
       }
       const sum =
-        args.customAllocNeeds + args.customAllocWants + args.customAllocSavings;
+        args.customAllocNeeds +
+        args.customAllocWants +
+        args.customAllocSavings;
       if (Math.round(sum) !== 100) {
         throw new ConvexError("Custom allocations must sum to 100%");
       }

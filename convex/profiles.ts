@@ -35,13 +35,9 @@ export const createProfile = mutation({
     currencySymbol: v.string(),
     currencyName: v.string(),
     currencyLocale: v.string(),
-    workerType: v.union(v.literal("dependent"), v.literal("independent")),
-    payFrequency: v.optional(
-      v.union(v.literal("monthly"), v.literal("biweekly")),
-    ),
-    paydays: v.optional(v.array(v.number())),
+    payFrequency: v.union(v.literal("monthly"), v.literal("biweekly")),
+    paydays: v.array(v.number()),
     monthlyIncome: v.number(),
-    estimatedMonthlyIncome: v.optional(v.number()),
     // Allocation defaults to 50/30/20 if not provided
     allocationNeeds: v.optional(v.number()),
     allocationWants: v.optional(v.number()),
@@ -72,11 +68,9 @@ export const createProfile = mutation({
       currencySymbol: args.currencySymbol,
       currencyName: args.currencyName,
       currencyLocale: args.currencyLocale,
-      workerType: args.workerType,
       payFrequency: args.payFrequency,
       paydays: args.paydays,
       monthlyIncome: args.monthlyIncome,
-      estimatedMonthlyIncome: args.estimatedMonthlyIncome,
       allocationNeeds: args.allocationNeeds ?? 50,
       allocationWants: args.allocationWants ?? 30,
       allocationSavings: args.allocationSavings ?? 20,
@@ -153,7 +147,6 @@ export const updateProfile = mutation({
   args: {
     name: v.optional(v.string()),
     monthlyIncome: v.optional(v.number()),
-    estimatedMonthlyIncome: v.optional(v.number()),
     payFrequency: v.optional(
       v.union(v.literal("monthly"), v.literal("biweekly")),
     ),
