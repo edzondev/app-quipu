@@ -10,23 +10,18 @@ import { useForm } from "react-hook-form";
 import {
   type OnboardingFormData,
   onboardingSchema,
-  stepTwoSchema,
   stepThreeSchema,
+  stepTwoSchema,
   stepFourSchema,
-  stepWorkerTypeSchema,
 } from "@/modules/auth/validations/onboarding";
 
 const STEP_SCHEMAS: Record<
   number,
-  | typeof stepTwoSchema
-  | typeof stepWorkerTypeSchema
-  | typeof stepThreeSchema
-  | typeof stepFourSchema
+  typeof stepTwoSchema | typeof stepThreeSchema | typeof stepFourSchema
 > = {
   2: stepTwoSchema,
-  3: stepWorkerTypeSchema,
-  4: stepThreeSchema,
-  5: stepFourSchema,
+  3: stepThreeSchema,
+  4: stepFourSchema,
 };
 
 export function useOnboarding() {
@@ -47,7 +42,6 @@ export function useOnboarding() {
       currencySymbol: "S/",
       currencyName: "Sol peruano",
       currencyLocale: "es-PE",
-      workerType: undefined,
       monthlyIncome: 0,
       payFrequency: "monthly",
       paydays: [1],
@@ -58,7 +52,7 @@ export function useOnboarding() {
   });
 
   const isFirstStep = step === 1;
-  const isLastStep = step === 5;
+  const isLastStep = step === 4;
 
   const goNext = async () => {
     if (step === 1) {
@@ -98,8 +92,6 @@ export function useOnboarding() {
   const handleSubmit = form.handleSubmit(async (data) => {
     setSubmitError(null);
     try {
-      const isIndependent = data.workerType === "independent";
-
       // Compute savings goal targets from income and allocation
       const monthlySavings =
         data.monthlyIncome * (data.allocationSavings / 100);
@@ -115,11 +107,9 @@ export function useOnboarding() {
         currencySymbol: data.currencySymbol,
         currencyName: data.currencyName,
         currencyLocale: data.currencyLocale,
-        workerType: data.workerType,
-        payFrequency: isIndependent ? undefined : data.payFrequency,
-        paydays: isIndependent ? undefined : data.paydays,
+        payFrequency: data.payFrequency,
+        paydays: data.paydays,
         monthlyIncome: data.monthlyIncome,
-        estimatedMonthlyIncome: isIndependent ? data.monthlyIncome : undefined,
         allocationNeeds: data.allocationNeeds,
         allocationWants: data.allocationWants,
         allocationSavings: data.allocationSavings,

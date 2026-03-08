@@ -84,16 +84,12 @@ export async function computeEnvelopes(
   ctx: QueryCtx | MutationCtx,
   profile: {
     _id: import("./_generated/dataModel").Id<"profiles">;
-    workerType: "dependent" | "independent";
     monthlyIncome: number;
     allocationNeeds: number;
     allocationWants: number;
     allocationSavings: number;
     coupleModeEnabled: boolean;
     coupleMonthlyBudget: number;
-    envelopeNeeds?: number;
-    envelopeWants?: number;
-    envelopeSavings?: number;
   },
   month: string,
 ) {
@@ -109,24 +105,11 @@ export async function computeEnvelopes(
     .filter((c) => c.envelope === "wants")
     .reduce((sum, c) => sum + c.amount, 0);
 
-  let allocatedNeeds: number;
-  let allocatedWants: number;
-  let allocatedSavings: number;
-  let netIncome: number;
+  const netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
 
-  if (profile.workerType === "independent") {
-    // Independent workers: use accumulated envelope fields
-    allocatedNeeds = profile.envelopeNeeds ?? 0;
-    allocatedWants = profile.envelopeWants ?? 0;
-    allocatedSavings = profile.envelopeSavings ?? 0;
-    netIncome = allocatedNeeds + allocatedWants + allocatedSavings;
-  } else {
-    // Dependent workers: calculate from monthly income
-    netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
-    allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
-    allocatedWants = netIncome * (profile.allocationWants / 100);
-    allocatedSavings = netIncome * (profile.allocationSavings / 100);
-  }
+  const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
+  const allocatedWants = netIncome * (profile.allocationWants / 100);
+  const allocatedSavings = netIncome * (profile.allocationSavings / 100);
 
   const allMonthExpenses = await ctx.db
     .query("expenses")

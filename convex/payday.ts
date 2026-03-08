@@ -1,10 +1,10 @@
-import { ConvexError, v } from "convex/values";
-import { internal } from "./_generated/api";
+import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import {
-  computeEnvelopes,
-  currentMonthString,
   getProfileOrThrow,
+  currentMonthString,
+  computeEnvelopes,
   todayString,
 } from "./helpers";
 
@@ -93,21 +93,17 @@ export const getPaydayStatus = query({
       todayDate.getMonth() + 1,
       0,
     ).getDate();
-    const paydays = profile.paydays ?? [];
-    const payFrequency = profile.payFrequency ?? "monthly";
-
     const effectiveDay = Math.min(dayOfMonth, daysInMonth);
-    const isPayday = paydays.includes(effectiveDay);
+    const isPayday = profile.paydays.includes(effectiveDay);
 
     const hasProcessedCurrentPayday = computeHasProcessed(
       profile.lastPaydayProcessedAt,
-      payFrequency,
+      profile.payFrequency,
       today,
       currentMonth,
     );
 
-    const nextPaydayDate =
-      paydays.length > 0 ? computeNextPaydayDate(paydays, todayDate) : today;
+    const nextPaydayDate = computeNextPaydayDate(profile.paydays, todayDate);
     const nextPaydayDateObj = new Date(nextPaydayDate + "T00:00:00");
     const todayDateObj = new Date(today + "T00:00:00");
     const daysUntilNextPayday = Math.round(
@@ -126,8 +122,8 @@ export const getPaydayStatus = query({
         allocationNeeds: profile.allocationNeeds,
         allocationWants: profile.allocationWants,
         allocationSavings: profile.allocationSavings,
-        payFrequency,
-        paydays,
+        payFrequency: profile.payFrequency,
+        paydays: profile.paydays,
       },
     };
   },
@@ -167,57 +163,48 @@ export const getDashboardData = query({
       new Date().getMonth() + 1,
       0,
     ).getDate();
-    const paydays = profile.paydays ?? [];
-    const payFrequency = profile.payFrequency ?? "monthly";
-
     const effectiveDay = Math.min(dayOfMonth, daysInMonth);
-    const isPayday = paydays.includes(effectiveDay);
+    const isPayday = profile.paydays.includes(effectiveDay);
     const daysRemaining = daysInMonth - dayOfMonth;
 
     const hasProcessedCurrentPayday = computeHasProcessed(
       profile.lastPaydayProcessedAt,
-      payFrequency,
+      profile.payFrequency,
       today,
       month,
     );
 
     // All DB reads are independent once we have profile._id — run in parallel
-    const [
-      computed,
-      savingsSubEnvelopes,
-      recentExpenses,
-      streak,
-      achievements,
-      coachMessage,
-    ] = await Promise.all([
-      computeEnvelopes(ctx, profile, month),
-      ctx.db
-        .query("savingsSubEnvelopes")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect(),
-      ctx.db
-        .query("expenses")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect()
-        .then((rows) =>
-          [...rows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20),
-        ),
-      ctx.db
-        .query("streaks")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .unique(),
-      ctx.db
-        .query("achievements")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect(),
-      ctx.db
-        .query("coachMessages")
-        .withIndex("by_profileId_read", (q) =>
-          q.eq("profileId", profile._id).eq("read", false),
-        )
-        .order("desc")
-        .first(),
-    ]);
+    const [computed, savingsSubEnvelopes, recentExpenses, streak, achievements, coachMessage] =
+      await Promise.all([
+        computeEnvelopes(ctx, profile, month),
+        ctx.db
+          .query("savingsSubEnvelopes")
+          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+          .collect(),
+        ctx.db
+          .query("expenses")
+          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+          .collect()
+          .then((rows) =>
+            [...rows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20),
+          ),
+        ctx.db
+          .query("streaks")
+          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+          .unique(),
+        ctx.db
+          .query("achievements")
+          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+          .collect(),
+        ctx.db
+          .query("coachMessages")
+          .withIndex("by_profileId_read", (q) =>
+            q.eq("profileId", profile._id).eq("read", false),
+          )
+          .order("desc")
+          .first(),
+      ]);
 
     // Post-fetch derivations (no I/O)
     const lastAchievement =
@@ -230,7 +217,9 @@ export const getDashboardData = query({
     const totalSpent =
       computed.envelopes.needs.spent + computed.envelopes.wants.spent;
     const budgetUsedPercent =
-      totalAllocated > 0 ? Math.round((totalSpent / totalAllocated) * 100) : 0;
+      totalAllocated > 0
+        ? Math.round((totalSpent / totalAllocated) * 100)
+        : 0;
 
     const needsOverflow = Math.max(
       0,
@@ -365,7 +354,7 @@ export const processPayday = mutation({
     if (
       computeHasProcessed(
         profile.lastPaydayProcessedAt,
-        profile.payFrequency ?? "monthly",
+        profile.payFrequency,
         today,
         currentMonth,
       )
@@ -440,42 +429,5 @@ export const processPayday = mutation({
     }
 
     return null;
-  },
-});
-
-/**
- * Registers an ad-hoc income for independent workers.
- * Distributes the amount across envelopes based on allocation percentages
- * and accumulates into the profile's envelope fields.
- */
-export const registerIncome = mutation({
-  args: {
-    amount: v.number(),
-  },
-  returns: v.object({
-    needs: v.number(),
-    wants: v.number(),
-    savings: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
-
-    if (profile.workerType !== "independent") {
-      throw new ConvexError(
-        "registerIncome solo está disponible para trabajadores independientes",
-      );
-    }
-
-    const needs = args.amount * (profile.allocationNeeds / 100);
-    const wants = args.amount * (profile.allocationWants / 100);
-    const savings = args.amount * (profile.allocationSavings / 100);
-
-    await ctx.db.patch(profile._id, {
-      envelopeNeeds: (profile.envelopeNeeds ?? 0) + needs,
-      envelopeWants: (profile.envelopeWants ?? 0) + wants,
-      envelopeSavings: (profile.envelopeSavings ?? 0) + savings,
-    });
-
-    return { needs, wants, savings };
   },
 });

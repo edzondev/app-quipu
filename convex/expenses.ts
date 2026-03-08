@@ -1,12 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "./_generated/server";
-import {
-  getProfile,
-  getProfileOrThrow,
-  currentMonthString,
-  todayString,
-} from "./helpers";
+import { getProfile, getProfileOrThrow, currentMonthString, todayString } from "./helpers";
 
 // Free plan limit: 20 expenses per month
 const FREE_PLAN_MONTHLY_LIMIT = 20;
