@@ -1,11 +1,6 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
-import { Badge } from "@/core/components/ui/badge";
-import { Button } from "@/core/components/ui/button";
-import { Card, CardContent } from "@/core/components/ui/card";
-import { cn } from "@/lib/utils";
-import { Preloaded, usePreloadedQuery } from "convex/react";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -17,8 +12,14 @@ import {
   TrendingUp,
   Trophy,
 } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import type { api } from "@/convex/_generated/api";
+import { Badge } from "@/core/components/ui/badge";
+import { Button } from "@/core/components/ui/button";
+import { Card, CardContent } from "@/core/components/ui/card";
+import { cn } from "@/lib/utils";
 import EnvelopeCard from "./envelope-card";
 import Header from "./header";
 
@@ -120,10 +121,9 @@ export default function Client({ preloaded }: Props) {
               {daysRemaining} días restantes en el mes
             </p>
             <p className="text-xs text-muted-foreground">
-              Pago{" "}
-              {profile.payFrequency === "biweekly" ? "quincenal" : "mensual"} ·
-              día {profile.paydays[0]} · {budgetUsedPercent}% del presupuesto
-              usado
+              {profile.workerType === "independent"
+                ? `Ingresos variables · ${budgetUsedPercent}% del presupuesto usado`
+                : `Pago ${profile.payFrequency === "biweekly" ? "quincenal" : "mensual"} · día ${(profile.paydays ?? [])[0]} · ${budgetUsedPercent}% del presupuesto usado`}
             </p>
           </div>
         </div>
@@ -180,6 +180,14 @@ export default function Client({ preloaded }: Props) {
           />
         ))}
       </div>
+
+      {profile.workerType === "independent" && (
+        <div className="mb-6">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/register-income">+ Registrar ingreso de hoy</Link>
+          </Button>
+        </div>
+      )}
 
       {/* Streak banner */}
       <div

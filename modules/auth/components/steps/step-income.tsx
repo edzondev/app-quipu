@@ -1,4 +1,4 @@
-import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn, useWatch } from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -7,7 +7,7 @@ import {
 } from "@/core/components/ui/field";
 import { Input } from "@/core/components/ui/input";
 import { cn } from "@/lib/utils";
-import { type OnboardingFormData } from "@/modules/auth/validations/onboarding";
+import type { OnboardingFormData } from "@/modules/auth/validations/onboarding";
 
 type Props = {
   form: UseFormReturn<OnboardingFormData>;
@@ -18,6 +18,10 @@ export default function StepIncome({ form }: Props) {
     control: form.control,
     name: "currencySymbol",
   });
+  const workerType = useWatch({
+    control: form.control,
+    name: "workerType",
+  });
   const payFrequency = useWatch({
     control: form.control,
     name: "payFrequency",
@@ -27,12 +31,16 @@ export default function StepIncome({ form }: Props) {
     name: "monthlyIncome",
   });
 
+  const isIndependent = workerType === "independent";
+
   return (
     <div className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-2xl font-bold tracking-tight">Tus ingresos</h2>
         <p className="text-muted-foreground text-sm">
-          Define cuánto ganas y cuándo recibes tu pago.
+          {isIndependent
+            ? "Establece una referencia de ingreso para tus metas."
+            : "Define cuánto ganas y cuándo recibes tu pago."}
         </p>
       </div>
 
@@ -43,8 +51,16 @@ export default function StepIncome({ form }: Props) {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="onboarding-income">
-                Ingreso mensual neto ({currencySymbol})
+                {isIndependent
+                  ? "¿Cuánto esperas ganar este mes?"
+                  : `Ingreso mensual neto (${currencySymbol})`}
               </FieldLabel>
+              {isIndependent && (
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Es solo una referencia para tus metas. Puedes cambiarlo cuando
+                  quieras.
+                </p>
+              )}
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
                   {currencySymbol}
@@ -69,59 +85,63 @@ export default function StepIncome({ form }: Props) {
           )}
         />
 
-        <Controller
-          name="payFrequency"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Frecuencia de pago</FieldLabel>
-              <div className="grid grid-cols-2 gap-3">
-                {(
-                  [
-                    {
-                      value: "monthly",
-                      label: "Mensual",
-                      sub: "1 pago al mes",
-                    },
-                    {
-                      value: "biweekly",
-                      label: "Quincenal",
-                      sub: "2 pagos al mes",
-                    },
-                  ] as const
-                ).map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      field.onChange(option.value);
-                      form.setValue(
-                        "paydays",
-                        option.value === "monthly" ? [1] : [15, 30],
-                      );
-                      form.clearErrors("paydays");
-                    }}
-                    className={cn(
-                      "rounded-xl border-2 p-4 text-left transition-all",
-                      field.value === option.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border bg-card hover:border-primary/50",
-                    )}
-                  >
-                    <p className="font-semibold text-sm">{option.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {option.sub}
-                    </p>
-                  </button>
-                ))}
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
+        {!isIndependent && (
+          <Controller
+            name="payFrequency"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Frecuencia de pago</FieldLabel>
+                <div className="grid grid-cols-2 gap-3">
+                  {(
+                    [
+                      {
+                        value: "monthly",
+                        label: "Mensual",
+                        sub: "1 pago al mes",
+                      },
+                      {
+                        value: "biweekly",
+                        label: "Quincenal",
+                        sub: "2 pagos al mes",
+                      },
+                    ] as const
+                  ).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        field.onChange(option.value);
+                        form.setValue(
+                          "paydays",
+                          option.value === "monthly" ? [1] : [15, 30],
+                        );
+                        form.clearErrors("paydays");
+                      }}
+                      className={cn(
+                        "rounded-xl border-2 p-4 text-left transition-all",
+                        field.value === option.value
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-card hover:border-primary/50",
+                      )}
+                    >
+                      <p className="font-semibold text-sm">{option.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {option.sub}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        )}
       </FieldGroup>
 
-      {monthlyIncome > 0 && (
+      {monthlyIncome > 0 && !isIndependent && (
         <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-4 space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
             Vista previa — asignación{" "}
