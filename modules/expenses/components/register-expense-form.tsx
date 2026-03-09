@@ -21,7 +21,10 @@ export function RegisterExpenseForm() {
         <div className="h-8 w-48 animate-pulse rounded-md bg-muted" />
         <div className="grid grid-cols-3 gap-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
+            <div
+              key={`skeleton-${i}`}
+              className="h-28 animate-pulse rounded-xl bg-muted"
+            />
           ))}
         </div>
         <div className="h-14 animate-pulse rounded-md bg-muted" />

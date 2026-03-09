@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, DM_Sans, Space_Grotesk } from "next/font/google";
+import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/core/components/providers/convex-client-provider";
 import { getToken } from "@/lib/auth-server";

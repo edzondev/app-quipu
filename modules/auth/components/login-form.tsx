@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Controller } from "react-hook-form";
 import { Button } from "@/core/components/ui/button";
 import {
@@ -53,12 +54,9 @@ export function LoginForm() {
             <Field data-invalid={fieldState.invalid}>
               <div className="flex items-center justify-between">
                 <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                <a
-                  href="#"
-                  className="ml-auto text-sm underline-offset-4 hover:underline"
-                >
+                <span className="ml-auto text-sm underline-offset-4 hover:underline cursor-pointer">
                   Olvidaste tu contraseña?
-                </a>
+                </span>
               </div>
               <Input
                 {...field}
@@ -77,9 +75,9 @@ export function LoginForm() {
           </Button>
           <FieldDescription className="text-center">
             No tienes una cuenta?{" "}
-            <a href="/register" className="underline underline-offset-4">
+            <Link href="/register" className="underline underline-offset-4">
               Regístrate
-            </a>
+            </Link>
           </FieldDescription>
         </Field>
       </FieldGroup>

@@ -141,7 +141,7 @@ export default function StepIncome({ form }: Props) {
         )}
       </FieldGroup>
 
-      {monthlyIncome > 0 && !isIndependent && (
+      {monthlyIncome > 0 && (
         <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-4 space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
             Vista previa — asignación{" "}

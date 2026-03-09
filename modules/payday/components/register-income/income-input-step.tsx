@@ -36,7 +36,6 @@ export default function IncomeInputStep({ currencySymbol, onSubmit }: Props) {
             const val = e.target.value;
             setAmount(val === "" ? 0 : Number(val));
           }}
-          autoFocus
         />
       </div>
 

@@ -382,37 +382,40 @@ export const processPayday = mutation({
     const netIncome = profile.monthlyIncome - totalFixed;
     const savingsAmount = netIncome * (profile.allocationSavings / 100);
 
-    // Distribute savings across sub-envelopes
-    const subEnvelopes = await ctx.db
-      .query("savingsSubEnvelopes")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
+    // Si el usuario activó Modo Rescate este mes, omitir distribución de ahorro
+    if (profile.rescuePausedSavingsMonth !== currentMonth) {
+      // Distribute savings across sub-envelopes
+      const subEnvelopes = await ctx.db
+        .query("savingsSubEnvelopes")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect();
 
-    const perEnvelope = savingsAmount / 3;
-    for (const sub of subEnvelopes) {
-      const newAmount = sub.currentAmount + perEnvelope;
-      const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
-      await ctx.db.patch(sub._id, {
-        currentAmount: newAmount,
-        progress: Math.min(100, Math.round((newAmount / goal) * 100)),
-      });
-    }
-
-    // Also advance current amount in active savings goals
-    const goals = await ctx.db
-      .query("savingsGoals")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-
-    for (const goal of goals) {
-      if (goal.currentAmount < goal.targetAmount) {
-        const contribution = Math.min(
-          goal.monthlyRequired,
-          goal.targetAmount - goal.currentAmount,
-        );
-        await ctx.db.patch(goal._id, {
-          currentAmount: goal.currentAmount + contribution,
+      const perEnvelope = savingsAmount / 3;
+      for (const sub of subEnvelopes) {
+        const newAmount = sub.currentAmount + perEnvelope;
+        const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
+        await ctx.db.patch(sub._id, {
+          currentAmount: newAmount,
+          progress: Math.min(100, Math.round((newAmount / goal) * 100)),
         });
+      }
+
+      // Also advance current amount in active savings goals
+      const goals = await ctx.db
+        .query("savingsGoals")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect();
+
+      for (const goal of goals) {
+        if (goal.currentAmount < goal.targetAmount) {
+          const contribution = Math.min(
+            goal.monthlyRequired,
+            goal.targetAmount - goal.currentAmount,
+          );
+          await ctx.db.patch(goal._id, {
+            currentAmount: goal.currentAmount + contribution,
+          });
+        }
       }
     }
 
@@ -475,6 +478,40 @@ export const registerIncome = mutation({
       envelopeWants: (profile.envelopeWants ?? 0) + wants,
       envelopeSavings: (profile.envelopeSavings ?? 0) + savings,
     });
+
+    // Distribute savings into sub-envelopes (same as processPayday for dependent workers)
+    const subEnvelopes = await ctx.db
+      .query("savingsSubEnvelopes")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    const perEnvelope = savings / 3;
+    for (const sub of subEnvelopes) {
+      const newAmount = sub.currentAmount + perEnvelope;
+      const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
+      await ctx.db.patch(sub._id, {
+        currentAmount: newAmount,
+        progress: Math.min(100, Math.round((newAmount / goal) * 100)),
+      });
+    }
+
+    // Also advance current amount in active savings goals
+    const savingsGoals = await ctx.db
+      .query("savingsGoals")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    for (const goal of savingsGoals) {
+      if (goal.currentAmount < goal.targetAmount) {
+        const contribution = Math.min(
+          goal.monthlyRequired,
+          goal.targetAmount - goal.currentAmount,
+        );
+        await ctx.db.patch(goal._id, {
+          currentAmount: goal.currentAmount + contribution,
+        });
+      }
+    }
 
     return { needs, wants, savings };
   },

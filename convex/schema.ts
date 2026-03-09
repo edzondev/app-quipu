@@ -26,6 +26,7 @@ const achievementCategory = v.union(
 );
 const registeredBy = v.union(v.literal("user"), v.literal("partner"));
 const planType = v.union(v.literal("free"), v.literal("premium"));
+const workerType = v.union(v.literal("dependent"), v.literal("independent"));
 
 export default defineSchema({
   profiles: defineTable({
@@ -36,7 +37,7 @@ export default defineSchema({
     currencySymbol: v.string(),
     currencyName: v.string(),
     currencyLocale: v.string(),
-    workerType: v.union(v.literal("dependent"), v.literal("independent")),
+    workerType: workerType,
     payFrequency: v.optional(payFrequency),
     paydays: v.optional(v.array(v.number())),
     monthlyIncome: v.number(),
@@ -59,6 +60,9 @@ export default defineSchema({
     polarCustomerId: v.optional(v.string()),
     planActivatedAt: v.optional(v.number()),
     lastPaydayProcessedAt: v.optional(v.string()),
+    rescuePausedSavingsMonth: v.optional(v.string()),
+    rescueAppliedAt: v.optional(v.number()),
+    rescueActionId: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   fixedCommitments: defineTable({

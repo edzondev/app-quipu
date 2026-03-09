@@ -88,7 +88,7 @@ const schema = z.object({
   deadlineMonth: z.string().min(1, "Selecciona una fecha límite"),
 });
 
-export type NewGoalFormData = z.infer<typeof schema>;
+type NewGoalFormData = z.infer<typeof schema>;
 
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 

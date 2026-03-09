@@ -21,21 +21,13 @@ import {
 } from "@/core/components/ui/sidebar";
 import { NavItems } from "./nav-items";
 import { NavUser } from "./nav-user";
-
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-};
+import { NavHeader } from "./nav-header";
 
 export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const profile = useQuery(api.profiles.getMyProfile);
-
+  const email = useQuery(api.profiles.getMyUserEmail);
   const paydayOrIncomeItem =
     profile?.workerType === "independent"
       ? {
@@ -85,12 +77,20 @@ export default function AppSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>L</SidebarHeader>
+      <SidebarHeader>
+        <NavHeader />
+      </SidebarHeader>
       <SidebarContent>
         <NavItems items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: profile?.name,
+            email: email ?? undefined,
+            avatar: profile?.name,
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

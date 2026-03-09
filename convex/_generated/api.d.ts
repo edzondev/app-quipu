@@ -16,6 +16,7 @@ import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as payday from "../payday.js";
 import type * as profiles from "../profiles.js";
+import type * as rescue from "../rescue.js";
 import type * as savings from "../savings.js";
 import type * as specialIncomes from "../specialIncomes.js";
 import type * as streaks from "../streaks.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   payday: typeof payday;
   profiles: typeof profiles;
+  rescue: typeof rescue;
   savings: typeof savings;
   specialIncomes: typeof specialIncomes;
   streaks: typeof streaks;

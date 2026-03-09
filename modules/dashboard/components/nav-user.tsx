@@ -21,14 +21,15 @@ import {
   useSidebar,
 } from "@/core/components/ui/sidebar";
 import { LogOut, MoreVertical, Settings, User } from "lucide-react";
+import Link from "next/link";
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string;
-    email: string;
-    avatar: string;
+    name?: string;
+    email?: string;
+    avatar?: string;
   };
 }) {
   const { isMobile } = useSidebar();
@@ -44,13 +45,12 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {user.name?.charAt(0).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {user.email}
-                </span>
               </div>
               <MoreVertical className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -77,13 +77,17 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User />
-                Perfil
+              <DropdownMenuItem asChild>
+                <Link href="/profile">
+                  <User />
+                  Perfil
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings />
-                Configuración
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings />
+                  Configuración
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

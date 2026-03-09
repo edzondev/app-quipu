@@ -6,7 +6,7 @@ import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 
-export type PaydayStep = "idle" | "assigning" | "done";
+type PaydayStep = "idle" | "assigning" | "done";
 
 const MIN_ASSIGNING_MS = 3200;
 

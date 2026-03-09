@@ -5,6 +5,18 @@ import { getAuthUserIdOrThrow, getProfileOrThrow } from "./helpers";
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 /**
+ * Returns the current user's email from the auth identity.
+ */
+export const getMyUserEmail = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    return identity.email ?? null;
+  },
+});
+
+/**
  * Returns the current user's profile, or null if not created yet.
  * The client uses null to decide whether to show the onboarding flow.
  */
@@ -152,6 +164,11 @@ export const completeOnboarding = mutation({
 export const updateProfile = mutation({
   args: {
     name: v.optional(v.string()),
+    country: v.optional(v.string()),
+    currencyCode: v.optional(v.string()),
+    currencySymbol: v.optional(v.string()),
+    currencyName: v.optional(v.string()),
+    currencyLocale: v.optional(v.string()),
     monthlyIncome: v.optional(v.number()),
     estimatedMonthlyIncome: v.optional(v.number()),
     payFrequency: v.optional(

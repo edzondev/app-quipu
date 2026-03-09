@@ -1,6 +1,7 @@
 "use client";
 
 import { Controller } from "react-hook-form";
+import Link from "next/link";
 import { Button } from "@/core/components/ui/button";
 import {
   Field,
@@ -85,9 +86,9 @@ export function RegisterForm() {
           </Button>
           <FieldDescription className="text-center">
             ¿Ya tienes una cuenta?{" "}
-            <a href="/login" className="underline underline-offset-4">
+            <Link href="/login" className="underline underline-offset-4">
               Inicia sesión
-            </a>
+            </Link>
           </FieldDescription>
         </Field>
       </FieldGroup>

@@ -9,6 +9,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import StepWelcome from "./steps/step-welcome";
 import StepProfile from "./steps/step-profile";
 import StepWorkerType from "./steps/step-worker-type";
@@ -50,12 +51,12 @@ export function OnboardingForm() {
     <div className="min-h-svh flex flex-col bg-background">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
+          <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <GalleryVerticalEnd className="size-4" />
             </div>
             Quipu
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -64,7 +65,7 @@ export function OnboardingForm() {
           <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
             {Array.from({ length: TOTAL_INDICATOR_STEPS }, (_, i) => (
               <div
-                key={i}
+                key={`indicator-${i}`}
                 className={cn(
                   "h-1.5 flex-1 rounded-full transition-all duration-300",
                   i < indicatorStep ? "bg-primary" : "bg-muted",

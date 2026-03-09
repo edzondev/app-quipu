@@ -54,6 +54,8 @@ export default function Client({ preloaded }: Props) {
 
   if (!data) return null;
 
+  console.log({ data });
+
   const {
     profile,
     envelopes,
@@ -142,7 +144,7 @@ export default function Client({ preloaded }: Props) {
         <button
           type="button"
           className="w-full animate-in fade-in duration-300 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-4 flex items-center gap-3 mb-6 text-left hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors"
-          onClick={() => router.push("/expenses")}
+          onClick={() => router.push("/rescue")}
         >
           <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -190,26 +192,28 @@ export default function Client({ preloaded }: Props) {
       )}
 
       {/* Streak banner */}
-      <div
-        className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 flex items-center gap-3 mb-6"
-        style={{ animationDelay: "400ms" }}
-      >
-        <span className="text-xl shrink-0">🔥</span>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm">
-            Racha: {streak?.currentStreak ?? 0} meses consecutivos
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {lastAchievement
-              ? `Último logro: ${lastAchievement.icon} ${lastAchievement.title}`
-              : "Completa tu primer mes para desbloquear logros"}
-          </p>
+      <Link href="/achievements" prefetch={false}>
+        <div
+          className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 flex items-center gap-3 mb-6 hover:bg-amber-100 dark:hover:bg-amber-950"
+          style={{ animationDelay: "400ms" }}
+        >
+          <span className="text-xl shrink-0">🔥</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">
+              Racha: {streak?.currentStreak ?? 0} meses consecutivos
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {lastAchievement
+                ? `Último logro: ${lastAchievement.icon} ${lastAchievement.title}`
+                : "Completa tu primer mes para desbloquear logros"}
+            </p>
+          </div>
+          <div className="flex items-center gap-0.5 text-muted-foreground shrink-0">
+            <Trophy className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4" />
+          </div>
         </div>
-        <div className="flex items-center gap-0.5 text-muted-foreground shrink-0">
-          <Trophy className="w-4 h-4" />
-          <ChevronRight className="w-4 h-4" />
-        </div>
-      </div>
+      </Link>
 
       {/* Quick action cards */}
       <div
