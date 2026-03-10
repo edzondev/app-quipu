@@ -29,7 +29,7 @@ export default function AppSidebar({
 }: React.ComponentProps<typeof Sidebar>) {
   const profile = useQuery(api.profiles.getMyProfile);
   const email = useQuery(api.profiles.getMyUserEmail);
-  const { isPremium } = usePlan();
+  const { isPremium, isLoading } = usePlan();
 
   const paydayOrIncomeItem =
     profile?.workerType === "independent"
@@ -72,15 +72,6 @@ export default function AppSidebar({
       url: "/add-expense",
       icon: PlusCircle,
     },
-    ...(!isPremium
-      ? [
-          {
-            name: "Ver planes",
-            url: "/upgrade",
-            icon: Crown,
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -99,6 +90,8 @@ export default function AppSidebar({
             email: email ?? undefined,
             avatar: profile?.name,
           }}
+          isLoading={isLoading}
+          isPremium={isPremium}
         />
       </SidebarFooter>
       <SidebarRail />

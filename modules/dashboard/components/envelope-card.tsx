@@ -71,7 +71,9 @@ export default function EnvelopeCard({
         : 0;
 
   const displayAmount = isSavings
-    ? (data.totalAccumulatedSavings ?? allocated)
+    ? data.totalAccumulatedSavings != null && data.totalAccumulatedSavings > 0
+      ? data.totalAccumulatedSavings
+      : allocated
     : available;
 
   return (

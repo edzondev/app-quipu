@@ -9,34 +9,6 @@ export const COUNTRY_CONFIG = [
     currencyLocale: "es-PE",
   },
   {
-    country: "Colombia",
-    currencyCode: "COP",
-    currencySymbol: "$",
-    currencyName: "Peso colombiano",
-    currencyLocale: "es-CO",
-  },
-  {
-    country: "Mexico",
-    currencyCode: "MXN",
-    currencySymbol: "$",
-    currencyName: "Peso mexicano",
-    currencyLocale: "es-MX",
-  },
-  {
-    country: "Argentina",
-    currencyCode: "ARS",
-    currencySymbol: "$",
-    currencyName: "Peso argentino",
-    currencyLocale: "es-AR",
-  },
-  {
-    country: "España",
-    currencyCode: "EUR",
-    currencySymbol: "€",
-    currencyName: "Euro",
-    currencyLocale: "es-ES",
-  },
-  {
     country: "Estados Unidos",
     currencyCode: "USD",
     currencySymbol: "$",
@@ -46,8 +18,8 @@ export const COUNTRY_CONFIG = [
 ] as const;
 
 export const stepTwoSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  country: z.string().min(1, "Selecciona un país"),
+  name: z.string().min(1, "El nombre es requerido."),
+  country: z.string().min(1, "Selecciona un país."),
   currencyCode: z.string().min(1, "Selecciona una moneda"),
   currencySymbol: z.string().min(1),
   currencyName: z.string().min(1),
@@ -60,62 +32,30 @@ export const stepWorkerTypeSchema = z.object({
   }),
 });
 
-export const stepThreeSchema = z
-  .object({
-    workerType: z.enum(["dependent", "independent"]),
-    monthlyIncome: z
-      .number({ error: "Ingresa tu ingreso mensual" })
-      .positive("El ingreso debe ser mayor a 0"),
-    estimatedMonthlyIncome: z.optional(
-      z.number().positive("El ingreso debe ser mayor a 0"),
+export const stepThreeSchema = z.object({
+  workerType: z.enum(["dependent", "independent"]),
+  monthlyIncome: z
+    .number({ error: "Ingresa tu ingreso mensual" })
+    .positive("El ingreso debe ser un número")
+    .min(1, "El ingreso debe ser mayor a 0"),
+  estimatedMonthlyIncome: z.optional(
+    z.number().positive("El ingreso debe ser mayor a 0"),
+  ),
+  payFrequency: z.optional(
+    z.enum(["monthly", "biweekly"], {
+      error: "Selecciona la frecuencia de pago",
+    }),
+  ),
+  paydays: z.optional(
+    z.array(
+      z
+        .number()
+        .int()
+        .min(1, "El día debe ser entre 1 y 31")
+        .max(31, "El día debe ser entre 1 y 31"),
     ),
-    payFrequency: z.optional(
-      z.enum(["monthly", "biweekly"], {
-        error: "Selecciona la frecuencia de pago",
-      }),
-    ),
-    paydays: z.optional(
-      z.array(
-        z
-          .number()
-          .int()
-          .min(1, "El día debe ser entre 1 y 31")
-          .max(31, "El día debe ser entre 1 y 31"),
-      ),
-    ),
-  })
-  .superRefine((data, ctx) => {
-    if (data.workerType === "dependent") {
-      if (!data.payFrequency) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona la frecuencia de pago",
-          path: ["payFrequency"],
-        });
-      }
-      if (!data.paydays || data.paydays.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona al menos un día de pago",
-          path: ["paydays"],
-        });
-      }
-      if (data.payFrequency === "monthly" && data.paydays?.length !== 1) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona 1 día para pago mensual",
-          path: ["paydays"],
-        });
-      }
-      if (data.payFrequency === "biweekly" && data.paydays?.length !== 2) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona 2 días para pago quincenal",
-          path: ["paydays"],
-        });
-      }
-    }
-  });
+  ),
+});
 
 export const stepFourSchema = z
   .object({
@@ -160,38 +100,6 @@ export const onboardingSchema = z
     allocationNeeds: z.number().int().positive(),
     allocationWants: z.number().int().positive(),
     allocationSavings: z.number().int().positive(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.workerType === "dependent") {
-      if (!data.payFrequency) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona la frecuencia de pago",
-          path: ["payFrequency"],
-        });
-      }
-      if (!data.paydays || data.paydays.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona al menos un día de pago",
-          path: ["paydays"],
-        });
-      }
-      if (data.payFrequency === "monthly" && data.paydays?.length !== 1) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona 1 día para pago mensual",
-          path: ["paydays"],
-        });
-      }
-      if (data.payFrequency === "biweekly" && data.paydays?.length !== 2) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Selecciona 2 días para pago quincenal",
-          path: ["paydays"],
-        });
-      }
-    }
   })
   .refine(
     (data) =>

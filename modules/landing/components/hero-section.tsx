@@ -17,7 +17,7 @@ export default function HeroSection() {
       </div>
 
       {/* Dashboard mockup */}
-      <div className="mt-14 max-w-3xl mx-auto overflow-hidden rounded-xl border border-border shadow-lg max-h-85 md:max-h-100">
+      <div className="mt-14 max-w-3xl mx-auto overflow-hidden rounded-xl border border-border shadow-lg max-h-auto">
         <div className="bg-card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold text-muted-foreground">

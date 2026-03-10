@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { usePreloadedQuery } from "convex/react";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
@@ -37,6 +38,32 @@ export function useSettings(
       coupleMonthlyBudget: profile?.coupleMonthlyBudget ?? 0,
     },
   });
+
+  // Re-sync form when the Convex profile updates reactively (e.g. after a
+  // successful save or an external change). react-hook-form only reads
+  // defaultValues once on mount, so we must call reset() explicitly.
+  useEffect(() => {
+    if (!profile) return;
+    form.reset({
+      monthlyIncome: profile.monthlyIncome,
+      payFrequency: profile.payFrequency ?? "monthly",
+      allocationNeeds: profile.allocationNeeds,
+      allocationWants: profile.allocationWants,
+      allocationSavings: profile.allocationSavings,
+      coupleModeEnabled: profile.coupleModeEnabled,
+      couplePartnerName: profile.couplePartnerName ?? "",
+      coupleMonthlyBudget: profile.coupleMonthlyBudget ?? 0,
+    });
+  }, [
+    profile?.monthlyIncome,
+    profile?.payFrequency,
+    profile?.allocationNeeds,
+    profile?.allocationWants,
+    profile?.allocationSavings,
+    profile?.coupleModeEnabled,
+    profile?.couplePartnerName,
+    profile?.coupleMonthlyBudget,
+  ]);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {

@@ -36,6 +36,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
+      autoSignIn: true,
     },
     user: {
       additionalFields: {

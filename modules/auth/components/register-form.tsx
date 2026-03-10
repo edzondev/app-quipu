@@ -1,7 +1,5 @@
 "use client";
 
-import { Controller } from "react-hook-form";
-import Link from "next/link";
 import { Button } from "@/core/components/ui/button";
 import {
   Field,
@@ -11,10 +9,19 @@ import {
   FieldLabel,
 } from "@/core/components/ui/field";
 import { Input } from "@/core/components/ui/input";
+import Link from "next/link";
+import { Controller } from "react-hook-form";
 import { useRegister } from "../hooks/use-register";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 
 export function RegisterForm() {
-  const { form, handleSubmit } = useRegister();
+  const {
+    form,
+    handleSubmit,
+    isSubmitting,
+    toggleVisibility,
+    isPasswordVisible,
+  } = useRegister();
 
   return (
     <form
@@ -41,6 +48,8 @@ export function RegisterForm() {
                 id="user-fullname"
                 aria-invalid={fieldState.invalid}
                 placeholder="jhondoe@gmail.com"
+                disabled={isSubmitting}
+                readOnly={isSubmitting}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -58,6 +67,8 @@ export function RegisterForm() {
                 id="user-email"
                 aria-invalid={fieldState.invalid}
                 placeholder="jhondoe@gmail.com"
+                disabled={isSubmitting}
+                readOnly={isSubmitting}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -69,20 +80,48 @@ export function RegisterForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-              <Input
-                {...field}
-                type="password"
-                id="password"
-                aria-invalid={fieldState.invalid}
-                placeholder="*********"
-              />
+              <div className="relative">
+                <Input
+                  {...field}
+                  type={isPasswordVisible ? "text" : "password"}
+                  id="password"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="*********"
+                  disabled={isSubmitting}
+                  readOnly={isSubmitting}
+                />
+                <button
+                  aria-controls="password"
+                  aria-label={
+                    isPasswordVisible ? "Hide password" : "Show password"
+                  }
+                  aria-pressed={isPasswordVisible}
+                  className="absolute inset-y-0 inset-e-0 flex h-full w-9 items-center justify-center rounded-e-md text-muted-foreground/80 outline-none transition-[color,box-shadow] hover:text-foreground focus:z-10 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={toggleVisibility}
+                  type="button"
+                >
+                  {isPasswordVisible ? (
+                    <EyeOffIcon aria-hidden="true" size={16} />
+                  ) : (
+                    <EyeIcon aria-hidden="true" size={16} />
+                  )}
+                </button>
+              </div>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
         <Field orientation="responsive">
-          <Button type="submit" form="form-create-user">
-            Guardar
+          <Button type="submit" form="form-create-user" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <Loader2Icon
+                aria-hidden="true"
+                size={16}
+                className="animate-spin"
+              />
+            ) : (
+              "Guardar"
+            )}
           </Button>
           <FieldDescription className="text-center">
             ¿Ya tienes una cuenta?{" "}

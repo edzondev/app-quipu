@@ -21,18 +21,30 @@ import {
   useSidebar,
 } from "@/core/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import { Crown, LogOut, MoreVertical, Settings, User } from "lucide-react";
+import {
+  ArrowUpCircle,
+  CreditCard,
+  Crown,
+  LogOut,
+  MoreVertical,
+  Settings,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export function NavUser({
   user,
+  isPremium,
+  isLoading,
 }: {
   user: {
     name?: string;
     email?: string;
     avatar?: string;
   };
+  isPremium?: boolean;
+  isLoading?: boolean;
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
@@ -59,6 +71,9 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  Plan {isPremium ? "Premium" : "Free"}
+                </span>
               </div>
               <MoreVertical className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -93,9 +108,17 @@ export function NavUser({
                   Perfil
                 </Link>
               </DropdownMenuItem>
+              {!isLoading && !isPremium && (
+                <DropdownMenuItem asChild>
+                  <Link href="/upgrade">
+                    <ArrowUpCircle />
+                    Mejorar Plan
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href="/plan">
-                  <Crown />
+                  <CreditCard />
                   Mi Plan
                 </Link>
               </DropdownMenuItem>

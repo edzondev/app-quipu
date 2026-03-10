@@ -144,7 +144,11 @@ export function RegisterExpenseForm() {
               <FieldLabel>Monto</FieldLabel>
               <Input
                 {...field}
-                onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                value={field.value === 0 ? "" : field.value}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  field.onChange(val === "" ? 0 : Number(val));
+                }}
                 type="number"
                 inputMode="decimal"
                 step="0.01"

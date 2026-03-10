@@ -1,9 +1,16 @@
+import Image from "next/image";
+
 export default function StepWelcome() {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-2">
-          <span className="text-3xl">🪢</span>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/5 mb-2">
+          <Image
+            src="/quipu-logo.webp"
+            alt="Quipu Logo"
+            width={48}
+            height={48}
+          />
         </div>
         <h1 className="text-3xl font-bold tracking-tight">
           Bienvenido a Quipu
