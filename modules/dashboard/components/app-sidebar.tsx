@@ -22,6 +22,7 @@ import {
 import { NavItems } from "./nav-items";
 import { NavUser } from "./nav-user";
 import { NavHeader } from "./nav-header";
+import { UpgradeBanner } from "./upgrade-banner";
 
 export default function AppSidebar({
   ...props
@@ -84,6 +85,7 @@ export default function AppSidebar({
         <NavItems items={navItems} />
       </SidebarContent>
       <SidebarFooter>
+        <UpgradeBanner />
         <NavUser
           user={{
             name: profile?.name,

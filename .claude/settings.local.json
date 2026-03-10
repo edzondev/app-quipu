@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__convex__runOneoffQuery",
+      "mcp__convex__tables",
+      "mcp__convex__data"
+    ]
+  }
+}

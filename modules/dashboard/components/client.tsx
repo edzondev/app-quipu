@@ -113,6 +113,13 @@ export default function Client({ preloaded }: Props) {
   return (
     <>
       <Header name={profile.name} month={data.month} />
+      {profile.workerType === "independent" && (
+        <div className="mb-6">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/register-income">+ Registrar ingreso de hoy</Link>
+          </Button>
+        </div>
+      )}
 
       {/* Month summary bar */}
       <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -182,14 +189,6 @@ export default function Client({ preloaded }: Props) {
           />
         ))}
       </div>
-
-      {profile.workerType === "independent" && (
-        <div className="mb-6">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/register-income">+ Registrar ingreso de hoy</Link>
-          </Button>
-        </div>
-      )}
 
       {/* Streak banner */}
       <Link href="/achievements" prefetch={false}>

@@ -7,11 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.13",
+    "@convex-dev/polar": "^0.8.1",
     "@hookform/resolvers": "^5.2.2",
+    "@polar-sh/better-auth": "^1.8.2",
+    "@polar-sh/sdk": "^0.46.3",
     "@sentry/nextjs": "^10.42.0",
     "better-auth": "1.4.9",
     "class-variance-authority": "^0.7.1",
@@ -32,6 +37,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^20.19.37",
     "@types/react": "^19.2.14",

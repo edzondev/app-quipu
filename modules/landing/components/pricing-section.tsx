@@ -2,6 +2,7 @@ import { Button } from "@/core/components/ui/button";
 import { Card, CardContent } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { Check } from "lucide-react";
+import PremiumCheckoutButton from "./premium-checkout-button";
 
 const FREE_FEATURES = [
   "Asignación automática 50/30/20",
@@ -73,7 +74,7 @@ export default function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Button className="w-full">Empezar con Premium</Button>
+              <PremiumCheckoutButton />
             </CardContent>
           </Card>
         </div>
