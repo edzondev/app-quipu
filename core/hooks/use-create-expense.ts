@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
+import { useExpenseLimit } from "@/hooks/use-expense-limit";
 import { type Expense, expenseSchema } from "../schemas/expense.schema";
 
 const MAX_DECIMALS = 2;
@@ -11,6 +12,7 @@ const MAX_INTEGER_DIGITS = 8;
 export default function useCreateExpense() {
   const [displayValue, setDisplayValue] = useState("0");
   const mutation = useMutation(api.expenses.registerExpense);
+  const { isAtLimit, limitLabel } = useExpenseLimit();
 
   const form = useForm<Expense>({
     resolver: zodResolver(expenseSchema),
@@ -61,6 +63,7 @@ export default function useCreateExpense() {
   };
 
   const mutate = async (value: Expense) => {
+    if (isAtLimit) return;
     try {
       await mutation(value);
       setDisplayValue("0");
@@ -76,5 +79,7 @@ export default function useCreateExpense() {
     handleKeypad,
     handleEnvelopeChange,
     displayValue,
+    isAtLimit,
+    limitLabel,
   };
 }

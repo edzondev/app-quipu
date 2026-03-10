@@ -7,12 +7,14 @@ import type { Id } from "./_generated/dataModel";
 // ─── Achievement Catalog ───────────────────────────────────────────────────────
 
 export const ACHIEVEMENT_CATALOG = [
+  // ── Free tier: the 3 initial badges ─────────────────────────────────────────
   {
     achievementId: "first_expense",
     title: "Primer Paso",
     description: "Registra tu primer gasto",
     icon: "📝",
     category: "milestone",
+    tier: "free",
   },
   {
     achievementId: "expenses_10",
@@ -20,6 +22,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Registra 10 gastos",
     icon: "🔢",
     category: "milestone",
+    tier: "free",
   },
   {
     achievementId: "first_savings",
@@ -27,13 +30,16 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Realiza tu primera asignación al ahorro",
     icon: "💰",
     category: "savings",
+    tier: "free",
   },
+  // ── Premium tier: advanced badges & streaks ──────────────────────────────────
   {
     achievementId: "emergency_25",
     title: "Red de Seguridad",
     description: "Fondo de emergencia al 25%",
     icon: "🛡️",
     category: "savings",
+    tier: "premium",
   },
   {
     achievementId: "emergency_50",
@@ -41,6 +47,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Fondo de emergencia al 50%",
     icon: "⚡",
     category: "savings",
+    tier: "premium",
   },
   {
     achievementId: "emergency_75",
@@ -48,6 +55,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Fondo de emergencia al 75%",
     icon: "🏰",
     category: "savings",
+    tier: "premium",
   },
   {
     achievementId: "emergency_100",
@@ -55,6 +63,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Fondo de emergencia al 100%",
     icon: "🏆",
     category: "savings",
+    tier: "premium",
   },
   {
     achievementId: "perfect_week",
@@ -62,6 +71,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Una semana sin exceder el presupuesto",
     icon: "✅",
     category: "streak",
+    tier: "premium",
   },
   {
     achievementId: "streak_1",
@@ -69,6 +79,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "Un mes completo dentro del presupuesto",
     icon: "📅",
     category: "streak",
+    tier: "premium",
   },
   {
     achievementId: "streak_3",
@@ -76,6 +87,7 @@ export const ACHIEVEMENT_CATALOG = [
     description: "3 meses consecutivos cumpliendo el plan",
     icon: "🔥",
     category: "streak",
+    tier: "premium",
   },
 ] as const;
 
@@ -142,6 +154,7 @@ export const getAchievementsData = query({
         description: item.description,
         icon: item.icon,
         category: item.category,
+        tier: item.tier,
         unlocked: !!db,
         unlockedAt: db?.unlockedAt,
       };

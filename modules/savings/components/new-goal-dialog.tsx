@@ -54,7 +54,7 @@ export function NewGoalDialog({ currencySymbol }: Props) {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 p-8 text-muted-foreground cursor-pointer hover:border-envelope-savings hover:text-envelope-savings transition-colors w-full h-full min-h-[140px]"
+          className="border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 p-8 text-muted-foreground cursor-pointer hover:border-envelope-savings hover:text-envelope-savings transition-colors w-full h-full min-h-35"
         >
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
             <Plus className="w-5 h-5" />

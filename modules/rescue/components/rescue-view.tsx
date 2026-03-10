@@ -13,8 +13,13 @@ interface RescueViewProps {
 
 export default function RescueView({ preloaded }: RescueViewProps) {
   const data = usePreloadedQuery(preloaded);
-  const { step, selectedActionId, setSelectedActionId, handleApply, isApplying } =
-    useRescue();
+  const {
+    step,
+    selectedActionId,
+    setSelectedActionId,
+    handleApply,
+    isApplying,
+  } = useRescue();
 
   if (step === "done") {
     return <DoneStep />;
@@ -24,9 +29,11 @@ export default function RescueView({ preloaded }: RescueViewProps) {
     return null;
   }
 
+  const envelope = data.envelope as "needs" | "wants" | null;
+
   return (
     <SelectActionStep
-      data={data}
+      data={{ ...data, envelope }}
       selectedActionId={selectedActionId}
       setSelectedActionId={setSelectedActionId}
       handleApply={handleApply}

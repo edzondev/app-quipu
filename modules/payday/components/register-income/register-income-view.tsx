@@ -12,8 +12,8 @@ type Props = {
 };
 
 export default function RegisterIncomeView({ preloadedProfile }: Props) {
-  const profile = usePreloadedQuery(preloadedProfile);
   const { step, amount, handleAssign } = useRegisterIncome();
+  const profile = usePreloadedQuery(preloadedProfile);
 
   if (!profile) return null;
 

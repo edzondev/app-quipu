@@ -2,6 +2,9 @@
 
 import type React from "react";
 import { api } from "@/convex/_generated/api";
+import { usePlan } from "@/hooks/use-plan";
+import { PremiumGate } from "@/core/components/shared/premium-gate";
+import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import { Card, CardContent } from "@/core/components/ui/card";
 import { NewGoalDialog } from "@/modules/savings/components/new-goal-dialog";
 import { WithdrawButton } from "@/modules/savings/components/withdraw-button";
@@ -37,6 +40,7 @@ export function SavingsClient({
   const goals = usePreloadedQuery(preloadedGoals);
   const profile = usePreloadedQuery(preloadedProfile);
   const mutation = useMutation(api.savings.deleteSavingsGoal);
+  const { isPremium } = usePlan();
 
   if (!profile || !subEnvelopes) return null;
 
@@ -124,10 +128,15 @@ export function SavingsClient({
       {/* Savings goals */}
       <div className="mb-4">
         <h2 className="text-xl font-bold tracking-tight">Mis Objetivos</h2>
-        <p className="text-muted-foreground text-sm">
-          {profile.plan === "free"
-            ? "Máximo 1 objetivo"
-            : "Máximo 3 objetivos simultáneos"}
+        <p className="text-muted-foreground text-sm flex items-center gap-1.5">
+          {isPremium ? (
+            "Objetivos ilimitados"
+          ) : (
+            <>
+              Máximo 1 objetivo · Desbloquea ilimitados
+              <PremiumBadge />
+            </>
+          )}
         </p>
       </div>
 
@@ -197,7 +206,13 @@ export function SavingsClient({
           </div>
         ))}
 
-        <NewGoalDialog currencySymbol={currencySymbol} />
+        {!isPremium && (goals ?? []).length >= 1 ? (
+          <PremiumGate featureName="Objetivos ilimitados">
+            <NewGoalDialog currencySymbol={currencySymbol} />
+          </PremiumGate>
+        ) : (
+          <NewGoalDialog currencySymbol={currencySymbol} />
+        )}
       </div>
     </>
   );

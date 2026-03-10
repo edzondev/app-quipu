@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { api } from "@/convex/_generated/api";
 import { useEnvelopes } from "@/core/hooks/use-envelopes";
+import { useExpenseLimit } from "@/hooks/use-expense-limit";
 import {
   type RegisterExpense,
   registerExpenseSchema,
@@ -16,6 +17,11 @@ export function useRegisterExpense() {
   const profile = useQuery(api.profiles.getMyProfile);
   const { envelopes } = useEnvelopes();
   const registerExpense = useMutation(api.expenses.registerExpense);
+  const {
+    isAtLimit,
+    limitLabel,
+    isLoading: isLimitLoading,
+  } = useExpenseLimit();
 
   const form = useForm<RegisterExpense>({
     resolver: zodResolver(registerExpenseSchema),
@@ -29,6 +35,7 @@ export function useRegisterExpense() {
   });
 
   const mutate = async (data: RegisterExpense) => {
+    if (isAtLimit) return;
     try {
       await registerExpense({
         amount: data.amount,
@@ -44,5 +51,13 @@ export function useRegisterExpense() {
     }
   };
 
-  return { form, mutate, profile, envelopes };
+  return {
+    form,
+    mutate,
+    profile,
+    envelopes,
+    isAtLimit,
+    limitLabel,
+    isLimitLoading,
+  };
 }

@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/core/components/ui/card";
+import { fmt } from "@/modules/dashboard/lib/constants";
 import { cn } from "@/lib/utils";
 
 const ENVELOPE_CONFIG = {
@@ -46,12 +47,6 @@ type Props = {
   currencySymbol: string;
   index?: number;
 };
-
-function fmt(value: number, symbol: string): string {
-  const abs = Math.abs(value);
-  const str = Number.isInteger(abs) ? abs.toString() : abs.toFixed(2);
-  return value < 0 ? `-${symbol} ${str}` : `${symbol} ${str}`;
-}
 
 export default function EnvelopeCard({
   envelopeKey,

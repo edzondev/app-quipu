@@ -30,10 +30,10 @@ import { Plus } from "lucide-react";
 const commitmentSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   amount: z
-    .number({ invalid_type_error: "Ingresa un monto válido" })
+    .number({ error: "Ingresa un monto válido" })
     .positive("El monto debe ser mayor a 0"),
   envelope: z.enum(["needs", "wants"], {
-    required_error: "Selecciona un sobre",
+    error: "Selecciona un sobre",
   }),
 });
 
@@ -41,7 +41,9 @@ type CommitmentFormValues = z.infer<typeof commitmentSchema>;
 
 export function AddCommitmentDialog() {
   const [open, setOpen] = useState(false);
-  const createCommitment = useMutation(api.fixedCommitments.createFixedCommitment);
+  const createCommitment = useMutation(
+    api.fixedCommitments.createFixedCommitment,
+  );
 
   const form = useForm<CommitmentFormValues>({
     resolver: zodResolver(commitmentSchema),

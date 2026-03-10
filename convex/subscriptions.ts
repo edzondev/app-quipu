@@ -1,10 +1,35 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
 import { getProfileOrThrow } from "./helpers";
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 export const getMyPlan = query({
+  args: {},
+  returns: v.object({
+    plan: v.union(v.literal("free"), v.literal("premium")),
+    polarSubscriptionId: v.optional(v.string()),
+    polarCustomerId: v.optional(v.string()),
+    planActivatedAt: v.optional(v.number()),
+  }),
+  handler: async (ctx) => {
+    const profile = await getProfileOrThrow(ctx);
+    return {
+      plan: profile.plan,
+      polarSubscriptionId: profile.polarSubscriptionId,
+      polarCustomerId: profile.polarCustomerId,
+      planActivatedAt: profile.planActivatedAt,
+    };
+  },
+});
+
+// ─── Internal Queries ─────────────────────────────────────────────────────────
+
+/**
+ * Same as getMyPlan but internal — used by polar.ts actions that need
+ * polarCustomerId without going through the public API surface.
+ */
+export const getMyPlanInternal = internalQuery({
   args: {},
   returns: v.object({
     plan: v.union(v.literal("free"), v.literal("premium")),

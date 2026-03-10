@@ -1,17 +1,17 @@
 "use client";
 
 import { api } from "@/convex/_generated/api";
+import { usePlan } from "@/hooks/use-plan";
+import { useQuery } from "convex/react";
 import {
+  BadgeDollarSign,
   Calendar,
-  DollarSign,
-  Gift,
+  Crown,
   LayoutDashboard,
   PiggyBank,
   PlusCircle,
   Trophy,
 } from "lucide-react";
-import { useQuery } from "convex/react";
-
 import {
   Sidebar,
   SidebarContent,
@@ -19,9 +19,9 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/core/components/ui/sidebar";
+import { NavHeader } from "./nav-header";
 import { NavItems } from "./nav-items";
 import { NavUser } from "./nav-user";
-import { NavHeader } from "./nav-header";
 import { UpgradeBanner } from "./upgrade-banner";
 
 export default function AppSidebar({
@@ -29,6 +29,8 @@ export default function AppSidebar({
 }: React.ComponentProps<typeof Sidebar>) {
   const profile = useQuery(api.profiles.getMyProfile);
   const email = useQuery(api.profiles.getMyUserEmail);
+  const { isPremium } = usePlan();
+
   const paydayOrIncomeItem =
     profile?.workerType === "independent"
       ? {
@@ -51,7 +53,7 @@ export default function AppSidebar({
     {
       name: "Gastos",
       url: "/expenses",
-      icon: DollarSign,
+      icon: BadgeDollarSign,
     },
     {
       name: "Ahorro",
@@ -62,18 +64,23 @@ export default function AppSidebar({
       name: "Logros",
       url: "/achievements",
       icon: Trophy,
+      premium: !isPremium,
     },
     paydayOrIncomeItem,
-    {
-      name: "Ingreso extra",
-      url: "/extra-income",
-      icon: Gift,
-    },
     {
       name: "Registrar gasto",
       url: "/add-expense",
       icon: PlusCircle,
     },
+    ...(!isPremium
+      ? [
+          {
+            name: "Ver planes",
+            url: "/upgrade",
+            icon: Crown,
+          },
+        ]
+      : []),
   ];
 
   return (

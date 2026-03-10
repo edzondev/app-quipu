@@ -41,10 +41,21 @@ export default function ListCard({ envelope, month, className }: Props) {
   );
   const { profile } = useProfile();
 
+  const hasResults = results && results.length > 0;
+  const isEmpty = !isLoading && results && results.length === 0;
+
   return (
     <Card className={cn(className)}>
-      <CardContent>
-        {!isLoading && results && results.length === 0 && (
+      <CardContent
+        className={cn("relative", isLoading && !hasResults && "min-h-41")}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-[1px] rounded-xl z-10 ">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {isEmpty && (
           <div className="text-center py-12 space-y-2">
             <Receipt className="w-10 h-10 text-muted-foreground/40 mx-auto" />
             <p className="text-sm text-muted-foreground">
@@ -53,7 +64,7 @@ export default function ListCard({ envelope, month, className }: Props) {
           </div>
         )}
 
-        {!isLoading && results && results.length > 0 && (
+        {hasResults && (
           <div className="divide-y divide-border">
             {results.map((expense) => (
               <div
@@ -92,8 +103,6 @@ export default function ListCard({ envelope, month, className }: Props) {
             ))}
           </div>
         )}
-
-        {isLoading && <Loader2 className="w-8 h-8 animate-spin mx-auto" />}
 
         {status === "CanLoadMore" && (
           <button

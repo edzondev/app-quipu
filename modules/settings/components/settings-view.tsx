@@ -3,6 +3,8 @@
 import { Controller } from "react-hook-form";
 import type { Preloaded } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { PremiumGate } from "@/core/components/shared/premium-gate";
+import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import { Button } from "@/core/components/ui/button";
 import {
   Card,
@@ -60,9 +62,7 @@ export default function SettingsView({ preloaded }: Props) {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-        <p className="text-muted-foreground mt-1">
-          Ajusta tu plan financiero.
-        </p>
+        <p className="text-muted-foreground mt-1">Ajusta tu plan financiero.</p>
       </div>
 
       <form id="settings-form" onSubmit={handleSubmit} className="space-y-6">
@@ -152,7 +152,9 @@ export default function SettingsView({ preloaded }: Props) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">Necesidades</span>
-                      <span className="text-muted-foreground">{field.value}%</span>
+                      <span className="text-muted-foreground">
+                        {field.value}%
+                      </span>
                     </div>
                     <Slider
                       min={0}
@@ -171,7 +173,9 @@ export default function SettingsView({ preloaded }: Props) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">Gustos</span>
-                      <span className="text-muted-foreground">{field.value}%</span>
+                      <span className="text-muted-foreground">
+                        {field.value}%
+                      </span>
                     </div>
                     <Slider
                       min={0}
@@ -190,7 +194,9 @@ export default function SettingsView({ preloaded }: Props) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">Ahorro</span>
-                      <span className="text-muted-foreground">{field.value}%</span>
+                      <span className="text-muted-foreground">
+                        {field.value}%
+                      </span>
                     </div>
                     <Slider
                       min={0}
@@ -207,93 +213,102 @@ export default function SettingsView({ preloaded }: Props) {
               <span className="text-muted-foreground">Total asignado</span>
               <span
                 className={
-                  total === 100 ? "text-green-600 font-semibold" : "text-destructive font-semibold"
+                  total === 100
+                    ? "text-green-600 font-semibold"
+                    : "text-destructive font-semibold"
                 }
               >
                 {total}%
               </span>
             </div>
             {formState.errors.allocationNeeds && (
-              <FieldError>{formState.errors.allocationNeeds.message}</FieldError>
+              <FieldError>
+                {formState.errors.allocationNeeds.message}
+              </FieldError>
             )}
           </CardContent>
         </Card>
 
         {/* Modo Pareja */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>👫 Modo Pareja</CardTitle>
-              <Controller
-                name="coupleModeEnabled"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-          </CardHeader>
-          {coupleModeEnabled && (
-            <CardContent>
-              <FieldGroup>
+        <PremiumGate featureName="Modo Pareja">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  👫 Modo Pareja
+                  <PremiumBadge />
+                </CardTitle>
                 <Controller
-                  name="couplePartnerName"
+                  name="coupleModeEnabled"
                   control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="couple-partner-name">
-                        Nombre de tu pareja
-                      </FieldLabel>
-                      <Input
-                        id="couple-partner-name"
-                        placeholder="Ej: María"
-                        {...field}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   )}
                 />
-                <Controller
-                  name="coupleMonthlyBudget"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="couple-budget">
-                        Presupuesto mensual de pareja ({currencySymbol})
-                      </FieldLabel>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
-                          {currencySymbol}
-                        </span>
+              </div>
+            </CardHeader>
+            {coupleModeEnabled && (
+              <CardContent>
+                <FieldGroup>
+                  <Controller
+                    name="couplePartnerName"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="couple-partner-name">
+                          Nombre de tu pareja
+                        </FieldLabel>
                         <Input
-                          id="couple-budget"
-                          type="number"
-                          min={0}
-                          step={100}
-                          placeholder="0"
-                          className="pl-10"
-                          value={field.value === 0 ? "" : field.value}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            field.onChange(val === "" ? 0 : Number(val));
-                          }}
+                          id="couple-partner-name"
+                          placeholder="Ej: María"
+                          {...field}
                         />
-                      </div>
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-            </CardContent>
-          )}
-        </Card>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="coupleMonthlyBudget"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="couple-budget">
+                          Presupuesto mensual de pareja ({currencySymbol})
+                        </FieldLabel>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
+                            {currencySymbol}
+                          </span>
+                          <Input
+                            id="couple-budget"
+                            type="number"
+                            min={0}
+                            step={100}
+                            placeholder="0"
+                            className="pl-10"
+                            value={field.value === 0 ? "" : field.value}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val === "" ? 0 : Number(val));
+                            }}
+                          />
+                        </div>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
+              </CardContent>
+            )}
+          </Card>
+        </PremiumGate>
 
         {formState.errors.root && (
           <p className="text-destructive text-sm">
@@ -307,37 +322,42 @@ export default function SettingsView({ preloaded }: Props) {
       </form>
 
       {/* Cuotas y deudas (outside main form, uses separate mutations) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>📋 Mis cuotas y deudas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-muted-foreground text-sm">
-            Pagos fijos que se descuentan antes de asignar tus sobres.
-          </p>
-          {commitments.length > 0 ? (
-            <div className="divide-y">
-              {commitments.map((c) => (
-                <CommitmentItem
-                  key={c._id}
-                  id={c._id}
-                  name={c.name}
-                  amount={c.amount}
-                  envelope={c.envelope}
-                  currencySymbol={currencySymbol}
-                  onDelete={handleDeleteCommitment}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm italic">
-              No tienes cuotas registradas.
+      <PremiumGate featureName="Cuotas y deudas fijas">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              📋 Mis cuotas y deudas
+              <PremiumBadge />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              Pagos fijos que se descuentan antes de asignar tus sobres.
             </p>
-          )}
-          <Separator />
-          <AddCommitmentDialog />
-        </CardContent>
-      </Card>
+            {commitments.length > 0 ? (
+              <div className="divide-y">
+                {commitments.map((c) => (
+                  <CommitmentItem
+                    key={c._id}
+                    id={c._id}
+                    name={c.name}
+                    amount={c.amount}
+                    envelope={c.envelope}
+                    currencySymbol={currencySymbol}
+                    onDelete={handleDeleteCommitment}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm italic">
+                No tienes cuotas registradas.
+              </p>
+            )}
+            <Separator />
+            <AddCommitmentDialog />
+          </CardContent>
+        </Card>
+      </PremiumGate>
     </div>
   );
 }

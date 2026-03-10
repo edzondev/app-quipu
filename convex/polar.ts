@@ -5,6 +5,8 @@ import type { DataModel } from "./_generated/dataModel";
 import { components, internal } from "./_generated/api";
 import { PolarCore } from "@polar-sh/sdk/core.js";
 import { checkoutsCreate } from "@polar-sh/sdk/funcs/checkoutsCreate.js";
+import { customerSessionsCreate } from "@polar-sh/sdk/funcs/customerSessionsCreate.js";
+import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
 
 // ─── Polar Client ─────────────────────────────────────────────────────────────
 // Reads from Convex env vars:
@@ -54,6 +56,65 @@ export const {
   changeCurrentSubscription,
 } = polar.api();
 
+// Convenience action — creates a Polar customer portal session without relying
+// on the component's stale customer cache.
+//
+// Strategy (in order):
+//   1. Try externalCustomerId = userId (works if the customer was created with
+//      externalCustomerId set, i.e. checkouts after this fix was deployed).
+//   2. Fall back to the polarCustomerId stored in our profile (works for
+//      existing customers created before the externalCustomerId fix).
+//      Also backfills externalCustomerId on the Polar customer so future
+//      calls use path #1.
+export const createCustomerPortalSession = action({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    const { userId } = await ctx.runQuery(internal.users.getCurrentUserInfo);
+    const planData = await ctx.runQuery(
+      internal.subscriptions.getMyPlanInternal,
+    );
+
+    const polarClient = new PolarCore({
+      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      server:
+        (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
+    });
+
+    // ── Path 1: externalCustomerId (preferred, no cache issues) ────────────
+    const byExternal = await customerSessionsCreate(polarClient, {
+      externalCustomerId: userId,
+    });
+
+    if (byExternal.ok) {
+      return byExternal.value.customerPortalUrl;
+    }
+
+    // ── Path 2: fall back to polarCustomerId stored in our profile ──────────
+    const polarCustomerId = planData?.polarCustomerId;
+    if (!polarCustomerId) {
+      // Surface a clear message instead of the raw Polar error
+      throw new Error(
+        "No se encontró una suscripción activa. Completa tu primer pago para acceder al portal.",
+      );
+    }
+
+    const byId = await customerSessionsCreate(polarClient, {
+      customerId: polarCustomerId,
+    });
+
+    if (!byId.ok) throw byId.error;
+
+    // Backfill externalCustomerId on the Polar customer so path #1 works next time
+    void customersUpdate(polarClient, {
+      id: polarCustomerId,
+      customerUpdate: { externalId: userId },
+    });
+
+    return byId.value.customerPortalUrl;
+  },
+});
+
 // Convenience action — bypasses the component's customer cache by calling the
 // Polar API directly with customerEmail. This avoids "Customer does not exist"
 // errors caused by stale customerId entries in the polar component's DB.
@@ -76,9 +137,12 @@ export const createPremiumCheckout = action({
         (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
     });
 
-    // Use customerEmail (not customerId) to avoid stale component customer cache
+    // Pass both customerEmail and externalCustomerId so Polar links the customer
+    // to our userId from the start — this makes the portal session work reliably
+    // via externalCustomerId without depending on the component's internal cache.
     const checkout = await checkoutsCreate(polarClient, {
       customerEmail: email,
+      externalCustomerId: userId,
       products: [productId],
       embedOrigin: origin,
       successUrl,

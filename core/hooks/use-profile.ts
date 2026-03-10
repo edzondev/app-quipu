@@ -13,12 +13,14 @@ import { api } from "@/convex/_generated/api";
  *
  * `profile` is `undefined` while loading, `null` when unauthenticated
  * or before onboarding. Flags default to `false` in both cases.
+ *
+ * Note: for plan/premium checks use `usePlan()` from `@/hooks/use-plan`
+ * instead — it is the single source of truth for subscription state.
  */
 export function useProfile() {
   const profile = useQuery(api.profiles.getMyProfile);
 
   const hasJuntos = profile?.coupleModeEnabled ?? false;
-  const isPremium = profile?.plan === "premium";
 
-  return { profile, hasJuntos, isPremium };
+  return { profile, hasJuntos };
 }

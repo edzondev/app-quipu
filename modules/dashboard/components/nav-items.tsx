@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/core/components/ui/sidebar";
+import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ export function NavItems({
     name: string;
     url: string;
     icon: LucideIcon;
+    premium?: boolean;
   }[];
 }) {
   const pathname = usePathname();
@@ -33,9 +35,12 @@ export function NavItems({
             })}
           >
             <SidebarMenuButton tooltip={item.name} asChild>
-              <Link href={item.url}>
+              <Link href={item.url} aria-label={item.name} prefetch>
                 <item.icon />
-                <span>{item.name}</span>
+                <span className="flex items-center gap-1.5">
+                  {item.name}
+                  {item.premium ? <PremiumBadge /> : null}
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

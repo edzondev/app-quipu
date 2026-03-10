@@ -14,7 +14,8 @@ import {
 import { Button } from "@/core/components/ui/button";
 import { Field, FieldError } from "@/core/components/ui/field";
 import { cn } from "@/lib/utils";
-import { Plus, Delete } from "lucide-react";
+import { Crown, Plus, Delete } from "lucide-react";
+import Link from "next/link";
 
 const HIDDEN_ROUTES = ["/add-expense", "/", "/onboarding"];
 
@@ -35,8 +36,15 @@ const KEYPAD = [
 
 export default function QuickExpenseFAB() {
   const pathname = usePathname();
-  const { mutate, form, handleKeypad, displayValue, handleEnvelopeChange } =
-    useCreateExpense();
+  const {
+    mutate,
+    form,
+    handleKeypad,
+    displayValue,
+    handleEnvelopeChange,
+    isAtLimit,
+    limitLabel,
+  } = useCreateExpense();
   const { envelopes } = useEnvelopes();
   const selectedEnvelope = useWatch({
     control: form.control,
@@ -61,12 +69,53 @@ export default function QuickExpenseFAB() {
 
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-center text-lg">
+          <DrawerTitle className="text-center text-lg flex items-center justify-center gap-2">
             Gasto rápido
+            {limitLabel !== null ? (
+              <span
+                className={cn(
+                  "text-xs font-medium px-2 py-0.5 rounded-full",
+                  isAtLimit
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {limitLabel}
+              </span>
+            ) : null}
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4 pb-6 space-y-4">
+        {/* Limit reached state */}
+        {isAtLimit ? (
+          <div className="px-4 pb-8 flex flex-col items-center gap-4 text-center">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 mt-2">
+              <Crown className="w-6 h-6 text-amber-500" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">
+                Límite del plan gratuito alcanzado
+              </p>
+              <p className="text-xs text-muted-foreground max-w-56">
+                Alcanzaste los 20 gastos del mes. Hazte Premium para registrar
+                gastos ilimitados.
+              </p>
+            </div>
+            <Button size="sm" asChild className="gap-1.5">
+              <Link href="/upgrade">
+                <Crown className="w-3.5 h-3.5" />
+                Ver planes
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+
+        <div
+          className={cn(
+            "px-4 pb-6 space-y-4",
+            isAtLimit ? "hidden" : undefined,
+          )}
+        >
           {/* Envelope cards */}
           <div className="flex gap-3">
             {envelopes &&

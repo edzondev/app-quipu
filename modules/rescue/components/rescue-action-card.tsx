@@ -32,7 +32,7 @@ export default function RescueActionCard({
       className={cn(
         "w-full text-left flex flex-col gap-3 rounded-xl border p-4 transition-colors",
         disabled
-          ? "cursor-not-allowed opacity-50 border-border bg-muted/30"
+          ? "cursor-not-allowed opacity-70 border-border bg-muted/30"
           : selected
             ? "cursor-pointer border-destructive bg-destructive/5 ring-2 ring-destructive/40"
             : "cursor-pointer border-border hover:border-destructive/50",

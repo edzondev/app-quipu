@@ -11,7 +11,7 @@ import { LandingFooter } from "@/modules/landing/components/landing-footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <main className="min-h-dvh bg-background text-foreground">
       <LandingNavbar />
       <HeroSection />
       <ProblemSection />
@@ -22,6 +22,6 @@ export default function Home() {
       <PricingSection />
       <CTASection />
       <LandingFooter />
-    </div>
+    </main>
   );
 }

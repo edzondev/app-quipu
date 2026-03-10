@@ -11,9 +11,12 @@ import {
 import { Input } from "@/core/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRegisterExpense } from "../hooks/use-register-expense";
+import { PremiumBadge } from "@/core/components/shared/premium-badge";
+import { Crown } from "lucide-react";
 
 export function RegisterExpenseForm() {
-  const { form, mutate, profile, envelopes } = useRegisterExpense();
+  const { form, mutate, profile, envelopes, isAtLimit, limitLabel } =
+    useRegisterExpense();
 
   if (!envelopes) {
     return (
@@ -39,7 +42,21 @@ export function RegisterExpenseForm() {
     <form className="flex flex-col gap-6" onSubmit={form.handleSubmit(mutate)}>
       <FieldGroup>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold">Registrar gasto</h1>
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-2xl font-bold">Registrar gasto</h1>
+            {limitLabel !== null ? (
+              <span
+                className={cn(
+                  "text-xs font-medium px-2 py-0.5 rounded-full",
+                  isAtLimit
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {limitLabel} gastos
+              </span>
+            ) : null}
+          </div>
           <p className="text-sm text-muted-foreground">
             ¿En qué sobre va este gasto?
           </p>
@@ -159,11 +176,27 @@ export function RegisterExpenseForm() {
           </p>
         )}
 
+        {/* Limit reached banner */}
+        {isAtLimit ? (
+          <div className="flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 p-4">
+            <Crown className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                Límite del plan gratuito alcanzado
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-500">
+                Alcanzaste los 20 gastos del mes. Hazte Premium para registrar
+                gastos ilimitados.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         {/* Submit */}
         <Field>
           <Button
             type="submit"
-            disabled={form.formState.isSubmitting}
+            disabled={form.formState.isSubmitting || isAtLimit}
             className="h-12 w-full"
           >
             {form.formState.isSubmitting ? "Registrando..." : "Registrar gasto"}

@@ -5,6 +5,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authClient } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
 
 export const useLogin = () => {
   const form = useForm<LoginSchema>({
@@ -16,11 +17,12 @@ export const useLogin = () => {
   });
 
   const handleSubmitLogin = async (data: LoginSchema) => {
-    console.log({ data });
     await authClient.signIn.email({
       email: data.email,
       password: data.password,
     });
+
+    redirect("/dashboard");
   };
 
   return {
