@@ -6,6 +6,7 @@ import { usePlan } from "@/hooks/use-plan";
 import { Crown } from "lucide-react";
 import { useAction } from "convex/react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type Props = {
   className?: string;
@@ -36,6 +37,8 @@ export function UpgradeCheckoutButton({ className, size = "default" }: Props) {
         successUrl: `${window.location.origin}/success`,
       });
       window.location.href = url;
+    } catch {
+      toast.error("No se pudo iniciar el pago. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useAction } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function PremiumCheckoutButton() {
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,8 @@ export default function PremiumCheckoutButton() {
         successUrl: `${window.location.origin}/success`,
       });
       window.location.href = url;
+    } catch {
+      toast.error("No se pudo iniciar el pago. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }

@@ -14,9 +14,7 @@ export default function SummaryCard({ preloaded }: Props) {
   const data = usePreloadedQuery(preloaded);
   const { hasJuntos } = useProfile();
 
-  const isLoading = data === undefined;
-
-  if (isLoading) {
+  if (data === undefined || data === null) {
     return null;
   }
   return (
