@@ -29,25 +29,25 @@ export default function SummaryCard({ preloaded }: Props) {
           )}
         >
           <div>
-            <p className="text-2xl font-bold">{data?.total}</p>
+            <p className="text-2xl font-bold">{data.total.toFixed(2)}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-envelope-needs">
-              {data?.needs}
+              {data.needs.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground">Necesidades</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-envelope-wants">
-              {data?.wants}
+              {data.wants.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground">Gustos</p>
           </div>
           {hasJuntos && (
             <div>
               <p className="text-2xl font-bold text-envelope-juntos">
-                {data?.juntos}
+                {(data.juntos ?? 0).toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground">Juntos</p>
             </div>

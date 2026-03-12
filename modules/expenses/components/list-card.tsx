@@ -96,7 +96,7 @@ export default function ListCard({ envelope, month, className }: Props) {
                     {getEnvelopeLabel(expense.envelope)}
                   </Badge>
                   <span className="text-sm font-semibold">
-                    - S/ {expense.amount.toFixed(2)}
+                    - {profile?.currencySymbol ?? "S/"} {expense.amount.toFixed(2)}
                   </span>
                 </div>
               </div>
