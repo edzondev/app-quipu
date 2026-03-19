@@ -91,8 +91,8 @@ export function SavingsClient({
             className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
             style={{ animationDelay: `${i * 100}ms` }}
           >
-            <Card className="h-full">
-              <CardContent className="space-y-4">
+            <Card className="h-full border-0 shadow-none">
+              <CardContent className="space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {sub.icon}
@@ -147,8 +147,8 @@ export function SavingsClient({
             className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
             style={{ animationDelay: `${i * 80}ms` }}
           >
-            <Card>
-              <CardContent className="space-y-3">
+            <Card className="border-0 shadow-none">
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{goal.emoji}</span>

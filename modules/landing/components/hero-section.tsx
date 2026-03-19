@@ -13,7 +13,7 @@ export default function HeroSection() {
       </p>
       <div className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-full px-4 py-1.5">
         <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-        Sin conexión bancaria · Tu banco no sabe que usas Quipu
+        Sin acceso a tu banco. Solo tú decides qué registras.
       </div>
 
       {/* Dashboard mockup */}

@@ -81,8 +81,8 @@ export default function EnvelopeCard({
       className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
       style={{ animationDelay: `${index * 100 + 200}ms` }}
     >
-      <Card className="overflow-hidden h-full">
-        <CardContent className="space-y-3">
+      <Card className="overflow-hidden h-full border-0 shadow-none">
+        <CardContent className="space-y-4">
           {/* Header row */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2.5">

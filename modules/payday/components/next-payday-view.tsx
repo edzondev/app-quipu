@@ -23,7 +23,7 @@ export default function NextPaydayView({
   });
 
   return (
-    <div className="flex flex-col items-center justify-center text-center gap-6 py-16 animate-in fade-in duration-300">
+    <div className="flex flex-col items-center justify-center text-center gap-8 py-20 animate-in fade-in duration-300">
       <div className="flex items-center justify-center w-20 h-20 rounded-full bg-muted">
         <CalendarDays className="w-10 h-10 text-muted-foreground" />
       </div>

@@ -6,11 +6,14 @@ type Props = {
   lastAchievement: { icon: string; title: string } | null | undefined;
 };
 
-export default function StreakBanner({ currentStreak, lastAchievement }: Props) {
+export default function StreakBanner({
+  currentStreak,
+  lastAchievement,
+}: Props) {
   return (
     <Link href="/achievements" prefetch={false}>
       <div
-        className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 flex items-center gap-3 mb-6 hover:bg-amber-100 dark:hover:bg-amber-950"
+        className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both rounded-xl bg-amber-50 dark:bg-amber-950/20 p-5 flex items-center gap-3 mb-6 hover:bg-amber-100 dark:hover:bg-amber-950"
         style={{ animationDelay: "400ms" }}
       >
         <span className="text-xl shrink-0">🔥</span>

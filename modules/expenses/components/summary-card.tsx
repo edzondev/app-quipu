@@ -18,7 +18,7 @@ export default function SummaryCard({ preloaded }: Props) {
     return null;
   }
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 border-0 shadow-none">
       <CardContent>
         <div
           className={cn(

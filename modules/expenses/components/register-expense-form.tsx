@@ -1,5 +1,6 @@
 "use client";
 
+import { Crown } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { Button } from "@/core/components/ui/button";
 import {
@@ -11,8 +12,6 @@ import {
 import { Input } from "@/core/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRegisterExpense } from "../hooks/use-register-expense";
-import { PremiumBadge } from "@/core/components/shared/premium-badge";
-import { Crown } from "lucide-react";
 
 export function RegisterExpenseForm() {
   const { form, mutate, profile, envelopes, isAtLimit, limitLabel } =
@@ -75,7 +74,7 @@ export function RegisterExpenseForm() {
                     key={env.key}
                     onClick={() => field.onChange(env.key)}
                     className={cn(
-                      "rounded-xl border-2 p-4 text-left transition-colors",
+                      "rounded-xl border-2 p-5 text-left transition-colors",
                       field.value === env.key
                         ? "border-primary bg-primary/5"
                         : "border-border bg-card",
@@ -182,7 +181,7 @@ export function RegisterExpenseForm() {
 
         {/* Limit reached banner */}
         {isAtLimit ? (
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 p-4">
+          <div className="flex items-start gap-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 p-5">
             <Crown className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
