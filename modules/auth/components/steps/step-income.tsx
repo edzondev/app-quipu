@@ -31,7 +31,19 @@ export default function StepIncome({ form }: Props) {
     name: "monthlyIncome",
   });
 
+  const paydays = useWatch({
+    control: form.control,
+    name: "paydays",
+  });
+  const initialRemainingBudget = useWatch({
+    control: form.control,
+    name: "initialRemainingBudget",
+  });
+
   const isIndependent = workerType === "independent";
+  const todayDay = new Date().getDate();
+  const isMidMonth =
+    !isIndependent && paydays != null && !paydays.includes(todayDay);
 
   return (
     <div className="space-y-6">
@@ -141,11 +153,72 @@ export default function StepIncome({ form }: Props) {
         )}
       </FieldGroup>
 
+      {isMidMonth && monthlyIncome > 0 && (
+        <div className="animate-in fade-in duration-300 rounded-xl border-2 border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-4 space-y-3">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+              Hoy no es tu día de pago
+            </p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-400/70">
+              Como te estás registrando a mitad de mes, necesitamos saber cuánto
+              te queda disponible para calcular tu presupuesto real hasta tu
+              próximo día de pago.
+            </p>
+          </div>
+          <Controller
+            name="initialRemainingBudget"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="onboarding-remaining-budget">
+                  ¿Cuánto te queda disponible de tu sueldo? ({currencySymbol})
+                </FieldLabel>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
+                    {currencySymbol}
+                  </span>
+                  <Input
+                    id="onboarding-remaining-budget"
+                    type="number"
+                    min={0}
+                    max={monthlyIncome}
+                    step={100}
+                    placeholder="0"
+                    aria-invalid={fieldState.invalid}
+                    className="pl-10 text-base font-semibold"
+                    value={
+                      field.value === 0 || field.value == null
+                        ? ""
+                        : field.value
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val === "" ? 0 : Number(val));
+                    }}
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+                {field.value != null &&
+                  field.value > 0 &&
+                  field.value > monthlyIncome && (
+                    <p className="text-xs text-amber-600">
+                      El monto supera tu sueldo mensual
+                    </p>
+                  )}
+              </Field>
+            )}
+          />
+        </div>
+      )}
+
       {monthlyIncome > 0 && (
         <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-4 space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
-            Vista previa — asignación{" "}
-            {payFrequency === "monthly" ? "mensual" : "por quincena"}:
+            {isMidMonth && initialRemainingBudget
+              ? "Vista previa — presupuesto con lo que te queda:"
+              : `Vista previa — asignación ${payFrequency === "monthly" ? "mensual" : "por quincena"}:`}
           </p>
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
@@ -157,10 +230,13 @@ export default function StepIncome({ form }: Props) {
               { label: "Gustos", pct: 0.3, color: "text-envelope-wants" },
               { label: "Ahorro", pct: 0.2, color: "text-envelope-savings" },
             ].map((item) => {
-              const amount =
-                payFrequency === "monthly"
-                  ? monthlyIncome * item.pct
-                  : (monthlyIncome / 2) * item.pct;
+              const base =
+                isMidMonth && initialRemainingBudget
+                  ? initialRemainingBudget
+                  : payFrequency === "biweekly"
+                    ? monthlyIncome / 2
+                    : monthlyIncome;
+              const amount = base * item.pct;
               return (
                 <div key={item.label}>
                   <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -171,7 +247,7 @@ export default function StepIncome({ form }: Props) {
               );
             })}
           </div>
-          {payFrequency === "biweekly" && (
+          {!isMidMonth && payFrequency === "biweekly" && (
             <p className="text-xs text-muted-foreground text-center">
               × 2 quincenas = {currencySymbol} {monthlyIncome.toLocaleString()}{" "}
               / mes

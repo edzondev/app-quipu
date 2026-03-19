@@ -51,6 +51,7 @@ export function useOnboarding() {
       monthlyIncome: 0,
       payFrequency: "monthly",
       paydays: [1],
+      initialRemainingBudget: undefined,
       allocationNeeds: 50,
       allocationWants: 30,
       allocationSavings: 20,
@@ -108,6 +109,13 @@ export function useOnboarding() {
       // Investment goal target: 1 year of monthly savings contributions
       const savingsGoalInvestment = Math.round(monthlySavings * 12);
 
+      // Determine if user is signing up mid-month (not on their payday)
+      const todayDay = new Date().getDate();
+      const isMidMonth =
+        !isIndependent &&
+        data.paydays != null &&
+        !data.paydays.includes(todayDay);
+
       await createProfile({
         name: data.name,
         country: data.country,
@@ -125,6 +133,10 @@ export function useOnboarding() {
         allocationSavings: data.allocationSavings,
         savingsGoalEmergency,
         savingsGoalInvestment,
+        initialRemainingBudget:
+          isMidMonth && data.initialRemainingBudget
+            ? data.initialRemainingBudget
+            : undefined,
       });
       await completeOnboarding();
       router.push("/dashboard");

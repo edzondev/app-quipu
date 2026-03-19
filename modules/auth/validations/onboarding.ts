@@ -55,6 +55,9 @@ export const stepThreeSchema = z.object({
         .max(31, "El día debe ser entre 1 y 31"),
     ),
   ),
+  initialRemainingBudget: z.optional(
+    z.number().min(0, "El monto debe ser mayor o igual a 0"),
+  ),
 });
 
 export const stepFourSchema = z
@@ -97,6 +100,9 @@ export const onboardingSchema = z
     estimatedMonthlyIncome: z.optional(z.number().positive()),
     payFrequency: z.optional(z.enum(["monthly", "biweekly"])),
     paydays: z.optional(z.array(z.number().int().min(1).max(31))),
+    initialRemainingBudget: z.optional(
+      z.number().min(0, "El monto debe ser mayor o igual a 0"),
+    ),
     allocationNeeds: z.number().int().positive(),
     allocationWants: z.number().int().positive(),
     allocationSavings: z.number().int().positive(),

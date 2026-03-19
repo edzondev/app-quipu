@@ -1,6 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUserIdOrThrow, getProfileOrThrow } from "./helpers";
+import {
+  currentMonthString,
+  getAuthUserIdOrThrow,
+  getProfileOrThrow,
+} from "./helpers";
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
@@ -61,6 +65,8 @@ export const createProfile = mutation({
     // Savings goal targets (computed from income on the client)
     savingsGoalEmergency: v.optional(v.number()),
     savingsGoalInvestment: v.optional(v.number()),
+    // Mid-month onboarding: how much the user has left this month
+    initialRemainingBudget: v.optional(v.number()),
   },
   returns: v.id("profiles"),
   handler: async (ctx, args) => {
@@ -95,6 +101,11 @@ export const createProfile = mutation({
       savingsGoalEmergency: args.savingsGoalEmergency ?? 0,
       //savingsGoalShortTerm: 0,
       savingsGoalInvestment: args.savingsGoalInvestment ?? 0,
+      initialRemainingBudget: args.initialRemainingBudget,
+      initialBudgetMonth:
+        args.initialRemainingBudget !== undefined
+          ? currentMonthString()
+          : undefined,
       coupleModeEnabled: false,
       couplePartnerName: "",
       coupleMonthlyBudget: 0,

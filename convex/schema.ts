@@ -42,6 +42,8 @@ export default defineSchema({
     paydays: v.optional(v.array(v.number())),
     monthlyIncome: v.number(),
     estimatedMonthlyIncome: v.optional(v.number()),
+    initialRemainingBudget: v.optional(v.number()),
+    initialBudgetMonth: v.optional(v.string()),
     envelopeNeeds: v.optional(v.number()),
     envelopeWants: v.optional(v.number()),
     envelopeSavings: v.optional(v.number()),
