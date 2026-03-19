@@ -94,6 +94,9 @@ export async function computeEnvelopes(
     envelopeNeeds?: number;
     envelopeWants?: number;
     envelopeSavings?: number;
+    initialRemainingBudget?: number;
+    initialBudgetMonth?: string;
+    lastPaydayProcessedAt?: string;
   },
   month: string,
 ) {
@@ -122,7 +125,20 @@ export async function computeEnvelopes(
     netIncome = allocatedNeeds + allocatedWants + allocatedSavings;
   } else {
     // Dependent workers: calculate from monthly income
-    netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
+    // If user signed up mid-month and reported remaining budget, use that
+    // instead of full salary until the first payday is processed.
+    const isFirstPartialMonth =
+      profile.initialRemainingBudget !== undefined &&
+      profile.initialBudgetMonth === month &&
+      !profile.lastPaydayProcessedAt;
+
+    if (isFirstPartialMonth) {
+      // User reported what they truly have left — already net of spent money
+      // Don't subtract fixed commitments again
+      netIncome = profile.initialRemainingBudget ?? 0;
+    } else {
+      netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
+    }
     allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
     allocatedWants = netIncome * (profile.allocationWants / 100);
     allocatedSavings = netIncome * (profile.allocationSavings / 100);
