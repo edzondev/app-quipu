@@ -29,7 +29,11 @@ export function DeleteAccountSection() {
   const [confirmEmail, setConfirmEmail] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const emailIsLoading = email === undefined;
+  const emailIsAvailable = typeof email === "string" && email.length > 0;
+
   const emailMatches = confirmEmail === email;
+  const dialogDisabled = !emailIsAvailable || isDeleting;
 
   const handleDelete = async () => {
     if (!emailMatches || !email) return;
@@ -38,9 +42,11 @@ export function DeleteAccountSection() {
       await deleteAccount({ confirmEmail });
       await authClient.signOut();
       toast.success("Tu cuenta ha sido eliminada.");
+      setOpen(false);
       router.push("/");
     } catch {
       toast.error("No se pudo eliminar la cuenta. Inténtalo de nuevo.");
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -66,7 +72,11 @@ export function DeleteAccountSection() {
           }}
         >
           <DialogTrigger asChild>
-            <Button variant="destructive" className="gap-2">
+            <Button
+              variant="destructive"
+              className="gap-2"
+              disabled={dialogDisabled}
+            >
               <Trash2 className="w-4 h-4" />
               Eliminar cuenta
             </Button>
@@ -83,13 +93,22 @@ export function DeleteAccountSection() {
 
             <div className="space-y-2 py-2">
               <p className="text-sm">
-                Escribe <strong>{email}</strong> para confirmar:
+                {emailIsAvailable ? (
+                  <>
+                    Escribe <strong>{email}</strong> para confirmar:
+                  </>
+                ) : emailIsLoading ? (
+                  "Cargando correo para confirmar..."
+                ) : (
+                  "No hay un correo disponible para confirmar la eliminación."
+                )}
               </p>
               <Input
                 value={confirmEmail}
                 onChange={(e) => setConfirmEmail(e.target.value)}
                 placeholder="tu@email.com"
                 autoComplete="off"
+                disabled={!emailIsAvailable}
               />
             </div>
 

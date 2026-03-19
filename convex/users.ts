@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation } from "./_generated/server";
 import { getProfileOrThrow } from "./helpers";
 
@@ -35,8 +35,15 @@ export const deleteAccount = mutation({
     const profile = await getProfileOrThrow(ctx);
 
     // Verify the confirmation email matches the session email
+    if (!identity.email) {
+      throw new ConvexError(
+        "No podemos verificar tu correo porque el proveedor no lo provee.",
+      );
+    }
     if (args.confirmEmail !== identity.email) {
-      throw new Error("El email de confirmación no coincide con tu cuenta.");
+      throw new ConvexError(
+        "El email de confirmación no coincide con tu cuenta.",
+      );
     }
 
     const profileId = profile._id;

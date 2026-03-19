@@ -2,7 +2,7 @@
 
 import type { Preloaded } from "convex/react";
 import { Controller } from "react-hook-form";
-import type { api } from "@/convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { Button } from "@/core/components/ui/button";

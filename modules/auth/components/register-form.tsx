@@ -43,14 +43,15 @@ function PasswordField({
     <Controller
       name="password"
       control={form.control}
-      render={({ field }) => (
-        <Field>
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
           <FieldLabel htmlFor="password">Contraseña</FieldLabel>
           <div className="relative">
             <Input
               {...field}
               type={isPasswordVisible ? "text" : "password"}
               id="password"
+              aria-invalid={fieldState.invalid}
               placeholder="*********"
               disabled={isSubmitting}
               readOnly={isSubmitting}
@@ -69,6 +70,7 @@ function PasswordField({
                 <EyeIcon aria-hidden="true" size={16} />
               )}
             </button>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </div>
           {showRules && (
             <ul className="space-y-1 mt-2 text-xs">
