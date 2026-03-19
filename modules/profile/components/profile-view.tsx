@@ -3,10 +3,7 @@
 import { Controller } from "react-hook-form";
 import type { Preloaded } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/core/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/core/components/ui/avatar";
 import { Button } from "@/core/components/ui/button";
 import {
   Card,
@@ -142,7 +139,10 @@ export default function ProfileView({ preloaded }: Props) {
                       </SelectTrigger>
                       <SelectContent>
                         {COUNTRY_CONFIG.map((c) => (
-                          <SelectItem key={c.currencyCode} value={c.currencyName}>
+                          <SelectItem
+                            key={c.currencyCode}
+                            value={c.currencyName}
+                          >
                             {c.currencySymbol} {c.currencyName}
                           </SelectItem>
                         ))}

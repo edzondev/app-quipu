@@ -20,8 +20,8 @@ export default function QuickActionCards({ coachText }: Props) {
       style={{ animationDelay: "500ms" }}
     >
       {/* Coach message card */}
-      <Card>
-        <CardContent className="flex items-start gap-3">
+      <Card className="border-0 shadow-none">
+        <CardContent className="flex items-start gap-4">
           <MessageCircle className="w-5 h-5 text-envelope-savings shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-xs font-semibold text-envelope-savings mb-1">
@@ -46,8 +46,8 @@ export default function QuickActionCards({ coachText }: Props) {
         className="text-left"
         onClick={() => router.push("/savings")}
       >
-        <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer">
-          <CardContent className="flex items-start justify-between gap-3 h-full">
+        <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer border-0 shadow-none">
+          <CardContent className="flex items-start justify-between gap-4 h-full">
             <div className="flex items-start gap-3">
               <TrendingUp className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
               <div>

@@ -186,14 +186,10 @@ export default function StepIncome({ form }: Props) {
                     placeholder="0"
                     aria-invalid={fieldState.invalid}
                     className="pl-10 text-base font-semibold"
-                    value={
-                      field.value === 0 || field.value == null
-                        ? ""
-                        : field.value
-                    }
+                    value={field.value == null ? "" : field.value}
                     onChange={(e) => {
                       const val = e.target.value;
-                      field.onChange(val === "" ? 0 : Number(val));
+                      field.onChange(val === "" ? undefined : Number(val));
                     }}
                   />
                 </div>
@@ -216,7 +212,7 @@ export default function StepIncome({ form }: Props) {
       {monthlyIncome > 0 && (
         <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-4 space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
-            {isMidMonth && initialRemainingBudget
+            {isMidMonth && initialRemainingBudget != null
               ? "Vista previa — presupuesto con lo que te queda:"
               : `Vista previa — asignación ${payFrequency === "monthly" ? "mensual" : "por quincena"}:`}
           </p>
@@ -231,7 +227,7 @@ export default function StepIncome({ form }: Props) {
               { label: "Ahorro", pct: 0.2, color: "text-envelope-savings" },
             ].map((item) => {
               const base =
-                isMidMonth && initialRemainingBudget
+                isMidMonth && initialRemainingBudget != null
                   ? initialRemainingBudget
                   : payFrequency === "biweekly"
                     ? monthlyIncome / 2

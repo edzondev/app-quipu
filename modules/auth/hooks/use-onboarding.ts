@@ -134,7 +134,7 @@ export function useOnboarding() {
         savingsGoalEmergency,
         savingsGoalInvestment,
         initialRemainingBudget:
-          isMidMonth && data.initialRemainingBudget
+          isMidMonth && data.initialRemainingBudget !== undefined
             ? data.initialRemainingBudget
             : undefined,
       });

@@ -39,7 +39,9 @@ test.describe("Onboarding — Trabajador dependiente (sueldo fijo)", () => {
     ).toBeVisible({ timeout: 10_000 });
 
     await expect(
-      page.locator("p", { hasText: "En 3 pasos tendrás tu plan financiero listo." }),
+      page.locator("p", {
+        hasText: "En 3 pasos tendrás tu plan financiero listo.",
+      }),
     ).toBeVisible();
 
     // The 3 envelope preview cards should be visible
@@ -88,9 +90,9 @@ test.describe("Onboarding — Trabajador dependiente (sueldo fijo)", () => {
     await page.locator("button", { hasText: "Continuar" }).click();
 
     // ── Step 4: Ingresos ──
-    await expect(
-      page.locator("h2", { hasText: "Tus ingresos" }),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("h2", { hasText: "Tus ingresos" })).toBeVisible({
+      timeout: 5_000,
+    });
 
     // For dependent worker, verify frequency and payday fields are visible
     await expect(page.locator("text=Frecuencia de pago")).toBeVisible();
@@ -148,9 +150,9 @@ test.describe("Onboarding — Trabajador dependiente (sueldo fijo)", () => {
     expect(new URL(page.url()).pathname).toBe("/dashboard");
 
     // Verify the dashboard shows the three envelopes
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator("text=Gustos").first()).toBeVisible();
     await expect(page.locator("text=Ahorro").first()).toBeVisible();
   });
@@ -202,9 +204,9 @@ test.describe("Onboarding — Trabajador independiente (ingresos variables)", ()
     await page.locator("button", { hasText: "Continuar" }).click();
 
     // ── Step 4: Ingresos (independent) ──
-    await expect(
-      page.locator("h2", { hasText: "Tus ingresos" }),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("h2", { hasText: "Tus ingresos" })).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Verify the label says "¿Cuánto esperas ganar este mes?"
     await expect(
@@ -304,22 +306,20 @@ test.describe("Onboarding — Validaciones", () => {
     await page.locator("button", { hasText: "Continuar" }).click();
 
     // Step 4 (Income): try to continue with empty income
-    await expect(
-      page.locator("h2", { hasText: "Tus ingresos" }),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("h2", { hasText: "Tus ingresos" })).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Don't fill anything, just click continue
     await page.locator("button", { hasText: "Continuar" }).click();
 
     // Should remain on the same step with a validation error
-    await expect(
-      page.locator("h2", { hasText: "Tus ingresos" }),
-    ).toBeVisible();
+    await expect(page.locator("h2", { hasText: "Tus ingresos" })).toBeVisible();
 
     // Error should mention that income must be greater than 0
-    await expect(
-      page.locator("text=/ingreso|mayor a 0/i").first(),
-    ).toBeVisible({ timeout: 3_000 });
+    await expect(page.locator("text=/ingreso|mayor a 0/i").first()).toBeVisible(
+      { timeout: 3_000 },
+    );
   });
 
   test("no debe avanzar sin seleccionar frecuencia para trabajador dependiente", async ({
@@ -349,9 +349,9 @@ test.describe("Onboarding — Validaciones", () => {
     await page.locator("button", { hasText: "Continuar" }).click();
 
     // Fill income but don't select frequency (neither monthly nor biweekly)
-    await expect(
-      page.locator("h2", { hasText: "Tus ingresos" }),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("h2", { hasText: "Tus ingresos" })).toBeVisible({
+      timeout: 5_000,
+    });
     await page.fill('input[id="onboarding-income"]', "3000");
 
     // Note: The default payFrequency is "monthly" and paydays is [1] from

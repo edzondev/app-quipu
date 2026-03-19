@@ -47,8 +47,8 @@ export default function RecentExpenses({
       className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both"
       style={{ animationDelay: "600ms" }}
     >
-      <Card>
-        <CardContent className="space-y-4">
+      <Card className="shadow-none">
+        <CardContent className="space-y-5">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">

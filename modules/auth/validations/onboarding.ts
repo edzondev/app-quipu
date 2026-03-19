@@ -32,33 +32,43 @@ export const stepWorkerTypeSchema = z.object({
   }),
 });
 
-export const stepThreeSchema = z.object({
-  workerType: z.enum(["dependent", "independent"]),
-  monthlyIncome: z
-    .number({ error: "Ingresa tu ingreso mensual" })
-    .positive("El ingreso debe ser un número")
-    .min(1, "El ingreso debe ser mayor a 0"),
-  estimatedMonthlyIncome: z.optional(
-    z.number().positive("El ingreso debe ser mayor a 0"),
-  ),
-  payFrequency: z.optional(
-    z.enum(["monthly", "biweekly"], {
-      error: "Selecciona la frecuencia de pago",
-    }),
-  ),
-  paydays: z.optional(
-    z.array(
-      z
-        .number()
-        .int()
-        .min(1, "El día debe ser entre 1 y 31")
-        .max(31, "El día debe ser entre 1 y 31"),
+export const stepThreeSchema = z
+  .object({
+    workerType: z.enum(["dependent", "independent"]),
+    monthlyIncome: z
+      .number({ error: "Ingresa tu ingreso mensual" })
+      .positive("El ingreso debe ser un número")
+      .min(1, "El ingreso debe ser mayor a 0"),
+    estimatedMonthlyIncome: z.optional(
+      z.number().positive("El ingreso debe ser mayor a 0"),
     ),
-  ),
-  initialRemainingBudget: z.optional(
-    z.number().min(0, "El monto debe ser mayor o igual a 0"),
-  ),
-});
+    payFrequency: z.optional(
+      z.enum(["monthly", "biweekly"], {
+        error: "Selecciona la frecuencia de pago",
+      }),
+    ),
+    paydays: z.optional(
+      z.array(
+        z
+          .number()
+          .int()
+          .min(1, "El día debe ser entre 1 y 31")
+          .max(31, "El día debe ser entre 1 y 31"),
+      ),
+    ),
+    initialRemainingBudget: z.optional(
+      z.number().min(0, "El monto debe ser mayor o igual a 0"),
+    ),
+  })
+  .refine(
+    (data) =>
+      data.initialRemainingBudget === undefined ||
+      data.initialRemainingBudget <= data.monthlyIncome,
+    {
+      message: "El monto no puede superar tu ingreso mensual",
+      path: ["initialRemainingBudget"],
+    },
+  );
 
 export const stepFourSchema = z
   .object({
@@ -114,6 +124,15 @@ export const onboardingSchema = z
     {
       message: "Los porcentajes deben sumar exactamente 100%",
       path: ["allocationNeeds"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.initialRemainingBudget === undefined ||
+      data.initialRemainingBudget <= data.monthlyIncome,
+    {
+      message: "El monto no puede superar tu ingreso mensual",
+      path: ["initialRemainingBudget"],
     },
   );
 

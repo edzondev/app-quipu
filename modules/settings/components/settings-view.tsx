@@ -1,10 +1,10 @@
 "use client";
 
-import { Controller } from "react-hook-form";
 import type { Preloaded } from "convex/react";
+import { Controller } from "react-hook-form";
 import { api } from "@/convex/_generated/api";
-import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
+import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { Button } from "@/core/components/ui/button";
 import {
   Card,
@@ -31,8 +31,9 @@ import { Separator } from "@/core/components/ui/separator";
 import { Slider } from "@/core/components/ui/slider";
 import { Switch } from "@/core/components/ui/switch";
 import { useSettings } from "../hooks/use-settings";
-import { CommitmentItem } from "./commitment-item";
 import { AddCommitmentDialog } from "./add-commitment-dialog";
+import { CommitmentItem } from "./commitment-item";
+import { DeleteAccountSection } from "./delete-account-section";
 
 type Props = {
   preloaded: Preloaded<typeof api.profiles.getMyProfile>;
@@ -358,6 +359,8 @@ export default function SettingsView({ preloaded }: Props) {
           </CardContent>
         </Card>
       </PremiumGate>
+
+      <DeleteAccountSection />
     </div>
   );
 }

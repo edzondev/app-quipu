@@ -15,9 +15,9 @@ test.describe("Expenses — Registro desde el FAB", () => {
     page,
   }) => {
     // Wait for dashboard to fully load with envelopes
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Capture the initial available amount for Necesidades from the envelope card
     // The envelope card shows the amount in the format "S/ X,XXX"
@@ -38,7 +38,7 @@ test.describe("Expenses — Registro desde el FAB", () => {
     });
 
     // The drawer should show envelope cards for selection
-    const drawerContent = page.locator('[data-vaul-drawer]');
+    const drawerContent = page.locator("[data-vaul-drawer]");
 
     // Select the "Necesidades" envelope inside the drawer
     // The envelope buttons in the drawer show emoji + label
@@ -48,7 +48,9 @@ test.describe("Expenses — Registro desde el FAB", () => {
       .first();
 
     // If the drawerContent locator doesn't find the buttons, fall back to page-level
-    const needsButton = (await needsEnvelopeButton.isVisible().catch(() => false))
+    const needsButton = (await needsEnvelopeButton
+      .isVisible()
+      .catch(() => false))
       ? needsEnvelopeButton
       : page.locator("button").filter({ hasText: "Necesidades" }).last();
 
@@ -85,9 +87,9 @@ test.describe("Expenses — Registro desde el FAB", () => {
   });
 
   test("debe manejar montos con decimal correctamente", async ({ page }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Open FAB
     const fab = page.locator('button[aria-label="Registro rápido de gasto"]');
@@ -145,9 +147,9 @@ test.describe("Expenses — Validaciones del FAB", () => {
   test("no debe registrar con monto 0 (botón deshabilitado o error)", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Open FAB
     const fab = page.locator('button[aria-label="Registro rápido de gasto"]');
@@ -179,9 +181,9 @@ test.describe("Expenses — Validaciones del FAB", () => {
   test("no debe registrar sin seleccionar sobre (muestra error de validación)", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Open FAB
     const fab = page.locator('button[aria-label="Registro rápido de gasto"]');
@@ -230,10 +232,15 @@ test.describe("Expenses — Registro desde página dedicada (/add-expense)", () 
       page.locator("h1", { hasText: "Registrar gasto" }),
     ).toBeVisible({ timeout: 10_000 });
 
-    await expect(page.locator("text=¿En qué sobre va este gasto?")).toBeVisible();
+    await expect(
+      page.locator("text=¿En qué sobre va este gasto?"),
+    ).toBeVisible();
 
     // Select the Necesidades envelope card
-    const needsCard = page.locator("button").filter({ hasText: "Necesidades" }).first();
+    const needsCard = page
+      .locator("button")
+      .filter({ hasText: "Necesidades" })
+      .first();
     await expect(needsCard).toBeVisible({ timeout: 5_000 });
     await needsCard.click();
 
@@ -245,7 +252,9 @@ test.describe("Expenses — Registro desde página dedicada (/add-expense)", () 
     await amountInput.fill("45");
 
     // Optionally fill description
-    const descriptionInput = page.locator('input[placeholder="¿En qué gastaste?"]');
+    const descriptionInput = page.locator(
+      'input[placeholder="¿En qué gastaste?"]',
+    );
     if (await descriptionInput.isVisible()) {
       await descriptionInput.fill("Gasto de prueba E2E");
     }
@@ -298,7 +307,10 @@ test.describe("Expenses — Registro desde página dedicada (/add-expense)", () 
     ).toBeVisible({ timeout: 10_000 });
 
     // Select an envelope but leave amount empty
-    const gustosCard = page.locator("button").filter({ hasText: "Gustos" }).first();
+    const gustosCard = page
+      .locator("button")
+      .filter({ hasText: "Gustos" })
+      .first();
     await gustosCard.click();
 
     // Submit
@@ -328,9 +340,9 @@ test.describe("Expenses — Página de historial (/expenses)", () => {
     await page.goto("/expenses");
     await page.waitForURL("**/expenses", { timeout: 10_000 });
 
-    await expect(
-      page.locator("h1", { hasText: "Gastos" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1", { hasText: "Gastos" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     await expect(
       page.locator("text=Historial completo de tus transacciones"),

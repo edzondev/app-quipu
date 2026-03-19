@@ -143,9 +143,9 @@ test.describe("Auth — Logout", () => {
       );
 
       const afterLogoutPath = new URL(page.url()).pathname;
-      expect(
-        afterLogoutPath === "/" || afterLogoutPath === "/login",
-      ).toBe(true);
+      expect(afterLogoutPath === "/" || afterLogoutPath === "/login").toBe(
+        true,
+      );
     }
   });
 });

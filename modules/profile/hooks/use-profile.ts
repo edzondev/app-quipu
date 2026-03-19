@@ -11,7 +11,10 @@ import { api } from "@/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { COUNTRY_CONFIG } from "@/modules/auth/validations/onboarding";
 import type { Preloaded } from "convex/react";
-import { type ProfileFormValues, profileSchema } from "../schemas/profile.schema";
+import {
+  type ProfileFormValues,
+  profileSchema,
+} from "../schemas/profile.schema";
 
 export function useProfile(
   preloaded: Preloaded<typeof api.profiles.getMyProfile>,

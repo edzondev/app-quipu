@@ -48,9 +48,9 @@ test.describe("Rescue — Banner en el dashboard", () => {
     page,
   }) => {
     // Wait for the dashboard to fully render
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
 
@@ -63,9 +63,7 @@ test.describe("Rescue — Banner en el dashboard", () => {
     }
 
     // The banner should display "Modo Rescate activado"
-    await expect(
-      page.locator("text=Modo Rescate activado"),
-    ).toBeVisible();
+    await expect(page.locator("text=Modo Rescate activado")).toBeVisible();
 
     // It should mention which envelope is over limit — either Necesidades or Gustos
     const bannerText = await page
@@ -83,9 +81,9 @@ test.describe("Rescue — Banner en el dashboard", () => {
   test("clic en el banner de rescate debe navegar a /rescue", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
 
@@ -123,9 +121,9 @@ test.describe("Rescue — Pantalla de selección de acción", () => {
   test("debe mostrar el monto del déficit en color destructive y las dos opciones de acción", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
     if (!bannerVisible) {
@@ -181,9 +179,9 @@ test.describe("Rescue — Pantalla de selección de acción", () => {
   test("el botón 'Aplicar solución' debe estar deshabilitado sin seleccionar acción", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
     if (!bannerVisible) {
@@ -210,9 +208,9 @@ test.describe("Rescue — Pantalla de selección de acción", () => {
   test("seleccionar una acción debe habilitar el botón 'Aplicar solución'", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
     if (!bannerVisible) {
@@ -253,7 +251,10 @@ test.describe("Rescue — Pantalla de selección de acción", () => {
     }
 
     if (!clickedCard) {
-      test.skip(true, "All rescue actions are disabled — cannot test selection");
+      test.skip(
+        true,
+        "All rescue actions are disabled — cannot test selection",
+      );
       return;
     }
 
@@ -283,9 +284,9 @@ test.describe("Rescue — Flujo completo: seleccionar acción y aplicar", () => 
     page,
   }) => {
     // PRECONDITION: user must be in rescue mode
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
     if (!bannerVisible) {
@@ -366,9 +367,9 @@ test.describe("Rescue — Flujo completo: seleccionar acción y aplicar", () => 
 
     // After applying rescue, the rescue banner should no longer appear
     // (or the deficit should be resolved)
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Give the dashboard a moment to render the rescue status
     const rescueBannerAfter = await page
@@ -398,9 +399,9 @@ test.describe("Rescue — Pausar contribución a Ahorro", () => {
   test("debe poder seleccionar 'Pausar contribución' y completar el flujo", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
     if (!bannerVisible) {
@@ -425,9 +426,7 @@ test.describe("Rescue — Pausar contribución a Ahorro", () => {
       .first();
 
     const pauseVisible = await pauseCard.isVisible().catch(() => false);
-    const pauseDisabled = pauseVisible
-      ? await pauseCard.isDisabled()
-      : true;
+    const pauseDisabled = pauseVisible ? await pauseCard.isDisabled() : true;
 
     if (!pauseVisible || pauseDisabled) {
       test.skip(
@@ -491,9 +490,9 @@ test.describe("Rescue — Mover desde Ahorro", () => {
   test("debe poder seleccionar 'Mover desde Ahorro' y completar el flujo", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
     if (!bannerVisible) {
@@ -532,9 +531,7 @@ test.describe("Rescue — Mover desde Ahorro", () => {
         const hasReason = await disabledReason.isVisible().catch(() => false);
         if (hasReason) {
           const reasonText = await disabledReason.textContent();
-          console.log(
-            `Transfer action disabled reason: ${reasonText}`,
-          );
+          console.log(`Transfer action disabled reason: ${reasonText}`);
         }
       }
       test.skip(
@@ -603,9 +600,9 @@ test.describe("Rescue — Redirección si no está en modo rescate", () => {
     }
 
     // Check if user is NOT in rescue mode
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     const bannerVisible = await isRescueBannerVisible(page);
 

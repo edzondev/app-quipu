@@ -1,5 +1,8 @@
 "use client";
 
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import Link from "next/link";
+import { Controller, useWatch } from "react-hook-form";
 import { Button } from "@/core/components/ui/button";
 import {
   Field,
@@ -9,10 +12,86 @@ import {
   FieldLabel,
 } from "@/core/components/ui/field";
 import { Input } from "@/core/components/ui/input";
-import Link from "next/link";
-import { Controller } from "react-hook-form";
 import { useRegister } from "../hooks/use-register";
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+
+const PASSWORD_RULES = [
+  { label: "Al menos 6 caracteres", test: (v: string) => v.length >= 6 },
+  { label: "Una letra mayúscula", test: (v: string) => /[A-Z]/.test(v) },
+  { label: "Una letra minúscula", test: (v: string) => /[a-z]/.test(v) },
+  { label: "Un número", test: (v: string) => /\d/.test(v) },
+  {
+    label: "Un carácter especial (@$!%*?&)",
+    test: (v: string) => /[@$!%*?&]/.test(v),
+  },
+] as const;
+
+function PasswordField({
+  form,
+  isPasswordVisible,
+  toggleVisibility,
+  isSubmitting,
+}: {
+  form: ReturnType<typeof useRegister>["form"];
+  isPasswordVisible: boolean;
+  toggleVisibility: () => void;
+  isSubmitting: boolean;
+}) {
+  const password = useWatch({ control: form.control, name: "password" });
+  const showRules = password.length > 0;
+
+  return (
+    <Controller
+      name="password"
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor="password">Contraseña</FieldLabel>
+          <div className="relative">
+            <Input
+              {...field}
+              type={isPasswordVisible ? "text" : "password"}
+              id="password"
+              aria-invalid={fieldState.invalid}
+              placeholder="*********"
+              disabled={isSubmitting}
+              readOnly={isSubmitting}
+            />
+            <button
+              aria-controls="password"
+              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              aria-pressed={isPasswordVisible}
+              className="absolute inset-y-0 inset-e-0 flex h-full w-9 items-center justify-center rounded-e-md text-muted-foreground/80 outline-none transition-[color,box-shadow] hover:text-foreground focus:z-10 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={toggleVisibility}
+              type="button"
+            >
+              {isPasswordVisible ? (
+                <EyeOffIcon aria-hidden="true" size={16} />
+              ) : (
+                <EyeIcon aria-hidden="true" size={16} />
+              )}
+            </button>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </div>
+          {showRules && (
+            <ul className="space-y-1 mt-2 text-xs">
+              {PASSWORD_RULES.map((rule) => {
+                const passed = rule.test(password);
+                return (
+                  <li
+                    key={rule.label}
+                    className={passed ? "text-green-600" : "text-destructive"}
+                  >
+                    {passed ? "\u2713" : "\u2717"} {rule.label}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Field>
+      )}
+    />
+  );
+}
 
 export function RegisterForm() {
   const {
@@ -74,42 +153,11 @@ export function RegisterForm() {
             </Field>
           )}
         />
-        <Controller
-          name="password"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-              <div className="relative">
-                <Input
-                  {...field}
-                  type={isPasswordVisible ? "text" : "password"}
-                  id="password"
-                  aria-invalid={fieldState.invalid}
-                  placeholder="*********"
-                  disabled={isSubmitting}
-                  readOnly={isSubmitting}
-                />
-                <button
-                  aria-controls="password"
-                  aria-label={
-                    isPasswordVisible ? "Hide password" : "Show password"
-                  }
-                  aria-pressed={isPasswordVisible}
-                  className="absolute inset-y-0 inset-e-0 flex h-full w-9 items-center justify-center rounded-e-md text-muted-foreground/80 outline-none transition-[color,box-shadow] hover:text-foreground focus:z-10 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={toggleVisibility}
-                  type="button"
-                >
-                  {isPasswordVisible ? (
-                    <EyeOffIcon aria-hidden="true" size={16} />
-                  ) : (
-                    <EyeIcon aria-hidden="true" size={16} />
-                  )}
-                </button>
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
+        <PasswordField
+          form={form}
+          isPasswordVisible={isPasswordVisible}
+          toggleVisibility={toggleVisibility}
+          isSubmitting={isSubmitting}
         />
         <Field orientation="responsive">
           <Button type="submit" form="form-create-user" disabled={isSubmitting}>
