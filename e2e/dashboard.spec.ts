@@ -15,9 +15,9 @@ test.describe("Dashboard — Sobres visibles", () => {
     page,
   }) => {
     // Wait for the envelope cards to render (they have staggered animations)
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator("text=Gustos").first()).toBeVisible();
     await expect(page.locator("text=Ahorro").first()).toBeVisible();
   });
@@ -26,9 +26,9 @@ test.describe("Dashboard — Sobres visibles", () => {
     page,
   }) => {
     // Wait for envelopes to load
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // The envelope cards display amounts in format like "S/ 1,500" or "S/ 0"
     // Each EnvelopeCard renders the amount with the currencySymbol (e.g. "S/")
@@ -81,9 +81,9 @@ test.describe("Dashboard — Botón de registrar ingreso según workerType", () 
     page,
   }) => {
     // Wait for dashboard content to load
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Check if the user is independent by looking for the register income button
     const registerIncomeButton = page.locator("a", {
@@ -91,10 +91,16 @@ test.describe("Dashboard — Botón de registrar ingreso según workerType", () 
     });
 
     // Also check for the sidebar item to determine worker type
-    const sidebarRegisterIncome = page.locator('[data-sidebar="sidebar"]').locator("text=Registrar Ingreso");
-    const sidebarPayday = page.locator('[data-sidebar="sidebar"]').locator("text=Día de pago");
+    const sidebarRegisterIncome = page
+      .locator('[data-sidebar="sidebar"]')
+      .locator("text=Registrar Ingreso");
+    const sidebarPayday = page
+      .locator('[data-sidebar="sidebar"]')
+      .locator("text=Día de pago");
 
-    const isIndependent = await sidebarRegisterIncome.isVisible().catch(() => false);
+    const isIndependent = await sidebarRegisterIncome
+      .isVisible()
+      .catch(() => false);
     const isDependent = await sidebarPayday.isVisible().catch(() => false);
 
     if (isIndependent) {
@@ -109,12 +115,14 @@ test.describe("Dashboard — Botón de registrar ingreso según workerType", () 
   test("trabajador dependiente: NO debe ver botón '+ Registrar ingreso de hoy'", async ({
     page,
   }) => {
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Check sidebar to determine worker type
-    const sidebarPayday = page.locator('[data-sidebar="sidebar"]').locator("text=Día de pago");
+    const sidebarPayday = page
+      .locator('[data-sidebar="sidebar"]')
+      .locator("text=Día de pago");
     const isDependent = await sidebarPayday.isVisible().catch(() => false);
 
     if (!isDependent) {
@@ -223,21 +231,21 @@ test.describe("Dashboard — Elementos adicionales", () => {
   });
 
   test("debe mostrar la card del coach financiero", async ({ page }) => {
-    await expect(
-      page.locator("text=Coach financiero"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Coach financiero")).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("debe mostrar la sección de gastos recientes", async ({ page }) => {
-    await expect(
-      page.locator("text=Gastos recientes"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Gastos recientes")).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("debe mostrar la card de ver detalle de ahorro", async ({ page }) => {
-    await expect(
-      page.locator("text=Ver detalle de ahorro"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Ver detalle de ahorro")).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("la barra de progreso del presupuesto debe ser visible", async ({

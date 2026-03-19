@@ -167,9 +167,7 @@ test.describe("Navigation — Ítems del sidebar según workerType", () => {
     expect(new URL(page.url()).pathname).toBe("/payday");
 
     // "Registrar Ingreso" must NOT be in the sidebar
-    await expect(
-      sidebar.locator("text=Registrar Ingreso"),
-    ).not.toBeVisible();
+    await expect(sidebar.locator("text=Registrar Ingreso")).not.toBeVisible();
   });
 
   test("trabajador independiente: 'Registrar Ingreso' lleva a /register-income y no existe 'Día de pago'", async ({
@@ -413,9 +411,7 @@ test.describe("Navigation — Acceso a Perfil y Configuración desde el menú de
     await expect(configItem).toBeVisible();
 
     // "Cerrar sesión" menu item
-    await expect(
-      dropdown.locator("text=Cerrar sesión"),
-    ).toBeVisible();
+    await expect(dropdown.locator("text=Cerrar sesión")).toBeVisible();
   });
 
   test("clic en 'Perfil' del menú de usuario debe navegar a /profile", async ({

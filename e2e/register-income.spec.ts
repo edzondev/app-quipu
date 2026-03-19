@@ -5,7 +5,9 @@ import { loginAs, TEST_USER } from "./helpers/auth";
  * Helper: detect whether the current test user is an independent worker
  * by inspecting the sidebar navigation items.
  */
-async function isIndependentWorker(page: import("@playwright/test").Page): Promise<boolean> {
+async function isIndependentWorker(
+  page: import("@playwright/test").Page,
+): Promise<boolean> {
   const sidebar = page.locator('[data-sidebar="sidebar"]');
   await expect(sidebar).toBeVisible({ timeout: 10_000 });
 
@@ -18,7 +20,9 @@ async function isIndependentWorker(page: import("@playwright/test").Page): Promi
 /**
  * Helper: detect whether the current test user is a dependent worker.
  */
-async function isDependentWorker(page: import("@playwright/test").Page): Promise<boolean> {
+async function isDependentWorker(
+  page: import("@playwright/test").Page,
+): Promise<boolean> {
   const sidebar = page.locator('[data-sidebar="sidebar"]');
   await expect(sidebar).toBeVisible({ timeout: 10_000 });
 
@@ -124,15 +128,13 @@ test.describe("Register Income — Flujo completo (trabajador independiente)", (
     await expect(envelopeCards.nth(0)).toBeVisible({ timeout: 5_000 });
 
     // Verify currency symbol is present in the cards
-    await expect(
-      envelopeCards.first().locator("text=/S\\//"),
-    ).toBeVisible();
+    await expect(envelopeCards.first().locator("text=/S\\//")).toBeVisible();
 
     // ── Step 3: Done ──
     // Wait for the done view: "¡Asignado!"
-    await expect(
-      page.locator("h1", { hasText: "¡Asignado!" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1", { hasText: "¡Asignado!" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Verify the subtitle
     await expect(
@@ -153,9 +155,9 @@ test.describe("Register Income — Flujo completo (trabajador independiente)", (
     expect(new URL(page.url()).pathname).toBe("/dashboard");
 
     // Verify the dashboard envelopes are visible (amounts should have increased)
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator("text=Gustos").first()).toBeVisible();
     await expect(page.locator("text=Ahorro").first()).toBeVisible();
   });
@@ -220,9 +222,9 @@ test.describe("Register Income — Acumulación de ingresos", () => {
     }
 
     // ── Capture initial envelope amounts from the dashboard ──
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Get the Necesidades envelope card amount
     const needsAmountLocator = page
@@ -255,18 +257,18 @@ test.describe("Register Income — Acumulación de ingresos", () => {
     await page.locator("button", { hasText: "Asignar" }).click();
 
     // Wait for the done step
-    await expect(
-      page.locator("h1", { hasText: "¡Asignado!" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1", { hasText: "¡Asignado!" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Go to dashboard
     await page.locator("button", { hasText: "Ir al dashboard" }).click();
     await page.waitForURL("**/dashboard", { timeout: 10_000 });
 
     // Wait for envelopes to load
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Get the amount after first income registration
     const afterFirstText = await needsAmountLocator.textContent();
@@ -288,18 +290,18 @@ test.describe("Register Income — Acumulación de ingresos", () => {
     await page.locator("button", { hasText: "Asignar" }).click();
 
     // Wait for done step
-    await expect(
-      page.locator("h1", { hasText: "¡Asignado!" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1", { hasText: "¡Asignado!" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Go to dashboard
     await page.locator("button", { hasText: "Ir al dashboard" }).click();
     await page.waitForURL("**/dashboard", { timeout: 10_000 });
 
     // Wait for envelopes to load
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Get the amount after second income
     const afterSecondText = await needsAmountLocator.textContent();
@@ -335,9 +337,9 @@ test.describe("Register Income — Acceso desde el dashboard", () => {
     }
 
     // Wait for the dashboard to load
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Click the register income link
     const registerIncomeLink = page.locator("a", {
@@ -452,9 +454,9 @@ test.describe("Register Income — Detalle del paso de asignación", () => {
     });
 
     // Verify the header text contains the amount
-    await expect(
-      page.locator("text=/Asignando.*1/"),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator("text=/Asignando.*1/")).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Wait for all cards to animate in
     const envelopeCards = page.locator(".rounded-xl.border-2.bg-card");

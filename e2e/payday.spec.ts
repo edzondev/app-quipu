@@ -24,10 +24,7 @@ test.describe("Payday — Día de pago (trabajador dependiente)", () => {
       .catch(() => false);
 
     if (!hasPayday) {
-      test.skip(
-        true,
-        "User is not a dependent worker — skipping payday tests",
-      );
+      test.skip(true, "User is not a dependent worker — skipping payday tests");
       return;
     }
 
@@ -191,9 +188,9 @@ test.describe("Payday — Día de pago (trabajador dependiente)", () => {
 
     // Wait for the animation to complete and the done step to appear
     // The done step shows "¡Listo!" after the assigning animation
-    await expect(
-      page.locator("h1", { hasText: "¡Listo!" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1", { hasText: "¡Listo!" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     // ── Step 3: Done ──
     // Verify the done step content
@@ -213,9 +210,9 @@ test.describe("Payday — Día de pago (trabajador dependiente)", () => {
     expect(new URL(page.url()).pathname).toBe("/dashboard");
 
     // Verify the dashboard shows the envelopes with updated amounts
-    await expect(
-      page.locator("text=Necesidades").first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Necesidades").first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator("text=Gustos").first()).toBeVisible();
     await expect(page.locator("text=Ahorro").first()).toBeVisible();
   });
@@ -363,9 +360,7 @@ test.describe("Payday — Asignación visual de sobres", () => {
     });
 
     // Wait for all three envelope cards to be visible
-    const envelopeCards = page.locator(
-      ".rounded-xl.border-2.bg-card",
-    );
+    const envelopeCards = page.locator(".rounded-xl.border-2.bg-card");
 
     // Wait until at least 3 cards are visible (they animate in)
     await expect(envelopeCards.nth(2)).toBeVisible({ timeout: 5_000 });
