@@ -16,7 +16,7 @@ export default function PremiumCheckoutButton() {
 
   const handleCheckout = async () => {
     if (!session?.user) {
-      router.push("/login");
+      router.push("/register");
       return;
     }
 

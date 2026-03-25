@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/core/components/ui/tooltip";
 import Script from "next/script";
 import ToastProvider from "@/core/components/providers/toast-provider";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -64,6 +65,7 @@ export default function RootLayout({
         <Suspense>
           <ConvexProviderWithToken>{children}</ConvexProviderWithToken>
         </Suspense>
+        <Analytics />
       </body>
     </html>
   );

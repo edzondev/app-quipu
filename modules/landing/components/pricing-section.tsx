@@ -4,6 +4,7 @@ import { Badge } from "@/core/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Check, Minus } from "lucide-react";
 import PremiumCheckoutButton from "./premium-checkout-button";
+import Link from "next/link";
 
 const FREE_FEATURES = [
   "Asignación automática 50/30/20",
@@ -62,7 +63,7 @@ export default function PricingSection() {
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {/* Free */}
           <Card>
-            <CardContent className="p-6 space-y-5">
+            <CardContent className="p-6 space-y-5 flex flex-col justify-between min-h-full">
               <div>
                 <h3 className="text-lg font-semibold">Gratis</h3>
                 <p className="text-3xl font-semibold mt-2">USD 0</p>
@@ -75,8 +76,8 @@ export default function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" className="w-full">
-                Empezar gratis
+              <Button variant="outline" className="w-full self-end" asChild>
+                <Link href="/register">Empezar gratis</Link>
               </Button>
             </CardContent>
           </Card>
