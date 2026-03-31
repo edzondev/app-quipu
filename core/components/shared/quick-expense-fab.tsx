@@ -133,7 +133,7 @@ export default function QuickExpenseFAB() {
                   <span className="text-xl">{env.emoji}</span>
                   <p className="text-sm font-medium mt-1">{env.label}</p>
                   <p className="text-xs text-muted-foreground">
-                    Disponible: {env.available}
+                    Disponible: {env.available.toFixed(2)}
                   </p>
                 </button>
               ))}

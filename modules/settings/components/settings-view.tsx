@@ -90,7 +90,7 @@ export default function SettingsView({ preloaded }: Props) {
                         id="settings-income"
                         type="number"
                         min={0}
-                        step={100}
+                        step="any"
                         placeholder="0"
                         className="pl-10"
                         value={field.value === 0 ? "" : field.value}
@@ -289,7 +289,7 @@ export default function SettingsView({ preloaded }: Props) {
                             id="couple-budget"
                             type="number"
                             min={0}
-                            step={100}
+                            step="any"
                             placeholder="0"
                             className="pl-10"
                             value={field.value === 0 ? "" : field.value}
