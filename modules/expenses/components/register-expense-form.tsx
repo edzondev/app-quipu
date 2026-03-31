@@ -67,7 +67,7 @@ export function RegisterExpenseForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <div className="grid grid-cols-3 gap-3">
+              <div className={cn("grid gap-3", profile?.coupleModeEnabled ? "grid-cols-3" : "grid-cols-2")}>
                 {envelopes.map((env) => (
                   <button
                     type="button"
