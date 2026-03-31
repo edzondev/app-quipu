@@ -28,7 +28,7 @@ export default function IncomeInputStep({ currencySymbol, onSubmit }: Props) {
         <Input
           type="number"
           min={0}
-          step={100}
+          step="any"
           placeholder="0"
           className="pl-12 text-center text-3xl font-bold h-16"
           value={amount === 0 ? "" : amount}

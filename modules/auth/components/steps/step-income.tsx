@@ -81,7 +81,7 @@ export default function StepIncome({ form }: Props) {
                   id="onboarding-income"
                   type="number"
                   min={0}
-                  step={100}
+                  step="any"
                   placeholder="0"
                   aria-invalid={fieldState.invalid}
                   className="pl-10 text-base font-semibold"
@@ -182,7 +182,7 @@ export default function StepIncome({ form }: Props) {
                     type="number"
                     min={0}
                     max={monthlyIncome}
-                    step={100}
+                    step="any"
                     placeholder="0"
                     aria-invalid={fieldState.invalid}
                     className="pl-10 text-base font-semibold"
