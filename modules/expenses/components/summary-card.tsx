@@ -1,8 +1,8 @@
 "use client";
 
+import { type Preloaded, usePreloadedQuery } from "convex/react";
+import type { api } from "@/convex/_generated/api";
 import { Card, CardContent } from "@/core/components/ui/card";
-import { usePreloadedQuery, Preloaded } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useProfile } from "@/core/hooks/use-profile";
 import { cn } from "@/lib/utils";
 
