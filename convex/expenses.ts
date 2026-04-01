@@ -1,10 +1,10 @@
-import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
+  currentMonthString,
   getProfile,
   getProfileOrThrow,
-  currentMonthString,
   todayString,
 } from "./helpers";
 import { unlockExpenseAchievements } from "./streaks";
@@ -188,6 +188,49 @@ export const registerExpense = mutation({
     await unlockExpenseAchievements(ctx, profile._id, allExpenses.length);
 
     return expenseId;
+  },
+});
+
+/**
+ * Updates an existing expense. Verifies ownership via the profile relationship.
+ * Only the provided fields are updated (partial patch).
+ */
+export const updateExpense = mutation({
+  args: {
+    expenseId: v.id("expenses"),
+    amount: v.optional(v.number()),
+    envelope: v.optional(
+      v.union(v.literal("needs"), v.literal("wants"), v.literal("juntos")),
+    ),
+    description: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const profile = await getProfileOrThrow(ctx);
+
+    const expense = await ctx.db.get(args.expenseId);
+    if (!expense || expense.profileId !== profile._id) {
+      throw new ConvexError("Expense not found");
+    }
+
+    if (args.amount !== undefined && args.amount <= 0) {
+      throw new ConvexError("Amount must be greater than 0");
+    }
+
+    if (args.envelope === "juntos" && !profile.coupleModeEnabled) {
+      throw new ConvexError("Couple mode is not enabled");
+    }
+
+    const patch: Record<string, unknown> = {};
+    if (args.amount !== undefined) patch.amount = args.amount;
+    if (args.envelope !== undefined) patch.envelope = args.envelope;
+    if (args.description !== undefined) patch.description = args.description;
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(args.expenseId, patch);
+    }
+
+    return null;
   },
 });
 

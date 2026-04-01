@@ -1,14 +1,26 @@
 "use client";
 
-import { Card, CardContent } from "@/core/components/ui/card";
 import { usePaginatedQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Loader2, Receipt } from "lucide-react";
+import { useState } from "react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Badge } from "@/core/components/ui/badge";
+import { Card, CardContent } from "@/core/components/ui/card";
 import { useProfile } from "@/core/hooks/use-profile";
 import { cn } from "@/lib/utils";
+import { EditExpenseModal } from "./edit-expense-modal";
 
 type Envelope = "needs" | "wants" | "juntos";
+
+type ExpenseItem = {
+  _id: Id<"expenses">;
+  amount: number;
+  description?: string;
+  envelope: Envelope;
+  date: string;
+  registeredBy?: "user" | "partner";
+};
 
 type Props = {
   envelope?: Envelope;
@@ -40,6 +52,9 @@ export default function ListCard({ envelope, month, className }: Props) {
     { initialNumItems: 20 },
   );
   const { profile } = useProfile();
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(
+    null,
+  );
 
   const hasResults = results && results.length > 0;
   const isEmpty = !isLoading && results && results.length === 0;
@@ -67,9 +82,11 @@ export default function ListCard({ envelope, month, className }: Props) {
         {hasResults && (
           <div className="divide-y divide-border">
             {results.map((expense) => (
-              <div
+              <button
+                type="button"
                 key={expense._id}
-                className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                onClick={() => setSelectedExpense(expense as ExpenseItem)}
+                className="flex w-full items-center justify-between py-3 first:pt-0 last:pb-0 text-left cursor-pointer hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">
@@ -100,7 +117,7 @@ export default function ListCard({ envelope, month, className }: Props) {
                     {expense.amount.toFixed(2)}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -116,6 +133,14 @@ export default function ListCard({ envelope, month, className }: Props) {
           </button>
         )}
       </CardContent>
+
+      <EditExpenseModal
+        expense={selectedExpense}
+        open={selectedExpense !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedExpense(null);
+        }}
+      />
     </Card>
   );
 }
