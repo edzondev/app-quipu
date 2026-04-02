@@ -2,9 +2,6 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getProfileOrThrow, requirePremium } from "./helpers";
 
-// Threshold: a special income is detected when > 1.5x the configured monthly income
-const EXTRAORDINARY_INCOME_MULTIPLIER = 1.5;
-
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
 export const listSpecialIncomes = query({
@@ -26,7 +23,7 @@ export const listSpecialIncomes = query({
  * the GratificacionScreen.
  */
 export const checkIfExtraordinary = query({
-  args: { amount: v.number() },
+  args: { amount: v.number(), threshold: v.number() },
   returns: v.union(
     v.object({
       isExtraordinary: v.literal(true),
@@ -38,9 +35,8 @@ export const checkIfExtraordinary = query({
   ),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
-    const threshold = profile.monthlyIncome * EXTRAORDINARY_INCOME_MULTIPLIER;
 
-    if (args.amount <= threshold) {
+    if (args.amount <= args.threshold) {
       return { isExtraordinary: false as const };
     }
 

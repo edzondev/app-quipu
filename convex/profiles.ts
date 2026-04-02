@@ -56,7 +56,6 @@ export const createProfile = mutation({
       v.union(v.literal("monthly"), v.literal("biweekly")),
     ),
     paydays: v.optional(v.array(v.number())),
-    monthlyIncome: v.number(),
     estimatedMonthlyIncome: v.optional(v.number()),
     // Allocation defaults to 50/30/20 if not provided
     allocationNeeds: v.optional(v.number()),
@@ -82,6 +81,11 @@ export const createProfile = mutation({
       return existing._id;
     }
 
+    const allocationNeeds = args.allocationNeeds ?? 50;
+    const allocationWants = args.allocationWants ?? 30;
+    const allocationSavings = args.allocationSavings ?? 20;
+    const remaining = args.initialRemainingBudget;
+
     const profileId = await ctx.db.insert("profiles", {
       userId,
       name: args.name,
@@ -93,11 +97,16 @@ export const createProfile = mutation({
       workerType: args.workerType,
       payFrequency: args.payFrequency,
       paydays: args.paydays,
-      monthlyIncome: args.monthlyIncome,
       estimatedMonthlyIncome: args.estimatedMonthlyIncome,
-      allocationNeeds: args.allocationNeeds ?? 50,
-      allocationWants: args.allocationWants ?? 30,
-      allocationSavings: args.allocationSavings ?? 20,
+      allocationNeeds,
+      allocationWants,
+      allocationSavings,
+      envelopeNeeds:
+        remaining !== undefined ? remaining * (allocationNeeds / 100) : 0,
+      envelopeWants:
+        remaining !== undefined ? remaining * (allocationWants / 100) : 0,
+      envelopeSavings:
+        remaining !== undefined ? remaining * (allocationSavings / 100) : 0,
       savingsGoalEmergency: args.savingsGoalEmergency ?? 0,
       //savingsGoalShortTerm: 0,
       savingsGoalInvestment: args.savingsGoalInvestment ?? 0,
@@ -180,7 +189,6 @@ export const updateProfile = mutation({
     currencySymbol: v.optional(v.string()),
     currencyName: v.optional(v.string()),
     currencyLocale: v.optional(v.string()),
-    monthlyIncome: v.optional(v.number()),
     estimatedMonthlyIncome: v.optional(v.number()),
     payFrequency: v.optional(
       v.union(v.literal("monthly"), v.literal("biweekly")),

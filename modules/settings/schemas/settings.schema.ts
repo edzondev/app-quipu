@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const settingsSchema = z
   .object({
-    monthlyIncome: z.number({ error: "Ingresa un monto válido" }).min(0),
     payFrequency: z.enum(["monthly", "biweekly"]),
     allocationNeeds: z.number().min(0).max(100),
     allocationWants: z.number().min(0).max(100),

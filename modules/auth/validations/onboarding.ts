@@ -104,9 +104,6 @@ export const onboardingSchema = z
     currencyName: z.string().min(1),
     currencyLocale: z.string().min(1),
     workerType: z.enum(["dependent", "independent"]),
-    monthlyIncome: z
-      .number({ error: "Ingresa tu ingreso mensual" })
-      .positive("El ingreso debe ser mayor a 0"),
     estimatedMonthlyIncome: z.optional(z.number().positive()),
     payFrequency: z.optional(z.enum(["monthly", "biweekly"])),
     paydays: z.optional(z.array(z.number().int().min(1).max(31))),
@@ -124,15 +121,6 @@ export const onboardingSchema = z
     {
       message: "Los porcentajes deben sumar exactamente 100%",
       path: ["allocationNeeds"],
-    },
-  )
-  .refine(
-    (data) =>
-      data.initialRemainingBudget === undefined ||
-      data.initialRemainingBudget <= data.monthlyIncome,
-    {
-      message: "El monto no puede superar tu ingreso mensual",
-      path: ["initialRemainingBudget"],
     },
   );
 

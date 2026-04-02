@@ -2,7 +2,9 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   currencySymbol: string;
-  monthlyIncome: number;
+  needsAmount: number;
+  wantsAmount: number;
+  savingsAmount: number;
   allocationNeeds: number;
   allocationWants: number;
   allocationSavings: number;
@@ -19,16 +21,16 @@ type EnvelopeCardData = {
 
 export default function AssigningStep({
   currencySymbol,
-  monthlyIncome,
+  needsAmount,
+  wantsAmount,
+  savingsAmount,
   allocationNeeds,
   allocationWants,
   allocationSavings,
 }: Props) {
-  const needsAmount = monthlyIncome * (allocationNeeds / 100);
-  const wantsAmount = monthlyIncome * (allocationWants / 100);
-  const savingsAmount = monthlyIncome * (allocationSavings / 100);
+  const totalIncome = needsAmount + wantsAmount + savingsAmount;
 
-  const formattedIncome = monthlyIncome.toLocaleString("es", {
+  const formattedIncome = totalIncome.toLocaleString("es", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });

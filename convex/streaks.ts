@@ -182,7 +182,11 @@ export const getAchievementsData = query({
  * Updates the streak record and unlocks achievements.
  */
 export const evaluateMonthCompliance = internalMutation({
-  args: { profileId: v.id("profiles") },
+  args: {
+    profileId: v.id("profiles"),
+    allocatedNeeds: v.number(),
+    allocatedWants: v.number(),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const profile = await ctx.db.get(args.profileId);
@@ -200,7 +204,7 @@ export const evaluateMonthCompliance = internalMutation({
 
     if (existing) return null;
 
-    // Calculate compliance
+    // Calculate compliance against the amounts passed when processPayday ran
     const expenses = await ctx.db
       .query("expenses")
       .withIndex("by_profileId", (q) => q.eq("profileId", args.profileId))
@@ -214,19 +218,8 @@ export const evaluateMonthCompliance = internalMutation({
       .filter((e) => e.envelope === "wants")
       .reduce((sum, e) => sum + e.amount, 0);
 
-    const commitments = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", args.profileId))
-      .collect();
-
-    const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
-    const netIncome = profile.monthlyIncome - totalFixed;
-
-    const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
-    const allocatedWants = netIncome * (profile.allocationWants / 100);
-
     const compliant =
-      spentNeeds <= allocatedNeeds && spentWants <= allocatedWants;
+      spentNeeds <= args.allocatedNeeds && spentWants <= args.allocatedWants;
 
     // Record history
     await ctx.db.insert("streakMonthlyHistory", {

@@ -40,7 +40,7 @@ export default defineSchema({
     workerType: workerType,
     payFrequency: v.optional(payFrequency),
     paydays: v.optional(v.array(v.number())),
-    monthlyIncome: v.number(),
+    monthlyIncome: v.optional(v.number()),
     estimatedMonthlyIncome: v.optional(v.number()),
     initialRemainingBudget: v.optional(v.number()),
     initialBudgetMonth: v.optional(v.string()),

@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/convex/_generated/api";
+import { calcularSplit } from "@/lib/quipu-calculator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -38,7 +39,9 @@ export function useOnboarding() {
   const createProfile = useMutation(api.profiles.createProfile);
   const completeOnboarding = useMutation(api.profiles.completeOnboarding);
 
-  const form = useForm<OnboardingFormData>({
+  // monthlyIncome is NOT part of OnboardingFormData (not sent to the backend),
+  // but lives in the form so step components can read and validate it locally.
+  const form = useForm<OnboardingFormData & { monthlyIncome: number }>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
       name: "",
@@ -76,7 +79,7 @@ export function useOnboarding() {
 
     if (!result.success) {
       for (const issue of result.error.issues) {
-        const fieldName = issue.path[0] as keyof OnboardingFormData;
+        const fieldName = issue.path[0] as keyof typeof values;
         if (fieldName) {
           form.setError(fieldName, { message: issue.message });
         }
@@ -101,13 +104,18 @@ export function useOnboarding() {
     try {
       const isIndependent = data.workerType === "independent";
 
-      // Compute savings goal targets from income and allocation
-      const monthlySavings =
-        data.monthlyIncome * (data.allocationSavings / 100);
+      // monthlyIncome is transient — only used here for goal calculations
+      const monthlyIncome = form.getValues("monthlyIncome");
+      const split = calcularSplit(monthlyIncome, {
+        needs: data.allocationNeeds,
+        wants: data.allocationWants,
+        savings: data.allocationSavings,
+      });
+
       // Emergency fund target: 3 months of income
-      const savingsGoalEmergency = data.monthlyIncome * 3;
+      const savingsGoalEmergency = monthlyIncome * 3;
       // Investment goal target: 1 year of monthly savings contributions
-      const savingsGoalInvestment = Math.round(monthlySavings * 12);
+      const savingsGoalInvestment = Math.round(split.savings * 12);
 
       // Determine if user is signing up mid-month (not on their payday)
       const todayDay = new Date().getDate();
@@ -126,8 +134,7 @@ export function useOnboarding() {
         workerType: data.workerType,
         payFrequency: isIndependent ? undefined : data.payFrequency,
         paydays: isIndependent ? undefined : data.paydays,
-        monthlyIncome: data.monthlyIncome,
-        estimatedMonthlyIncome: isIndependent ? data.monthlyIncome : undefined,
+        estimatedMonthlyIncome: isIndependent ? monthlyIncome : undefined,
         allocationNeeds: data.allocationNeeds,
         allocationWants: data.allocationWants,
         allocationSavings: data.allocationSavings,

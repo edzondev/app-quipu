@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { usePreloadedQuery } from "convex/react";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
@@ -25,10 +25,12 @@ export function useSettings(
     api.fixedCommitments.deleteFixedCommitment,
   );
 
+  // monthlyIncome is never persisted — it lives only in local component state.
+  const [localMonthlyIncome, setLocalMonthlyIncome] = useState(0);
+
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      monthlyIncome: profile?.monthlyIncome ?? 0,
       payFrequency: profile?.payFrequency ?? "monthly",
       allocationNeeds: profile?.allocationNeeds ?? 50,
       allocationWants: profile?.allocationWants ?? 30,
@@ -39,13 +41,10 @@ export function useSettings(
     },
   });
 
-  // Re-sync form when the Convex profile updates reactively (e.g. after a
-  // successful save or an external change). react-hook-form only reads
-  // defaultValues once on mount, so we must call reset() explicitly.
+  // Re-sync form when the Convex profile updates reactively.
   useEffect(() => {
     if (!profile) return;
     form.reset({
-      monthlyIncome: profile.monthlyIncome,
       payFrequency: profile.payFrequency ?? "monthly",
       allocationNeeds: profile.allocationNeeds,
       allocationWants: profile.allocationWants,
@@ -55,7 +54,6 @@ export function useSettings(
       coupleMonthlyBudget: profile.coupleMonthlyBudget ?? 0,
     });
   }, [
-    profile?.monthlyIncome,
     profile?.payFrequency,
     profile?.allocationNeeds,
     profile?.allocationWants,
@@ -68,7 +66,6 @@ export function useSettings(
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
       await updateProfile({
-        monthlyIncome: data.monthlyIncome,
         payFrequency: data.payFrequency,
         allocationNeeds: data.allocationNeeds,
         allocationWants: data.allocationWants,
@@ -115,5 +112,7 @@ export function useSettings(
     handleDeleteCommitment,
     isSubmitting: form.formState.isSubmitting,
     profile,
+    localMonthlyIncome,
+    setLocalMonthlyIncome,
   };
 }

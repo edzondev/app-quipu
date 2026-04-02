@@ -84,19 +84,11 @@ export async function computeEnvelopes(
   ctx: QueryCtx | MutationCtx,
   profile: {
     _id: import("./_generated/dataModel").Id<"profiles">;
-    workerType: "dependent" | "independent";
-    monthlyIncome: number;
-    allocationNeeds: number;
-    allocationWants: number;
-    allocationSavings: number;
     coupleModeEnabled: boolean;
     coupleMonthlyBudget: number;
     envelopeNeeds?: number;
     envelopeWants?: number;
     envelopeSavings?: number;
-    initialRemainingBudget?: number;
-    initialBudgetMonth?: string;
-    lastPaydayProcessedAt?: string;
   },
   month: string,
 ) {
@@ -112,37 +104,12 @@ export async function computeEnvelopes(
     .filter((c) => c.envelope === "wants")
     .reduce((sum, c) => sum + c.amount, 0);
 
-  let allocatedNeeds: number;
-  let allocatedWants: number;
-  let allocatedSavings: number;
-  let netIncome: number;
-
-  if (profile.workerType === "independent") {
-    // Independent workers: use accumulated envelope fields
-    allocatedNeeds = profile.envelopeNeeds ?? 0;
-    allocatedWants = profile.envelopeWants ?? 0;
-    allocatedSavings = profile.envelopeSavings ?? 0;
-    netIncome = allocatedNeeds + allocatedWants + allocatedSavings;
-  } else {
-    // Dependent workers: calculate from monthly income
-    // If user signed up mid-month and reported remaining budget, use that
-    // instead of full salary until the first payday is processed.
-    const isFirstPartialMonth =
-      profile.initialRemainingBudget !== undefined &&
-      profile.initialBudgetMonth === month &&
-      !profile.lastPaydayProcessedAt;
-
-    if (isFirstPartialMonth) {
-      // User reported what they truly have left — already net of spent money
-      // Don't subtract fixed commitments again
-      netIncome = profile.initialRemainingBudget ?? 0;
-    } else {
-      netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
-    }
-    allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
-    allocatedWants = netIncome * (profile.allocationWants / 100);
-    allocatedSavings = netIncome * (profile.allocationSavings / 100);
-  }
+  // Envelope amounts are always read from the stored fields, set by
+  // processPayday (dependent workers) or registerIncome (independent workers).
+  const allocatedNeeds = profile.envelopeNeeds ?? 0;
+  const allocatedWants = profile.envelopeWants ?? 0;
+  const allocatedSavings = profile.envelopeSavings ?? 0;
+  const netIncome = allocatedNeeds + allocatedWants + allocatedSavings;
 
   const allMonthExpenses = await ctx.db
     .query("expenses")

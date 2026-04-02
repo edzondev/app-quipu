@@ -115,6 +115,16 @@ export const getPaydayStatus = query({
         (1000 * 60 * 60 * 24),
     );
 
+    const commitments = await ctx.db
+      .query("fixedCommitments")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    const fixedCommitmentsTotal = commitments.reduce(
+      (sum, c) => sum + c.amount,
+      0,
+    );
+
     return {
       isPayday,
       hasProcessedCurrentPayday,
@@ -122,12 +132,12 @@ export const getPaydayStatus = query({
       daysUntilNextPayday,
       profile: {
         currencySymbol: profile.currencySymbol,
-        monthlyIncome: profile.monthlyIncome,
         allocationNeeds: profile.allocationNeeds,
         allocationWants: profile.allocationWants,
         allocationSavings: profile.allocationSavings,
         payFrequency,
         paydays,
+        fixedCommitmentsTotal,
       },
     };
   },
@@ -283,9 +293,13 @@ export const getDashboardData = query({
  * - Records the date so re-runs within the same period are no-ops (idempotent)
  */
 export const processPayday = mutation({
-  args: {},
+  args: {
+    needsAmount: v.number(),
+    wantsAmount: v.number(),
+    savingsAmount: v.number(),
+  },
   returns: v.null(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
 
     const today = todayString();
@@ -303,14 +317,14 @@ export const processPayday = mutation({
       return null;
     }
 
-    const commitments = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
+    // Store the client-calculated envelope amounts on the profile
+    await ctx.db.patch(profile._id, {
+      envelopeNeeds: args.needsAmount,
+      envelopeWants: args.wantsAmount,
+      envelopeSavings: args.savingsAmount,
+    });
 
-    const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
-    const netIncome = profile.monthlyIncome - totalFixed;
-    const savingsAmount = netIncome * (profile.allocationSavings / 100);
+    const savingsAmount = args.savingsAmount;
 
     // Si el usuario activó Modo Rescate este mes, omitir distribución de ahorro
     if (profile.rescuePausedSavingsMonth !== currentMonth) {
@@ -368,7 +382,11 @@ export const processPayday = mutation({
       await ctx.scheduler.runAfter(
         msUntilEndOfMonth,
         internal.streaks.evaluateMonthCompliance,
-        { profileId: profile._id },
+        {
+          profileId: profile._id,
+          allocatedNeeds: args.needsAmount,
+          allocatedWants: args.wantsAmount,
+        },
       );
     }
 

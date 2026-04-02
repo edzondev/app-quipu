@@ -47,6 +47,8 @@ export default function SettingsView({ preloaded }: Props) {
     handleDeleteCommitment,
     isSubmitting,
     profile,
+    localMonthlyIncome,
+    setLocalMonthlyIncome,
   } = useSettings(preloaded);
 
   const { watch, control, formState } = form;
@@ -74,38 +76,32 @@ export default function SettingsView({ preloaded }: Props) {
           </CardHeader>
           <CardContent>
             <FieldGroup>
-              <Controller
-                name="monthlyIncome"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="settings-income">
-                      Ingreso mensual neto ({currencySymbol})
-                    </FieldLabel>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
-                        {currencySymbol}
-                      </span>
-                      <Input
-                        id="settings-income"
-                        type="number"
-                        min={0}
-                        step="any"
-                        placeholder="0"
-                        className="pl-10"
-                        value={field.value === 0 ? "" : field.value}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? 0 : Number(val));
-                        }}
-                      />
-                    </div>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
+              <Field>
+                <FieldLabel htmlFor="settings-income">
+                  Ingreso mensual neto ({currencySymbol})
+                </FieldLabel>
+                <FieldDescription>
+                  Solo se usa en esta sesión para previsualizar montos. No se guarda.
+                </FieldDescription>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
+                    {currencySymbol}
+                  </span>
+                  <Input
+                    id="settings-income"
+                    type="number"
+                    min={0}
+                    step="any"
+                    placeholder="0"
+                    className="pl-10"
+                    value={localMonthlyIncome === 0 ? "" : localMonthlyIncome}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setLocalMonthlyIncome(val === "" ? 0 : Number(val));
+                    }}
+                  />
+                </div>
+              </Field>
 
               <Controller
                 name="payFrequency"

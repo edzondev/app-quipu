@@ -1,6 +1,7 @@
 "use client";
 
 import { Preloaded, usePreloadedQuery } from "convex/react";
+import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { usePayday } from "../hooks/use-payday";
 import PaydayStep from "./payday-step";
@@ -15,7 +16,10 @@ type Props = {
 
 export default function PaydayView({ preloadedPaydayStatus }: Props) {
   const status = usePreloadedQuery(preloadedPaydayStatus);
-  const { step, handleAssign } = usePayday();
+  const { step, handleAssign, assignedAmounts } = usePayday();
+
+  // Income lives only in local state — never persisted to the server
+  const [localIncome, setLocalIncome] = useState(0);
 
   if (!status) return null;
 
@@ -29,12 +33,27 @@ export default function PaydayView({ preloadedPaydayStatus }: Props) {
 
   const {
     currencySymbol,
-    monthlyIncome,
     allocationNeeds,
     allocationWants,
     allocationSavings,
     payFrequency,
+    fixedCommitmentsTotal,
   } = profile;
+
+  // fixedCommitmentsTotal is the sum of all fixed commitments;
+  // we treat them as split evenly between needs/wants for netIncome purposes.
+  // The actual per-envelope breakdown is handled by calcularNetIncome in use-payday.
+  const fixedNeeds = fixedCommitmentsTotal;
+  const fixedWants = 0;
+
+  const onAssign = (income: number) => {
+    handleAssign(
+      income,
+      { needs: allocationNeeds, wants: allocationWants, savings: allocationSavings },
+      fixedNeeds,
+      fixedWants,
+    );
+  };
 
   // While an animation is in progress, always show it through to completion
   if (step === "assigning") {
@@ -42,7 +61,9 @@ export default function PaydayView({ preloadedPaydayStatus }: Props) {
       <section className="animate-in fade-in duration-200">
         <AssigningStep
           currencySymbol={currencySymbol}
-          monthlyIncome={monthlyIncome}
+          needsAmount={assignedAmounts.needs}
+          wantsAmount={assignedAmounts.wants}
+          savingsAmount={assignedAmounts.savings}
           allocationNeeds={allocationNeeds}
           allocationWants={allocationWants}
           allocationSavings={allocationSavings}
@@ -84,8 +105,13 @@ export default function PaydayView({ preloadedPaydayStatus }: Props) {
     <section className="animate-in fade-in duration-200">
       <PaydayStep
         currencySymbol={currencySymbol}
-        monthlyIncome={monthlyIncome}
-        onAssign={handleAssign}
+        localIncome={localIncome}
+        onIncomeChange={setLocalIncome}
+        allocationNeeds={allocationNeeds}
+        allocationWants={allocationWants}
+        allocationSavings={allocationSavings}
+        fixedCommitmentsTotal={fixedCommitmentsTotal}
+        onAssign={onAssign}
       />
     </section>
   );
