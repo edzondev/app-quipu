@@ -1,4 +1,9 @@
-import { Controller, type UseFormReturn, useWatch } from "react-hook-form";
+import {
+  Controller,
+  useFormContext,
+  type UseFormReturn,
+  useWatch,
+} from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -7,36 +12,41 @@ import {
 } from "@/core/components/ui/field";
 import { Input } from "@/core/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { OnboardingFormData } from "@/modules/auth/validations/onboarding";
+import type {
+  OnboardingFormData,
+  OnboardingFormOutput,
+} from "@/modules/auth/validations/onboarding";
 
 type Props = {
   form: UseFormReturn<OnboardingFormData>;
 };
 
-export default function StepIncome({ form }: Props) {
+export default function StepIncome() {
+  const { control, getValues, setValue, clearErrors } =
+    useFormContext<OnboardingFormOutput>();
   const currencySymbol = useWatch({
-    control: form.control,
+    control: control,
     name: "currencySymbol",
   });
   const workerType = useWatch({
-    control: form.control,
+    control: control,
     name: "workerType",
   });
   const payFrequency = useWatch({
-    control: form.control,
+    control: control,
     name: "payFrequency",
   });
   const monthlyIncome = useWatch({
-    control: form.control,
+    control: control,
     name: "monthlyIncome",
   });
 
   const paydays = useWatch({
-    control: form.control,
+    control: control,
     name: "paydays",
   });
   const initialRemainingBudget = useWatch({
-    control: form.control,
+    control: control,
     name: "initialRemainingBudget",
   });
 
@@ -59,7 +69,7 @@ export default function StepIncome({ form }: Props) {
       <FieldGroup>
         <Controller
           name="monthlyIncome"
-          control={form.control}
+          control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="onboarding-income">
@@ -100,7 +110,7 @@ export default function StepIncome({ form }: Props) {
         {!isIndependent && (
           <Controller
             name="payFrequency"
-            control={form.control}
+            control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel>Frecuencia de pago</FieldLabel>
@@ -124,11 +134,11 @@ export default function StepIncome({ form }: Props) {
                       type="button"
                       onClick={() => {
                         field.onChange(option.value);
-                        form.setValue(
+                        setValue(
                           "paydays",
                           option.value === "monthly" ? [1] : [15, 30],
                         );
-                        form.clearErrors("paydays");
+                        clearErrors("paydays");
                       }}
                       className={cn(
                         "rounded-xl border-2 p-4 text-left transition-all",
@@ -167,12 +177,17 @@ export default function StepIncome({ form }: Props) {
           </div>
           <Controller
             name="initialRemainingBudget"
-            control={form.control}
+            control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="onboarding-remaining-budget">
-                  ¿Cuánto te queda disponible de tu sueldo? ({currencySymbol})
+                  ¿Cuánto te queda disponible de tu sueldo? ({currencySymbol}){" "}
+                  <span className="text-destructive font-semibold">*</span>
                 </FieldLabel>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Si no lo indicas, usaremos tu ingreso mensual completo como
+                  referencia
+                </p>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
                     {currencySymbol}

@@ -1,4 +1,9 @@
-import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
+import {
+  Controller,
+  useFormContext,
+  useWatch,
+  type UseFormReturn,
+} from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -7,7 +12,10 @@ import {
 } from "@/core/components/ui/field";
 import { Slider } from "@/core/components/ui/slider";
 import { PiggyBank } from "lucide-react";
-import { type OnboardingFormData } from "@/modules/auth/validations/onboarding";
+import {
+  OnboardingFormOutput,
+  type OnboardingFormData,
+} from "@/modules/auth/validations/onboarding";
 
 type Props = {
   form: UseFormReturn<OnboardingFormData>;
@@ -91,25 +99,27 @@ function adjustProportionally(
   };
 }
 
-export default function StepPlan({ form }: Props) {
+export default function StepPlan() {
+  const { control, getValues, setValue } =
+    useFormContext<OnboardingFormOutput>();
   const monthlyIncome = useWatch({
-    control: form.control,
+    control: control,
     name: "monthlyIncome",
   });
   const currencySymbol = useWatch({
-    control: form.control,
+    control: control,
     name: "currencySymbol",
   });
   const needs = useWatch({
-    control: form.control,
+    control: control,
     name: "allocationNeeds",
   });
   const wants = useWatch({
-    control: form.control,
+    control: control,
     name: "allocationWants",
   });
   const savings = useWatch({
-    control: form.control,
+    control: control,
     name: "allocationSavings",
   });
 
@@ -117,18 +127,18 @@ export default function StepPlan({ form }: Props) {
 
   const handleSliderChange = (key: AllocKey, value: number) => {
     const current = {
-      allocationNeeds: form.getValues("allocationNeeds"),
-      allocationWants: form.getValues("allocationWants"),
-      allocationSavings: form.getValues("allocationSavings"),
+      allocationNeeds: getValues("allocationNeeds"),
+      allocationWants: getValues("allocationWants"),
+      allocationSavings: getValues("allocationSavings"),
     };
     const adjusted = adjustProportionally(key, value, current);
-    form.setValue("allocationNeeds", adjusted.allocationNeeds, {
+    setValue("allocationNeeds", adjusted.allocationNeeds, {
       shouldValidate: false,
     });
-    form.setValue("allocationWants", adjusted.allocationWants, {
+    setValue("allocationWants", adjusted.allocationWants, {
       shouldValidate: false,
     });
-    form.setValue("allocationSavings", adjusted.allocationSavings, {
+    setValue("allocationSavings", adjusted.allocationSavings, {
       shouldValidate: false,
     });
   };
@@ -149,7 +159,7 @@ export default function StepPlan({ form }: Props) {
           <Controller
             key={key}
             name={key}
-            control={form.control}
+            control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <div className="flex items-center justify-between">

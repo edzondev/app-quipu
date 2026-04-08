@@ -14,6 +14,7 @@ import type * as expenses from "../expenses.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
+import type * as migrations from "../migrations.js";
 import type * as payday from "../payday.js";
 import type * as polar from "../polar.js";
 import type * as profiles from "../profiles.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   fixedCommitments: typeof fixedCommitments;
   helpers: typeof helpers;
   http: typeof http;
+  migrations: typeof migrations;
   payday: typeof payday;
   polar: typeof polar;
   profiles: typeof profiles;

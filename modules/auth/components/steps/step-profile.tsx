@@ -1,4 +1,9 @@
-import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
+import {
+  Controller,
+  useFormContext,
+  useWatch,
+  type UseFormReturn,
+} from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -15,6 +20,7 @@ import {
 } from "@/core/components/ui/select";
 import {
   COUNTRY_CONFIG,
+  OnboardingFormOutput,
   type OnboardingFormData,
 } from "@/modules/auth/validations/onboarding";
 
@@ -22,17 +28,19 @@ type Props = {
   form: UseFormReturn<OnboardingFormData>;
 };
 
-export default function StepProfile({ form }: Props) {
+export default function StepProfile() {
+  const { control, setValue } = useFormContext<OnboardingFormOutput>();
+
   const currencyCode = useWatch({
-    control: form.control,
+    control: control,
     name: "currencyCode",
   });
   const currencyName = useWatch({
-    control: form.control,
+    control: control,
     name: "currencyName",
   });
   const currencySymbol = useWatch({
-    control: form.control,
+    control: control,
     name: "currencySymbol",
   });
 
@@ -50,7 +58,7 @@ export default function StepProfile({ form }: Props) {
       <FieldGroup>
         <Controller
           name="name"
-          control={form.control}
+          control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="onboarding-name">Nombre completo</FieldLabel>
@@ -68,7 +76,7 @@ export default function StepProfile({ form }: Props) {
 
         <Controller
           name="country"
-          control={form.control}
+          control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="onboarding-country">
@@ -82,10 +90,10 @@ export default function StepProfile({ form }: Props) {
                     (c) => c.country === value,
                   );
                   if (config) {
-                    form.setValue("currencyCode", config.currencyCode);
-                    form.setValue("currencySymbol", config.currencySymbol);
-                    form.setValue("currencyName", config.currencyName);
-                    form.setValue("currencyLocale", config.currencyLocale);
+                    setValue("currencyCode", config.currencyCode);
+                    setValue("currencySymbol", config.currencySymbol);
+                    setValue("currencyName", config.currencyName);
+                    setValue("currencyLocale", config.currencyLocale);
                   }
                 }}
               >

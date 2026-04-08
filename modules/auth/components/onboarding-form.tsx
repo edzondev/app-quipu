@@ -9,14 +9,23 @@ import StepPlan from "./steps/step-plan";
 import StepProfile from "./steps/step-profile";
 import StepWelcome from "./steps/step-welcome";
 import StepWorkerType from "./steps/step-worker-type";
+import { STEP_COUNT } from "../validations/onboarding";
+import { FormProvider } from "react-hook-form";
 
-const TOTAL_INDICATOR_STEPS = 4;
+const STEP_COMPONENTS: Record<number, React.ReactNode> = {
+  0: <StepWelcome />,
+  1: <StepProfile />,
+  2: <StepWorkerType />,
+  3: <StepIncome />,
+  4: <StepPlan />,
+};
 
 export function OnboardingForm() {
   const {
     form,
-    step,
+    totalSteps,
     direction,
+    currentStep,
     isFirstStep,
     isLastStep,
     goNext,
@@ -26,15 +35,7 @@ export function OnboardingForm() {
     submitError,
   } = useOnboarding();
 
-  const indicatorStep = step - 1;
-
-  const stepContent = {
-    1: <StepWelcome />,
-    2: <StepProfile form={form} />,
-    3: <StepWorkerType form={form} />,
-    4: <StepIncome form={form} />,
-    5: <StepPlan form={form} />,
-  };
+  const indicatorStep = currentStep + 1;
 
   const animationClass =
     direction === "forward"
@@ -47,7 +48,7 @@ export function OnboardingForm() {
         {!isFirstStep && (
           <div className="px-6 md:px-10 pb-2">
             <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
-              {Array.from({ length: TOTAL_INDICATOR_STEPS }, (_, i) => (
+              {Array.from({ length: STEP_COUNT }, (_, i) => (
                 <div
                   key={`indicator-${i}`}
                   className={cn(
@@ -62,93 +63,95 @@ export function OnboardingForm() {
 
         <div className="flex items-center justify-center px-6 py-8 md:px-10">
           <div className="w-full max-w-lg">
-            <form
-              id="form-onboarding"
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-8"
-            >
-              <div key={step} className={animationClass}>
-                {stepContent[step as keyof typeof stepContent]}
-              </div>
+            <FormProvider {...form}>
+              <form
+                id="form-onboarding"
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-8"
+              >
+                <div key={currentStep} className={animationClass}>
+                  {STEP_COMPONENTS[currentStep as keyof typeof STEP_COMPONENTS]}
+                </div>
 
-              <div className="flex flex-col gap-3">
-                {isFirstStep && (
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="w-full"
-                    onClick={goNext}
-                  >
-                    Empezar <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                )}
-
-                {!isFirstStep && !isLastStep && (
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      onClick={goBack}
-                      className="px-4"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span className="sr-only">Atrás</span>
-                    </Button>
+                <div className="flex flex-col gap-3">
+                  {isFirstStep && (
                     <Button
                       type="button"
                       size="lg"
-                      className="flex-1"
+                      className="w-full"
                       onClick={goNext}
                     >
-                      Continuar <ArrowRight className="ml-2 w-4 h-4" />
+                      Empezar <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
-                  </div>
-                )}
+                  )}
 
-                {isLastStep && (
-                  <div className="flex flex-col gap-2">
+                  {!isFirstStep && !isLastStep && (
                     <div className="flex gap-3">
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="lg"
                         onClick={goBack}
-                        disabled={isSubmitting}
                         className="px-4"
                       >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="sr-only">Atrás</span>
                       </Button>
                       <Button
-                        type="submit"
-                        form="form-onboarding"
+                        type="button"
                         size="lg"
-                        disabled={isSubmitting}
                         className="flex-1"
+                        onClick={goNext}
                       >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                            Activando...
-                          </>
-                        ) : (
-                          <>
-                            Activar mi plan{" "}
-                            <ArrowRight className="ml-2 w-4 h-4" />
-                          </>
-                        )}
+                        Continuar <ArrowRight className="ml-2 w-4 h-4" />
                       </Button>
                     </div>
-                    {submitError && (
-                      <p className="text-destructive text-sm mt-1 text-center">
-                        {submitError}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </form>
+                  )}
+
+                  {isLastStep && (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-3">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="lg"
+                          onClick={goBack}
+                          disabled={isSubmitting}
+                          className="px-4"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                          <span className="sr-only">Atrás</span>
+                        </Button>
+                        <Button
+                          type="submit"
+                          form="form-onboarding"
+                          size="lg"
+                          disabled={isSubmitting}
+                          className="flex-1"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                              Activando...
+                            </>
+                          ) : (
+                            <>
+                              Activar mi plan{" "}
+                              <ArrowRight className="ml-2 w-4 h-4" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      {submitError && (
+                        <p className="text-destructive text-sm mt-1 text-center">
+                          {submitError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </form>
+            </FormProvider>
           </div>
         </div>
       </div>

@@ -1,5 +1,9 @@
 import { Briefcase, TrendingUp } from "lucide-react";
-import { Controller, type UseFormReturn } from "react-hook-form";
+import {
+  Controller,
+  useFormContext,
+  type UseFormReturn,
+} from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -7,7 +11,10 @@ import {
   FieldLabel,
 } from "@/core/components/ui/field";
 import { cn } from "@/lib/utils";
-import type { OnboardingFormData } from "@/modules/auth/validations/onboarding";
+import type {
+  OnboardingFormData,
+  OnboardingFormOutput,
+} from "@/modules/auth/validations/onboarding";
 
 type Props = {
   form: UseFormReturn<OnboardingFormData>;
@@ -28,7 +35,10 @@ const OPTIONS = [
   },
 ];
 
-export default function StepWorkerType({ form }: Props) {
+export default function StepWorkerType() {
+  const { control, getValues, setValue } =
+    useFormContext<OnboardingFormOutput>();
+
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -41,7 +51,7 @@ export default function StepWorkerType({ form }: Props) {
       <FieldGroup>
         <Controller
           name="workerType"
-          control={form.control}
+          control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel className="sr-only">Tipo de trabajador</FieldLabel>

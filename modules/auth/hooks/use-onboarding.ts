@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   type OnboardingFormData,
@@ -15,6 +15,9 @@ import {
   stepThreeSchema,
   stepFourSchema,
   stepWorkerTypeSchema,
+  defaultValues,
+  stepFields,
+  STEP_COUNT,
 } from "@/modules/auth/validations/onboarding";
 
 const STEP_SCHEMAS: Record<
@@ -32,7 +35,7 @@ const STEP_SCHEMAS: Record<
 
 export function useOnboarding() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -41,63 +44,40 @@ export function useOnboarding() {
 
   // monthlyIncome is NOT part of OnboardingFormData (not sent to the backend),
   // but lives in the form so step components can read and validate it locally.
-  const form = useForm<OnboardingFormData & { monthlyIncome: number }>({
+  const form = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: {
-      name: "",
-      country: "Peru",
-      currencyCode: "PEN",
-      currencySymbol: "S/",
-      currencyName: "Sol peruano",
-      currencyLocale: "es-PE",
-      workerType: undefined,
-      monthlyIncome: 0,
-      payFrequency: "monthly",
-      paydays: [1],
-      initialRemainingBudget: undefined,
-      allocationNeeds: 50,
-      allocationWants: 30,
-      allocationSavings: 20,
-    },
+    defaultValues,
+    mode: "onTouched",
+    reValidateMode: "onChange",
   });
 
-  const isFirstStep = step === 1;
-  const isLastStep = step === 5;
+  const goNext = useCallback(async () => {
+    console.log("currentStep", currentStep, "STEP_COUNT", STEP_COUNT);
 
-  const goNext = async () => {
-    if (step === 1) {
+    // Some steps (like the welcome/intro step) don't have any form fields.
+    // `stepFields` maps schemas to the step index; if there are no fields for
+    // the current step, skip validation so the user can advance.
+    const fields = stepFields[currentStep] ?? [];
+    if (fields.length === 0) {
+      setCurrentStep((s) => Math.min(s + 1, STEP_COUNT - 1));
       setDirection("forward");
-      setStep(2);
       return;
     }
 
-    const schema = STEP_SCHEMAS[step];
-    if (!schema) return;
+    const isValid = await form.trigger(fields, {
+      shouldFocus: true,
+    });
+    console.log("isValid", isValid);
+    if (!isValid) return;
 
-    const values = form.getValues();
-    const result = schema.safeParse(values);
-
-    if (!result.success) {
-      for (const issue of result.error.issues) {
-        const fieldName = issue.path[0] as keyof typeof values;
-        if (fieldName) {
-          form.setError(fieldName, { message: issue.message });
-        }
-      }
-      return;
-    }
-
-    form.clearErrors();
+    setCurrentStep((s) => Math.min(s + 1, STEP_COUNT - 1));
     setDirection("forward");
-    setStep((s) => s + 1);
-  };
+  }, [currentStep, form]);
 
-  const goBack = () => {
-    if (step <= 1) return;
-    form.clearErrors();
+  const goBack = useCallback(() => {
+    setCurrentStep((s) => Math.max(0, s - 1));
     setDirection("backward");
-    setStep((s) => s - 1);
-  };
+  }, []);
 
   const handleSubmit = form.handleSubmit(async (data) => {
     setSubmitError(null);
@@ -124,6 +104,15 @@ export function useOnboarding() {
         data.paydays != null &&
         !data.paydays.includes(todayDay);
 
+      // For mid-month signups, use monthlyIncome as initialRemainingBudget if not provided
+      let initialRemainingBudget: number | undefined = undefined;
+      if (isMidMonth) {
+        initialRemainingBudget =
+          data.initialRemainingBudget && data.initialRemainingBudget > 0
+            ? data.initialRemainingBudget
+            : monthlyIncome;
+      }
+
       await createProfile({
         name: data.name,
         country: data.country,
@@ -140,10 +129,7 @@ export function useOnboarding() {
         allocationSavings: data.allocationSavings,
         savingsGoalEmergency,
         savingsGoalInvestment,
-        initialRemainingBudget:
-          isMidMonth && data.initialRemainingBudget !== undefined
-            ? data.initialRemainingBudget
-            : undefined,
+        initialRemainingBudget,
       });
       await completeOnboarding();
       router.push("/dashboard");
@@ -158,14 +144,15 @@ export function useOnboarding() {
 
   return {
     form,
-    step,
-    direction,
-    isFirstStep,
-    isLastStep,
+    currentStep,
+    isFirstStep: currentStep === 0,
+    isLastStep: currentStep === STEP_COUNT - 1,
+    totalSteps: STEP_COUNT,
     goNext,
     goBack,
     handleSubmit,
     isSubmitting: form.formState.isSubmitting,
     submitError,
+    direction,
   };
 }

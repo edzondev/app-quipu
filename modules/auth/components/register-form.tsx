@@ -1,6 +1,6 @@
 "use client";
 
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import { Check, EyeIcon, EyeOffIcon, Loader2Icon, X } from "lucide-react";
 import Link from "next/link";
 import { Controller, useWatch } from "react-hook-form";
 import { Button } from "@/core/components/ui/button";
@@ -79,9 +79,14 @@ function PasswordField({
                 return (
                   <li
                     key={rule.label}
-                    className={passed ? "text-green-600" : "text-destructive"}
+                    className={passed ? "text-green-800" : "text-destructive"}
                   >
-                    {passed ? "\u2713" : "\u2717"} {rule.label}
+                    {passed ? (
+                      <Check className="inline-block size-3" />
+                    ) : (
+                      <X className="inline-block size-3" />
+                    )}{" "}
+                    {rule.label}
                   </li>
                 );
               })}
