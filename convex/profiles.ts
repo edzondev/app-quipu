@@ -93,7 +93,7 @@ export const createProfile = mutation({
       workerType: args.workerType,
       payFrequency: args.payFrequency,
       paydays: args.paydays,
-      monthlyIncome: args.monthlyIncome,
+      monthlyIncome: args.monthlyIncome ?? 0,
       estimatedMonthlyIncome: args.estimatedMonthlyIncome,
       allocationNeeds: args.allocationNeeds ?? 50,
       allocationWants: args.allocationWants ?? 30,

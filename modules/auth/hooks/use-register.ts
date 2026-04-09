@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { toast } from "sonner";
 import { useState } from "react";
 import { AUTH_ERROR_CODES } from "@/core/constants/convex.constants";
+import { analytics } from "@/lib/analytics";
 
 export const useRegister = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -48,6 +49,7 @@ export const useRegister = () => {
       return;
     }
 
+    analytics.capture.sign_up();
     redirect("/dashboard");
   };
 

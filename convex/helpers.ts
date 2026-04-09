@@ -68,6 +68,10 @@ export function requirePremium(plan: "free" | "premium") {
 
 /**
  * Returns YYYY-MM string for the current month (UTC).
+ *
+ * Note: avoid calling this inside Convex *queries* (it uses Date.now() which
+ * breaks deterministic caching). Prefer passing the month as a query argument
+ * from the client instead. Safe to call from mutations and actions.
  */
 export function currentMonthString(): string {
   return new Date().toISOString().slice(0, 7);
@@ -85,7 +89,7 @@ export async function computeEnvelopes(
   profile: {
     _id: import("./_generated/dataModel").Id<"profiles">;
     workerType: "dependent" | "independent";
-    monthlyIncome: number;
+    monthlyIncome?: number;
     allocationNeeds: number;
     allocationWants: number;
     allocationSavings: number;
@@ -97,6 +101,8 @@ export async function computeEnvelopes(
     initialRemainingBudget?: number;
     initialBudgetMonth?: string;
     lastPaydayProcessedAt?: string;
+    rescueActionId?: string;
+    rescueAppliedAt?: number;
   },
   month: string,
 ) {
@@ -137,18 +143,40 @@ export async function computeEnvelopes(
       // Don't subtract fixed commitments again
       netIncome = profile.initialRemainingBudget ?? 0;
     } else {
-      netIncome = profile.monthlyIncome - (fixedNeeds + fixedWants);
+      netIncome = (profile.monthlyIncome ?? 0) - (fixedNeeds + fixedWants);
     }
     allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
     allocatedWants = netIncome * (profile.allocationWants / 100);
     allocatedSavings = netIncome * (profile.allocationSavings / 100);
+
+    // Apply rescue transfer offsets for dependent workers.
+    // When rescue "transfer_from_savings" is applied this month,
+    // envelopeNeeds/Wants fields hold the transferred amount — add as allocation delta.
+    const rescueMonth =
+      profile.rescueAppliedAt !== undefined
+        ? new Date(profile.rescueAppliedAt).toISOString().slice(0, 7)
+        : null;
+    if (
+      profile.rescueActionId === "transfer_from_savings" &&
+      rescueMonth === month
+    ) {
+      const rescueNeeds = profile.envelopeNeeds ?? 0;
+      const rescueWants = profile.envelopeWants ?? 0;
+      allocatedNeeds = allocatedNeeds + rescueNeeds;
+      allocatedWants = allocatedWants + rescueWants;
+      allocatedSavings = Math.max(0, allocatedSavings - rescueNeeds - rescueWants);
+    }
   }
 
   const allMonthExpenses = await ctx.db
     .query("expenses")
-    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-    .collect()
-    .then((rows) => rows.filter((e) => e.date.startsWith(month)));
+    .withIndex("by_profileId_date", (q) =>
+      q
+        .eq("profileId", profile._id)
+        .gte("date", `${month}-01`)
+        .lt("date", `${month}-32`),
+    )
+    .collect();
 
   const spentNeeds = allMonthExpenses
     .filter((e) => e.envelope === "needs")
@@ -197,4 +225,52 @@ export async function computeEnvelopes(
  */
 export function todayString(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Distributes a savings amount equally across all three savings sub-envelopes
+ * (emergency, short_term, investment) for the given profile.
+ * Also advances active savings goals by their monthly required amount.
+ *
+ * Shared by processPayday, registerIncome, and registerSpecialIncome to avoid
+ * logic drift across callsites.
+ */
+export async function distributeSavingsToSubEnvelopes(
+  ctx: MutationCtx,
+  profileId: import("./_generated/dataModel").Id<"profiles">,
+  savingsAmount: number,
+): Promise<void> {
+  if (savingsAmount <= 0) return;
+
+  const subEnvelopes = await ctx.db
+    .query("savingsSubEnvelopes")
+    .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+    .collect();
+
+  const perEnvelope = savingsAmount / 3;
+  for (const sub of subEnvelopes) {
+    const newAmount = sub.currentAmount + perEnvelope;
+    const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
+    await ctx.db.patch(sub._id, {
+      currentAmount: newAmount,
+      progress: Math.min(100, Math.round((newAmount / goal) * 100)),
+    });
+  }
+
+  const savingsGoals = await ctx.db
+    .query("savingsGoals")
+    .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+    .collect();
+
+  for (const goal of savingsGoals) {
+    if (goal.currentAmount < goal.targetAmount) {
+      const contribution = Math.min(
+        goal.monthlyRequired,
+        goal.targetAmount - goal.currentAmount,
+      );
+      await ctx.db.patch(goal._id, {
+        currentAmount: goal.currentAmount + contribution,
+      });
+    }
+  }
 }

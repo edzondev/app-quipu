@@ -174,8 +174,12 @@ export default function QuickExpenseFAB() {
             />
 
             {/* Submit */}
-            <Button type="submit" className="w-full h-12 text-base">
-              Registrar
+            <Button
+              type="submit"
+              className="w-full h-12 text-base"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Registrando..." : "Registrar"}
             </Button>
           </form>
         </div>

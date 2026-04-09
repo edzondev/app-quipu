@@ -18,7 +18,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/core/components/ui/drawer";
+import { Separator } from "@/core/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DeleteExpenseButton } from "./delete-expense-button";
 import { EditExpenseForm } from "./edit-expense-form";
 
 type ExpenseData = {
@@ -65,6 +67,11 @@ export function EditExpenseModal({ expense, open, onOpenChange }: Props) {
             defaultValues={defaultValues}
             onSuccess={handleSuccess}
           />
+          <Separator className="my-2" />
+          <DeleteExpenseButton
+            expenseId={expense._id}
+            onDelete={handleSuccess}
+          />
         </DialogContent>
       </Dialog>
     );
@@ -74,9 +81,9 @@ export function EditExpenseModal({ expense, open, onOpenChange }: Props) {
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader className="text-left">
-          <DrawerTitle>Editar gasto</DrawerTitle>
+          <DrawerTitle>Modificar gasto</DrawerTitle>
           <DrawerDescription>
-            Modifica el sobre, monto o descripción de este gasto.
+            Modifica los detalles de este gasto o elimínalo.
           </DrawerDescription>
         </DrawerHeader>
         <EditExpenseForm
@@ -87,9 +94,10 @@ export function EditExpenseModal({ expense, open, onOpenChange }: Props) {
           className="px-4"
         />
         <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">Cancelar</Button>
-          </DrawerClose>
+          <DeleteExpenseButton
+            expenseId={expense._id}
+            onDelete={handleSuccess}
+          />
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Preloaded } from "convex/react";
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import { api } from "@/convex/_generated/api";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import { PremiumGate } from "@/core/components/shared/premium-gate";
@@ -49,12 +49,12 @@ export default function SettingsView({ preloaded }: Props) {
     profile,
   } = useSettings(preloaded);
 
-  const { watch, control, formState } = form;
-  const coupleModeEnabled = watch("coupleModeEnabled");
-  const needsPct = watch("allocationNeeds");
-  const wantsPct = watch("allocationWants");
-  const savingsPct = watch("allocationSavings");
-  const payFrequency = watch("payFrequency");
+  const { control, formState } = form;
+  const coupleModeEnabled = useWatch({ control, name: "coupleModeEnabled" });
+  const needsPct = useWatch({ control, name: "allocationNeeds" });
+  const wantsPct = useWatch({ control, name: "allocationWants" });
+  const savingsPct = useWatch({ control, name: "allocationSavings" });
+  const payFrequency = useWatch({ control, name: "payFrequency" });
 
   const total = needsPct + wantsPct + savingsPct;
   const currencySymbol = profile?.currencySymbol ?? "$";
@@ -316,13 +316,9 @@ export default function SettingsView({ preloaded }: Props) {
             {formState.errors.root.message}
           </p>
         )}
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Guardando..." : "Guardar cambios"}
-        </Button>
       </form>
 
-      {/* Cuotas y deudas (outside main form, uses separate mutations) */}
+      {/* Cuotas y deudas: mutaciones propias en el diálogo; Guardar usa form="settings-form". */}
       <PremiumGate featureName="Cuotas y deudas fijas">
         <Card>
           <CardHeader>
@@ -359,6 +355,15 @@ export default function SettingsView({ preloaded }: Props) {
           </CardContent>
         </Card>
       </PremiumGate>
+
+      <Button
+        type="submit"
+        form="settings-form"
+        className="w-full"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Guardando..." : "Guardar cambios"}
+      </Button>
 
       <DeleteAccountSection />
     </div>

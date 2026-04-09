@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { analytics } from "@/lib/analytics";
 
 type RescueStep = "idle" | "applying" | "done";
 
@@ -22,6 +23,7 @@ export function useRescue() {
           | "transfer_from_savings"
           | "pause_savings_contribution",
       });
+      analytics.capture.rescue_mode_resolved();
       setStep("done");
     } catch (err) {
       setStep("idle");

@@ -5,14 +5,10 @@ import { ConvexError } from "convex/values";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { analytics } from "@/lib/analytics";
+import { MIN_ASSIGNING_MS, wait } from "../lib/payday-utils";
 
 export type RegisterIncomeStep = "idle" | "assigning" | "done";
-
-const MIN_ASSIGNING_MS = 3200;
-
-function wait(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
 
 export function useRegisterIncome() {
   const [step, setStep] = useState<RegisterIncomeStep>("idle");
@@ -25,10 +21,13 @@ export function useRegisterIncome() {
     setAmount(incomeAmount);
     setStep("assigning");
     try {
-      await Promise.all([
+      const [result] = await Promise.all([
         registerIncome({ amount: incomeAmount }),
         wait(MIN_ASSIGNING_MS),
       ]);
+      analytics.capture.distribution_completed({
+        distribution_number: result.distributionsCompleted,
+      });
       setStep("done");
     } catch (err) {
       setStep("idle");

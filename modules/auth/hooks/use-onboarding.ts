@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { analytics } from "@/lib/analytics";
 import {
   type OnboardingFormData,
   onboardingSchema,
@@ -60,6 +61,10 @@ export function useOnboarding() {
 
   const isFirstStep = step === 1;
   const isLastStep = step === 5;
+
+  useEffect(() => {
+    analytics.capture.onboarding_started();
+  }, []);
 
   const goNext = async () => {
     if (step === 1) {
@@ -139,6 +144,12 @@ export function useOnboarding() {
             : undefined,
       });
       await completeOnboarding();
+      analytics.capture.salary_configured({
+        mode: isIndependent ? "independiente" : "dependiente",
+      });
+      if (isIndependent) {
+        analytics.capture.modo_independiente_activated();
+      }
       router.push("/dashboard");
     } catch (err) {
       if (err instanceof ConvexError) {

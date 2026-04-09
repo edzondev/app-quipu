@@ -11,7 +11,7 @@ export const getCurrentUserInfo = internalQuery({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Not authenticated");
     return {
       userId: identity.subject,
       email: identity.email ?? "",
@@ -30,7 +30,7 @@ export const deleteAccount = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Not authenticated");
 
     const profile = await getProfileOrThrow(ctx);
 
@@ -73,6 +73,12 @@ export const deleteAccount = mutation({
 
     // Delete the profile itself
     await ctx.db.delete(profileId);
+
+    // NOTE: Better Auth user/session/account records live in the Better Auth
+    // component's isolated schema and cannot be deleted via ctx.db here.
+    // They should be cleaned up by calling the Better Auth admin.deleteUser
+    // API from the client-side after this mutation completes, or by configuring
+    // Better Auth's `deleteUserFn` callback. Tracked as a known data-hygiene gap.
 
     return null;
   },

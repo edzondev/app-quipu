@@ -61,11 +61,13 @@ export const activatePremium = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Find profile by polarCustomerId
-    const profiles = await ctx.db.query("profiles").collect();
-    const profile = profiles.find(
-      (p) => p.polarCustomerId === args.polarCustomerId,
-    );
+    // Find profile by polarCustomerId using index for O(log n) lookup
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_polarCustomerId", (q) =>
+        q.eq("polarCustomerId", args.polarCustomerId),
+      )
+      .unique();
 
     if (!profile) {
       // First time: the polarCustomerId might not be set yet.
@@ -93,10 +95,13 @@ export const revokePremium = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const profiles = await ctx.db.query("profiles").collect();
-    const profile = profiles.find(
-      (p) => p.polarSubscriptionId === args.polarSubscriptionId,
-    );
+    // Find profile by polarSubscriptionId using index for O(log n) lookup
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_polarSubscriptionId", (q) =>
+        q.eq("polarSubscriptionId", args.polarSubscriptionId),
+      )
+      .unique();
 
     if (!profile) return null;
 

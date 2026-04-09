@@ -18,6 +18,7 @@ import type * as payday from "../payday.js";
 import type * as polar from "../polar.js";
 import type * as profiles from "../profiles.js";
 import type * as rescue from "../rescue.js";
+import type * as runtimeEnv from "../runtimeEnv.js";
 import type * as savings from "../savings.js";
 import type * as specialIncomes from "../specialIncomes.js";
 import type * as streaks from "../streaks.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   polar: typeof polar;
   profiles: typeof profiles;
   rescue: typeof rescue;
+  runtimeEnv: typeof runtimeEnv;
   savings: typeof savings;
   specialIncomes: typeof specialIncomes;
   streaks: typeof streaks;

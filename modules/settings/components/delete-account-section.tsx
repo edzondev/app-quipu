@@ -39,8 +39,10 @@ export function DeleteAccountSection() {
     if (!emailMatches || !email) return;
     setIsDeleting(true);
     try {
+      // Delete app data (expenses, savings, profile, etc.)
       await deleteAccount({ confirmEmail });
-      await authClient.signOut();
+      // Delete Better Auth user record (sessions, accounts, user row)
+      await authClient.deleteUser();
       toast.success("Tu cuenta ha sido eliminada.");
       setOpen(false);
       router.push("/");

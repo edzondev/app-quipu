@@ -56,12 +56,17 @@ export default function RecentExpenses({
               <h2 className="font-semibold">Gastos recientes</h2>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            <div
+              role="group"
+              aria-label="Filtrar gastos"
+              className="flex items-center gap-2 flex-wrap"
+            >
               {(["all", "needs", "wants"] as const).map((f) => (
                 <button
                   key={f}
                   type="button"
                   onClick={() => onFilterChange(f)}
+                  aria-pressed={filter === f}
                   className={cn(
                     "px-3 py-1 rounded-full text-xs font-medium transition-colors",
                     filter === f

@@ -1,9 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import {
   computeEnvelopes,
   currentMonthString,
+  distributeSavingsToSubEnvelopes,
   getProfileOrThrow,
   todayString,
 } from "./helpers";
@@ -122,7 +123,7 @@ export const getPaydayStatus = query({
       daysUntilNextPayday,
       profile: {
         currencySymbol: profile.currencySymbol,
-        monthlyIncome: profile.monthlyIncome,
+        monthlyIncome: profile.monthlyIncome ?? 0,
         allocationNeeds: profile.allocationNeeds,
         allocationWants: profile.allocationWants,
         allocationSavings: profile.allocationSavings,
@@ -197,11 +198,11 @@ export const getDashboardData = query({
         .collect(),
       ctx.db
         .query("expenses")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect()
-        .then((rows) =>
-          [...rows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20),
-        ),
+        .withIndex("by_profileId_date", (q) =>
+          q.eq("profileId", profile._id),
+        )
+        .order("desc")
+        .take(20),
       ctx.db
         .query("streaks")
         .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
@@ -284,7 +285,7 @@ export const getDashboardData = query({
  */
 export const processPayday = mutation({
   args: {},
-  returns: v.null(),
+  returns: v.number(),
   handler: async (ctx) => {
     const profile = await getProfileOrThrow(ctx);
 
@@ -300,7 +301,7 @@ export const processPayday = mutation({
         currentMonth,
       )
     ) {
-      return null;
+      return profile.distributionsCompleted ?? 0;
     }
 
     const commitments = await ctx.db
@@ -309,48 +310,20 @@ export const processPayday = mutation({
       .collect();
 
     const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
-    const netIncome = profile.monthlyIncome - totalFixed;
+    const netIncome = (profile.monthlyIncome ?? 0) - totalFixed;
     const savingsAmount = netIncome * (profile.allocationSavings / 100);
 
     // Si el usuario activó Modo Rescate este mes, omitir distribución de ahorro
     if (profile.rescuePausedSavingsMonth !== currentMonth) {
-      // Distribute savings across sub-envelopes
-      const subEnvelopes = await ctx.db
-        .query("savingsSubEnvelopes")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect();
-
-      const perEnvelope = savingsAmount / 3;
-      for (const sub of subEnvelopes) {
-        const newAmount = sub.currentAmount + perEnvelope;
-        const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
-        await ctx.db.patch(sub._id, {
-          currentAmount: newAmount,
-          progress: Math.min(100, Math.round((newAmount / goal) * 100)),
-        });
-      }
-
-      // Also advance current amount in active savings goals
-      const goals = await ctx.db
-        .query("savingsGoals")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect();
-
-      for (const goal of goals) {
-        if (goal.currentAmount < goal.targetAmount) {
-          const contribution = Math.min(
-            goal.monthlyRequired,
-            goal.targetAmount - goal.currentAmount,
-          );
-          await ctx.db.patch(goal._id, {
-            currentAmount: goal.currentAmount + contribution,
-          });
-        }
-      }
+      await distributeSavingsToSubEnvelopes(ctx, profile._id, savingsAmount);
     }
 
-    // Mark this period as processed
-    await ctx.db.patch(profile._id, { lastPaydayProcessedAt: today });
+    // Mark this period as processed and increment distribution counter
+    const newDistributionsCompleted = (profile.distributionsCompleted ?? 0) + 1;
+    await ctx.db.patch(profile._id, {
+      lastPaydayProcessedAt: today,
+      distributionsCompleted: newDistributionsCompleted,
+    });
 
     // Schedule end-of-month streak evaluation (runs at midnight on last day of month)
     const now = new Date();
@@ -372,7 +345,7 @@ export const processPayday = mutation({
       );
     }
 
-    return null;
+    return newDistributionsCompleted;
   },
 });
 
@@ -389,6 +362,7 @@ export const registerIncome = mutation({
     needs: v.number(),
     wants: v.number(),
     savings: v.number(),
+    distributionsCompleted: v.number(),
   }),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
@@ -399,50 +373,25 @@ export const registerIncome = mutation({
       );
     }
 
+    if (args.amount <= 0) {
+      throw new ConvexError("El monto debe ser mayor a 0");
+    }
+
     const needs = args.amount * (profile.allocationNeeds / 100);
     const wants = args.amount * (profile.allocationWants / 100);
     const savings = args.amount * (profile.allocationSavings / 100);
 
+    const newDistributionsCompleted = (profile.distributionsCompleted ?? 0) + 1;
     await ctx.db.patch(profile._id, {
       envelopeNeeds: (profile.envelopeNeeds ?? 0) + needs,
       envelopeWants: (profile.envelopeWants ?? 0) + wants,
       envelopeSavings: (profile.envelopeSavings ?? 0) + savings,
+      distributionsCompleted: newDistributionsCompleted,
     });
 
-    // Distribute savings into sub-envelopes (same as processPayday for dependent workers)
-    const subEnvelopes = await ctx.db
-      .query("savingsSubEnvelopes")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
+    // Distribute savings into sub-envelopes
+    await distributeSavingsToSubEnvelopes(ctx, profile._id, savings);
 
-    const perEnvelope = savings / 3;
-    for (const sub of subEnvelopes) {
-      const newAmount = sub.currentAmount + perEnvelope;
-      const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
-      await ctx.db.patch(sub._id, {
-        currentAmount: newAmount,
-        progress: Math.min(100, Math.round((newAmount / goal) * 100)),
-      });
-    }
-
-    // Also advance current amount in active savings goals
-    const savingsGoals = await ctx.db
-      .query("savingsGoals")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-
-    for (const goal of savingsGoals) {
-      if (goal.currentAmount < goal.targetAmount) {
-        const contribution = Math.min(
-          goal.monthlyRequired,
-          goal.targetAmount - goal.currentAmount,
-        );
-        await ctx.db.patch(goal._id, {
-          currentAmount: goal.currentAmount + contribution,
-        });
-      }
-    }
-
-    return { needs, wants, savings };
+    return { needs, wants, savings, distributionsCompleted: newDistributionsCompleted };
   },
 });

@@ -1,6 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getProfile, getProfileOrThrow, requirePremium } from "./helpers";
+import {
+  distributeSavingsToSubEnvelopes,
+  getProfile,
+  getProfileOrThrow,
+  requirePremium,
+} from "./helpers";
 
 // Free plan limit: 1 active savings goal
 const FREE_PLAN_GOALS_LIMIT = 1;
@@ -56,22 +61,7 @@ export const distributeSavings = mutation({
 
     if (args.amount <= 0) return null;
 
-    const subEnvelopes = await ctx.db
-      .query("savingsSubEnvelopes")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-
-    // Default: distribute equally among three sub-envelopes
-    const perEnvelope = args.amount / 3;
-
-    for (const sub of subEnvelopes) {
-      const newAmount = sub.currentAmount + perEnvelope;
-      const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
-      await ctx.db.patch(sub._id, {
-        currentAmount: newAmount,
-        progress: Math.min(100, Math.round((newAmount / goal) * 100)),
-      });
-    }
+    await distributeSavingsToSubEnvelopes(ctx, profile._id, args.amount);
 
     return null;
   },
@@ -92,6 +82,10 @@ export const withdrawFromEmergencyFund = mutation({
       throw new ConvexError(
         "You must confirm the withdrawal from your emergency fund",
       );
+    }
+
+    if (args.amount <= 0) {
+      throw new ConvexError("Amount must be greater than 0");
     }
 
     const profile = await getProfileOrThrow(ctx);

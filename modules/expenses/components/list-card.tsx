@@ -60,7 +60,7 @@ export default function ListCard({ envelope, month, className }: Props) {
   const isEmpty = !isLoading && results && results.length === 0;
 
   return (
-    <Card className={cn(className)}>
+    <Card className={cn("py-3",className)}>
       <CardContent
         className={cn("relative", isLoading && !hasResults && "min-h-41")}
       >
@@ -86,7 +86,7 @@ export default function ListCard({ envelope, month, className }: Props) {
                 type="button"
                 key={expense._id}
                 onClick={() => setSelectedExpense(expense as ExpenseItem)}
-                className="flex w-full items-center justify-between py-3 first:pt-0 last:pb-0 text-left cursor-pointer hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors"
+                className="flex w-full items-center justify-between py-3 text-left cursor-pointer hover:bg-muted/50 mx-auto px-2 rounded-lg transition-colors border-0"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">

@@ -58,7 +58,7 @@ Sabes exactamente cuánto tienes disponible en cada categoría en todo momento.
 
 ## Stack
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Base de datos:** [Convex](https://convex.dev) — tiempo real y transaccional
 - **Auth:** [Better Auth](https://better-auth.com)
 - **Pagos:** [Polar.sh](https://polar.sh)
@@ -77,7 +77,7 @@ git clone https://github.com/tu-usuario/quipu.git
 cd quipu
 
 # Instalar dependencias
-npm install
+bun install
 
 # Configurar variables de entorno
 cp .env.example .env.local
@@ -87,7 +87,7 @@ cp .env.example .env.local
 npx convex dev
 
 # Iniciar la app
-npm run dev
+bun dev
 ```
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
@@ -96,27 +96,18 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## Variables de entorno
 
-Crea un archivo `.env.local` en la raíz del proyecto:
+1. Copia la plantilla: `cp .env.example .env.local`
+2. Rellena los valores. Los comentarios en `.env.example` indican qué consume **Next.js** y qué debe estar también en el **dashboard de Convex** (Polar, Better Auth, etc.).
 
-```bash
-# Convex
-NEXT_PUBLIC_CONVEX_URL=
+Resumen de nombres que usa el código:
 
-# Better Auth
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=
-
-# Polar
-POLAR_ACCESS_TOKEN=
-POLAR_WEBHOOK_SECRET=
-
-# Resend
-RESEND_API_KEY=
-
-# Sentry (opcional en desarrollo)
-SENTRY_DSN=
-SENTRY_AUTH_TOKEN=
-```
+- **Convex / cliente:** `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`
+- **App:** `SITE_URL` (URL canónica; Better Auth en Convex usa esto como `baseURL`)
+- **Auth:** `BETTER_AUTH_SECRET` (en Convex)
+- **Polar (Convex):** `POLAR_ORGANIZATION_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_SERVER`, `POLAR_PRODUCT_ID_PREMIUM` — no `POLAR_ACCESS_TOKEN`
+- **PostHog:** `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
+- **Sentry:** `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, opcional `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN` (build)
+- **E2E:** `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`
 
 ---
 

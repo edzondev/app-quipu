@@ -8,6 +8,8 @@ import Script from "next/script";
 import ToastProvider from "@/core/components/providers/toast-provider";
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import { PostHogProvider } from "@/core/components/providers/posthog-provider";
+import { PostHogPageView } from "@/core/components/providers/posthog-pageview";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -62,9 +64,12 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${spaceGrotesk.variable} antialiased`}
       >
-        <Suspense>
-          <ConvexProviderWithToken>{children}</ConvexProviderWithToken>
-        </Suspense>
+        <PostHogProvider>
+          <Suspense>
+            <PostHogPageView />
+            <ConvexProviderWithToken>{children}</ConvexProviderWithToken>
+          </Suspense>
+        </PostHogProvider>
         <Analytics />
       </body>
     </html>

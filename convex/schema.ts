@@ -40,7 +40,7 @@ export default defineSchema({
     workerType: workerType,
     payFrequency: v.optional(payFrequency),
     paydays: v.optional(v.array(v.number())),
-    monthlyIncome: v.number(),
+    monthlyIncome: v.optional(v.number()),
     estimatedMonthlyIncome: v.optional(v.number()),
     initialRemainingBudget: v.optional(v.number()),
     initialBudgetMonth: v.optional(v.string()),
@@ -65,7 +65,11 @@ export default defineSchema({
     rescuePausedSavingsMonth: v.optional(v.string()),
     rescueAppliedAt: v.optional(v.number()),
     rescueActionId: v.optional(v.string()),
-  }).index("by_userId", ["userId"]),
+    distributionsCompleted: v.optional(v.number()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_polarCustomerId", ["polarCustomerId"])
+    .index("by_polarSubscriptionId", ["polarSubscriptionId"]),
 
   fixedCommitments: defineTable({
     profileId: v.id("profiles"),

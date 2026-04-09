@@ -7,6 +7,10 @@ import { PolarCore } from "@polar-sh/sdk/core.js";
 import { checkoutsCreate } from "@polar-sh/sdk/funcs/checkoutsCreate.js";
 import { customerSessionsCreate } from "@polar-sh/sdk/funcs/customerSessionsCreate.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
+import {
+  getPolarProductIdPremium,
+  requirePolarOrganizationToken,
+} from "./runtimeEnv";
 
 // ─── Polar Client ─────────────────────────────────────────────────────────────
 // Reads from Convex env vars:
@@ -27,7 +31,7 @@ export const polar: Polar<DataModel, { premium: string }> = new Polar(
     // Map your internal plan keys to Polar product IDs.
     // Add more entries here as you create new products in Polar.
     products: {
-      premium: process.env.POLAR_PRODUCT_ID_PREMIUM!,
+      premium: getPolarProductIdPremium() ?? "",
     },
 
     // Remaining config falls back to env vars:
@@ -75,10 +79,10 @@ export const createCustomerPortalSession = action({
       internal.subscriptions.getMyPlanInternal,
     );
 
+    const rawServer1 = process.env.POLAR_SERVER ?? "sandbox";
     const polarClient = new PolarCore({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
-      server:
-        (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
+      accessToken: requirePolarOrganizationToken(),
+      server: rawServer1 === "production" ? "production" : "sandbox",
     });
 
     // ── Path 1: externalCustomerId (preferred, no cache issues) ────────────
@@ -106,10 +110,14 @@ export const createCustomerPortalSession = action({
     if (!byId.ok) throw byId.error;
 
     // Backfill externalCustomerId on the Polar customer so path #1 works next time
-    void customersUpdate(polarClient, {
-      id: polarCustomerId,
-      customerUpdate: { externalId: userId },
-    });
+    try {
+      await customersUpdate(polarClient, {
+        id: polarCustomerId,
+        customerUpdate: { externalId: userId },
+      });
+    } catch (err) {
+      console.error("Failed to backfill Polar externalCustomerId:", err);
+    }
 
     return byId.value.customerPortalUrl;
   },
@@ -124,17 +132,17 @@ export const createPremiumCheckout = action({
     successUrl: v.string(),
   },
   handler: async (ctx, { origin, successUrl }) => {
-    const productId = process.env.POLAR_PRODUCT_ID_PREMIUM;
+    const productId = getPolarProductIdPremium();
     if (!productId) throw new Error("POLAR_PRODUCT_ID_PREMIUM not set");
 
     const { userId, email } = await ctx.runQuery(
       internal.users.getCurrentUserInfo,
     );
 
+    const rawServer2 = process.env.POLAR_SERVER ?? "sandbox";
     const polarClient = new PolarCore({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
-      server:
-        (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
+      accessToken: requirePolarOrganizationToken(),
+      server: rawServer2 === "production" ? "production" : "sandbox",
     });
 
     // Pass both customerEmail and externalCustomerId so Polar links the customer

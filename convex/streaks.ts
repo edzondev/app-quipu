@@ -1,7 +1,12 @@
 import { v } from "convex/values";
 import { internalMutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
-import { getProfile, getProfileOrThrow, currentMonthString } from "./helpers";
+import {
+  computeEnvelopes,
+  currentMonthString,
+  getProfile,
+  getProfileOrThrow,
+} from "./helpers";
 import type { Id } from "./_generated/dataModel";
 
 // ─── Achievement Catalog ───────────────────────────────────────────────────────
@@ -86,6 +91,22 @@ export const ACHIEVEMENT_CATALOG = [
     title: "Racha Imparable",
     description: "3 meses consecutivos cumpliendo el plan",
     icon: "🔥",
+    category: "streak",
+    tier: "premium",
+  },
+  {
+    achievementId: "streak_6",
+    title: "Medio año",
+    description: "6 meses seguidos controlando tu dinero",
+    icon: "🏆",
+    category: "streak",
+    tier: "premium",
+  },
+  {
+    achievementId: "streak_12",
+    title: "Un año completo",
+    description: "12 meses de racha — eres un ejemplo de disciplina",
+    icon: "💎",
     category: "streak",
     tier: "premium",
   },
@@ -200,30 +221,14 @@ export const evaluateMonthCompliance = internalMutation({
 
     if (existing) return null;
 
-    // Calculate compliance
-    const expenses = await ctx.db
-      .query("expenses")
-      .withIndex("by_profileId", (q) => q.eq("profileId", args.profileId))
-      .collect();
+    // Use computeEnvelopes to ensure consistent calculations for both
+    // dependent and independent workers (avoids duplicating allocation logic)
+    const computed = await computeEnvelopes(ctx, profile, month);
 
-    const monthExpenses = expenses.filter((e) => e.date.startsWith(month));
-    const spentNeeds = monthExpenses
-      .filter((e) => e.envelope === "needs")
-      .reduce((sum, e) => sum + e.amount, 0);
-    const spentWants = monthExpenses
-      .filter((e) => e.envelope === "wants")
-      .reduce((sum, e) => sum + e.amount, 0);
-
-    const commitments = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", args.profileId))
-      .collect();
-
-    const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
-    const netIncome = profile.monthlyIncome - totalFixed;
-
-    const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
-    const allocatedWants = netIncome * (profile.allocationWants / 100);
+    const spentNeeds = computed.envelopes.needs.spent;
+    const spentWants = computed.envelopes.wants.spent;
+    const allocatedNeeds = computed.envelopes.needs.allocated;
+    const allocatedWants = computed.envelopes.wants.allocated;
 
     const compliant =
       spentNeeds <= allocatedNeeds && spentWants <= allocatedWants;

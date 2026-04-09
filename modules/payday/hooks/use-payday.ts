@@ -5,14 +5,10 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { analytics } from "@/lib/analytics";
+import { MIN_ASSIGNING_MS, wait } from "../lib/payday-utils";
 
 type PaydayStep = "idle" | "assigning" | "done";
-
-const MIN_ASSIGNING_MS = 3200;
-
-function wait(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
 
 export function usePayday() {
   const [step, setStep] = useState<PaydayStep>("idle");
@@ -23,7 +19,13 @@ export function usePayday() {
   const handleAssign = async () => {
     setStep("assigning");
     try {
-      await Promise.all([processPayday(), wait(MIN_ASSIGNING_MS)]);
+      const [distributionNumber] = await Promise.all([
+        processPayday(),
+        wait(MIN_ASSIGNING_MS),
+      ]);
+      analytics.capture.distribution_completed({
+        distribution_number: distributionNumber,
+      });
       setStep("done");
     } catch (err) {
       setStep("idle");

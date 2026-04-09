@@ -4,6 +4,7 @@ import {
   computeEnvelopes,
   currentMonthString,
   getProfileOrThrow,
+  requirePremium,
 } from "./helpers";
 
 /**
@@ -96,6 +97,7 @@ export const applyRescueSolution = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
+    requirePremium(profile.plan);
     const month = currentMonthString();
 
     if (args.actionId === "transfer_from_savings") {

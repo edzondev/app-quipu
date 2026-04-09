@@ -2,9 +2,10 @@
 
 import { AlertTriangle, ArrowRight, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlan } from "@/hooks/use-plan";
 import { Button } from "@/core/components/ui/button";
+import { analytics } from "@/lib/analytics";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,10 @@ export function RescueModeBanner({
   const router = useRouter();
   const { isPremium } = usePlan();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  useEffect(() => {
+    analytics.capture.rescue_mode_triggered({ reason: "auto" });
+  }, []);
 
   const overflowMessage =
     needsOverflow > 0

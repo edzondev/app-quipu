@@ -2,8 +2,9 @@ import { useMutation } from "convex/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
-import { useExpenseLimit } from "@/hooks/use-expense-limit";
+import { useExpenseLimit } from "@/core/hooks/use-expense-limit";
 import { type Expense, expenseSchema } from "../schemas/expense.schema";
 
 const MAX_DECIMALS = 2;
@@ -70,6 +71,9 @@ export default function useCreateExpense() {
       form.reset();
     } catch (error) {
       console.error(error);
+      const message =
+        error instanceof Error ? error.message : "No se pudo registrar el gasto";
+      toast.error(message);
     }
   };
 

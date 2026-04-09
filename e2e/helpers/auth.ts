@@ -34,8 +34,8 @@ export async function loginAs(
   );
 }
 
-/** Default test credentials */
+/** Default test credentials — set E2E_TEST_EMAIL and E2E_TEST_PASSWORD in .env.local */
 export const TEST_USER = {
-  email: "edzonperez.castillo@gmail.com",
-  password: "Edzondev2000!",
+  email: process.env.E2E_TEST_EMAIL ?? "",
+  password: process.env.E2E_TEST_PASSWORD ?? "",
 } as const;

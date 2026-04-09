@@ -29,7 +29,9 @@ export const listExpenses = query({
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
 
-    // When filtering by envelope, use the dedicated index
+    // When filtering by envelope, use the dedicated index.
+    // Month filtering is applied in memory for the envelope index since Convex
+    // does not support multi-range queries on a single index.
     if (args.envelope) {
       const results = await ctx.db
         .query("expenses")
@@ -39,7 +41,6 @@ export const listExpenses = query({
         .order("desc")
         .paginate(args.paginationOpts);
 
-      // Additional month filter in memory (Convex indexes don't support multi-range)
       if (args.month) {
         return {
           ...results,
@@ -49,20 +50,26 @@ export const listExpenses = query({
       return results;
     }
 
-    // No envelope filter — use profileId index and filter month in memory
-    const results = await ctx.db
+    // With month filter: use date-range index so pagination stays within the month.
+    if (args.month) {
+      return await ctx.db
+        .query("expenses")
+        .withIndex("by_profileId_date", (q) =>
+          q
+            .eq("profileId", profile._id)
+            .gte("date", `${args.month}-01`)
+            .lt("date", `${args.month}-32`),
+        )
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+
+    // No filters — paginate all expenses for this profile
+    return await ctx.db
       .query("expenses")
       .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
       .order("desc")
       .paginate(args.paginationOpts);
-
-    if (args.month) {
-      return {
-        ...results,
-        page: results.page.filter((e) => e.date.startsWith(args.month!)),
-      };
-    }
-    return results;
   },
 });
 
@@ -79,12 +86,15 @@ export const getMonthlyTotals = query({
     if (!profile) return null;
     const month = args.month ?? currentMonthString();
 
-    const expenses = await ctx.db
+    const monthExpenses = await ctx.db
       .query("expenses")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .withIndex("by_profileId_date", (q) =>
+        q
+          .eq("profileId", profile._id)
+          .gte("date", `${month}-01`)
+          .lt("date", `${month}-32`),
+      )
       .collect();
-
-    const monthExpenses = expenses.filter((e) => e.date.startsWith(month));
 
     return {
       total: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
@@ -114,10 +124,15 @@ export const getCurrentMonthCount = query({
 
     const expenses = await ctx.db
       .query("expenses")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .withIndex("by_profileId_date", (q) =>
+        q
+          .eq("profileId", profile._id)
+          .gte("date", `${month}-01`)
+          .lt("date", `${month}-32`),
+      )
       .collect();
 
-    return expenses.filter((e) => e.date.startsWith(month)).length;
+    return expenses.length;
   },
 });
 
@@ -153,14 +168,15 @@ export const registerExpense = mutation({
       const month = currentMonthString();
       const monthExpenses = await ctx.db
         .query("expenses")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .withIndex("by_profileId_date", (q) =>
+          q
+            .eq("profileId", profile._id)
+            .gte("date", `${month}-01`)
+            .lt("date", `${month}-32`),
+        )
         .collect();
 
-      const count = monthExpenses.filter((e) =>
-        e.date.startsWith(month),
-      ).length;
-
-      if (count >= FREE_PLAN_MONTHLY_LIMIT) {
+      if (monthExpenses.length >= FREE_PLAN_MONTHLY_LIMIT) {
         throw new ConvexError(
           `Free plan limit: ${FREE_PLAN_MONTHLY_LIMIT} expenses per month`,
         );
@@ -181,11 +197,13 @@ export const registerExpense = mutation({
       registeredBy: args.registeredBy ?? "user",
     });
 
-    const allExpenses = await ctx.db
+    // Count total expenses for achievement tracking (all-time, not just current month)
+    const totalExpenseCount = await ctx.db
       .query("expenses")
       .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-    await unlockExpenseAchievements(ctx, profile._id, allExpenses.length);
+      .collect()
+      .then((rows) => rows.length);
+    await unlockExpenseAchievements(ctx, profile._id, totalExpenseCount);
 
     return expenseId;
   },

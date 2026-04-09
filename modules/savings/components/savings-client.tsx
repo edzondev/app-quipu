@@ -24,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/core/components/ui/alert-dialog";
 import { Id } from "@/convex/_generated/dataModel";
+import { useState } from "react";
 
 type Props = {
   preloadedSubs: Preloaded<typeof api.savings.getSavingsSubEnvelopes>;
@@ -41,6 +42,7 @@ export function SavingsClient({
   const profile = usePreloadedQuery(preloadedProfile);
   const mutation = useMutation(api.savings.deleteSavingsGoal);
   const { isPremium } = usePlan();
+  const [deletingGoalId, setDeletingGoalId] = useState<Id<"savingsGoals"> | null>(null);
 
   if (!profile || !subEnvelopes) return null;
 
@@ -68,7 +70,13 @@ export function SavingsClient({
   })[];
 
   const handleDelete = async (goalId: Id<"savingsGoals">) => {
-    await mutation({ goalId });
+    if (deletingGoalId) return;
+    setDeletingGoalId(goalId);
+    try {
+      await mutation({ goalId });
+    } finally {
+      setDeletingGoalId(null);
+    }
   };
 
   return (
@@ -177,8 +185,9 @@ export function SavingsClient({
                         <AlertDialogAction
                           variant="destructive"
                           onClick={() => handleDelete(goal._id)}
+                          disabled={deletingGoalId === goal._id}
                         >
-                          Continuar
+                          {deletingGoalId === goal._id ? "Eliminando..." : "Continuar"}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

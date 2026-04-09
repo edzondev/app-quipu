@@ -8,6 +8,7 @@ import { Polar as PolarSDK } from "@polar-sh/sdk";
 import { components } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
 import authConfig from "../auth.config";
+import { getPolarOrganizationToken, getSiteUrl } from "../runtimeEnv";
 import schema from "./schema";
 
 // Better Auth Component
@@ -22,16 +23,25 @@ export const authComponent = createClient<DataModel, typeof schema>(
 // ─── Polar SDK Client ─────────────────────────────────────────────────────────
 // Reads POLAR_ORGANIZATION_TOKEN and POLAR_SERVER from Convex env vars.
 // (Better Auth routes run inside Convex HTTP actions via @convex-dev/better-auth)
+const rawPolarServer = process.env.POLAR_SERVER ?? "sandbox";
+if (rawPolarServer !== "sandbox" && rawPolarServer !== "production") {
+  console.error(
+    `POLAR_SERVER must be "sandbox" or "production", got: "${rawPolarServer}". Defaulting to "sandbox".`,
+  );
+}
+const polarServer: "sandbox" | "production" =
+  rawPolarServer === "production" ? "production" : "sandbox";
+
 const polarSDKClient = new PolarSDK({
-  accessToken: process.env.POLAR_ORGANIZATION_TOKEN,
-  server: (process.env.POLAR_SERVER as "sandbox" | "production") ?? "sandbox",
+  accessToken: getPolarOrganizationToken(),
+  server: polarServer,
 });
 
 // Better Auth Options
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   return {
     appName: "app-quipu",
-    baseURL: process.env.SITE_URL,
+    baseURL: getSiteUrl(),
     secret: process.env.BETTER_AUTH_SECRET,
     database: authComponent.adapter(ctx),
     emailAndPassword: {

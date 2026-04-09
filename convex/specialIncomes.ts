@@ -1,6 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getProfileOrThrow, requirePremium } from "./helpers";
+import {
+  distributeSavingsToSubEnvelopes,
+  getProfileOrThrow,
+  requirePremium,
+} from "./helpers";
 
 // Threshold: a special income is detected when > 1.5x the configured monthly income
 const EXTRAORDINARY_INCOME_MULTIPLIER = 1.5;
@@ -38,7 +42,7 @@ export const checkIfExtraordinary = query({
   ),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
-    const threshold = profile.monthlyIncome * EXTRAORDINARY_INCOME_MULTIPLIER;
+    const threshold = (profile.monthlyIncome ?? 0) * EXTRAORDINARY_INCOME_MULTIPLIER;
 
     if (args.amount <= threshold) {
       return { isExtraordinary: false as const };
@@ -103,7 +107,7 @@ export const registerSpecialIncome = mutation({
       }
     }
 
-    return await ctx.db.insert("specialIncomes", {
+    const recordId = await ctx.db.insert("specialIncomes", {
       profileId: profile._id,
       typeId: args.typeId,
       amount: args.amount,
@@ -113,5 +117,37 @@ export const registerSpecialIncome = mutation({
       customAllocWants: args.customAllocWants,
       customAllocSavings: args.customAllocSavings,
     });
+
+    // Compute allocation amounts based on chosen strategy
+    let allocNeeds: number;
+    let allocWants: number;
+    let allocSavings: number;
+
+    if (args.allocationStrategy === "savings") {
+      allocNeeds = 0;
+      allocWants = 0;
+      allocSavings = args.amount;
+    } else if (args.allocationStrategy === "distribute") {
+      allocNeeds = args.amount * (profile.allocationNeeds / 100);
+      allocWants = args.amount * (profile.allocationWants / 100);
+      allocSavings = args.amount * (profile.allocationSavings / 100);
+    } else {
+      // custom — percentages already validated to sum to 100
+      allocNeeds = args.amount * (args.customAllocNeeds! / 100);
+      allocWants = args.amount * (args.customAllocWants! / 100);
+      allocSavings = args.amount * (args.customAllocSavings! / 100);
+    }
+
+    // Apply allocations to envelope balances (independent worker fields)
+    await ctx.db.patch(profile._id, {
+      envelopeNeeds: (profile.envelopeNeeds ?? 0) + allocNeeds,
+      envelopeWants: (profile.envelopeWants ?? 0) + allocWants,
+      envelopeSavings: (profile.envelopeSavings ?? 0) + allocSavings,
+    });
+
+    // Distribute savings portion into sub-envelopes
+    await distributeSavingsToSubEnvelopes(ctx, profile._id, allocSavings);
+
+    return recordId;
   },
 });

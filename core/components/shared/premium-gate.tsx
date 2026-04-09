@@ -15,7 +15,15 @@ type Props = {
 export function PremiumGate({ children, featureName, className }: Props) {
   const { isPremium, isLoading } = usePlan();
 
-  if (isLoading || isPremium) return <>{children}</>;
+  if (isLoading) {
+    return (
+      <div className={cn("animate-pulse space-y-3", className)}>
+        <div className="h-24 rounded-xl bg-muted" />
+      </div>
+    );
+  }
+
+  if (isPremium) return <>{children}</>;
 
   return (
     <div className={cn("space-y-0", className)}>
