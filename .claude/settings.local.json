@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun run:*)"
+      "Bash(bun run:*)",
+      "Bash(bunx @biomejs/biome check --write app/layout.tsx app/robots.ts app/sitemap.ts app/page.tsx \"app/\\(auth\\)/\\(routes\\)/login/page.tsx\" \"app/\\(auth\\)/\\(routes\\)/register/page.tsx\" \"app/\\(auth\\)/onboarding/page.tsx\" \"app/\\(upgrade\\)/upgrade/page.tsx\")"
     ]
   }
 }

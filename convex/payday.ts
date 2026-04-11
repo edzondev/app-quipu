@@ -198,9 +198,7 @@ export const getDashboardData = query({
         .collect(),
       ctx.db
         .query("expenses")
-        .withIndex("by_profileId_date", (q) =>
-          q.eq("profileId", profile._id),
-        )
+        .withIndex("by_profileId_date", (q) => q.eq("profileId", profile._id))
         .order("desc")
         .take(20),
       ctx.db
@@ -392,6 +390,11 @@ export const registerIncome = mutation({
     // Distribute savings into sub-envelopes
     await distributeSavingsToSubEnvelopes(ctx, profile._id, savings);
 
-    return { needs, wants, savings, distributionsCompleted: newDistributionsCompleted };
+    return {
+      needs,
+      wants,
+      savings,
+      distributionsCompleted: newDistributionsCompleted,
+    };
   },
 });

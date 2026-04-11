@@ -17,7 +17,7 @@ import {
 export function useSettings(
   preloaded: Preloaded<typeof api.profiles.getMyProfile>,
 ) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const profile = usePreloadedQuery(preloaded);
   const commitments = useQuery(api.fixedCommitments.listFixedCommitments);
 
@@ -68,7 +68,7 @@ export function useSettings(
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       await updateProfile({
         monthlyIncome: data.monthlyIncome,
         payFrequency: data.payFrequency,
@@ -80,7 +80,7 @@ export function useSettings(
         coupleMonthlyBudget: data.coupleMonthlyBudget,
       });
       toast.success("Cambios guardados");
-      setIsLoading(false)
+      setIsLoading(false);
     } catch (e: unknown) {
       const message =
         e instanceof ConvexError
@@ -90,13 +90,13 @@ export function useSettings(
             : "Error al guardar los cambios";
       form.setError("root", { message });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   });
 
   const handleDeleteCommitment = async (commitmentId: string) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       await deleteCommitment({
         commitmentId: commitmentId as Parameters<
           typeof deleteCommitment
@@ -112,7 +112,7 @@ export function useSettings(
             : "Error al eliminar la cuota";
       toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
 

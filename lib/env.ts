@@ -50,12 +50,15 @@ export function getSiteUrl(): string | undefined {
  * Preferir NEXT_PUBLIC_POSTHOG_KEY; NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN es alias heredado.
  */
 export function getPosthogKey(): string | undefined {
-  return trim(process.env.NEXT_PUBLIC_POSTHOG_KEY) ?? trim(
-    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
+  return (
+    trim(process.env.NEXT_PUBLIC_POSTHOG_KEY) ??
+    trim(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN)
   );
 }
 
 /** Host de la API PostHog; por defecto US cloud. */
 export function getPosthogHost(): string {
-  return trim(process.env.NEXT_PUBLIC_POSTHOG_HOST) ?? "https://us.i.posthog.com";
+  return (
+    trim(process.env.NEXT_PUBLIC_POSTHOG_HOST) ?? "https://us.i.posthog.com"
+  );
 }

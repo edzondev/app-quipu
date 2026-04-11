@@ -60,7 +60,7 @@ export default function ListCard({ envelope, month, className }: Props) {
   const isEmpty = !isLoading && results && results.length === 0;
 
   return (
-    <Card className={cn("py-3",className)}>
+    <Card className={cn("py-3", className)}>
       <CardContent
         className={cn("relative", isLoading && !hasResults && "min-h-41")}
       >

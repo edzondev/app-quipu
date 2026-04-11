@@ -35,7 +35,11 @@ export default function ExpensesClient() {
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div role="group" aria-label="Filtrar por sobre" className="flex gap-1 flex-wrap">
+        <div
+          role="group"
+          aria-label="Filtrar por sobre"
+          className="flex gap-1 flex-wrap"
+        >
           {options.map((opt) => (
             <Button
               key={opt.value ?? "all"}

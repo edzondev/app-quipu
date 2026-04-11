@@ -18,8 +18,9 @@ export function getSiteUrl(): string | undefined {
  * Preferir POLAR_ORGANIZATION_TOKEN; POLAR_ACCESS_TOKEN es alias heredado (docs antiguas).
  */
 export function getPolarOrganizationToken(): string | undefined {
-  return trim(process.env.POLAR_ORGANIZATION_TOKEN) ?? trim(
-    process.env.POLAR_ACCESS_TOKEN,
+  return (
+    trim(process.env.POLAR_ORGANIZATION_TOKEN) ??
+    trim(process.env.POLAR_ACCESS_TOKEN)
   );
 }
 
