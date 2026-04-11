@@ -164,7 +164,10 @@ export async function computeEnvelopes(
       const rescueWants = profile.envelopeWants ?? 0;
       allocatedNeeds = allocatedNeeds + rescueNeeds;
       allocatedWants = allocatedWants + rescueWants;
-      allocatedSavings = Math.max(0, allocatedSavings - rescueNeeds - rescueWants);
+      allocatedSavings = Math.max(
+        0,
+        allocatedSavings - rescueNeeds - rescueWants,
+      );
     }
   }
 

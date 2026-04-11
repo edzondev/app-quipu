@@ -42,7 +42,8 @@ export const checkIfExtraordinary = query({
   ),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
-    const threshold = (profile.monthlyIncome ?? 0) * EXTRAORDINARY_INCOME_MULTIPLIER;
+    const threshold =
+      (profile.monthlyIncome ?? 0) * EXTRAORDINARY_INCOME_MULTIPLIER;
 
     if (args.amount <= threshold) {
       return { isExtraordinary: false as const };

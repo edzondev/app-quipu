@@ -72,7 +72,9 @@ export default function useCreateExpense() {
     } catch (error) {
       console.error(error);
       const message =
-        error instanceof Error ? error.message : "No se pudo registrar el gasto";
+        error instanceof Error
+          ? error.message
+          : "No se pudo registrar el gasto";
       toast.error(message);
     }
   };

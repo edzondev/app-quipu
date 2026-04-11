@@ -15,11 +15,11 @@ export default async function AuthLayout({ children }: Props) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center md:justify-start">
+        <div className="flex justify-start">
           <Button variant="ghost" asChild>
             <Link href="/" className="flex items-center gap-2 font-medium">
               <ArrowLeft className="size-4" />
-              Regresar
+              Volver al inicio
             </Link>
           </Button>
         </div>

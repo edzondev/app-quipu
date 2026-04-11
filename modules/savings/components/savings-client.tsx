@@ -42,7 +42,8 @@ export function SavingsClient({
   const profile = usePreloadedQuery(preloadedProfile);
   const mutation = useMutation(api.savings.deleteSavingsGoal);
   const { isPremium } = usePlan();
-  const [deletingGoalId, setDeletingGoalId] = useState<Id<"savingsGoals"> | null>(null);
+  const [deletingGoalId, setDeletingGoalId] =
+    useState<Id<"savingsGoals"> | null>(null);
 
   if (!profile || !subEnvelopes) return null;
 
@@ -187,7 +188,9 @@ export function SavingsClient({
                           onClick={() => handleDelete(goal._id)}
                           disabled={deletingGoalId === goal._id}
                         >
-                          {deletingGoalId === goal._id ? "Eliminando..." : "Continuar"}
+                          {deletingGoalId === goal._id
+                            ? "Eliminando..."
+                            : "Continuar"}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
