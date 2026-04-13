@@ -9,8 +9,24 @@ import type { Id } from "./_generated/dataModel";
  * Returns unread coach messages for the current user.
  * Free plan: limited to 1 tip per week (enforced on creation, not here).
  */
+const coachMessageValidator = v.object({
+  _id: v.id("coachMessages"),
+  _creationTime: v.number(),
+  profileId: v.id("profiles"),
+  type: v.union(
+    v.literal("alert"),
+    v.literal("celebration"),
+    v.literal("encouragement"),
+    v.literal("warning"),
+  ),
+  message: v.string(),
+  date: v.string(),
+  read: v.boolean(),
+});
+
 export const getUnreadCoachMessages = query({
   args: {},
+  returns: v.union(v.null(), v.array(coachMessageValidator)),
   handler: async (ctx) => {
     const profile = await getProfile(ctx);
     if (!profile) return null;
@@ -65,19 +81,22 @@ export const createCoachMessage = internalMutation({
     const profile = await ctx.db.get(args.profileId);
     if (!profile) return null;
 
-    // Free plan: max 1 tip per week — check last 7 days
+    // Free plan: max 1 tip per week — check last 7 days using date index
     if (profile.plan === "free") {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         .toISOString()
         .slice(0, 10);
 
-      const recent = await ctx.db
+      const recentMessage = await ctx.db
         .query("coachMessages")
-        .withIndex("by_profileId", (q) => q.eq("profileId", args.profileId))
-        .collect();
+        .withIndex("by_profileId_date", (q) =>
+          q
+            .eq("profileId", args.profileId)
+            .gte("date", sevenDaysAgo),
+        )
+        .first();
 
-      const hasRecentMessage = recent.some((m) => m.date >= sevenDaysAgo);
-      if (hasRecentMessage) return null;
+      if (recentMessage) return null;
     }
 
     await ctx.db.insert("coachMessages", {

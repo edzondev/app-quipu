@@ -30,10 +30,23 @@ import {
 import { Separator } from "@/core/components/ui/separator";
 import { Slider } from "@/core/components/ui/slider";
 import { Switch } from "@/core/components/ui/switch";
+import dynamic from "next/dynamic";
 import { useSettings } from "../hooks/use-settings";
-import { AddCommitmentDialog } from "./add-commitment-dialog";
 import { CommitmentItem } from "./commitment-item";
-import { DeleteAccountSection } from "./delete-account-section";
+
+// Modal: loaded on demand when the dialog is opened
+const AddCommitmentDialog = dynamic(
+  () =>
+    import("./add-commitment-dialog").then((m) => m.AddCommitmentDialog),
+  { ssr: false },
+);
+
+// Rarely used — defer until the section is visible in the page
+const DeleteAccountSection = dynamic(
+  () =>
+    import("./delete-account-section").then((m) => m.DeleteAccountSection),
+  { ssr: false },
+);
 
 type Props = {
   preloaded: Preloaded<typeof api.profiles.getMyProfile>;

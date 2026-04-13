@@ -1,3 +1,5 @@
+"use client";
+
 import {
   loginSchema,
   type LoginSchema,

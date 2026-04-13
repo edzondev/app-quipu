@@ -114,8 +114,32 @@ export const ACHIEVEMENT_CATALOG = [
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
+const streakValidator = v.object({
+  _id: v.id("streaks"),
+  _creationTime: v.number(),
+  profileId: v.id("profiles"),
+  currentStreak: v.number(),
+  longestStreak: v.number(),
+  lastComplianceDate: v.optional(v.string()),
+});
+
+const streakHistoryValidator = v.object({
+  _id: v.id("streakMonthlyHistory"),
+  _creationTime: v.number(),
+  profileId: v.id("profiles"),
+  month: v.string(),
+  compliant: v.boolean(),
+});
+
 export const getStreakData = query({
   args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      streak: v.union(v.null(), streakValidator),
+      history: v.array(streakHistoryValidator),
+    }),
+  ),
   handler: async (ctx) => {
     const profile = await getProfile(ctx);
     if (!profile) return null;
@@ -135,8 +159,21 @@ export const getStreakData = query({
   },
 });
 
+const achievementDocValidator = v.object({
+  _id: v.id("achievements"),
+  _creationTime: v.number(),
+  profileId: v.id("profiles"),
+  achievementId: v.string(),
+  title: v.string(),
+  description: v.string(),
+  icon: v.string(),
+  category: v.union(v.literal("milestone"), v.literal("savings"), v.literal("streak")),
+  unlockedAt: v.optional(v.string()),
+});
+
 export const getAchievements = query({
   args: {},
+  returns: v.union(v.null(), v.array(achievementDocValidator)),
   handler: async (ctx) => {
     const profile = await getProfile(ctx);
     if (!profile) return null;
@@ -149,6 +186,30 @@ export const getAchievements = query({
 
 export const getAchievementsData = query({
   args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      streak: v.union(
+        v.null(),
+        v.object({
+          currentStreak: v.number(),
+          longestStreak: v.number(),
+        }),
+      ),
+      achievements: v.array(
+        v.object({
+          achievementId: v.string(),
+          title: v.string(),
+          description: v.string(),
+          icon: v.string(),
+          category: v.string(),
+          tier: v.string(),
+          unlocked: v.boolean(),
+          unlockedAt: v.optional(v.string()),
+        }),
+      ),
+    }),
+  ),
   handler: async (ctx) => {
     const profile = await getProfile(ctx);
     if (!profile) return null;

@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { usePlan } from "@/core/hooks/use-plan";
+import { currentMonthString } from "@/lib/utils";
 
 const FREE_PLAN_MONTHLY_LIMIT = 20;
 
@@ -16,7 +17,9 @@ const FREE_PLAN_MONTHLY_LIMIT = 20;
  */
 export function useExpenseLimit() {
   const { isFree, isLoading: isPlanLoading } = usePlan();
-  const count = useQuery(api.expenses.getCurrentMonthCount);
+  const count = useQuery(api.expenses.getCurrentMonthCount, {
+    month: currentMonthString(),
+  });
 
   const isLoading = isPlanLoading || count === undefined;
   const currentCount = count ?? 0;

@@ -26,8 +26,15 @@ polar.registerRoutes(http, {
 
     // Primary: userId embedded in checkout metadata by createPremiumCheckout
     // Fallback: externalId or customer metadata (for manual Polar dashboard subscriptions)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = event.data as any;
+    // The Polar SDK types don't expose metadata/customer fields directly, so we extend the type.
+    type PolarSubscriptionExtras = {
+      metadata?: Record<string, string | undefined>;
+      customer?: {
+        externalId?: string;
+        metadata?: Record<string, string | undefined>;
+      };
+    };
+    const data = event.data as typeof event.data & PolarSubscriptionExtras;
     const userId =
       data.metadata?.userId ??
       data.customer?.externalId ??

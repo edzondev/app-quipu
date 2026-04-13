@@ -6,11 +6,20 @@ import { usePlan } from "@/hooks/use-plan";
 import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import { Card, CardContent } from "@/core/components/ui/card";
-import { NewGoalDialog } from "@/modules/savings/components/new-goal-dialog";
+import dynamic from "next/dynamic";
 import { WithdrawButton } from "@/modules/savings/components/withdraw-button";
+
+// Modal: loaded on demand when the dialog is triggered
+const NewGoalDialog = dynamic(
+  () =>
+    import("@/modules/savings/components/new-goal-dialog").then(
+      (m) => m.NewGoalDialog,
+    ),
+  { ssr: false },
+);
 import type { Preloaded } from "convex/react";
 import { useMutation, usePreloadedQuery } from "convex/react";
-import { Shield, Trash, TrendingUp } from "lucide-react";
+import { Shield, Target, Trash, TrendingUp } from "lucide-react";
 import { Button } from "@/core/components/ui/button";
 import {
   AlertDialog,
@@ -55,12 +64,17 @@ export function SavingsClient({
   const totalSaved = subEnvelopes.reduce((s, e) => s + e.currentAmount, 0);
 
   const emergency = subEnvelopes.find((s) => s.subEnvelopeId === "emergency");
+  const shortTerm = subEnvelopes.find((s) => s.subEnvelopeId === "short_term");
   const investment = subEnvelopes.find((s) => s.subEnvelopeId === "investment");
 
   const mainSubs = [
     emergency && {
       ...emergency,
       icon: <Shield className="w-5 h-5 text-envelope-savings" />,
+    },
+    shortTerm && {
+      ...shortTerm,
+      icon: <Target className="w-5 h-5 text-envelope-savings" />,
     },
     investment && {
       ...investment,
@@ -92,8 +106,8 @@ export function SavingsClient({
         </p>
       </div>
 
-      {/* Sub-envelopes: emergency + investment */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+      {/* Sub-envelopes: emergency + short_term + investment */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         {mainSubs.map((sub, i) => (
           <div
             key={sub._id}

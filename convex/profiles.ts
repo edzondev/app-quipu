@@ -13,6 +13,7 @@ import {
  */
 export const getMyUserEmail = query({
   args: {},
+  returns: v.union(v.null(), v.string()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;

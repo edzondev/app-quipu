@@ -91,7 +91,7 @@ export default function RecentExpenses({
           {/* Empty state */}
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-8 space-y-2">
-              <Receipt className="w-10 h-10 text-muted-foreground/40 mx-auto" />
+              <Receipt className="w-10 h-10 text-muted-foreground mx-auto" />
               <p className="text-sm text-muted-foreground">
                 {recentExpenses.length === 0
                   ? "Aún no has registrado gastos. ¡Empieza registrando tu primer gasto!"

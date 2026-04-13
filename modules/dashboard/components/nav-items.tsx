@@ -1,3 +1,5 @@
+"use client";
+
 import { type LucideIcon } from "lucide-react";
 
 import {
@@ -9,7 +11,7 @@ import {
 } from "@/core/components/ui/sidebar";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export function NavItems({
@@ -23,6 +25,8 @@ export function NavItems({
   }[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:block">
       <SidebarGroupLabel>MENU</SidebarGroupLabel>
@@ -35,7 +39,13 @@ export function NavItems({
             })}
           >
             <SidebarMenuButton tooltip={item.name} asChild>
-              <Link href={item.url} aria-label={item.name} prefetch>
+              <Link
+                href={item.url}
+                aria-label={item.name}
+                prefetch={false}
+                onMouseEnter={() => router.prefetch(item.url)}
+                onFocus={() => router.prefetch(item.url)}
+              >
                 <item.icon />
                 <span className="flex items-center gap-1.5">
                   {item.name}

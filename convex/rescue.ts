@@ -12,8 +12,10 @@ import {
  * Soft auth check — returns null if not authenticated.
  */
 export const getRescueStatus = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    month: v.optional(v.string()), // "YYYY-MM" — pass from client for deterministic caching
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
@@ -23,7 +25,7 @@ export const getRescueStatus = query({
       .unique();
     if (!profile) return null;
 
-    const month = currentMonthString();
+    const month = args.month ?? currentMonthString();
     const computed = await computeEnvelopes(ctx, profile, month);
 
     const needsOverflow =

@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  ArrowUpRight,
+  CalendarCheck,
+  CheckCircle2,
+  Crown,
+  ExternalLink,
+  Lock,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/core/components/ui/badge";
 import { Button } from "@/core/components/ui/button";
 import {
@@ -9,18 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/core/components/ui/card";
+import { Skeleton } from "@/core/components/ui/skeleton";
 import { usePlanPortal } from "../hooks/use-plan-portal";
-import {
-  ArrowUpRight,
-  CalendarCheck,
-  CheckCircle2,
-  Crown,
-  ExternalLink,
-  Lock,
-  Sparkles,
-  Zap,
-} from "lucide-react";
-import Link from "next/link";
 
 const FREE_FEATURES = [
   "Dashboard de sobres (50/30/20)",
@@ -53,11 +53,51 @@ export default function PlanView() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-2xl animate-pulse">
-        <div className="h-8 w-48 bg-muted rounded-lg" />
-        <div className="h-48 bg-muted rounded-xl" />
-        <div className="h-64 bg-muted rounded-xl" />
-      </div>
+      <output
+        className="block max-w-2xl space-y-6"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <span className="sr-only">Cargando plan</span>
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-40 rounded-md" />
+          <Skeleton className="h-4 w-full max-w-md rounded-md" />
+        </div>
+        <Card className="overflow-hidden border-border/70">
+          <CardHeader className="space-y-0 pb-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-9 w-9 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-36 rounded-md" />
+                  <Skeleton className="h-3 w-44 rounded-md" />
+                </div>
+              </div>
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-4 w-full rounded-md" />
+            <Skeleton className="h-11 w-full rounded-lg" />
+          </CardContent>
+        </Card>
+        <Card className="border-border/70">
+          <CardHeader className="pb-2">
+            <Skeleton className="h-5 w-48 rounded-md" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {["a", "b", "c", "d", "e"].map((k, i) => (
+              <div key={k} className="flex items-center gap-3">
+                <Skeleton
+                  className="h-4 w-4 shrink-0 rounded-sm"
+                  style={{ animationDelay: `${i * 45}ms` }}
+                />
+                <Skeleton className="h-4 flex-1 rounded-md" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </output>
     );
   }
 

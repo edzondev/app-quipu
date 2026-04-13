@@ -99,7 +99,9 @@ export default defineSchema({
   })
     .index("by_profileId", ["profileId"])
     .index("by_profileId_date", ["profileId", "date"])
-    .index("by_profileId_envelope", ["profileId", "envelope"]),
+    .index("by_profileId_envelope", ["profileId", "envelope"])
+    // Composite index for efficient envelope+date range queries (avoids in-memory month filtering)
+    .index("by_profileId_envelope_date", ["profileId", "envelope", "date"]),
 
   savingsSubEnvelopes: defineTable({
     profileId: v.id("profiles"),
@@ -131,7 +133,9 @@ export default defineSchema({
     read: v.boolean(),
   })
     .index("by_profileId", ["profileId"])
-    .index("by_profileId_read", ["profileId", "read"]),
+    .index("by_profileId_read", ["profileId", "read"])
+    // Index for date-based lookups (e.g., checking recent messages by profile)
+    .index("by_profileId_date", ["profileId", "date"]),
 
   achievements: defineTable({
     profileId: v.id("profiles"),

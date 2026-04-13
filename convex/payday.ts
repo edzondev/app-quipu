@@ -74,8 +74,29 @@ function computeNextPaydayDate(paydays: number[], today: Date): string {
  * render the payday UI.
  */
 export const getPaydayStatus = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    month: v.optional(v.string()), // "YYYY-MM" — pass from client for deterministic caching
+    today: v.optional(v.string()), // "YYYY-MM-DD"
+  },
+  returns: v.union(
+    v.null(),
+    v.object({
+      isPayday: v.boolean(),
+      hasProcessedCurrentPayday: v.boolean(),
+      nextPaydayDate: v.string(),
+      daysUntilNextPayday: v.number(),
+      profile: v.object({
+        currencySymbol: v.string(),
+        monthlyIncome: v.number(),
+        allocationNeeds: v.number(),
+        allocationWants: v.number(),
+        allocationSavings: v.number(),
+        payFrequency: v.union(v.literal("monthly"), v.literal("biweekly")),
+        paydays: v.array(v.number()),
+      }),
+    }),
+  ),
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
@@ -85,9 +106,9 @@ export const getPaydayStatus = query({
       .unique();
     if (!profile) return null;
 
-    const today = todayString();
-    const currentMonth = currentMonthString();
-    const todayDate = new Date();
+    const today = args.today ?? todayString();
+    const currentMonth = args.month ?? currentMonthString();
+    const todayDate = new Date(`${today}T00:00:00Z`);
     const dayOfMonth = todayDate.getDate();
     const daysInMonth = new Date(
       todayDate.getFullYear(),
@@ -145,8 +166,11 @@ export const getPaydayStatus = query({
  * subscription replaces multiple separate queries.
  */
 export const getDashboardData = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    month: v.optional(v.string()), // "YYYY-MM" — pass from client for deterministic caching
+    today: v.optional(v.string()), // "YYYY-MM-DD"
+  },
+  handler: async (ctx, args) => {
     // Soft auth check — return null instead of throwing.
     // The layout/page handles null by redirecting to onboarding.
     const identity = await ctx.auth.getUserIdentity();
@@ -158,14 +182,15 @@ export const getDashboardData = query({
       .unique();
     if (!profile) return null;
 
-    const month = currentMonthString();
-    const today = todayString();
+    const month = args.month ?? currentMonthString();
+    const today = args.today ?? todayString();
 
     // Pure date calculations — no I/O
-    const dayOfMonth = new Date().getDate();
+    const todayDate = new Date(`${today}T00:00:00Z`);
+    const dayOfMonth = todayDate.getUTCDate();
     const daysInMonth = new Date(
-      new Date().getFullYear(),
-      new Date().getMonth() + 1,
+      todayDate.getUTCFullYear(),
+      todayDate.getUTCMonth() + 1,
       0,
     ).getDate();
     const paydays = profile.paydays ?? [];

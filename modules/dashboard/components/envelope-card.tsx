@@ -36,7 +36,8 @@ type EnvelopeData = {
   spent?: number;
   available?: number;
   budget?: number;
-  subEnvelopes?: unknown[];
+  fixedCommitments?: number;
+  subEnvelopes?: readonly unknown[];
   totalAccumulatedSavings?: number;
 };
 

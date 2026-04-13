@@ -1,6 +1,12 @@
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/core/components/ui/button";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "¡Ya eres Premium!",
+  description: "Tu suscripción a Quipu Premium fue activada exitosamente.",
+};
 
 export default function SuccessPage() {
   return (

@@ -1,6 +1,6 @@
 import { Polar } from "@convex-dev/polar";
 import { action } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { DataModel } from "./_generated/dataModel";
 import { components, internal } from "./_generated/api";
 import { PolarCore } from "@polar-sh/sdk/core.js";
@@ -97,8 +97,7 @@ export const createCustomerPortalSession = action({
     // ── Path 2: fall back to polarCustomerId stored in our profile ──────────
     const polarCustomerId = planData?.polarCustomerId;
     if (!polarCustomerId) {
-      // Surface a clear message instead of the raw Polar error
-      throw new Error(
+      throw new ConvexError(
         "No se encontró una suscripción activa. Completa tu primer pago para acceder al portal.",
       );
     }
@@ -133,7 +132,7 @@ export const createPremiumCheckout = action({
   },
   handler: async (ctx, { origin, successUrl }) => {
     const productId = getPolarProductIdPremium();
-    if (!productId) throw new Error("POLAR_PRODUCT_ID_PREMIUM not set");
+    if (!productId) throw new ConvexError("POLAR_PRODUCT_ID_PREMIUM not set");
 
     const { userId, email } = await ctx.runQuery(
       internal.users.getCurrentUserInfo,

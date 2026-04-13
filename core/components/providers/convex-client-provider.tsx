@@ -2,10 +2,10 @@
 
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { ConvexReactClient, useQuery } from "convex/react";
-import { authClient } from "@/lib/auth-client";
-import { api } from "@/convex/_generated/api";
 import posthog from "posthog-js";
 import { useEffect } from "react";
+import { api } from "@/convex/_generated/api";
+import { authClient } from "@/lib/auth-client";
 import { getConvexUrl, getPosthogKey } from "@/lib/env";
 
 const convex = new ConvexReactClient(getConvexUrl());

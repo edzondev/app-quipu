@@ -1,15 +1,22 @@
 "use client";
 
 import { usePaginatedQuery } from "convex/react";
-import { Loader2, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Badge } from "@/core/components/ui/badge";
 import { Card, CardContent } from "@/core/components/ui/card";
+import { Skeleton } from "@/core/components/ui/skeleton";
 import { useProfile } from "@/core/hooks/use-profile";
 import { cn } from "@/lib/utils";
-import { EditExpenseModal } from "./edit-expense-modal";
+
+// Modal: loaded on demand when user selects an expense to edit
+const EditExpenseModal = dynamic(
+  () => import("./edit-expense-modal").then((m) => m.EditExpenseModal),
+  { ssr: false },
+);
 
 type Envelope = "needs" | "wants" | "juntos";
 
@@ -45,6 +52,8 @@ const getEnvelopeLabel = (envelope: string) => {
   return envelope;
 };
 
+const EXPENSE_LIST_SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"] as const;
+
 export default function ListCard({ envelope, month, className }: Props) {
   const { results, isLoading, loadMore, status } = usePaginatedQuery(
     api.expenses.listExpenses,
@@ -61,18 +70,38 @@ export default function ListCard({ envelope, month, className }: Props) {
 
   return (
     <Card className={cn("py-3", className)}>
-      <CardContent
-        className={cn("relative", isLoading && !hasResults && "min-h-41")}
-      >
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-[1px] rounded-xl z-10 ">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        )}
+      <CardContent className="relative">
+        {isLoading && !hasResults ? (
+          <output
+            className="block min-h-41 space-y-0 divide-y divide-border px-1"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <span className="sr-only">Cargando gastos</span>
+            {EXPENSE_LIST_SKELETON_KEYS.map((key, i) => (
+              <div
+                key={key}
+                className="flex w-full items-center justify-between gap-4 py-3.5"
+              >
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton
+                    className="h-4 w-[min(100%,14rem)] rounded-md"
+                    style={{ animationDelay: `${i * 55}ms` }}
+                  />
+                  <Skeleton className="h-3 w-24 rounded-md" />
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <Skeleton className="hidden h-6 w-[5.5rem] rounded-full sm:block" />
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </output>
+        ) : null}
 
         {isEmpty && (
           <div className="text-center py-12 space-y-2">
-            <Receipt className="w-10 h-10 text-muted-foreground/40 mx-auto" />
+            <Receipt className="w-10 h-10 text-muted-foreground mx-auto" />
             <p className="text-sm text-muted-foreground">
               No se encontraron gastos.
             </p>

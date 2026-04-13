@@ -1,25 +1,17 @@
-import { api } from "@/convex/_generated/api";
-import QuickExpenseFAB from "@/core/components/shared/quick-expense-fab";
+import { QuickExpenseFABDynamic } from "@/core/components/shared/quick-expense-fab-dynamic";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/core/components/ui/sidebar";
-import { fetchAuthQuery, isAuthenticated } from "@/lib/auth-server";
+import { requireAuthWithProfile } from "@/lib/auth-server";
 import AppSidebar from "@/modules/dashboard/components/app-sidebar";
-import { redirect } from "next/navigation";
 import type { PropsWithChildren } from "react";
 
 type Props = PropsWithChildren<{}>;
 
 export default async function DashboardLayout({ children }: Props) {
-  // 1. Sin sesión → login
-  const authed = await isAuthenticated();
-  if (!authed) redirect("/login");
-
-  // 2. Con sesión pero sin onboarding completo → onboarding
-  const profile = await fetchAuthQuery(api.profiles.getMyProfile, {});
-  if (!profile || !profile.onboardingComplete) redirect("/onboarding");
+  await requireAuthWithProfile();
 
   return (
     <SidebarProvider>
@@ -34,7 +26,7 @@ export default async function DashboardLayout({ children }: Props) {
           <section className="container w-full md:max-w-4xl lg:max-w-7xl mx-auto px-4 pt-2 pb-6 md:px-6 h-full">
             {children}
           </section>
-          <QuickExpenseFAB />
+          <QuickExpenseFABDynamic />
         </main>
       </SidebarInset>
     </SidebarProvider>

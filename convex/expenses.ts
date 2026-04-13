@@ -29,25 +29,31 @@ export const listExpenses = query({
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
 
-    // When filtering by envelope, use the dedicated index.
-    // Month filtering is applied in memory for the envelope index since Convex
-    // does not support multi-range queries on a single index.
+    // When filtering by both envelope and month, use the composite index for efficient
+    // range queries that avoid in-memory filtering of the paginated page.
+    if (args.envelope && args.month) {
+      return await ctx.db
+        .query("expenses")
+        .withIndex("by_profileId_envelope_date", (q) =>
+          q
+            .eq("profileId", profile._id)
+            .eq("envelope", args.envelope!)
+            .gte("date", `${args.month}-01`)
+            .lt("date", `${args.month}-32`),
+        )
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+
+    // When filtering by envelope only (no month), use the single-field envelope index.
     if (args.envelope) {
-      const results = await ctx.db
+      return await ctx.db
         .query("expenses")
         .withIndex("by_profileId_envelope", (q) =>
           q.eq("profileId", profile._id).eq("envelope", args.envelope!),
         )
         .order("desc")
         .paginate(args.paginationOpts);
-
-      if (args.month) {
-        return {
-          ...results,
-          page: results.page.filter((e) => e.date.startsWith(args.month!)),
-        };
-      }
-      return results;
     }
 
     // With month filter: use date-range index so pagination stays within the month.
@@ -81,6 +87,15 @@ export const getMonthlyTotals = query({
   args: {
     month: v.optional(v.string()), // defaults to current month
   },
+  returns: v.union(
+    v.null(),
+    v.object({
+      total: v.number(),
+      needs: v.number(),
+      wants: v.number(),
+      juntos: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const profile = await getProfile(ctx);
     if (!profile) return null;
@@ -116,11 +131,14 @@ export const getMonthlyTotals = query({
  * Used by the client to show the free plan limit warning (20/month).
  */
 export const getCurrentMonthCount = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    month: v.optional(v.string()), // "YYYY-MM" — pass from client for deterministic caching
+  },
+  returns: v.union(v.null(), v.number()),
+  handler: async (ctx, args) => {
     const profile = await getProfile(ctx);
     if (!profile) return null;
-    const month = currentMonthString();
+    const month = args.month ?? currentMonthString();
 
     const expenses = await ctx.db
       .query("expenses")

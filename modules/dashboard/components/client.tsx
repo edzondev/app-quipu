@@ -1,17 +1,18 @@
 "use client";
 
+import type { Preloaded } from "convex/react";
 import type { api } from "@/convex/_generated/api";
-import { type Preloaded } from "convex/react";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/modules/dashboard/hooks/use-dashboard-data";
+import { DashboardMainSkeleton } from "./dashboard-main-skeleton";
 import EnvelopeCard from "./envelope-card";
 import Header from "./header";
 import IncomeRegisterButton from "./income-register-button";
 import MonthSummaryBar from "./month-summary-bar";
-import { RescueModeBanner } from "./rescue-mode-banner";
-import StreakBanner from "./streak-banner";
 import QuickActionCards from "./quick-action-cards";
 import RecentExpenses from "./recent-expenses";
+import { RescueModeBanner } from "./rescue-mode-banner";
+import StreakBanner from "./streak-banner";
 
 type Props = {
   preloaded: Preloaded<typeof api.payday.getDashboardData>;
@@ -20,8 +21,18 @@ type Props = {
 export default function Client({ preloaded }: Props) {
   const dashboard = useDashboardData(preloaded);
 
-  if (!dashboard) return null;
+  if (!dashboard) {
+    return <DashboardMainSkeleton />;
+  }
 
+  return <DashboardBody dashboard={dashboard} />;
+}
+
+function DashboardBody({
+  dashboard,
+}: {
+  dashboard: NonNullable<ReturnType<typeof useDashboardData>>;
+}) {
   const {
     profile,
     symbol,
@@ -74,8 +85,7 @@ export default function Client({ preloaded }: Props) {
           <EnvelopeCard
             key={entry.key}
             envelopeKey={entry.key}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data={entry.data as any}
+            data={entry.data}
             allocationPct={entry.allocationPct}
             currencySymbol={symbol}
             index={i}

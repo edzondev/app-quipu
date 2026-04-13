@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { currentMonthString } from "@/lib/utils";
 
 /**
  * Returns the selectable expense envelopes for the current user.
@@ -17,6 +18,8 @@ import { api } from "@/convex/_generated/api";
  * `null` while loading or when the user is unauthenticated/unprovisioned.
  */
 export function useEnvelopes() {
-  const envelopes = useQuery(api.envelopes.getEnvelopes);
+  const envelopes = useQuery(api.envelopes.getEnvelopes, {
+    month: currentMonthString(),
+  });
   return { envelopes };
 }

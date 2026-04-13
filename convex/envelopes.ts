@@ -21,9 +21,11 @@ const envelopeItem = v.object({
  * - Savings is excluded: expenses cannot be charged to savings per the schema.
  */
 export const getEnvelopes = query({
-  args: {},
+  args: {
+    month: v.optional(v.string()), // "YYYY-MM" — pass from client for deterministic caching
+  },
   returns: v.union(v.array(envelopeItem), v.null()),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
@@ -33,7 +35,7 @@ export const getEnvelopes = query({
       .unique();
     if (!profile) return null;
 
-    const month = currentMonthString();
+    const month = args.month ?? currentMonthString();
     const { envelopes } = await computeEnvelopes(ctx, profile, month);
 
     const result: Array<{

@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import {
   distributeSavingsToSubEnvelopes,
   getProfile,
@@ -47,22 +47,20 @@ export const getSavingsGoals = query({
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 /**
- * Called by the payday mutation to accumulate savings into sub-envelopes.
- * Distributes the savings amount equally among the three sub-envelopes
- * (or with a custom strategy in a future iteration).
+ * Internal mutation — distributes a savings amount into sub-envelopes.
+ * Not exposed publicly; called internally when needed via ctx.runMutation().
+ * Use the `distributeSavingsToSubEnvelopes` helper from helpers.ts instead
+ * when the profileId is already available in the same mutation context.
  */
-export const distributeSavings = mutation({
+export const distributeSavings = internalMutation({
   args: {
-    amount: v.number(), // total savings amount to distribute
+    profileId: v.id("profiles"),
+    amount: v.number(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
-
     if (args.amount <= 0) return null;
-
-    await distributeSavingsToSubEnvelopes(ctx, profile._id, args.amount);
-
+    await distributeSavingsToSubEnvelopes(ctx, args.profileId, args.amount);
     return null;
   },
 });

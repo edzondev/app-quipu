@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import { Suspense } from "react";
 import { ConvexClientProvider } from "@/core/components/providers/convex-client-provider";
@@ -146,7 +146,7 @@ export default function RootLayout({
             <ConvexProviderWithToken>{children}</ConvexProviderWithToken>
           </Suspense>
         </PostHogProvider>
-        <Analytics />
+        <Analytics mode="production" />
       </body>
     </html>
   );
