@@ -69,11 +69,6 @@ export default function AppSidebar({
       premium: !isPremium,
     },
     paydayOrIncomeItem,
-    {
-      name: "Registrar gasto",
-      url: "/add-expense",
-      icon: PlusCircle,
-    },
   ];
 
   return (

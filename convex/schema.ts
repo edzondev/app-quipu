@@ -94,6 +94,10 @@ export default defineSchema({
     amount: v.number(),
     description: v.optional(v.string()),
     envelope: expenseEnvelope,
+    bucket: v.optional(
+      v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
+    ),
+    module: v.optional(v.string()),
     date: v.string(),
     registeredBy: v.optional(registeredBy),
   })

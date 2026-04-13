@@ -21,6 +21,8 @@ export default function useCreateExpense() {
       amount: 0,
       envelope: "needs",
       description: "Gasto rápido",
+      bucket: "needs",
+      module: "Cotidiano",
     },
   });
 
@@ -61,6 +63,8 @@ export default function useCreateExpense() {
 
   const handleEnvelopeChange = (envelope: Expense["envelope"]) => {
     form.setValue("envelope", envelope);
+    if (envelope === "needs") form.setValue("bucket", "needs");
+    else if (envelope === "wants") form.setValue("bucket", "wants");
   };
 
   const mutate = async (value: Expense) => {

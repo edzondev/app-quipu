@@ -170,6 +170,10 @@ export const registerExpense = mutation({
       v.literal("wants"),
       v.literal("juntos"),
     ),
+    bucket: v.optional(
+      v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
+    ),
+    module: v.optional(v.string()),
     date: v.optional(v.string()), // "YYYY-MM-DD", defaults to today
     registeredBy: v.optional(v.union(v.literal("user"), v.literal("partner"))),
   },
@@ -211,6 +215,8 @@ export const registerExpense = mutation({
       amount: args.amount,
       description: args.description,
       envelope: args.envelope,
+      bucket: args.bucket,
+      module: args.module,
       date: args.date ?? todayString(),
       registeredBy: args.registeredBy ?? "user",
     });
@@ -238,6 +244,10 @@ export const updateExpense = mutation({
     envelope: v.optional(
       v.union(v.literal("needs"), v.literal("wants"), v.literal("juntos")),
     ),
+    bucket: v.optional(
+      v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
+    ),
+    module: v.optional(v.string()),
     description: v.optional(v.string()),
   },
   returns: v.null(),
@@ -260,6 +270,8 @@ export const updateExpense = mutation({
     const patch: Record<string, unknown> = {};
     if (args.amount !== undefined) patch.amount = args.amount;
     if (args.envelope !== undefined) patch.envelope = args.envelope;
+    if (args.bucket !== undefined) patch.bucket = args.bucket;
+    if (args.module !== undefined) patch.module = args.module;
     if (args.description !== undefined) patch.description = args.description;
 
     if (Object.keys(patch).length > 0) {

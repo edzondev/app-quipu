@@ -10,6 +10,8 @@ export default function StreakBanner({
   currentStreak,
   lastAchievement,
 }: Props) {
+  if (currentStreak === 0) return null;
+
   return (
     <Link href="/achievements" prefetch={false}>
       <div
