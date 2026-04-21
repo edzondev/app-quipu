@@ -49,8 +49,8 @@ export function MisIngresosCard({
   });
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="gap-2">
+      <CardHeader>
         <CardTitle className="text-base font-semibold">Mis ingresos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
@@ -90,21 +90,37 @@ export function MisIngresosCard({
           />
         ))}
 
-        {/* Add form */}
-        {showAddForm ? (
-          <AddExtraIncomeForm onDone={() => setShowAddForm(false)} />
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full mt-2"
-            onClick={() => setShowAddForm(true)}
+        {/* Add form with smooth open/close transition */}
+        <div className="mt-2">
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-out ${
+              showAddForm
+                ? "max-h-128 opacity-100 translate-y-0"
+                : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+            }`}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            Agregar ingreso extra
-          </Button>
-        )}
+            <AddExtraIncomeForm onDone={() => setShowAddForm(false)} />
+          </div>
+
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-out ${
+              showAddForm
+                ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+                : "max-h-16 opacity-100 translate-y-0"
+            }`}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setShowAddForm(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Agregar ingreso extra
+            </Button>
+          </div>
+        </div>
 
         <Separator className="my-3" />
 

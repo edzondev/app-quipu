@@ -9,6 +9,14 @@ import AssigningStep from "./assigning-step";
 import { AssignmentCard } from "./assignment-card";
 import DoneStep from "./done-step";
 import { MisIngresosCard } from "./mis-ingresos-card";
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/core/components/ui/alert";
+import { InfoIcon } from "lucide-react";
+import { useFeatureFlagEnabled } from "posthog-js/react";
 
 type Props = {
   preloadedPaydayStatus: Preloaded<typeof api.payday.getPaydayStatus>;
@@ -82,6 +90,8 @@ function PaydayContent({
   handleAssign: ReturnType<typeof usePayday>["handleAssign"];
   extraIncomes: ExtraIncome[];
 }) {
+  const showExtraIncomeAlert = useFeatureFlagEnabled("show-extra-income-alert");
+
   const {
     isPayday,
     hasProcessedCurrentPayday,
@@ -136,7 +146,21 @@ function PaydayContent({
           Gestiona tus ingresos y asigna tu dinero
         </p>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      {showExtraIncomeAlert && (
+        <Alert variant="info">
+          <InfoIcon className="mt-0.5 size-4 text-sky-600" />
+          <AlertTitle className="text-sm font-semibold tracking-tight text-sky-950">
+            Nuevos ingresos extra disponibles
+          </AlertTitle>
+          <AlertDescription>
+            Agrega ingresos extra a tu presupuesto. Tú decides si incluirlos en
+            tu asignación mensual o no.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
         <MisIngresosCard
           currencySymbol={currencySymbol}
           monthlyIncome={monthlyIncome}

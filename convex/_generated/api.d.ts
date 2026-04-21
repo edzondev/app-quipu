@@ -11,6 +11,7 @@
 import type * as coach from "../coach.js";
 import type * as envelopes from "../envelopes.js";
 import type * as expenses from "../expenses.js";
+import type * as extraIncomes from "../extraIncomes.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   coach: typeof coach;
   envelopes: typeof envelopes;
   expenses: typeof expenses;
+  extraIncomes: typeof extraIncomes;
   fixedCommitments: typeof fixedCommitments;
   helpers: typeof helpers;
   http: typeof http;
