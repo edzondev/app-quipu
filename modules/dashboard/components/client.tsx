@@ -9,6 +9,7 @@ import EnvelopeCard from "./envelope-card";
 import Header from "./header";
 import IncomeRegisterButton from "./income-register-button";
 import MonthSummaryBar from "./month-summary-bar";
+import { PauseModeBanner } from "./pause-mode-banner";
 import QuickActionCards from "./quick-action-cards";
 import RecentExpenses from "./recent-expenses";
 import { RescueModeBanner } from "./rescue-mode-banner";
@@ -42,6 +43,7 @@ function DashboardBody({
     daysRemaining,
     budgetUsedPercent,
     rescueStatus,
+    pauseMode,
     streak,
     lastAchievement,
     coachText,
@@ -50,6 +52,26 @@ function DashboardBody({
     filter,
     setFilter,
   } = dashboard;
+
+  if (pauseMode) {
+    return (
+      <>
+        <Header name={profile.name} month={month} />
+        <IncomeRegisterButton workerType={profile.workerType} />
+        <PauseModeBanner
+          remaining={pauseMode.remaining}
+          currencySymbol={symbol}
+        />
+        <RecentExpenses
+          recentExpenses={recentExpenses}
+          filteredExpenses={filteredExpenses}
+          filter={filter}
+          onFilterChange={setFilter}
+          currencySymbol={symbol}
+        />
+      </>
+    );
+  }
 
   return (
     <>

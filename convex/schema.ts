@@ -66,6 +66,9 @@ export default defineSchema({
     rescueAppliedAt: v.optional(v.number()),
     rescueActionId: v.optional(v.string()),
     distributionsCompleted: v.optional(v.number()),
+    pauseModeActive: v.optional(v.boolean()),
+    pauseModeFund: v.optional(v.number()),
+    pauseModeStartedAt: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
     .index("by_polarCustomerId", ["polarCustomerId"])

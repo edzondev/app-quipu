@@ -231,6 +231,74 @@ export function todayString(): string {
 }
 
 /**
+ * Computes the Modo Pausa snapshot for a profile.
+ *
+ * When pause mode is not active (or the required fields are missing), returns
+ * null. Otherwise sums every expense since `pauseModeStartedAt` (cross-month)
+ * and returns the initial fund, spent total, and remaining balance.
+ *
+ * Shared between getPauseStatus and getDashboardData to avoid duplication.
+ */
+export async function computePauseMode(
+  ctx: QueryCtx | MutationCtx,
+  profile: {
+    _id: import("./_generated/dataModel").Id<"profiles">;
+    pauseModeActive?: boolean;
+    pauseModeFund?: number;
+    pauseModeStartedAt?: string;
+  },
+): Promise<{
+  active: true;
+  fund: number;
+  startedAt: string;
+  spent: number;
+  remaining: number;
+} | null> {
+  if (
+    profile.pauseModeActive !== true ||
+    profile.pauseModeFund === undefined ||
+    profile.pauseModeStartedAt === undefined
+  ) {
+    return null;
+  }
+
+  const fund = profile.pauseModeFund;
+  const startedAt = profile.pauseModeStartedAt;
+
+  const expensesSinceStart = await ctx.db
+    .query("expenses")
+    .withIndex("by_profileId_date", (q) =>
+      q.eq("profileId", profile._id).gte("date", startedAt),
+    )
+    .collect();
+
+  const spent = expensesSinceStart.reduce((sum, e) => sum + e.amount, 0);
+
+  return {
+    active: true,
+    fund,
+    startedAt,
+    spent,
+    remaining: fund - spent,
+  };
+}
+
+/**
+ * Returns the positive carryover available in operational envelopes when
+ * entering Modo Pausa.
+ *
+ * Only needs and wants are considered. Negative availability does not reduce
+ * carryover (clamped to 0 per envelope).
+ */
+export function computePauseModeCarryoverFromEnvelopes(
+  computed: Awaited<ReturnType<typeof computeEnvelopes>>,
+): number {
+  const needsAvailable = Math.max(0, computed.envelopes.needs.available);
+  const wantsAvailable = Math.max(0, computed.envelopes.wants.available);
+  return needsAvailable + wantsAvailable;
+}
+
+/**
  * Distributes a savings amount equally across all three savings sub-envelopes
  * (emergency, short_term, investment) for the given profile.
  * Also advances active savings goals by their monthly required amount.

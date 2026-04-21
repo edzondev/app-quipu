@@ -26,6 +26,7 @@ export function useDashboardData(
     coachMessage,
     isCoupleModeEnabled,
     month,
+    pauseMode,
   } = data;
 
   const symbol = profile.currencySymbol;
@@ -83,6 +84,8 @@ export function useDashboardData(
     budgetUsedPercent,
     // Rescue
     rescueStatus,
+    // Pause mode
+    pauseMode,
     // Gamification
     streak,
     lastAchievement,

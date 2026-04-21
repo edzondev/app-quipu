@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 export default function StepWelcome() {
@@ -50,13 +51,13 @@ export default function StepWelcome() {
         ].map((item) => (
           <div
             key={item.label}
-            className={`rounded-xl border-2 ${item.color} bg-card p-4 text-center space-y-1.5`}
+            className={cn("rounded-xl border-2", item.color, "bg-card p-4 text-center space-y-1.5")}
           >
             <div className="text-2xl">{item.icon}</div>
             <div className="text-xs font-medium text-muted-foreground">
               {item.label}
             </div>
-            <div className={`text-lg font-bold ${item.textColor}`}>
+            <div className={cn("text-lg font-bold", item.textColor)}>
               {item.pct}
             </div>
           </div>

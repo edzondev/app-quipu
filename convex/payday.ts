@@ -3,6 +3,7 @@ import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import {
   computeEnvelopes,
+  computePauseMode,
   currentMonthString,
   distributeSavingsToSubEnvelopes,
   getProfileOrThrow,
@@ -215,6 +216,7 @@ export const getDashboardData = query({
       streak,
       achievements,
       coachMessage,
+      pauseMode,
     ] = await Promise.all([
       computeEnvelopes(ctx, profile, month),
       ctx.db
@@ -241,6 +243,7 @@ export const getDashboardData = query({
         )
         .order("desc")
         .first(),
+      computePauseMode(ctx, profile),
     ]);
 
     // Post-fetch derivations (no I/O)
@@ -294,6 +297,7 @@ export const getDashboardData = query({
       streak,
       lastAchievement,
       coachMessage,
+      pauseMode,
     };
   },
 });

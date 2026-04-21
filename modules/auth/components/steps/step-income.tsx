@@ -236,7 +236,7 @@ export default function StepIncome({ form }: Props) {
               return (
                 <div key={item.label}>
                   <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className={`text-sm font-bold ${item.color}`}>
+                  <p className={cn("text-sm font-bold", item.color)}>
                     {currencySymbol} {amount.toLocaleString()}
                   </p>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus } from "lucide-react";
+import { Pause, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -15,6 +15,8 @@ import {
 import { Separator } from "@/core/components/ui/separator";
 import { AddExtraIncomeForm } from "./add-extra-income-form";
 import { ExtraIncomeItem } from "./extra-income-item";
+import { PauseModeForm } from "./pause-mode-form";
+import { cn } from "@/lib/utils";
 
 type ExtraIncome = {
   _id: Id<"extraIncomes">;
@@ -37,6 +39,7 @@ export function MisIngresosCard({
   totalAssignable,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showPauseForm, setShowPauseForm] = useState(false);
 
   const formattedSalary = monthlyIncome.toLocaleString("es", {
     minimumFractionDigits: 0,
@@ -93,21 +96,19 @@ export function MisIngresosCard({
         {/* Add form with smooth open/close transition */}
         <div className="mt-2">
           <div
-            className={`overflow-hidden transition-all duration-300 ease-out ${
-              showAddForm
-                ? "max-h-128 opacity-100 translate-y-0"
-                : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
-            }`}
+            className={cn("overflow-hidden transition-all duration-300 ease-out", showAddForm
+              ? "max-h-128 opacity-100 translate-y-0"
+              : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+            )}
           >
             <AddExtraIncomeForm onDone={() => setShowAddForm(false)} />
           </div>
 
           <div
-            className={`overflow-hidden transition-all duration-300 ease-out ${
-              showAddForm
-                ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
-                : "max-h-16 opacity-100 translate-y-0"
-            }`}
+            className={cn("overflow-hidden transition-all duration-300 ease-out", showAddForm
+              ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+              : "max-h-16 opacity-100 translate-y-0"
+            )}
           >
             <Button
               type="button"
@@ -132,6 +133,36 @@ export function MisIngresosCard({
           <span className="text-base font-bold tabular-nums">
             {currencySymbol} {formattedTotal}
           </span>
+        </div>
+
+        {/* Pause mode toggle with smooth open/close transition */}
+        <div className="mt-2">
+          <div
+            className={cn("overflow-hidden transition-all duration-300 ease-out", showPauseForm
+              ? "max-h-96 opacity-100 translate-y-0"
+              : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+            )}
+          >
+            <PauseModeForm onDone={() => setShowPauseForm(false)} />
+          </div>
+
+          <div
+            className={cn("overflow-hidden transition-all duration-300 ease-out", showPauseForm
+              ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+              : "max-h-16 opacity-100 translate-y-0"
+            )}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="default"
+              className="w-full hover:cursor-pointer"
+              onClick={() => setShowPauseForm(true)}
+            >
+              <Pause className="h-4 w-4 mr-1" />
+              Activar Modo Pausa — No tengo ingresos fijos
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
