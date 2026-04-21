@@ -78,6 +78,14 @@ export default defineSchema({
     envelope: envelopeType,
   }).index("by_profileId", ["profileId"]),
 
+  extraIncomes: defineTable({
+    profileId: v.id("profiles"),
+    name: v.string(),
+    amount: v.number(),
+    includeInBudget: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_profileId", ["profileId"]),
+
   specialIncomes: defineTable({
     profileId: v.id("profiles"),
     typeId: v.string(),

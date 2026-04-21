@@ -1,14 +1,14 @@
 "use client";
 
-import { type Preloaded, usePreloadedQuery } from "convex/react";
-import type { api } from "@/convex/_generated/api";
+import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/core/components/ui/skeleton";
 import { usePayday } from "../hooks/use-payday";
-import AlreadyProcessedView from "./already-processed-view";
 import AssigningStep from "./assigning-step";
+import { AssignmentCard } from "./assignment-card";
 import DoneStep from "./done-step";
-import NextPaydayView from "./next-payday-view";
-import PaydayStep from "./payday-step";
+import { MisIngresosCard } from "./mis-ingresos-card";
 
 type Props = {
   preloadedPaydayStatus: Preloaded<typeof api.payday.getPaydayStatus>;
@@ -30,11 +30,19 @@ type PaydayStatusSnapshot = {
   };
 };
 
+type ExtraIncome = {
+  _id: Id<"extraIncomes">;
+  name: string;
+  amount: number;
+  includeInBudget: boolean;
+};
+
 export default function PaydayView({ preloadedPaydayStatus }: Props) {
   const status = usePreloadedQuery(preloadedPaydayStatus);
   const { step, handleAssign } = usePayday();
+  const extraIncomes = useQuery(api.extraIncomes.listExtraIncomes);
 
-  if (!status) {
+  if (!status || extraIncomes === undefined) {
     return (
       <output
         className="flex flex-col items-center justify-center gap-8 py-20"
@@ -54,7 +62,12 @@ export default function PaydayView({ preloadedPaydayStatus }: Props) {
   }
 
   return (
-    <PaydayContent status={status} step={step} handleAssign={handleAssign} />
+    <PaydayContent
+      status={status}
+      step={step}
+      handleAssign={handleAssign}
+      extraIncomes={extraIncomes}
+    />
   );
 }
 
@@ -62,10 +75,12 @@ function PaydayContent({
   status,
   step,
   handleAssign,
+  extraIncomes,
 }: {
   status: PaydayStatusSnapshot;
   step: ReturnType<typeof usePayday>["step"];
   handleAssign: ReturnType<typeof usePayday>["handleAssign"];
+  extraIncomes: ExtraIncome[];
 }) {
   const {
     isPayday,
@@ -84,13 +99,18 @@ function PaydayContent({
     payFrequency,
   } = profile;
 
-  // While an animation is in progress, always show it through to completion
+  const extraIncomesTotal = extraIncomes
+    .filter((e) => e.includeInBudget)
+    .reduce((sum, e) => sum + e.amount, 0);
+  const totalAssignable = monthlyIncome + extraIncomesTotal;
+
+  // Full-screen animation states — shown regardless of idle sub-state
   if (step === "assigning") {
     return (
       <section className="animate-in fade-in duration-200">
         <AssigningStep
           currencySymbol={currencySymbol}
-          monthlyIncome={monthlyIncome}
+          monthlyIncome={totalAssignable}
           allocationNeeds={allocationNeeds}
           allocationWants={allocationWants}
           allocationSavings={allocationSavings}
@@ -107,34 +127,34 @@ function PaydayContent({
     );
   }
 
-  // step === "idle": gate on server state
-  if (!isPayday) {
-    return (
-      <section className="animate-in fade-in duration-200">
-        <NextPaydayView
+  // step === "idle": two-column layout
+  return (
+    <section className="animate-in fade-in duration-200 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Día de pago</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Gestiona tus ingresos y asigna tu dinero
+        </p>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MisIngresosCard
+          currencySymbol={currencySymbol}
+          monthlyIncome={monthlyIncome}
+          extraIncomes={extraIncomes}
+          totalAssignable={totalAssignable}
+        />
+        <AssignmentCard
+          currencySymbol={currencySymbol}
+          totalAssignable={totalAssignable}
+          isPayday={isPayday}
+          hasProcessedCurrentPayday={hasProcessedCurrentPayday}
           nextPaydayDate={nextPaydayDate}
           daysUntilNextPayday={daysUntilNextPayday}
           payFrequency={payFrequency}
+          onAssign={handleAssign}
+          isAssigning={false}
         />
-      </section>
-    );
-  }
-
-  if (hasProcessedCurrentPayday) {
-    return (
-      <section className="animate-in fade-in duration-200">
-        <AlreadyProcessedView />
-      </section>
-    );
-  }
-
-  return (
-    <section className="animate-in fade-in duration-200">
-      <PaydayStep
-        currencySymbol={currencySymbol}
-        monthlyIncome={monthlyIncome}
-        onAssign={handleAssign}
-      />
+      </div>
     </section>
   );
 }
