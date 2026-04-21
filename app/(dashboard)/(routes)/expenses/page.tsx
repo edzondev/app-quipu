@@ -3,6 +3,7 @@ import { preloadAuthQuery } from "@/lib/auth-server";
 import { getServerCalendarStrings } from "@/lib/server-calendar";
 import SummaryCard from "@/modules/expenses/components/summary-card";
 import ExpensesClient from "@/modules/expenses/components/expenses-client";
+import { ExpensesUpdateBanner } from "@/modules/expenses/components/expenses-update-banner";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -39,6 +40,7 @@ export default function ExpensesPage() {
           </p>
         </div>
       </div>
+      <ExpensesUpdateBanner />
       <Suspense fallback={null}>
         <ExpensesContent />
       </Suspense>

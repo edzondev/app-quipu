@@ -327,13 +327,23 @@ export const processPayday = mutation({
       return profile.distributionsCompleted ?? 0;
     }
 
-    const commitments = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
+    const [commitments, extraIncomes] = await Promise.all([
+      ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+      ctx.db
+        .query("extraIncomes")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+    ]);
 
     const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
-    const netIncome = (profile.monthlyIncome ?? 0) - totalFixed;
+    const extraIncomesTotal = extraIncomes
+      .filter((e) => e.includeInBudget)
+      .reduce((sum, e) => sum + e.amount, 0);
+    const netIncome =
+      (profile.monthlyIncome ?? 0) + extraIncomesTotal - totalFixed;
     const savingsAmount = netIncome * (profile.allocationSavings / 100);
 
     // Si el usuario activó Modo Rescate este mes, omitir distribución de ahorro
