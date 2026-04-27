@@ -114,8 +114,9 @@ export function AddCommitmentDialog() {
                 <Input
                   id="commitment-amount"
                   type="number"
+                  inputMode="decimal"
                   min={0}
-                  step={1}
+                  step="0.01"
                   placeholder="0"
                   value={field.value === 0 ? "" : field.value}
                   onChange={(e) => {

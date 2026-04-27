@@ -91,7 +91,9 @@ export function PauseModeForm({ onDone }: Props) {
             <Input
               id="pause-mode-liquidation"
               type="number"
+              inputMode="decimal"
               min={0}
+              step="0.01"
               placeholder="0"
               value={field.value === 0 ? "" : field.value}
               onChange={(e) => {

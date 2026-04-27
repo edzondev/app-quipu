@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { currentMonthString, computeEnvelopes } from "./helpers";
+import {
+  computeEnvelopes,
+  computePauseMode,
+  currentMonthString,
+} from "./helpers";
 
 const envelopeItem = v.object({
   key: v.union(v.literal("needs"), v.literal("wants"), v.literal("juntos")),
@@ -36,7 +40,29 @@ export const getEnvelopes = query({
     if (!profile) return null;
 
     const month = args.month ?? currentMonthString();
-    const { envelopes } = await computeEnvelopes(ctx, profile, month);
+    const [{ envelopes }, pauseSnapshot] = await Promise.all([
+      computeEnvelopes(ctx, profile, month),
+      computePauseMode(ctx, profile),
+    ]);
+
+    // While Modo Pausa is active, Necesidades and Gustos share the pause fund
+    // as a single pool — the regular monthly allocation is meaningless because
+    // there's no current income. Surface the shared fund balance so the
+    // envelope picker (FAB, /add-expense, edit form) doesn't show negatives.
+    const needsBalance = pauseSnapshot
+      ? {
+          allocated: pauseSnapshot.fund,
+          spent: pauseSnapshot.spent,
+          available: pauseSnapshot.remaining,
+        }
+      : envelopes.needs;
+    const wantsBalance = pauseSnapshot
+      ? {
+          allocated: pauseSnapshot.fund,
+          spent: pauseSnapshot.spent,
+          available: pauseSnapshot.remaining,
+        }
+      : envelopes.wants;
 
     const result: Array<{
       key: "needs" | "wants" | "juntos";
@@ -50,17 +76,17 @@ export const getEnvelopes = query({
         key: "needs",
         label: "Necesidades",
         emoji: "🏠",
-        allocated: envelopes.needs.allocated,
-        spent: envelopes.needs.spent,
-        available: envelopes.needs.available,
+        allocated: needsBalance.allocated,
+        spent: needsBalance.spent,
+        available: needsBalance.available,
       },
       {
         key: "wants",
         label: "Gustos",
         emoji: "✨",
-        allocated: envelopes.wants.allocated,
-        spent: envelopes.wants.spent,
-        available: envelopes.wants.available,
+        allocated: wantsBalance.allocated,
+        spent: wantsBalance.spent,
+        available: wantsBalance.available,
       },
     ];
 
