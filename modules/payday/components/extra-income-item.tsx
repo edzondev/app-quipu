@@ -132,8 +132,9 @@ export function ExtraIncomeItem({ income, currencySymbol }: Props) {
           />
           <Input
             type="number"
+            inputMode="decimal"
             min={0}
-            step={1}
+            step="0.01"
             value={editAmount}
             onChange={(e) => setEditAmount(e.target.value)}
             placeholder="Monto"
