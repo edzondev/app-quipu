@@ -92,7 +92,7 @@ export function PauseModeForm({ onDone }: Props) {
               id="pause-mode-liquidation"
               type="number"
               min={0}
-              step={1}
+              step="any"
               placeholder="0"
               value={field.value === 0 ? "" : field.value}
               onChange={(e) => {
