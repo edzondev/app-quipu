@@ -48,7 +48,7 @@ export function AssignmentCard({
     maximumFractionDigits: 2,
   });
 
-  const canAssign = isPayday && !hasProcessedCurrentPayday;
+  const canAssign = !hasProcessedCurrentPayday;
 
   return (
     <Card className="flex flex-col">
