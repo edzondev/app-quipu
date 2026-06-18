@@ -15,7 +15,10 @@ describe("updateExpenseSchema", () => {
 
     it("accepts all three envelope values", () => {
       for (const envelope of ["needs", "wants", "juntos"] as const) {
-        const result = updateExpenseSchema.safeParse({ ...validInput, envelope });
+        const result = updateExpenseSchema.safeParse({
+          ...validInput,
+          envelope,
+        });
         expect(result.success).toBe(true);
       }
     });

@@ -83,9 +83,9 @@ describe("stepWorkerTypeSchema", () => {
   });
 
   it("rejects an empty string", () => {
-    expect(
-      stepWorkerTypeSchema.safeParse({ workerType: "" }).success,
-    ).toBe(false);
+    expect(stepWorkerTypeSchema.safeParse({ workerType: "" }).success).toBe(
+      false,
+    );
   });
 });
 

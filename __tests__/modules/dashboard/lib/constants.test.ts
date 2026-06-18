@@ -1,6 +1,10 @@
 // __tests__/modules/dashboard/lib/constants.test.ts
 import { describe, it, expect } from "vitest";
-import { fmt, BADGE_CLASS, ENVELOPE_LABEL } from "@/modules/dashboard/lib/constants";
+import {
+  fmt,
+  BADGE_CLASS,
+  ENVELOPE_LABEL,
+} from "@/modules/dashboard/lib/constants";
 
 describe("fmt", () => {
   describe("positive integers", () => {

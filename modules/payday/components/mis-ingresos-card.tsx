@@ -96,18 +96,22 @@ export function MisIngresosCard({
         {/* Add form with smooth open/close transition */}
         <div className="mt-2">
           <div
-            className={cn("overflow-hidden transition-all duration-300 ease-out", showAddForm
-              ? "max-h-128 opacity-100 translate-y-0"
-              : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+            className={cn(
+              "overflow-hidden transition-all duration-300 ease-out",
+              showAddForm
+                ? "max-h-128 opacity-100 translate-y-0"
+                : "max-h-0 opacity-0 -translate-y-1 pointer-events-none",
             )}
           >
             <AddExtraIncomeForm onDone={() => setShowAddForm(false)} />
           </div>
 
           <div
-            className={cn("overflow-hidden transition-all duration-300 ease-out", showAddForm
-              ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
-              : "max-h-16 opacity-100 translate-y-0"
+            className={cn(
+              "overflow-hidden transition-all duration-300 ease-out",
+              showAddForm
+                ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+                : "max-h-16 opacity-100 translate-y-0",
             )}
           >
             <Button
@@ -138,18 +142,22 @@ export function MisIngresosCard({
         {/* Pause mode toggle with smooth open/close transition */}
         <div className="mt-2">
           <div
-            className={cn("overflow-hidden transition-all duration-300 ease-out", showPauseForm
-              ? "max-h-96 opacity-100 translate-y-0"
-              : "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+            className={cn(
+              "overflow-hidden transition-all duration-300 ease-out",
+              showPauseForm
+                ? "max-h-96 opacity-100 translate-y-0"
+                : "max-h-0 opacity-0 -translate-y-1 pointer-events-none",
             )}
           >
             <PauseModeForm onDone={() => setShowPauseForm(false)} />
           </div>
 
           <div
-            className={cn("overflow-hidden transition-all duration-300 ease-out", showPauseForm
-              ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
-              : "max-h-16 opacity-100 translate-y-0"
+            className={cn(
+              "overflow-hidden transition-all duration-300 ease-out",
+              showPauseForm
+                ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none"
+                : "max-h-16 opacity-100 translate-y-0",
             )}
           >
             <Button

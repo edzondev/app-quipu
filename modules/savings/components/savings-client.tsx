@@ -21,7 +21,7 @@ const NewGoalDialog = dynamic(
 
 import type { Preloaded } from "convex/react";
 import { useMutation, usePreloadedQuery } from "convex/react";
-import { Shield, Target, Trash, TrendingUp } from "lucide-react";
+import { RotateCcw, Shield, Target, Trash, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
@@ -51,10 +51,12 @@ export function SavingsClient({
   const subEnvelopes = usePreloadedQuery(preloadedSubs);
   const goals = usePreloadedQuery(preloadedGoals);
   const profile = usePreloadedQuery(preloadedProfile);
-  const mutation = useMutation(api.savings.deleteSavingsGoal);
+  const deleteGoal = useMutation(api.savings.deleteSavingsGoal);
+  const resetSubs = useMutation(api.savings.resetSavingsSubEnvelopes);
   const { isPremium } = usePlan();
   const [deletingGoalId, setDeletingGoalId] =
     useState<Id<"savingsGoals"> | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   if (!profile || !subEnvelopes) return <SavingsSkeleton />;
 
@@ -90,26 +92,70 @@ export function SavingsClient({
     if (deletingGoalId) return;
     setDeletingGoalId(goalId);
     try {
-      await mutation({ goalId });
+      await deleteGoal({ goalId });
     } finally {
       setDeletingGoalId(null);
     }
   };
 
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      await resetSubs();
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Tu Ahorro</h1>
-        <p className="text-muted-foreground">
-          Total acumulado:{" "}
-          <span className="font-bold text-envelope-savings">
-            {fmt(totalSaved)}
-          </span>
-        </p>
-        <p className="text-xs text-muted-foreground mt-2 max-w-xl">
-          Tus sobres de ahorro se llenan automáticamente cada vez que recibes tu
-          ingreso, con el porcentaje que asignaste a Ahorro en tu plan.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Tu Ahorro</h1>
+          <p className="text-muted-foreground">
+            Total acumulado:{" "}
+            <span className="font-bold text-envelope-savings">
+              {fmt(totalSaved)}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 max-w-xl">
+            Tus sobres de ahorro se llenan automáticamente cada vez que recibes
+            tu ingreso, con el porcentaje que asignaste a Ahorro en tu plan.
+          </p>
+        </div>
+
+        {/* TODO: remove after testing — temporary reset button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 text-muted-foreground"
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Resetear ahorro
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Resetear ahorro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción pondrá todos tus sub-sobres de ahorro en S/ 0. Los
+                objetivos de ahorro no se eliminan.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={handleReset}
+                disabled={isResetting}
+              >
+                {isResetting ? "Reseteando..." : "Sí, resetear"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Sub-envelopes: emergency + short_term + investment */}

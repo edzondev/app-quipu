@@ -24,31 +24,31 @@ const ENVELOPE_CONFIG: {
   textColor: string;
   borderColor: string;
 }[] = [
-    {
-      key: "allocationNeeds",
-      label: "Necesidades",
-      icon: "🏠",
-      bgColor: "bg-envelope-needs",
-      textColor: "text-white",
-      borderColor: "border-envelope-needs",
-    },
-    {
-      key: "allocationWants",
-      label: "Gustos",
-      icon: "🎉",
-      bgColor: "bg-envelope-wants",
-      textColor: "text-white",
-      borderColor: "border-envelope-wants",
-    },
-    {
-      key: "allocationSavings",
-      label: "Ahorro",
-      icon: "💰",
-      bgColor: "bg-envelope-savings",
-      textColor: "text-white",
-      borderColor: "border-envelope-savings",
-    },
-  ];
+  {
+    key: "allocationNeeds",
+    label: "Necesidades",
+    icon: "🏠",
+    bgColor: "bg-envelope-needs",
+    textColor: "text-white",
+    borderColor: "border-envelope-needs",
+  },
+  {
+    key: "allocationWants",
+    label: "Gustos",
+    icon: "🎉",
+    bgColor: "bg-envelope-wants",
+    textColor: "text-white",
+    borderColor: "border-envelope-wants",
+  },
+  {
+    key: "allocationSavings",
+    label: "Ahorro",
+    icon: "💰",
+    bgColor: "bg-envelope-savings",
+    textColor: "text-white",
+    borderColor: "border-envelope-savings",
+  },
+];
 
 const OTHER_KEYS: Record<AllocKey, [AllocKey, AllocKey]> = {
   allocationNeeds: ["allocationWants", "allocationSavings"],
@@ -209,12 +209,20 @@ export default function StepPlan({ form }: Props) {
             return (
               <div
                 key={key}
-                className={cn("rounded-xl border-2", borderColor, "bg-card p-3 text-center space-y-1")}
+                className={cn(
+                  "rounded-xl border-2",
+                  borderColor,
+                  "bg-card p-3 text-center space-y-1",
+                )}
               >
                 <div className="text-xl">{icon}</div>
                 <p className="text-xs text-muted-foreground">{label}</p>
                 <p
-                  className={cn("text-sm font-bold", `text-envelope-${key === "allocationNeeds" ? "needs" : key === "allocationWants" ? "wants" : "savings"}`)}>
+                  className={cn(
+                    "text-sm font-bold",
+                    `text-envelope-${key === "allocationNeeds" ? "needs" : key === "allocationWants" ? "wants" : "savings"}`,
+                  )}
+                >
                   {currencySymbol}{" "}
                   {amount.toLocaleString("es-PE", {
                     maximumFractionDigits: 0,

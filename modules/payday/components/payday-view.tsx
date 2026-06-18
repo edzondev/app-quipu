@@ -184,14 +184,25 @@ function PaydayContent({
               variant="default"
               className="mb-4 rounded-xl border-transparent bg-white dark:bg-zinc-900 px-3 py-3 shadow-sm"
             >
-              <InfoIcon className="mt-0.5 size-6" color="#ffffff" fill="#8200db" />
+              <InfoIcon
+                className="mt-0.5 size-6"
+                color="#ffffff"
+                fill="#8200db"
+              />
               <AlertTitle className="text-sm font-medium tracking-tight text-purple-700">
                 Nuevos funcionalidades para tu día de pago
               </AlertTitle>
               <AlertDescription className="mt-1 text-[13px] leading-relaxed text-gray-500">
                 <ul className="list-disc list-inside">
-                  <li>Ahora puedes agregar ingresos extra a tu presupuesto y decidir si deben entrar en tu asignación mensual.</li>
-                  <li>Si te quedaste sin ingresos fijos, activa Modo Pausa para cuidar tu fondo mientras encuentras una nueva fuente de ingreso.</li>
+                  <li>
+                    Ahora puedes agregar ingresos extra a tu presupuesto y
+                    decidir si deben entrar en tu asignación mensual.
+                  </li>
+                  <li>
+                    Si te quedaste sin ingresos fijos, activa Modo Pausa para
+                    cuidar tu fondo mientras encuentras una nueva fuente de
+                    ingreso.
+                  </li>
                 </ul>
               </AlertDescription>
             </Alert>

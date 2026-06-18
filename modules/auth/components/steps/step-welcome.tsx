@@ -51,7 +51,11 @@ export default function StepWelcome() {
         ].map((item) => (
           <div
             key={item.label}
-            className={cn("rounded-xl border-2", item.color, "bg-card p-4 text-center space-y-1.5")}
+            className={cn(
+              "rounded-xl border-2",
+              item.color,
+              "bg-card p-4 text-center space-y-1.5",
+            )}
           >
             <div className="text-2xl">{item.icon}</div>
             <div className="text-xs font-medium text-muted-foreground">
