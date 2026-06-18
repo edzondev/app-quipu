@@ -77,40 +77,74 @@ export function currentMonthString(): string {
   return new Date().toISOString().slice(0, 7);
 }
 
-/**
- * Computes envelope balances for a given profile and month.
- * Shared between getDashboardData and getEnvelopes to avoid duplication.
- *
- * Returns allocated/spent/available per envelope plus juntos when couple mode
- * is active. `juntos` is null when couple mode is disabled.
- */
-export async function computeEnvelopes(
-  ctx: QueryCtx | MutationCtx,
-  profile: {
-    _id: import("./_generated/dataModel").Id<"profiles">;
-    workerType: "dependent" | "independent";
-    monthlyIncome?: number;
-    allocationNeeds: number;
-    allocationWants: number;
-    allocationSavings: number;
-    coupleModeEnabled: boolean;
-    coupleMonthlyBudget: number;
-    envelopeNeeds?: number;
-    envelopeWants?: number;
-    envelopeSavings?: number;
-    initialRemainingBudget?: number;
-    initialBudgetMonth?: string;
-    lastPaydayProcessedAt?: string;
-    rescueActionId?: string;
-    rescueAppliedAt?: number;
-  },
-  month: string,
-) {
-  const commitments = await ctx.db
-    .query("fixedCommitments")
-    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-    .collect();
+export type ComputeEnvelopesProfile = {
+  _id: import("./_generated/dataModel").Id<"profiles">;
+  workerType: "dependent" | "independent";
+  monthlyIncome?: number;
+  allocationNeeds: number;
+  allocationWants: number;
+  allocationSavings: number;
+  coupleModeEnabled: boolean;
+  coupleMonthlyBudget: number;
+  envelopeNeeds?: number;
+  envelopeWants?: number;
+  envelopeSavings?: number;
+  initialRemainingBudget?: number;
+  initialBudgetMonth?: string;
+  lastPaydayProcessedAt?: string;
+  rescueActionId?: string;
+  rescueAppliedAt?: number;
+};
 
+export type FixedCommitmentInput = {
+  envelope: "needs" | "wants";
+  amount: number;
+};
+
+export type ExpenseInput = {
+  envelope: "needs" | "wants" | "juntos";
+  amount: number;
+};
+
+export type ComputeEnvelopesResult = {
+  fixedNeeds: number;
+  fixedWants: number;
+  totalFixed: number;
+  netIncome: number;
+  envelopes: {
+    needs: {
+      allocated: number;
+      fixedCommitments: number;
+      spent: number;
+      available: number;
+    };
+    wants: {
+      allocated: number;
+      fixedCommitments: number;
+      spent: number;
+      available: number;
+    };
+    savings: {
+      allocated: number;
+    };
+    juntos: {
+      budget: number;
+      spent: number;
+      available: number;
+    } | null;
+  };
+};
+
+/**
+ * Pure computation behind computeEnvelopes. Accepts already-loaded
+ * commitments and expenses so it can be unit-tested without a Convex ctx.
+ */
+export function computeEnvelopesFromData(
+  profile: ComputeEnvelopesProfile,
+  month: string,
+  commitments: FixedCommitmentInput[],
+  expenses: ExpenseInput[],
+): ComputeEnvelopesResult {
   const fixedNeeds = commitments
     .filter((c) => c.envelope === "needs")
     .reduce((sum, c) => sum + c.amount, 0);
@@ -171,23 +205,13 @@ export async function computeEnvelopes(
     }
   }
 
-  const allMonthExpenses = await ctx.db
-    .query("expenses")
-    .withIndex("by_profileId_date", (q) =>
-      q
-        .eq("profileId", profile._id)
-        .gte("date", `${month}-01`)
-        .lt("date", `${month}-32`),
-    )
-    .collect();
-
-  const spentNeeds = allMonthExpenses
+  const spentNeeds = expenses
     .filter((e) => e.envelope === "needs")
     .reduce((sum, e) => sum + e.amount, 0);
-  const spentWants = allMonthExpenses
+  const spentWants = expenses
     .filter((e) => e.envelope === "wants")
     .reduce((sum, e) => sum + e.amount, 0);
-  const spentJuntos = allMonthExpenses
+  const spentJuntos = expenses
     .filter((e) => e.envelope === "juntos")
     .reduce((sum, e) => sum + e.amount, 0);
 
@@ -224,10 +248,89 @@ export async function computeEnvelopes(
 }
 
 /**
+ * Computes envelope balances for a given profile and month.
+ * Shared between getDashboardData and getEnvelopes to avoid duplication.
+ *
+ * Returns allocated/spent/available per envelope plus juntos when couple mode
+ * is active. `juntos` is null when couple mode is disabled.
+ */
+export async function computeEnvelopes(
+  ctx: QueryCtx | MutationCtx,
+  profile: ComputeEnvelopesProfile,
+  month: string,
+): Promise<ComputeEnvelopesResult> {
+  const commitments = await ctx.db
+    .query("fixedCommitments")
+    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+    .collect();
+
+  const allMonthExpenses = await ctx.db
+    .query("expenses")
+    .withIndex("by_profileId_date", (q) =>
+      q
+        .eq("profileId", profile._id)
+        .gte("date", `${month}-01`)
+        .lt("date", `${month}-32`),
+    )
+    .collect();
+
+  return computeEnvelopesFromData(
+    profile,
+    month,
+    commitments,
+    allMonthExpenses,
+  );
+}
+
+/**
  * Returns YYYY-MM-DD string for today (UTC).
  */
 export function todayString(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+export type PauseModeProfile = {
+  _id: import("./_generated/dataModel").Id<"profiles">;
+  pauseModeActive?: boolean;
+  pauseModeFund?: number;
+  pauseModeStartedAt?: string;
+};
+
+export type PauseModeResult = {
+  active: true;
+  fund: number;
+  startedAt: string;
+  spent: number;
+  remaining: number;
+} | null;
+
+/**
+ * Pure computation behind computePauseMode. Sums expenses since the pause
+ * start date without touching the database.
+ */
+export function computePauseModeFromData(
+  profile: PauseModeProfile,
+  expensesSinceStart: ExpenseInput[],
+): PauseModeResult {
+  if (
+    profile.pauseModeActive !== true ||
+    profile.pauseModeFund === undefined ||
+    profile.pauseModeStartedAt === undefined
+  ) {
+    return null;
+  }
+
+  const fund = profile.pauseModeFund;
+  const startedAt = profile.pauseModeStartedAt;
+  const spent = expensesSinceStart.reduce((sum, e) => sum + e.amount, 0);
+
+  return {
+    active: true,
+    fund,
+    startedAt,
+    spent,
+    remaining: fund - spent,
+  };
 }
 
 /**
@@ -241,19 +344,8 @@ export function todayString(): string {
  */
 export async function computePauseMode(
   ctx: QueryCtx | MutationCtx,
-  profile: {
-    _id: import("./_generated/dataModel").Id<"profiles">;
-    pauseModeActive?: boolean;
-    pauseModeFund?: number;
-    pauseModeStartedAt?: string;
-  },
-): Promise<{
-  active: true;
-  fund: number;
-  startedAt: string;
-  spent: number;
-  remaining: number;
-} | null> {
+  profile: PauseModeProfile,
+): Promise<PauseModeResult> {
   if (
     profile.pauseModeActive !== true ||
     profile.pauseModeFund === undefined ||
@@ -262,9 +354,7 @@ export async function computePauseMode(
     return null;
   }
 
-  const fund = profile.pauseModeFund;
   const startedAt = profile.pauseModeStartedAt;
-
   const expensesSinceStart = await ctx.db
     .query("expenses")
     .withIndex("by_profileId_date", (q) =>
@@ -272,15 +362,7 @@ export async function computePauseMode(
     )
     .collect();
 
-  const spent = expensesSinceStart.reduce((sum, e) => sum + e.amount, 0);
-
-  return {
-    active: true,
-    fund,
-    startedAt,
-    spent,
-    remaining: fund - spent,
-  };
+  return computePauseModeFromData(profile, expensesSinceStart);
 }
 
 /**
@@ -291,11 +373,71 @@ export async function computePauseMode(
  * carryover (clamped to 0 per envelope).
  */
 export function computePauseModeCarryoverFromEnvelopes(
-  computed: Awaited<ReturnType<typeof computeEnvelopes>>,
+  computed: ComputeEnvelopesResult,
 ): number {
   const needsAvailable = Math.max(0, computed.envelopes.needs.available);
   const wantsAvailable = Math.max(0, computed.envelopes.wants.available);
   return needsAvailable + wantsAvailable;
+}
+
+export type SavingsSubEnvelopeInput = {
+  _id: import("./_generated/dataModel").Id<"savingsSubEnvelopes">;
+  currentAmount: number;
+  goalAmount: number;
+  progress: number;
+};
+
+export type SavingsGoalInput = {
+  _id: import("./_generated/dataModel").Id<"savingsGoals">;
+  currentAmount: number;
+  targetAmount: number;
+  monthlyRequired: number;
+};
+
+export type SavingsDistributionResult = {
+  subEnvelopes: SavingsSubEnvelopeInput[];
+  goals: SavingsGoalInput[];
+};
+
+/**
+ * Pure computation behind distributeSavingsToSubEnvelopes. Returns the new
+ * state of sub-envelopes and goals without writing to the database.
+ */
+export function distributeSavingsFromData(
+  savingsAmount: number,
+  subEnvelopes: SavingsSubEnvelopeInput[],
+  savingsGoals: SavingsGoalInput[],
+): SavingsDistributionResult {
+  if (savingsAmount <= 0) {
+    return { subEnvelopes: [...subEnvelopes], goals: [...savingsGoals] };
+  }
+
+  const perEnvelope = savingsAmount / 3;
+  const updatedSubEnvelopes = subEnvelopes.map((sub) => {
+    const newAmount = sub.currentAmount + perEnvelope;
+    const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
+    return {
+      ...sub,
+      currentAmount: newAmount,
+      progress: Math.min(100, Math.round((newAmount / goal) * 100)),
+    };
+  });
+
+  const updatedGoals = savingsGoals.map((goal) => {
+    if (goal.currentAmount < goal.targetAmount) {
+      const contribution = Math.min(
+        goal.monthlyRequired,
+        goal.targetAmount - goal.currentAmount,
+      );
+      return {
+        ...goal,
+        currentAmount: goal.currentAmount + contribution,
+      };
+    }
+    return { ...goal };
+  });
+
+  return { subEnvelopes: updatedSubEnvelopes, goals: updatedGoals };
 }
 
 /**
@@ -311,37 +453,29 @@ export async function distributeSavingsToSubEnvelopes(
   profileId: import("./_generated/dataModel").Id<"profiles">,
   savingsAmount: number,
 ): Promise<void> {
-  if (savingsAmount <= 0) return;
-
   const subEnvelopes = await ctx.db
     .query("savingsSubEnvelopes")
     .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
     .collect();
-
-  const perEnvelope = savingsAmount / 3;
-  for (const sub of subEnvelopes) {
-    const newAmount = sub.currentAmount + perEnvelope;
-    const goal = sub.goalAmount > 0 ? sub.goalAmount : 1;
-    await ctx.db.patch(sub._id, {
-      currentAmount: newAmount,
-      progress: Math.min(100, Math.round((newAmount / goal) * 100)),
-    });
-  }
 
   const savingsGoals = await ctx.db
     .query("savingsGoals")
     .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
     .collect();
 
-  for (const goal of savingsGoals) {
-    if (goal.currentAmount < goal.targetAmount) {
-      const contribution = Math.min(
-        goal.monthlyRequired,
-        goal.targetAmount - goal.currentAmount,
-      );
-      await ctx.db.patch(goal._id, {
-        currentAmount: goal.currentAmount + contribution,
-      });
-    }
+  const { subEnvelopes: updatedSubEnvelopes, goals: updatedGoals } =
+    distributeSavingsFromData(savingsAmount, subEnvelopes, savingsGoals);
+
+  for (const sub of updatedSubEnvelopes) {
+    await ctx.db.patch(sub._id, {
+      currentAmount: sub.currentAmount,
+      progress: sub.progress,
+    });
+  }
+
+  for (const goal of updatedGoals) {
+    await ctx.db.patch(goal._id, {
+      currentAmount: goal.currentAmount,
+    });
   }
 }

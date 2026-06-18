@@ -1,13 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type React from "react";
 import { api } from "@/convex/_generated/api";
-import { usePlan } from "@/hooks/use-plan";
-import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
+import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { Card, CardContent } from "@/core/components/ui/card";
-import dynamic from "next/dynamic";
+import { usePlan } from "@/hooks/use-plan";
 import { WithdrawButton } from "@/modules/savings/components/withdraw-button";
+import { SavingsSkeleton } from "./savings-skeleton";
 
 // Modal: loaded on demand when the dialog is triggered
 const NewGoalDialog = dynamic(
@@ -17,10 +18,12 @@ const NewGoalDialog = dynamic(
     ),
   { ssr: false },
 );
+
 import type { Preloaded } from "convex/react";
 import { useMutation, usePreloadedQuery } from "convex/react";
 import { Shield, Target, Trash, TrendingUp } from "lucide-react";
-import { Button } from "@/core/components/ui/button";
+import { useState } from "react";
+import type { Id } from "@/convex/_generated/dataModel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/core/components/ui/alert-dialog";
-import { Id } from "@/convex/_generated/dataModel";
-import { useState } from "react";
+import { Button } from "@/core/components/ui/button";
 
 type Props = {
   preloadedSubs: Preloaded<typeof api.savings.getSavingsSubEnvelopes>;
@@ -54,7 +56,7 @@ export function SavingsClient({
   const [deletingGoalId, setDeletingGoalId] =
     useState<Id<"savingsGoals"> | null>(null);
 
-  if (!profile || !subEnvelopes) return null;
+  if (!profile || !subEnvelopes) return <SavingsSkeleton />;
 
   const { currencySymbol, currencyLocale } = profile;
 
@@ -103,6 +105,10 @@ export function SavingsClient({
           <span className="font-bold text-envelope-savings">
             {fmt(totalSaved)}
           </span>
+        </p>
+        <p className="text-xs text-muted-foreground mt-2 max-w-xl">
+          Tus sobres de ahorro se llenan automáticamente cada vez que recibes tu
+          ingreso, con el porcentaje que asignaste a Ahorro en tu plan.
         </p>
       </div>
 

@@ -1,13 +1,8 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
-import type { MutationCtx } from "./_generated/server";
-import {
-  computeEnvelopes,
-  currentMonthString,
-  getProfile,
-  getProfileOrThrow,
-} from "./helpers";
 import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
+import { computeEnvelopes, currentMonthString, getProfile } from "./helpers";
 
 // ─── Achievement Catalog ───────────────────────────────────────────────────────
 
@@ -36,6 +31,7 @@ export const ACHIEVEMENT_CATALOG = [
     icon: "💰",
     category: "savings",
     tier: "free",
+    // TODO: No unlock logic exists. See Phase 3 testing audit.
   },
   // ── Premium tier: advanced badges & streaks ──────────────────────────────────
   {
@@ -45,6 +41,7 @@ export const ACHIEVEMENT_CATALOG = [
     icon: "🛡️",
     category: "savings",
     tier: "premium",
+    // TODO: No evaluation logic exists for emergency fund progress.
   },
   {
     achievementId: "emergency_50",
@@ -53,6 +50,7 @@ export const ACHIEVEMENT_CATALOG = [
     icon: "⚡",
     category: "savings",
     tier: "premium",
+    // TODO: No evaluation logic exists for emergency fund progress.
   },
   {
     achievementId: "emergency_75",
@@ -61,6 +59,7 @@ export const ACHIEVEMENT_CATALOG = [
     icon: "🏰",
     category: "savings",
     tier: "premium",
+    // TODO: No evaluation logic exists for emergency fund progress.
   },
   {
     achievementId: "emergency_100",
@@ -69,6 +68,7 @@ export const ACHIEVEMENT_CATALOG = [
     icon: "🏆",
     category: "savings",
     tier: "premium",
+    // TODO: No evaluation logic exists for emergency fund progress.
   },
   {
     achievementId: "perfect_week",
@@ -77,6 +77,7 @@ export const ACHIEVEMENT_CATALOG = [
     icon: "✅",
     category: "streak",
     tier: "premium",
+    // TODO: No evaluation logic exists for weekly compliance.
   },
   {
     achievementId: "streak_1",
@@ -167,7 +168,11 @@ const achievementDocValidator = v.object({
   title: v.string(),
   description: v.string(),
   icon: v.string(),
-  category: v.union(v.literal("milestone"), v.literal("savings"), v.literal("streak")),
+  category: v.union(
+    v.literal("milestone"),
+    v.literal("savings"),
+    v.literal("streak"),
+  ),
   unlockedAt: v.optional(v.string()),
 });
 

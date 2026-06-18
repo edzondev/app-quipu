@@ -1,11 +1,61 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
+  type ComputeEnvelopesResult,
   computeEnvelopes,
   currentMonthString,
   getProfileOrThrow,
   requirePremium,
 } from "./helpers";
+
+export type RescueDeficit = {
+  needsOverflow: number;
+  wantsOverflow: number;
+  envelope: "needs" | "wants" | null;
+  deficit: number;
+};
+
+/**
+ * Pure computation shared by getRescueStatus and applyRescueSolution.
+ * Determines whether the user is in rescue mode and the size of the deficit.
+ */
+export function computeRescueDeficit(
+  computed: ComputeEnvelopesResult,
+): RescueDeficit {
+  const needsOverflow =
+    computed.envelopes.needs.spent - computed.envelopes.needs.allocated;
+  const wantsOverflow =
+    computed.envelopes.wants.spent - computed.envelopes.wants.allocated;
+
+  const isInRescue = needsOverflow > 0 || wantsOverflow > 0;
+  const envelope = isInRescue ? (needsOverflow > 0 ? "needs" : "wants") : null;
+  const deficit =
+    envelope === "needs"
+      ? needsOverflow
+      : envelope === "wants"
+        ? wantsOverflow
+        : 0;
+
+  return { needsOverflow, wantsOverflow, envelope, deficit };
+}
+
+export type RescueTransfer = {
+  transferAmount: number;
+  targetEnvelope: "needs" | "wants";
+};
+
+/**
+ * Pure computation for the rescue transfer_from_savings action.
+ */
+export function computeRescueTransfer(
+  computed: ComputeEnvelopesResult,
+  savings: number,
+): RescueTransfer {
+  const { needsOverflow, deficit } = computeRescueDeficit(computed);
+  const transferAmount = Math.min(deficit, savings);
+  const targetEnvelope = needsOverflow > 0 ? "needs" : "wants";
+  return { transferAmount, targetEnvelope };
+}
 
 /**
  * Returns the current rescue status for the authenticated user.
@@ -28,28 +78,21 @@ export const getRescueStatus = query({
     const month = args.month ?? currentMonthString();
     const computed = await computeEnvelopes(ctx, profile, month);
 
-    const needsOverflow =
-      computed.envelopes.needs.spent - computed.envelopes.needs.allocated;
-    const wantsOverflow =
-      computed.envelopes.wants.spent - computed.envelopes.wants.allocated;
-
-    const isInRescue = needsOverflow > 0 || wantsOverflow > 0;
-
-    // needs has priority over wants
-    const envelope =
-      needsOverflow > 0 ? "needs" : wantsOverflow > 0 ? "wants" : null;
-    const envelopeName =
-      envelope === "needs"
-        ? "Necesidades"
-        : envelope === "wants"
-          ? "Gustos"
-          : null;
-    const deficit =
-      envelope === "needs"
-        ? needsOverflow
-        : envelope === "wants"
-          ? wantsOverflow
-          : 0;
+    const { isInRescue, envelope, envelopeName, deficit } = (() => {
+      const result = computeRescueDeficit(computed);
+      const envelopeName =
+        result.envelope === "needs"
+          ? "Necesidades"
+          : result.envelope === "wants"
+            ? "Gustos"
+            : null;
+      return {
+        isInRescue: result.envelope !== null,
+        envelope: result.envelope,
+        envelopeName,
+        deficit: result.deficit,
+      };
+    })();
 
     const savings = profile.envelopeSavings ?? 0;
     const transferAmount = Math.min(deficit, savings);
@@ -104,23 +147,13 @@ export const applyRescueSolution = mutation({
 
     if (args.actionId === "transfer_from_savings") {
       const computed = await computeEnvelopes(ctx, profile, month);
-
-      const needsOverflow =
-        computed.envelopes.needs.spent - computed.envelopes.needs.allocated;
-      const wantsOverflow =
-        computed.envelopes.wants.spent - computed.envelopes.wants.allocated;
-
-      const deficit =
-        needsOverflow > 0
-          ? needsOverflow
-          : wantsOverflow > 0
-            ? wantsOverflow
-            : 0;
-
+      const { transferAmount, targetEnvelope } = computeRescueTransfer(
+        computed,
+        profile.envelopeSavings ?? 0,
+      );
       const savings = profile.envelopeSavings ?? 0;
-      const transferAmount = Math.min(deficit, savings);
 
-      if (needsOverflow > 0) {
+      if (targetEnvelope === "needs") {
         await ctx.db.patch(profile._id, {
           envelopeSavings: savings - transferAmount,
           envelopeNeeds: (profile.envelopeNeeds ?? 0) + transferAmount,

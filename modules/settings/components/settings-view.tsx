@@ -2,7 +2,7 @@
 
 import type { Preloaded } from "convex/react";
 import { Controller, useWatch } from "react-hook-form";
-import { api } from "@/convex/_generated/api";
+import type { api } from "@/convex/_generated/api";
 import { PremiumBadge } from "@/core/components/shared/premium-badge";
 import { PremiumGate } from "@/core/components/shared/premium-gate";
 import { Button } from "@/core/components/ui/button";
@@ -36,15 +36,13 @@ import { CommitmentItem } from "./commitment-item";
 
 // Modal: loaded on demand when the dialog is opened
 const AddCommitmentDialog = dynamic(
-  () =>
-    import("./add-commitment-dialog").then((m) => m.AddCommitmentDialog),
+  () => import("./add-commitment-dialog").then((m) => m.AddCommitmentDialog),
   { ssr: false },
 );
 
 // Rarely used — defer until the section is visible in the page
 const DeleteAccountSection = dynamic(
-  () =>
-    import("./delete-account-section").then((m) => m.DeleteAccountSection),
+  () => import("./delete-account-section").then((m) => m.DeleteAccountSection),
   { ssr: false },
 );
 
@@ -56,6 +54,7 @@ export default function SettingsView({ preloaded }: Props) {
   const {
     form,
     commitments,
+    commitmentsLoading,
     handleSubmit,
     handleDeleteCommitment,
     isSubmitting,
@@ -128,7 +127,16 @@ export default function SettingsView({ preloaded }: Props) {
                     <FieldLabel htmlFor="settings-pay-frequency">
                       Frecuencia de pago
                     </FieldLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue(
+                          "paydays",
+                          value === "monthly" ? [1] : [15, 30],
+                        );
+                      }}
+                    >
                       <SelectTrigger id="settings-pay-frequency">
                         <SelectValue />
                       </SelectTrigger>
@@ -344,7 +352,12 @@ export default function SettingsView({ preloaded }: Props) {
             <p className="text-muted-foreground text-sm">
               Pagos fijos que se descuentan antes de asignar tus sobres.
             </p>
-            {commitments.length > 0 ? (
+            {commitmentsLoading ? (
+              <div className="space-y-2">
+                <div className="h-10 animate-pulse rounded-lg bg-muted" />
+                <div className="h-10 animate-pulse rounded-lg bg-muted" />
+              </div>
+            ) : commitments.length > 0 ? (
               <div className="divide-y">
                 {commitments.map((c) => (
                   <CommitmentItem

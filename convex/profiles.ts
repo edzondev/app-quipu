@@ -4,6 +4,7 @@ import {
   currentMonthString,
   getAuthUserIdOrThrow,
   getProfileOrThrow,
+  requirePremium,
 } from "./helpers";
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
@@ -81,6 +82,10 @@ export const createProfile = mutation({
     if (existing) {
       await ctx.db.patch(existing._id, { onboardingComplete: true });
       return existing._id;
+    }
+
+    if (args.monthlyIncome < 0) {
+      throw new ConvexError("Monthly income cannot be negative");
     }
 
     const profileId = await ctx.db.insert("profiles", {
@@ -201,14 +206,27 @@ export const updateProfile = mutation({
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
 
-    // If all three allocations are provided, validate they sum to 100
+    if (args.monthlyIncome !== undefined && args.monthlyIncome < 0) {
+      throw new ConvexError("Monthly income cannot be negative");
+    }
+
     if (
-      args.allocationNeeds !== undefined &&
-      args.allocationWants !== undefined &&
-      args.allocationSavings !== undefined
+      args.coupleMonthlyBudget !== undefined &&
+      args.coupleMonthlyBudget < 0
     ) {
-      const sum =
-        args.allocationNeeds + args.allocationWants + args.allocationSavings;
+      throw new ConvexError("Couple budget cannot be negative");
+    }
+
+    if (args.coupleModeEnabled === true) {
+      requirePremium(profile.plan);
+    }
+
+    // Validate allocations sum to 100, merging provided values with existing ones
+    const needs = args.allocationNeeds ?? profile.allocationNeeds;
+    const wants = args.allocationWants ?? profile.allocationWants;
+    const savings = args.allocationSavings ?? profile.allocationSavings;
+    if (needs !== undefined && wants !== undefined && savings !== undefined) {
+      const sum = needs + wants + savings;
       if (Math.round(sum) !== 100) {
         throw new ConvexError("Allocations must sum to 100%");
       }

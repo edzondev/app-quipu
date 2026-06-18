@@ -210,6 +210,10 @@ export const registerExpense = mutation({
       throw new ConvexError("Couple mode is not enabled");
     }
 
+    if (args.registeredBy === "partner" && !profile.coupleModeEnabled) {
+      throw new ConvexError("Couple mode is not enabled");
+    }
+
     const expenseId = await ctx.db.insert("expenses", {
       profileId: profile._id,
       amount: args.amount,

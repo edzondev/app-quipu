@@ -15,12 +15,14 @@ import {
 /**
  * Whether the current pay period has already been processed.
  * Monthly: last processed date is in the current YYYY-MM.
- * Biweekly: last processed date is in the same half of the current month
- *           (days 1-15 = first half, days 16+ = second half).
+ * Biweekly: the payday that corresponds to `today` (the greatest configured
+ *           payday less than or equal to today's day) has already been
+ *           processed this month.
  */
-function computeHasProcessed(
+export function computeHasProcessed(
   lastPaydayProcessedAt: string | undefined,
   payFrequency: "monthly" | "biweekly",
+  paydays: number[],
   today: string,
   currentMonth: string,
 ): boolean {
@@ -29,18 +31,22 @@ function computeHasProcessed(
 
   if (payFrequency === "monthly") return true;
 
-  // Biweekly: same half?
+  // Biweekly: has the payday that corresponds to today been processed?
   const todayDay = parseInt(today.slice(8, 10), 10);
   const processedDay = parseInt(lastPaydayProcessedAt.slice(8, 10), 10);
-  const todayHalf = todayDay <= 15 ? "first" : "second";
-  const processedHalf = processedDay <= 15 ? "first" : "second";
-  return todayHalf === processedHalf;
+  const sortedPaydays = [...paydays].sort((a, b) => a - b);
+  const currentPaydayDay = [...sortedPaydays]
+    .reverse()
+    .find((d) => d <= todayDay);
+
+  if (currentPaydayDay === undefined) return false;
+  return processedDay >= currentPaydayDay;
 }
 
 /**
  * Returns the next payday date (YYYY-MM-DD) after today.
  */
-function computeNextPaydayDate(paydays: number[], today: Date): string {
+export function computeNextPaydayDate(paydays: number[], today: Date): string {
   const year = today.getFullYear();
   const month = today.getMonth(); // 0-indexed
   const dayOfMonth = today.getDate();
@@ -65,6 +71,57 @@ function computeNextPaydayDate(paydays: number[], today: Date): string {
   return new Date(nextYear, effectiveMonth, effectiveDay)
     .toISOString()
     .slice(0, 10);
+}
+
+export type CommitmentInput = { amount: number };
+export type ExtraIncomeInput = { amount: number; includeInBudget: boolean };
+
+/**
+ * Pure computation behind processPayday. Determines how much is available
+ * for savings distribution after fixed commitments and included extra incomes.
+ */
+export function computePaydayDistribution(
+  monthlyIncome: number | undefined,
+  allocationSavings: number,
+  commitments: CommitmentInput[],
+  extraIncomes: ExtraIncomeInput[],
+): {
+  totalFixed: number;
+  extraIncomesTotal: number;
+  netIncome: number;
+  savingsAmount: number;
+} {
+  const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
+  const extraIncomesTotal = extraIncomes
+    .filter((e) => e.includeInBudget)
+    .reduce((sum, e) => sum + e.amount, 0);
+  const netIncome = (monthlyIncome ?? 0) + extraIncomesTotal - totalFixed;
+  const savingsAmount = netIncome * (allocationSavings / 100);
+
+  return { totalFixed, extraIncomesTotal, netIncome, savingsAmount };
+}
+
+export type IncomeAllocation = {
+  needs: number;
+  wants: number;
+  savings: number;
+};
+
+/**
+ * Pure computation behind registerIncome. Splits an income amount across the
+ * three operational envelopes using the configured allocation percentages.
+ */
+export function computeIncomeAllocation(
+  amount: number,
+  allocationNeeds: number,
+  allocationWants: number,
+  allocationSavings: number,
+): IncomeAllocation {
+  return {
+    needs: amount * (allocationNeeds / 100),
+    wants: amount * (allocationWants / 100),
+    savings: amount * (allocationSavings / 100),
+  };
 }
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
@@ -125,14 +182,15 @@ export const getPaydayStatus = query({
     const hasProcessedCurrentPayday = computeHasProcessed(
       profile.lastPaydayProcessedAt,
       payFrequency,
+      paydays,
       today,
       currentMonth,
     );
 
     const nextPaydayDate =
       paydays.length > 0 ? computeNextPaydayDate(paydays, todayDate) : today;
-    const nextPaydayDateObj = new Date(nextPaydayDate + "T00:00:00");
-    const todayDateObj = new Date(today + "T00:00:00");
+    const nextPaydayDateObj = new Date(`${nextPaydayDate}T00:00:00`);
+    const todayDateObj = new Date(`${today}T00:00:00`);
     const daysUntilNextPayday = Math.round(
       (nextPaydayDateObj.getTime() - todayDateObj.getTime()) /
         (1000 * 60 * 60 * 24),
@@ -204,6 +262,7 @@ export const getDashboardData = query({
     const hasProcessedCurrentPayday = computeHasProcessed(
       profile.lastPaydayProcessedAt,
       payFrequency,
+      paydays,
       today,
       month,
     );
@@ -227,7 +286,7 @@ export const getDashboardData = query({
         .query("expenses")
         .withIndex("by_profileId_date", (q) => q.eq("profileId", profile._id))
         .order("desc")
-        .take(20),
+        .take(5),
       ctx.db
         .query("streaks")
         .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
@@ -324,6 +383,7 @@ export const processPayday = mutation({
       computeHasProcessed(
         profile.lastPaydayProcessedAt,
         profile.payFrequency ?? "monthly",
+        profile.paydays ?? [],
         today,
         currentMonth,
       )
@@ -342,13 +402,12 @@ export const processPayday = mutation({
         .collect(),
     ]);
 
-    const totalFixed = commitments.reduce((sum, c) => sum + c.amount, 0);
-    const extraIncomesTotal = extraIncomes
-      .filter((e) => e.includeInBudget)
-      .reduce((sum, e) => sum + e.amount, 0);
-    const netIncome =
-      (profile.monthlyIncome ?? 0) + extraIncomesTotal - totalFixed;
-    const savingsAmount = netIncome * (profile.allocationSavings / 100);
+    const { savingsAmount } = computePaydayDistribution(
+      profile.monthlyIncome,
+      profile.allocationSavings,
+      commitments,
+      extraIncomes,
+    );
 
     // Si el usuario activó Modo Rescate este mes, omitir distribución de ahorro
     if (profile.rescuePausedSavingsMonth !== currentMonth) {
@@ -414,9 +473,12 @@ export const registerIncome = mutation({
       throw new ConvexError("El monto debe ser mayor a 0");
     }
 
-    const needs = args.amount * (profile.allocationNeeds / 100);
-    const wants = args.amount * (profile.allocationWants / 100);
-    const savings = args.amount * (profile.allocationSavings / 100);
+    const { needs, wants, savings } = computeIncomeAllocation(
+      args.amount,
+      profile.allocationNeeds,
+      profile.allocationWants,
+      profile.allocationSavings,
+    );
 
     const newDistributionsCompleted = (profile.distributionsCompleted ?? 0) + 1;
     await ctx.db.patch(profile._id, {

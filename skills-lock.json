@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "494d59fffe67c87b485f4ee2fb1abd73fc9d0d508c4c8bd9c43a9edd3242f730"
     },
+    "best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "0d59bc23f61ba03b850aa3b81392044c5c7fa3662a5f61b98490b20b0f14a56a"
+    },
     "better-auth-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
@@ -16,10 +21,20 @@
       "sourceType": "well-known",
       "computedHash": "c20fe20eb84bb56fd5a96eae6e36c5fd8d38f989818a4944f8a08140fe5e7a5b"
     },
+    "composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "c124390cc3441844903ada94cb5820b23d922f2d0ad34e01e029e410197c8a32"
+    },
     "email-and-password-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "computedHash": "7786d722fa682b3d6a99793e73a9d51b59becefa595676134a993020633e068f"
+    },
+    "emailAndPassword": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "1cbc9527756aa933c0f2f5ad7f18fe493f78ef0f4b6f073b624fbf6ccbd463c9"
     },
     "frontend-design": {
       "source": "anthropics/skills",
@@ -41,10 +56,30 @@
       "sourceType": "github",
       "computedHash": "e3aeb1f9e8a68d24df0c1c2e3c8ab97ede09a7251a2c76988318d02254346979"
     },
+    "organization": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "74bd4e58dd4b66466f79cf0d00a5e75d5ca81b98c0461ee8cd7faba7d8dc16fa"
+    },
     "playwright-best-practices": {
       "source": "currents-dev/playwright-best-practices-skill",
       "sourceType": "github",
       "computedHash": "6db654e753257e642d6507d59b4fc633a2382e93429748ba0fb6817c23ef5216"
+    },
+    "react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "502eb06700e2c3cb1bd7f710860528f72281320bd5171a2087b05a090b573dc1"
+    },
+    "react-hook-form": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "5cac0a77035b36714c95df1f0ccc9955713fbfc87734f189a16f5aac903eccda"
+    },
+    "seo": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "c184da724d1c61ad077f27418ea8e7e88fd54bcdf98165e18be7e4681cbd5e20"
     },
     "shadcn": {
       "source": "shadcn/ui",
@@ -66,6 +101,11 @@
       "sourceType": "github",
       "computedHash": "c4f3a299c62c1985b774b7c28e53b7e55c565dbf973fd52b08899e4bcfffa3f9"
     },
+    "twoFactor": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "85230144b20eed676d0cbe8d28997cb9ccc0b293517204215adad0d74fae9a9d"
+    },
     "typescript-advanced-types": {
       "source": "wshobson/agents",
       "sourceType": "github",
@@ -80,6 +120,16 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "computedHash": "43ca6c197f8ec13055079da7053232d477068b03ca443f9ac1bc819b95cdd432"
+    },
+    "vitest": {
+      "source": "antfu/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "be7329a28a492b802061206c2d75603ab294f25f541bc5421d5de8d41abe68b1"
+    },
+    "zod": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "aa8a97195b07763d37494b511f48be90979fd6826c031956c831cfc58f6a24b8"
     }
   }
 }

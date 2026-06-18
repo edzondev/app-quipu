@@ -31,6 +31,7 @@ export function useSettings(
     defaultValues: {
       monthlyIncome: profile?.monthlyIncome ?? 0,
       payFrequency: profile?.payFrequency ?? "monthly",
+      paydays: profile?.paydays ?? [1],
       allocationNeeds: profile?.allocationNeeds ?? 50,
       allocationWants: profile?.allocationWants ?? 30,
       allocationSavings: profile?.allocationSavings ?? 20,
@@ -48,6 +49,7 @@ export function useSettings(
     form.reset({
       monthlyIncome: profile.monthlyIncome,
       payFrequency: profile.payFrequency ?? "monthly",
+      paydays: profile.paydays ?? [1],
       allocationNeeds: profile.allocationNeeds,
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
@@ -58,6 +60,7 @@ export function useSettings(
   }, [
     profile?.monthlyIncome,
     profile?.payFrequency,
+    profile?.paydays,
     profile?.allocationNeeds,
     profile?.allocationWants,
     profile?.allocationSavings,
@@ -72,6 +75,7 @@ export function useSettings(
       await updateProfile({
         monthlyIncome: data.monthlyIncome,
         payFrequency: data.payFrequency,
+        paydays: data.paydays,
         allocationNeeds: data.allocationNeeds,
         allocationWants: data.allocationWants,
         allocationSavings: data.allocationSavings,
@@ -119,6 +123,7 @@ export function useSettings(
   return {
     form,
     commitments: commitments ?? [],
+    commitmentsLoading: commitments === undefined,
     handleSubmit,
     handleDeleteCommitment,
     isSubmitting: form.formState.isSubmitting || isLoading,

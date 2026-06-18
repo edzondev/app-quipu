@@ -1,5 +1,5 @@
 // __tests__/modules/auth/schemas/register.schema.test.ts
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { registerSchema } from "@/modules/auth/schemas/register.schema";
 
 // A password that satisfies all policy rules:
@@ -156,10 +156,10 @@ describe("registerSchema", () => {
           email: "a@b.com",
           password: `Abc123${special}`,
         });
-        expect(result.success).toBe(
-          true,
+        expect(
+          result.success,
           `expected success for special char: ${special}`,
-        );
+        ).toBe(true);
       }
     });
   });

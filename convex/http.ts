@@ -18,6 +18,40 @@ authComponent.registerRoutes(http, createAuth);
 //   POLAR_SERVER              ("sandbox" | "production")
 //   POLAR_PRODUCT_ID_PREMIUM
 
+export type PolarSubscriptionExtras = {
+  id: string;
+  customerId: string;
+  status: string;
+  metadata?: Record<string, string | undefined>;
+  customer?: {
+    externalId?: string;
+    metadata?: Record<string, string | undefined>;
+  };
+};
+
+export const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"];
+
+/**
+ * Pure decision helper: returns true when a subscription status should trigger
+ * premium revocation.
+ */
+export function shouldRevokePremium(status: string): boolean {
+  return !ACTIVE_SUBSCRIPTION_STATUSES.includes(status);
+}
+
+/**
+ * Pure helper: extracts the userId from Polar subscription webhook payload.
+ */
+export function extractUserIdFromSubscriptionEvent(
+  data: PolarSubscriptionExtras,
+): string | undefined {
+  return (
+    data.metadata?.userId ??
+    data.customer?.externalId ??
+    data.customer?.metadata?.userId
+  );
+}
+
 polar.registerRoutes(http, {
   path: "/webhooks/polar",
 
@@ -27,18 +61,8 @@ polar.registerRoutes(http, {
     // Primary: userId embedded in checkout metadata by createPremiumCheckout
     // Fallback: externalId or customer metadata (for manual Polar dashboard subscriptions)
     // The Polar SDK types don't expose metadata/customer fields directly, so we extend the type.
-    type PolarSubscriptionExtras = {
-      metadata?: Record<string, string | undefined>;
-      customer?: {
-        externalId?: string;
-        metadata?: Record<string, string | undefined>;
-      };
-    };
     const data = event.data as typeof event.data & PolarSubscriptionExtras;
-    const userId =
-      data.metadata?.userId ??
-      data.customer?.externalId ??
-      data.customer?.metadata?.userId;
+    const userId = extractUserIdFromSubscriptionEvent(data);
 
     if (userId) {
       await ctx.runMutation(internal.subscriptions.linkPolarCustomer, {
@@ -58,7 +82,7 @@ polar.registerRoutes(http, {
   onSubscriptionUpdated: async (ctx, event) => {
     const { id: polarSubscriptionId, status } = event.data;
     // Revoke premium if the subscription is no longer active
-    if (status === "revoked" || status === "canceled") {
+    if (shouldRevokePremium(status)) {
       await ctx.runMutation(internal.subscriptions.revokePremium, {
         polarSubscriptionId,
       });

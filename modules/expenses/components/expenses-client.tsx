@@ -34,11 +34,11 @@ export default function ExpensesClient() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-start">
         <div
           role="group"
           aria-label="Filtrar por sobre"
-          className="flex gap-1 flex-wrap"
+          className="flex gap-1 flex-wrap order-2 sm:order-1"
         >
           {options.map((opt) => (
             <Button
@@ -54,7 +54,7 @@ export default function ExpensesClient() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1 sm:ml-auto">
+        <div className="flex items-center gap-1 sm:ml-auto order-1 sm:order-2">
           <Button
             variant="outline"
             size="icon"
@@ -63,7 +63,7 @@ export default function ExpensesClient() {
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <span className="text-sm font-medium min-w-32.5 text-center capitalize">
+          <span className="text-sm font-medium min-w-32 text-center capitalize">
             {monthLabel}
           </span>
           <Button
