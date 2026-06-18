@@ -62,7 +62,7 @@ export const updateFixedCommitment = mutation({
       throw new ConvexError("Fixed commitment not found");
     }
 
-    const { commitmentId, ...fields } = args;
+    const { commitmentId: _, ...fields } = args;
     const patch: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) patch[key] = value;
@@ -78,6 +78,7 @@ export const deleteFixedCommitment = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const profile = await getProfileOrThrow(ctx);
+    requirePremium(profile.plan);
 
     const commitment = await ctx.db.get(args.commitmentId);
     if (!commitment || commitment.profileId !== profile._id) {

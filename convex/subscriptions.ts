@@ -107,6 +107,9 @@ export const revokePremium = internalMutation({
 
     await ctx.db.patch(profile._id, {
       plan: "free",
+      polarSubscriptionId: undefined,
+      polarCustomerId: undefined,
+      planActivatedAt: undefined,
     });
 
     return null;

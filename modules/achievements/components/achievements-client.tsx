@@ -1,10 +1,11 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
-import { usePlan } from "@/hooks/use-plan";
-import { Preloaded, usePreloadedQuery } from "convex/react";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { Crown, Trophy } from "lucide-react";
+import type { api } from "@/convex/_generated/api";
+import { usePlan } from "@/hooks/use-plan";
 import AchievementCard from "./achievement-card";
+import { AchievementsSkeleton } from "./achievements-skeleton";
 import StreakBanner from "./streak-banner";
 
 type Props = {
@@ -15,7 +16,7 @@ export default function AchievementsClient({ preloaded }: Props) {
   const data = usePreloadedQuery(preloaded);
   const { isPremium } = usePlan();
 
-  if (!data) return null;
+  if (!data) return <AchievementsSkeleton />;
 
   const { streak, achievements } = data;
 

@@ -2,7 +2,6 @@ import { api } from "@/convex/_generated/api";
 import { preloadAuthQuery } from "@/lib/auth-server";
 import AchievementsClient from "@/modules/achievements/components/achievements-client";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Logros y Rachas",
@@ -10,12 +9,8 @@ export const metadata: Metadata = {
     "Tu progreso hacia la disciplina financiera: rachas activas y logros desbloqueados.",
 };
 
-async function AchievementsContent() {
+export default async function AchievementsPage() {
   const preloaded = await preloadAuthQuery(api.streaks.getAchievementsData);
-  return <AchievementsClient preloaded={preloaded} />;
-}
-
-export default function AchievementsPage() {
   return (
     <>
       <div className="mb-8">
@@ -24,9 +19,7 @@ export default function AchievementsPage() {
           Tu progreso hacia la disciplina financiera
         </p>
       </div>
-      <Suspense fallback={null}>
-        <AchievementsContent />
-      </Suspense>
+      <AchievementsClient preloaded={preloaded} />
     </>
   );
 }

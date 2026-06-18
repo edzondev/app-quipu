@@ -5,7 +5,6 @@ import SummaryCard from "@/modules/expenses/components/summary-card";
 import ExpensesClient from "@/modules/expenses/components/expenses-client";
 import { ExpensesUpdateBanner } from "@/modules/expenses/components/expenses-update-banner";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Gastos",
@@ -13,23 +12,15 @@ export const metadata: Metadata = {
     "Historial completo de tus transacciones y resumen de gastos por sobre.",
 };
 
-async function ExpensesContent() {
+export default async function ExpensesPage() {
   const { month } = await getServerCalendarStrings();
-  const preloadedTotals = await preloadAuthQuery(api.expenses.getMonthlyTotals, {
-    month,
-  });
-
-  return (
-    <>
-      <div className="animate-in fade-in duration-300">
-        <SummaryCard preloaded={preloadedTotals} />
-      </div>
-      <ExpensesClient />
-    </>
+  const preloadedTotals = await preloadAuthQuery(
+    api.expenses.getMonthlyTotals,
+    {
+      month,
+    },
   );
-}
 
-export default function ExpensesPage() {
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -41,9 +32,10 @@ export default function ExpensesPage() {
         </div>
       </div>
       <ExpensesUpdateBanner />
-      <Suspense fallback={null}>
-        <ExpensesContent />
-      </Suspense>
+      <div className="animate-in fade-in duration-300">
+        <SummaryCard preloaded={preloadedTotals} />
+      </div>
+      <ExpensesClient />
     </>
   );
 }

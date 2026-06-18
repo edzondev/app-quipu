@@ -5,6 +5,7 @@ import { settingsSchema } from "@/modules/settings/schemas/settings.schema";
 const validSettings = {
   monthlyIncome: 3000,
   payFrequency: "monthly" as const,
+  paydays: [1],
   allocationNeeds: 50,
   allocationWants: 30,
   allocationSavings: 20,
@@ -172,6 +173,30 @@ describe("settingsSchema", () => {
 
     it("rejects a missing payFrequency field", () => {
       const { payFrequency: _, ...rest } = validSettings;
+      expect(settingsSchema.safeParse(rest).success).toBe(false);
+    });
+  });
+
+  describe("paydays validation", () => {
+    it("accepts biweekly paydays", () => {
+      const result = settingsSchema.safeParse({
+        ...validSettings,
+        payFrequency: "biweekly",
+        paydays: [15, 30],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects an empty paydays array", () => {
+      const result = settingsSchema.safeParse({
+        ...validSettings,
+        paydays: [],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects a missing paydays field", () => {
+      const { paydays: _, ...rest } = validSettings;
       expect(settingsSchema.safeParse(rest).success).toBe(false);
     });
   });

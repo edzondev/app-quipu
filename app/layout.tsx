@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import { Suspense } from "react";
+import { GlobalFallback } from "@/core/components/shared/global-fallback";
 import { ConvexClientProvider } from "@/core/components/providers/convex-client-provider";
 import { PostHogPageView } from "@/core/components/providers/posthog-pageview";
 import { PostHogProvider } from "@/core/components/providers/posthog-provider";
@@ -141,7 +142,7 @@ export default function RootLayout({
           }}
         />
         <PostHogProvider>
-          <Suspense>
+          <Suspense fallback={<GlobalFallback />}>
             <PostHogPageView />
             <ConvexProviderWithToken>{children}</ConvexProviderWithToken>
           </Suspense>
