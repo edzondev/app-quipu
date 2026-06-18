@@ -66,6 +66,36 @@ export const distributeSavings = internalMutation({
 });
 
 /**
+ * Resets all three savings sub-envelopes (emergency, short_term, investment)
+ * to zero. Useful when accumulated savings no longer reflect reality
+ * (e.g. after withdrawing cash or transferring money out of the app).
+ *
+ * Only resets sub-envelope balances — does not affect savings goals,
+ * the profile's envelopeSavings field, or current-month allocations.
+ */
+export const resetSavingsSubEnvelopes = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const profile = await getProfileOrThrow(ctx);
+
+    const subEnvelopes = await ctx.db
+      .query("savingsSubEnvelopes")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    for (const sub of subEnvelopes) {
+      await ctx.db.patch(sub._id, {
+        currentAmount: 0,
+        progress: 0,
+      });
+    }
+
+    return null;
+  },
+});
+
+/**
  * Withdraws from the emergency fund. Requires explicit `confirm: true`
  * to enforce the deliberate friction described in the product spec.
  */

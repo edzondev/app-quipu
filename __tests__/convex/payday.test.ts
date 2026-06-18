@@ -158,6 +158,50 @@ describe("computePaydayDistribution", () => {
     expect(result.netIncome).toBe(-500);
     expect(result.savingsAmount).toBe(-100);
   });
+
+  it("prorates monthly income for biweekly users with two paydays", () => {
+    const result = computePaydayDistribution(
+      7000,
+      20,
+      [],
+      [],
+      "biweekly",
+      [15, 30],
+    );
+
+    // effectiveIncome = 7000 / 2 = 3500 per payday
+    expect(result.netIncome).toBe(3500);
+    expect(result.savingsAmount).toBe(700);
+  });
+
+  it("does not prorate for monthly users even when paydays are provided", () => {
+    const result = computePaydayDistribution(
+      3000,
+      20,
+      [{ amount: 500 }],
+      [],
+      "monthly",
+      [15],
+    );
+
+    expect(result.netIncome).toBe(2500);
+    expect(result.savingsAmount).toBe(500);
+  });
+
+  it("handles biweekly with single payday array gracefully", () => {
+    const result = computePaydayDistribution(
+      4000,
+      20,
+      [],
+      [],
+      "biweekly",
+      [15],
+    );
+
+    // Only 1 payday in array, so no proration
+    expect(result.netIncome).toBe(4000);
+    expect(result.savingsAmount).toBe(800);
+  });
 });
 
 describe("computeIncomeAllocation", () => {

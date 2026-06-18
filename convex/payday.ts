@@ -79,12 +79,17 @@ export type ExtraIncomeInput = { amount: number; includeInBudget: boolean };
 /**
  * Pure computation behind processPayday. Determines how much is available
  * for savings distribution after fixed commitments and included extra incomes.
+ *
+ * For biweekly users, monthlyIncome is prorated by the number of paydays
+ * so that each payday distribution reflects only that period's portion.
  */
 export function computePaydayDistribution(
   monthlyIncome: number | undefined,
   allocationSavings: number,
   commitments: CommitmentInput[],
   extraIncomes: ExtraIncomeInput[],
+  payFrequency?: "monthly" | "biweekly",
+  paydays?: number[],
 ): {
   totalFixed: number;
   extraIncomesTotal: number;
@@ -95,7 +100,14 @@ export function computePaydayDistribution(
   const extraIncomesTotal = extraIncomes
     .filter((e) => e.includeInBudget)
     .reduce((sum, e) => sum + e.amount, 0);
-  const netIncome = (monthlyIncome ?? 0) + extraIncomesTotal - totalFixed;
+
+  // Prorate monthly income for biweekly pay periods
+  let effectiveIncome = monthlyIncome ?? 0;
+  if (payFrequency === "biweekly" && paydays && paydays.length > 1) {
+    effectiveIncome = effectiveIncome / paydays.length;
+  }
+
+  const netIncome = effectiveIncome + extraIncomesTotal - totalFixed;
   const savingsAmount = netIncome * (allocationSavings / 100);
 
   return { totalFixed, extraIncomesTotal, netIncome, savingsAmount };
@@ -407,6 +419,8 @@ export const processPayday = mutation({
       profile.allocationSavings,
       commitments,
       extraIncomes,
+      profile.payFrequency,
+      profile.paydays,
     );
 
     // Si el usuario activó Modo Rescate este mes, omitir distribución de ahorro
