@@ -1,0 +1,4 @@
+{
+  "extends": "@quipu/config/tsconfig/base.json",
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "quipu",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "check-types": "turbo check-types",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "codegen": "turbo codegen"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.1",
+    "turbo": "2.10.0",
+    "typescript": "6.0.3"
+  }
+}

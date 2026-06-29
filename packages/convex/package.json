@@ -1,0 +1,19 @@
+{
+  "name": "@quipu/convex",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "build": "convex build",
+    "check-types": "tsc --noEmit -p tsconfig.json",
+    "codegen": "convex codegen"
+  },
+  "dependencies": {
+    "convex": "^1.42.0"
+  },
+  "devDependencies": {
+    "@quipu/config": "workspace:*",
+    "typescript": "6.0.3"
+  }
+}

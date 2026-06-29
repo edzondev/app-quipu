@@ -1,0 +1,4 @@
+{
+  "extends": "@quipu/config/tsconfig/convex.json",
+  "include": ["convex/**/*"]
+}

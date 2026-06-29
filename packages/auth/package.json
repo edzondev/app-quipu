@@ -1,0 +1,17 @@
+{
+  "name": "@quipu/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "biome check src",
+    "check-types": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@quipu/config": "workspace:*",
+    "typescript": "6.0.3"
+  }
+}
