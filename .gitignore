@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -11,14 +11,14 @@
 !.yarn/versions
 
 # testing
-/coverage
+/coverage/
 
 # next.js
 /.next/
 /out/
 
 # production
-/build
+/build/
 
 # misc
 .DS_Store
@@ -45,8 +45,7 @@ next-env.d.ts
 # Sentry Config File
 .env.sentry-build-plugin
 
-# Playwright
-node_modules/
+# Playwright (root)
 /test-results/
 /playwright-report/
 /blob-report/
@@ -54,9 +53,27 @@ node_modules/
 /playwright/.auth/
 .env.local
 
+# monorepo: nested build outputs
+**/node_modules/
+**/.next/
+**/out/
+**/coverage/
+**/build/
+**/dist/
+
+# monorepo: nested test outputs
+**/test-results/
+**/playwright-report/
+**/blob-report/
+
+# monorepo: per-package env overrides
+**/.env.local
+
+# monorepo: Convex local state and cache
+**/.convex/
+**/.turbo/
+
+# tools
 .claude/
 .agents/
 .unlighthouse/
-
-# turbo
-.turbo/

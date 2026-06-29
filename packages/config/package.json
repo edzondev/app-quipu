@@ -1,0 +1,15 @@
+{
+  "name": "@quipu/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "tsconfig"
+  ],
+  "exports": {
+    "./tsconfig/base.json": "./tsconfig/base.json",
+    "./tsconfig/next.json": "./tsconfig/next.json",
+    "./tsconfig/convex.json": "./tsconfig/convex.json",
+    "./tsconfig/ui.json": "./tsconfig/ui.json"
+  }
+}

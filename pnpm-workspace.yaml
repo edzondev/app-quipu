@@ -1,0 +1,31 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Reusable version ranges. Reference from package.json with `catalog:`.
+# `pnpm add` will auto-pick the version from here when `catalogMode: prefer`.
+# PR #3 will add: react, react-dom, better-auth, @convex-dev/better-auth,
+# @better-auth/passkey, next, zod, @types/*.
+catalog:
+  typescript: 6.0.3
+
+catalogMode: prefer
+cleanupUnusedCatalogs: true
+
+# Only install platform-specific binaries for the current machine
+# (avoids pnpm retrying timeouts on @esbuild/@biomejs/@turbo for every
+# other OS/CPU combo, which used to add ~30-60s of failed requests).
+supportedArchitectures:
+  os:
+    - current
+  cpu:
+    - current
+  libc:
+    - current
+
+nodeLinker: hoisted
+publicHoistPattern:
+  - "*types*"
+autoInstallPeers: true
+allowBuilds:
+  esbuild: true
