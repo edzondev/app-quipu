@@ -60,7 +60,6 @@ next-env.d.ts
 **/coverage/
 **/build/
 **/dist/
-**/tsconfig.tsbuildinfo
 
 # monorepo: nested test outputs
 **/test-results/

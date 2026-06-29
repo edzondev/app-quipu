@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    typescript:
+      specifier: 6.0.3
+      version: 6.0.3
+
 importers:
 
   .:
@@ -15,7 +21,7 @@ importers:
         specifier: 2.10.0
         version: 2.10.0
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/auth:
@@ -24,7 +30,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/config: {}
@@ -39,7 +45,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/lib:
@@ -48,7 +54,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/ui:
@@ -57,7 +63,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
 packages:
