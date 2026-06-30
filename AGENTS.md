@@ -1,89 +1,89 @@
 # AGENTS.md
 
-Repo-specific guidance for OpenCode sessions in **app-quipu** (Next.js 16 + Convex + Better Auth + Polar.sh, Peruvian-market personal finance app). Keep this file lean — only signal an agent would actually miss.
+Repo-specific guidance for OpenCode sessions in **app-quipu** (Quipu 2.0 — monorepo: pnpm + Turborepo, Next.js 16 web app, Convex backend with Better Auth + Polar.sh). Peruvian-market personal finance app. Keep this file lean — only signal an agent would actually miss.
+
+## Repo shape
+
+```
+apps/
+  web/              # @quipu/web — Next.js 16 (App Router)
+packages/
+  convex/           # @quipu/convex — Convex backend (functions + schema)
+  auth/             # @quipu/auth — shared Better Auth config (server-side factory)
+  ui/               # @quipu/ui — design-system primitives (hand-rolled, NOT shadcn yet)
+  lib/              # @quipu/lib — shared TS utilities (cn, formatters)
+  config/           # @quipu/config — shared tsconfig presets
+  config/tsconfig/
+    next.json       # base for apps/web
+    convex.json     # base for packages/convex
+```
+
+`apps/mobile` is reserved in `pnpm-workspace.yaml` (no folder yet — `.gitkeep` placeholder).
 
 ## Dev loop — two processes are mandatory
 
 Next.js alone is not enough. Backend runs in Convex.
 
 ```bash
-bun dev               # terminal 1 — Next.js on :3000
-npx convex dev        # terminal 2 — Convex backend (syncs functions, watches schema)
+pnpm dev               # terminal 1 — Next.js on :3000
+npx convex dev         # terminal 2 — Convex backend (syncs functions, watches schema)
 ```
 
-`npx convex dev` is what populates `convex/_generated/` and syncs env vars from `.env.local` to your Convex deployment. The app will not work without it running. Convex uses **`tsgo`** (`@typescript/native-preview`) for type-checking per `convex.json` — `tsc` will not match its behavior.
+Run `npx convex dev` from `packages/convex/`, not from root. It populates `packages/convex/convex/_generated/` and syncs env vars from `.env.local` to your Convex deployment. The app will not work without it running.
 
 ## Commands
 
 ```bash
-bun dev                   # Next.js dev server
-bun run build             # Production build
-bun run lint              # biome check (NOT eslint)
-bun run format            # biome format --write
-bun test                  # vitest — unit tests in __tests__/
-bun run test:e2e          # Playwright headless — needs dev server on :3000 + E2E_TEST_EMAIL/PASSWORD
-bun run test:e2e:ui       # Playwright UI mode
-npx playwright test e2e/expenses.spec.ts   # single spec
-npx convex dev            # Convex backend (run in parallel with bun dev)
+pnpm dev                   # turbo dev — runs all dev tasks in parallel
+pnpm run build             # turbo build
+pnpm run lint              # turbo lint — biome check (NOT eslint)
+pnpm run format            # turbo format — biome format --write
+pnpm run check-types       # turbo check-types — tsc --noEmit per package
+pnpm test                  # vitest — unit tests in __tests__/
+pnpm run test:e2e          # Playwright headless
+pnpm run test:e2e:ui       # Playwright UI mode
+npx convex codegen         # from packages/convex/ — regenerate _generated/
+npx convex dev             # from packages/convex/ — long-running watcher
 ```
 
-Package manager is **bun** — do not introduce `npm`/`pnpm`/`yarn` lockfiles.
-
-## Test prerequisites that aren't obvious
-
-- **Vitest** (`bun test`) is jsdom + React Testing Library. Tests live in `__tests__/` mirroring the source tree (`__tests__/convex/`, `__tests__/modules/`, `__tests__/lib/`, `__tests__/core/`).
-- **Playwright** (`bun run test:e2e`) requires:
-  1. Dev server already running on `http://localhost:3000` (`playwright.config.ts` does not auto-start it)
-  2. A real test account in Convex — credentials via `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` in `.env.local`
-  3. Use the `loginAs(page, email, password)` helper in `e2e/helpers/auth.ts`; it waits for redirect to `/dashboard` or `/onboarding`
-  4. Specs call `test.skip()` when the seeded user lands on `/onboarding` instead of `/dashboard` — the test account must be fully onboarded
-- Playwright runs in parallel locally; CI switches to single worker + 2 retries (`playwright.config.ts`).
+Package manager is **pnpm** (lockfile is `pnpm-lock.yaml`, NOT `package-lock.json` or `bun.lockb`). Do not introduce npm/yarn lockfiles. Versions shared across packages live in the `catalog:` block of `pnpm-workspace.yaml`; reference them with `"name": "catalog:"` in package.json.
 
 ## Convex gotchas
 
-- **Env vars split**: Next.js reads `.env.local` for client-visible vars. Convex reads its own env (`npx convex env set` for production, or sync from `.env.local` during `npx convex dev`). Polar, Better Auth secrets, and webhook secrets are **Convex-side**; only the `NEXT_PUBLIC_*` Convex URLs live in Next.js. See `.env.example` for which is which.
+- **Env vars split**: Next.js reads `.env.local` for client-visible vars. Convex reads its own env (`npx convex env set` for production, or sync from `.env.local` during `npx convex dev`). Polar, Better Auth, and passkey secrets are **Convex-side**; only `NEXT_PUBLIC_*` Convex URLs live in Next.js. See `.env.example` for which is which.
+- **Convex CLI looks for `.env.local` in `packages/convex/`, not root.** It auto-creates that file on first run with `CONVEX_DEPLOYMENT`, `CONVEX_URL`, `CONVEX_SITE_URL`. If missing, `npx convex dev` and `npx convex codegen` both fail with "No CONVEX_DEPLOYMENT set".
 - **Canonical names** (the runtime falls back to old names — do not use them in new code):
-  - `SITE_URL` (not `BETTER_AUTH_URL`) — used as Better Auth's `baseURL` in `convex/betterAuth/auth.ts`. `lib/env.ts` accepts `SITE_URL`, `BETTER_AUTH_URL`, `VERCEL_URL`, `NEXT_PUBLIC_SITE_URL` in that order.
+  - `SITE_URL` (not `BETTER_AUTH_URL`) — used as Better Auth's `baseURL` in `packages/convex/convex/auth.ts`.
   - `POLAR_ORGANIZATION_TOKEN` (not `POLAR_ACCESS_TOKEN`).
-- **`v.id()` vs `v.string()`**: `v.id("profiles")` only works for tables in this Convex schema. The Better Auth `user` table lives in the **Better Auth component** (isolated schema), so `profiles.userId` is `v.string()` storing `identity.subject`. See `convex/schema.ts:33`.
-- **`currentMonthString()` warning**: in `convex/helpers.ts`. Do **not** call it inside Convex queries — it uses `Date.now()` and breaks deterministic caching. Pass the month as a query argument from the client. It is safe in mutations and actions.
-- **Cross-component auth helpers**: use `getProfile`, `getProfileOrThrow`, `getAuthUserIdOrThrow`, `requirePremium` from `convex/helpers.ts` — they all key off `identity.subject`. `requirePremium(plan)` throws `ConvexError` for free users; call it after `getProfileOrThrow`.
-- **Shared envelope math**: `computeEnvelopes(ctx, profile, month)` in `convex/helpers.ts` is the single source of truth for needs/wants/savings/juntos balances. Use it from new queries rather than reimplementing month math.
-- **Auto-generated, do not edit**: `convex/_generated/`. Regenerated by `npx convex dev`. Import types via `import { ... } from "@/convex/_generated/api"` and `import type { Id, Doc } from "@/convex/_generated/dataModel"`.
-- **Webhooks**: Polar webhook is registered at `convex/http.ts` on path `/webhooks/polar`. Configure that URL in the Polar dashboard as `{NEXT_PUBLIC_CONVEX_SITE_URL}/webhooks/polar`. The component handles signature verification.
+- **`v.id()` vs `v.string()`**: `v.id("profiles")` only works for tables in this Convex schema. The Better Auth `user` table lives in the **Better Auth component** (isolated schema, mounted locally under `packages/convex/convex/betterAuth/`), so `profiles.userId` is `v.string()` storing the identity subject.
+- **Passkey env**: `PASSKEY_RP_ID` and `PASSKEY_RP_NAME` are required by `@better-auth/passkey`. Defaults in `auth.ts` fallback to `localhost` / `Quipu` so local dev works without env vars.
+- **`currentMonthString()` warning**: uses `Date.now()` and breaks deterministic caching. Do **not** call it inside Convex queries — pass the month as a query argument from the client. It is safe in mutations and actions.
+- **Auto-generated, do not edit**: `packages/convex/convex/_generated/` and `packages/convex/convex/betterAuth/_generated/`. Regenerated by `npx convex codegen` / `npx convex dev`. Import types via `import { ... } from "@quipu/convex/convex/_generated/api"` and `import type { Id, Doc } from "@quipu/convex/convex/_generated/dataModel"`.
+- **Webhooks**: Polar webhook is registered at `packages/convex/convex/http.ts` on path `/webhooks/polar`. Configure that URL in the Polar dashboard as `{NEXT_PUBLIC_CONVEX_SITE_URL}/webhooks/polar`. The Better Auth component handles signature verification for the auth routes.
+- **Convex AI files warning**: optional. `npx convex ai-files disable` to silence the prompt.
 
 ## Auth wiring (Better Auth as a Convex component)
 
-Better Auth is not a separate Node service — it runs inside Convex as a component.
+Better Auth is not a separate Node service — it runs inside Convex as a locally-mounted component.
 
-- `convex/betterAuth/auth.ts` — `authComponent` (Convex client) and `createAuth()` factory.
-- `convex/convex.config.ts` — registers `betterAuth` and `@convex-dev/polar` components.
-- `convex/auth.config.ts` — `providers: [getAuthConfigProvider()]` for Convex auth.
-- `lib/auth-client.ts` — browser-side `authClient` (with `convexClient()` and `polarClient()` plugins).
-- `lib/auth-server.ts` — server-side `getToken`, `isAuthenticated`, `handler`, `preloadAuthQuery`, `fetchAuthQuery`, plus `requireAuthWithProfile()` guard that redirects to `/login` or `/onboarding`.
-- `app/api/auth/[...all]/route.ts` — re-exports the GET/POST `handler` from `lib/auth-server.ts`.
-- `app/layout.tsx` — `ConvexProviderWithToken` calls `getToken()` server-side and passes it as `initialToken` to `ConvexBetterAuthProvider`. **Do not remove this** — without it, the first client render flashes the unauthenticated state (hydration flicker).
+- `packages/convex/convex/betterAuth/auth.ts` — `authComponent` (Convex client) and `createAuth()` factory.
+- `packages/convex/convex/convex.config.ts` — `defineApp().use(betterAuth)` registers the component.
+- `packages/convex/convex/auth.config.ts` — `providers: [getAuthConfigProvider()]` for Convex auth.
+- `packages/convex/convex/auth.ts` — top-level `createAuth()` instance used by `http.ts` to mount routes.
+- `apps/web/lib/auth-client.ts` — browser-side `authClient` (with `convexClient()` and `passkeyClient()` plugins, `baseURL: NEXT_PUBLIC_SITE_URL`).
+- `apps/web/lib/auth-server.ts` — server-side `getToken`, `isAuthenticated`, `handler`, `preloadAuthQuery`, `fetchAuthQuery/Mutation/Action` from `convexBetterAuthNextJs()`.
+- `apps/web/app/api/auth/[...all]/route.ts` — re-exports the `handler.GET` / `handler.POST` from `lib/auth-server.ts`.
+- `apps/web/app/layout.tsx` — async server component, calls `getToken()` and passes it as `initialToken` to `ConvexClientProvider`. **Do not remove this** — without it, the first client render flashes the unauthenticated state (hydration flicker).
 
-## Premium gating
+## Frontend layout (`apps/web`)
 
-Premium plan is `v.union(v.literal("free"), v.literal("premium"))` on `profiles.plan`. Free plan must not see fixed commitments, rescue mode, special incomes, or couple mode. In Convex mutations, gate with:
-
-```ts
-const profile = await getProfileOrThrow(ctx);
-requirePremium(profile.plan);
-```
-
-In React, gate UI with `useIsPremium()` from `core/hooks/`. Subscription state is mutated by the Polar webhook in `convex/http.ts` → `linkPolarCustomer` / `activatePremium` / `revokePremium` in `convex/subscriptions.ts`. Do not call these directly from the client.
-
-## Frontend layout
-
-- **App Router** (`app/`), not Pages Router. Route groups: `(auth)/`, `(dashboard)/`, `(legal)/` (MDX), `(upgrade)/`. `app/(dashboard)/(routes)/<page>/page.tsx` for protected screens.
-- **Module pattern** (vertical slice): each `modules/<feature>/` has `components/`, `hooks/`, `schemas/`. Cross-cutting hooks live in `hooks/` at the repo root (e.g. `hooks/use-mobile.ts`, `hooks/use-plan.ts`).
-- **shadcn/ui** is aliased to `@/core/components/ui` (not the default `components/ui/`). Add components with `npx shadcn add <component>`. The `components.json` already declares the alias.
+- **App Router** (`app/`), not Pages Router. Route groups (planned): `(auth)/`, `(dashboard)/`, `(legal)/` (MDX), `(upgrade)/`. `app/(dashboard)/(routes)/<page>/page.tsx` for protected screens.
+- **Module pattern** (vertical slice): each `modules/<feature>/` has `components/`, `hooks/`, `schemas/`. Cross-cutting hooks live in `hooks/` at the repo root. No `modules/` folder yet — it will be created when UI lands.
+- **Shared package imports** use the workspace name: `import { cn } from "@quipu/lib"`, `import { Button } from "@quipu/ui"`. These are typed against the package's `src/index.ts`.
+- **shadcn/ui**: not installed yet. When added, alias is `@/core/components/ui` (not the default `components/ui/`). The `components.json` will declare the alias.
 - **Tailwind v4** with the `@theme inline` block in `app/globals.css`. Color tokens are OKLCH. New colors must be defined as CSS variables in `:root` / `.dark` and exposed via `@theme inline` in the same file.
-- **Fonts**: DM Sans (`--font-dm-sans`) and Space Grotesk (`--font-space-grotesk`), wired in `app/layout.tsx` via `next/font/google`.
-- **MDX**: legal pages in `app/(legal)/` are `.mdx` files (`pageExtensions: ["ts", "tsx", "mdx", ...]` in `next.config.ts`). `remark-gfm` is registered in `next.config.ts`.
-- **Cross-cutting providers**: `core/components/providers/` — `ConvexClientProvider`, `PostHogProvider`, `PostHogPageView`, `ToastProvider`.
+- **Fonts**: currently `Geist` + `Geist_Mono` from `next/font/google` (the create-next-app default). DM Sans + Space Grotesk are planned — see `ABOUT.md`.
+- **MDX**: legal pages will live under `app/(legal)/` as `.mdx` files. `pageExtensions: ["ts", "tsx", "mdx", ...]` and `remark-gfm` go in `next.config.ts` when MDX is needed.
 
 ## Next.js 16 + React Compiler (this affects code shape)
 
@@ -92,25 +92,21 @@ In React, gate UI with `useIsPremium()` from `core/hooks/`. Subscription state i
 - `images.unoptimized: true` — do not introduce `next/image` optimization config that assumes the default.
 - `experimental.optimizePackageImports: ["lucide-react", "date-fns"]` — import these from the package root, not deep paths, or tree-shaking will break.
 
-## Monitoring
+## Things that look like files but are not
 
-- `instrumentation.ts` — Sentry. Dev mode returns early; Sentry only runs in `nodejs` and `edge` runtimes in production. `onRequestError` is exported for capture.
-- `instrumentation-client.ts` — PostHog init (only if `NEXT_PUBLIC_POSTHOG_KEY`) and Sentry client init. `capture_pageview: false` — `PostHogPageView` does it manually.
-- `sentry.*.config.ts` — server/edge/client Sentry init files; do not delete even though they look empty, they are required by `withSentryConfig` in `next.config.ts`.
+- `packages/convex/convex/betterAuth/` is a **local install** of the Better Auth component (not the npm-published one). Its `convex.config.ts` is what `defineApp().use(betterAuth)` points to. Do not run `pnpm add better-auth` inside that folder; the dep is hoisted to `packages/convex/node_modules/`.
+- `packages/convex/convex/_generated/` and `packages/convex/convex/betterAuth/_generated/` are auto-generated by the Convex CLI. They are checked in for type stability across machines — do not edit by hand, but you can regenerate freely.
+- `convex/README.md` (inside the betterAuth component) is the default Convex template README, not project documentation. Ignore it.
 
 ## Tooling config
 
 - **Biome** (not ESLint/Prettier). 2-space indent. `biome.json` enables `next` and `react` domain rules and `organizeImports` on save.
-- **`tsconfig.json`** has `"@/*": ["./*"]` — `import "@/lib/utils"` resolves to `./lib/utils.ts`.
-- **`playwright.config.ts`** uses `chromium` only, `baseURL: http://localhost:3000`, reporter `html`.
-
-## Things that look like files but are not
-
-- `convex/users.ts` is **not** a Convex `users` table — Better Auth owns that table inside its component. `convex/users.ts` only contains `getCurrentUserInfo` (internal query used by the Polar component) and `deleteAccount` (mutation that cascades the *profile* — it does **not** delete the Better Auth user record; that gap is documented in a code comment at the bottom of the file).
-- `convex/README.md` is the default Convex template README, not project documentation. Ignore it; `ABOUT.md` and `CLAUDE.md` are the real docs.
+- **`tsconfig.json`** in each package extends `@quipu/config/tsconfig/<name>.json` and adds `"@/*": ["./*"]` where applicable.
+- **Workspace catalog** (`pnpm-workspace.yaml`): `typescript@6.0.3`, `@biomejs/biome@2.5.1`, `@types/node@^24`, `better-auth@1.6.22`, `@convex-dev/better-auth@0.12.4`, `@better-auth/passkey@1.6.22`, `convex@^1.42.0`. Deps shared by ≥2 packages go in the catalog; single-use deps stay in the consuming package.
 
 ## Reference
 
 - `CLAUDE.md` — fuller architecture overview, Convex file map, and env-var inventory (kept in sync with this file).
 - `.env.example` — annotated env-var template with Next.js vs Convex split.
 - `ABOUT.md` — product philosophy and feature list (mostly useful for understanding *what* the code is supposed to do, not *how*).
+- `apps/web/README.md` — local dev quickstart for the web app.

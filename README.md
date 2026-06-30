@@ -58,14 +58,14 @@ Sabes exactamente cuánto tienes disponible en cada categoría en todo momento.
 
 ## Stack
 
-- **Framework:** Next.js 16 (App Router)
-- **Base de datos:** [Convex](https://convex.dev) — tiempo real y transaccional
-- **Auth:** [Better Auth](https://better-auth.com)
+- **Monorepo:** pnpm workspaces + Turborepo
+- **Framework:** Next.js 16 (App Router) en `apps/web`
+- **Base de datos:** [Convex](https://convex.dev) — tiempo real y transaccional, en `packages/convex`
+- **Auth:** [Better Auth](https://better-auth.com) corriendo como componente dentro de Convex (passkey + email/password)
 - **Pagos:** [Polar.sh](https://polar.sh)
-- **UI:** Tailwind CSS + shadcn/ui
-- **Emails:** Resend
-- **Errores:** Sentry
-- **Deployment:** Vercel
+- **UI:** Tailwind v4 + shadcn/ui (planeado)
+- **Tooling:** Biome (lint + format), TypeScript 6, Vitest, Playwright
+- **Deployment:** Vercel (web) + Convex Cloud (backend)
 
 ---
 
@@ -73,37 +73,47 @@ Sabes exactamente cuánto tienes disponible en cada categoría en todo momento.
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tu-usuario/quipu.git
+git clone https://github.com/edzondev/quipu.git
 cd quipu
 
-# Instalar dependencias
-bun install
+# Instalar dependencias (pnpm 11 + Node 24)
+pnpm install
 
 # Configurar variables de entorno
 cp .env.example .env.local
 # Editar .env.local con tus credenciales
+# Ver .env.example para saber qué variables se leen del lado de Next.js
+# y cuáles deben estar también en el dashboard de Convex.
 
-# Iniciar Convex en modo desarrollo
+# Iniciar Convex en modo desarrollo (terminal 1)
+cd packages/convex
 npx convex dev
+cd ../..
 
-# Iniciar la app
-bun dev
+# Iniciar la app (terminal 2)
+pnpm dev
 ```
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+
+> **Importante:** el primer comando que corres dentro de `packages/convex/` provisiona
+> tu deployment y crea `packages/convex/.env.local` con `CONVEX_DEPLOYMENT`,
+> `CONVEX_URL` y `CONVEX_SITE_URL`. Sin este archivo, ni el dev server ni
+> `npx convex codegen` funcionan.
 
 ---
 
 ## Variables de entorno
 
 1. Copia la plantilla: `cp .env.example .env.local`
-2. Rellena los valores. Los comentarios en `.env.example` indican qué consume **Next.js** y qué debe estar también en el **dashboard de Convex** (Polar, Better Auth, etc.).
+2. Rellena los valores. Los comentarios en `.env.example` indican qué consume **Next.js** y qué debe estar también en el **dashboard de Convex** (Polar, Better Auth, passkey, etc.).
 
-Resumen de nombres que usa el código:
+Resumen de nombres canónicos que usa el código:
 
-- **Convex / cliente:** `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`
+- **Convex (cliente):** `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`
 - **App:** `SITE_URL` (URL canónica; Better Auth en Convex usa esto como `baseURL`)
-- **Auth:** `BETTER_AUTH_SECRET` (en Convex)
+- **Auth (Convex):** `BETTER_AUTH_SECRET`
+- **Passkey (Convex):** `PASSKEY_RP_ID`, `PASSKEY_RP_NAME`
 - **Polar (Convex):** `POLAR_ORGANIZATION_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_SERVER`, `POLAR_PRODUCT_ID_PREMIUM` — no `POLAR_ACCESS_TOKEN`
 - **PostHog:** `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
 - **Sentry:** `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, opcional `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_AUTH_TOKEN` (build)
@@ -111,27 +121,38 @@ Resumen de nombres que usa el código:
 
 ---
 
-## Estructura del proyecto
+## Estructura del monorepo
 
 ```
 quipu/
-├── app/               # Next.js App Router
-│   ├── (auth)/        # Login, Register, Onboarding
-│   └── (dashboard)/   # Dashboard y módulos protegidos
-├── modules/           # Lógica de negocio por feature
-├── convex/            # Schema y funciones de base de datos
-├── core/              # Componentes y hooks globales
-└── lib/               # Instancias y utilidades
+├── apps/
+│   └── web/                 # @quipu/web — Next.js 16 (App Router)
+│       ├── app/             # App Router (route groups, layouts, pages)
+│       ├── core/            # Cross-cutting components + providers
+│       ├── modules/         # Feature modules (vertical slice) — empty, en construcción
+│       └── lib/             # auth-client, auth-server, utils
+├── packages/
+│   ├── convex/              # @quipu/convex — backend
+│   │   └── convex/          # schema, functions, http, auth, _generated/
+│   ├── auth/                # @quipu/auth — Better Auth factory compartida
+│   ├── ui/                  # @quipu/ui — design-system primitives
+│   ├── lib/                 # @quipu/lib — utilidades TS compartidas (cn, formatters)
+│   └── config/              # @quipu/config — tsconfig presets
+│       └── tsconfig/        # next.json, convex.json
+├── biome.json               # lint + format
+├── turbo.json               # task pipeline
+├── pnpm-workspace.yaml      # workspaces + catalog
+└── .env.example             # plantilla de variables
 ```
 
 ---
 
 ## Contribuir
 
-Este proyecto está en desarrollo activo. Si encuentras un bug o tienes una sugerencia, abre un [issue](https://github.com/tu-usuario/quipu/issues).
+Este proyecto está en desarrollo activo. Si encuentras un bug o tienes una sugerencia, abre un [issue](https://github.com/edzondev/quipu/issues).
 
 ---
 
 ## Licencia
 
-MIT © 2025 Quipu — Hecho en Perú 🇵🇪
+MIT © 2026 Quipu — Hecho en Perú 🇵🇪
