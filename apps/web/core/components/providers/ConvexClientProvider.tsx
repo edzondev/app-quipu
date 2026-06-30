@@ -12,11 +12,18 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL ?? "", {
   unsavedChangesWarning: false,
 })
 
-export function ConvexClientProvider({ children }: { children: ReactNode }) {
+export function ConvexClientProvider({
+  children,
+  initialToken,
+}: {
+  children: ReactNode
+  initialToken?: string | null
+}) {
   return (
     <ConvexBetterAuthProvider
       client={convex}
       authClient={authClient as unknown as AuthClient}
+      initialToken={initialToken}
     >
       {children}
     </ConvexBetterAuthProvider>
