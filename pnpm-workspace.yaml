@@ -4,10 +4,14 @@ packages:
 
 # Reusable version ranges. Reference from package.json with `catalog:`.
 # `pnpm add` will auto-pick the version from here when `catalogMode: prefer`.
-# PR #3 will add: react, react-dom, better-auth, @convex-dev/better-auth,
-# @better-auth/passkey, next, zod, @types/*.
 catalog:
   typescript: 6.0.3
+  "@biomejs/biome": 2.5.1
+  "@types/node": ^24
+  better-auth: 1.6.22
+  '@convex-dev/better-auth': 0.12.4
+  '@better-auth/passkey': 1.6.22
+  convex: ^1.42.0
 
 catalogMode: prefer
 cleanupUnusedCatalogs: true
@@ -23,9 +27,9 @@ supportedArchitectures:
   libc:
     - current
 
-nodeLinker: hoisted
 publicHoistPattern:
   - "*types*"
 autoInstallPeers: true
 allowBuilds:
   esbuild: true
+  sharp: true

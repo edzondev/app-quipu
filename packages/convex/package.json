@@ -5,15 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "convex dev",
-    "build": "convex build",
     "check-types": "tsc --noEmit -p tsconfig.json",
     "codegen": "convex codegen"
   },
   "dependencies": {
-    "convex": "^1.42.0"
+    "@better-auth/passkey": "catalog:",
+    "@convex-dev/better-auth": "catalog:",
+    "better-auth": "catalog:",
+    "convex": "catalog:"
   },
   "devDependencies": {
     "@quipu/config": "workspace:*",
+    "@types/node": "catalog:",
     "typescript": "catalog:"
   }
 }
