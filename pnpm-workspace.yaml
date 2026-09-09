@@ -11,6 +11,15 @@ minimumReleaseAgeExclude:
   - expo-dev-launcher@57.0.19
   - expo-dev-menu@57.0.18
   - expo-updates@57.0.21
+  - '@expo/cli@57.0.23'
+  - '@expo/metro-file-map@57.0.3'
+  - babel-preset-expo@57.0.11
+  - expo-modules-core@57.0.17
+  - expo-modules-jsi@57.1.0
+  - expo@57.0.21
+  - '@expo/ui@57.0.17'
+  - expo-glass-effect@57.0.2
+  - expo-router@57.0.20
 overrides:
   better-auth: 1.6.30
   "@better-auth/passkey": 1.6.30

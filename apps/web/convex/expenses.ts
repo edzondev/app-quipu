@@ -5,12 +5,16 @@ import {
   buildWantsOverflowNudge,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
+import { computeCycleDayMetrics } from "./lib/dashboardMath";
 import { requireActiveAccount } from "./lib/entitlements";
 import { isEnvelopeFrozen } from "./lib/envelopeGuards";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
+import {
+  computeDailyImpact,
+  computeSpendableCents,
+} from "./lib/spendableBalance";
 
 const RECENT_EXPENSES_LIMIT = 5;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const registerExpense = mutation({
   args: {
@@ -45,12 +49,12 @@ export const registerExpense = mutation({
     // v2.5: Plan Free es ilimitado. El valor de Premium es automatización,
     // no restricción de registros.
 
-    const envelope = await ctx.db
+    // Ambos sobres gastables: para el hero solo cuenta needs + wants.
+    const cycleEnvelopes = await ctx.db
       .query("envelopes")
-      .withIndex("by_cycle_type", (q) =>
-        q.eq("cycleId", activeCycle._id).eq("type", args.envelopeType),
-      )
-      .unique();
+      .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+      .collect();
+    const envelope = cycleEnvelopes.find((e) => e.type === args.envelopeType);
     if (!envelope) {
       throw new ConvexError({
         code: "NOT_FOUND",
@@ -68,8 +72,28 @@ export const registerExpense = mutation({
       });
     }
 
+    const needsRemainingBefore =
+      cycleEnvelopes.find((e) => e.type === "needs")?.remainingAmount ?? 0;
+    const wantsRemainingBefore =
+      cycleEnvelopes.find((e) => e.type === "wants")?.remainingAmount ?? 0;
+    const spendableBeforeCents = computeSpendableCents({
+      needsRemainingCents: needsRemainingBefore,
+      wantsRemainingCents: wantsRemainingBefore,
+    });
+
     const newRemainingAmount = envelope.remainingAmount - args.amount;
     await ctx.db.patch(envelope._id, { remainingAmount: newRemainingAmount });
+
+    const spendableAfterCents = computeSpendableCents({
+      needsRemainingCents:
+        args.envelopeType === "needs"
+          ? newRemainingAmount
+          : needsRemainingBefore,
+      wantsRemainingCents:
+        args.envelopeType === "wants"
+          ? newRemainingAmount
+          : wantsRemainingBefore,
+    });
 
     const expenseId = await ctx.db.insert("expenses", {
       profileId: profile._id,
@@ -107,7 +131,11 @@ export const registerExpense = mutation({
           ((envelope.allocatedAmount - newRemainingAmount) /
             envelope.allocatedAmount) *
           100;
-        const daysElapsed = (now - activeCycle.startDate) / MS_PER_DAY;
+        const { daysElapsed } = computeCycleDayMetrics(
+          activeCycle.startDate,
+          activeCycle.endDate,
+          now,
+        );
         const nudge = buildWantsOverflowNudge({
           profileName: profile.name,
           burnPercent: burnPct,
@@ -126,10 +154,17 @@ export const registerExpense = mutation({
       }
     }
 
-    const daysRemainingInCycle = Math.max(
-      0,
-      Math.ceil((activeCycle.endDate - now) / MS_PER_DAY),
-    );
+    const daysRemainingInCycle = computeCycleDayMetrics(
+      activeCycle.startDate,
+      activeCycle.endDate,
+      now,
+    ).daysRemaining;
+
+    const dailyImpact = computeDailyImpact({
+      spendableBeforeCents,
+      spendableAfterCents,
+      daysRemaining: daysRemainingInCycle,
+    });
 
     return {
       expenseId,
@@ -138,6 +173,10 @@ export const registerExpense = mutation({
       remainingAmount: newRemainingAmount,
       cycleId: activeCycle._id,
       daysRemainingInCycle,
+      spendableCents: spendableAfterCents,
+      dailyBeforeCents: dailyImpact.dailyBeforeCents,
+      dailyAfterCents: dailyImpact.dailyAfterCents,
+      dailyDeltaCents: dailyImpact.dailyDeltaCents,
     };
   },
 });
@@ -324,7 +363,11 @@ export const updateExpense = mutation({
             ((wantsEnvelope.allocatedAmount - wantsEnvelope.remainingAmount) /
               wantsEnvelope.allocatedAmount) *
             100;
-          const daysElapsed = (now - cycle.startDate) / MS_PER_DAY;
+          const { daysElapsed } = computeCycleDayMetrics(
+            cycle.startDate,
+            cycle.endDate,
+            now,
+          );
           const nudge = buildWantsOverflowNudge({
             profileName: profile.name,
             burnPercent: burnPct,

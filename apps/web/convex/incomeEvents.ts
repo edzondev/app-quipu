@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { DistributionPolicy } from "../shared/lib/allocations";
+import { limaStartOfDay } from "../shared/lib/date";
 import { validateAllocationPlan } from "../shared/lib/incomeAllocation";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
@@ -260,7 +261,9 @@ export const createIncomeEvent = mutation({
         }
         cycleDays = CYCLE_DAYS[freq];
       }
-      const startDate = args.occurredAt;
+      // Ancla el ciclo a medianoche Lima del día del ingreso, no al instante
+      // exacto: el conteo de días debe coincidir con el calendario del usuario.
+      const startDate = limaStartOfDay(args.occurredAt);
       const endDate = startDate + cycleDays * MS_PER_DAY;
       cycleId = await ctx.db.insert("financialCycles", {
         profileId: profile._id,

@@ -1,3 +1,4 @@
+import { limaStartOfDay } from "../../shared/lib/date";
 import { evaluateCycleCompliance } from "./budgetMath";
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -98,9 +99,17 @@ export function computeCycleDayMetrics(
   daysElapsed: number;
   progressPercent: number;
 } {
-  const daysTotal = Math.max(1, Math.ceil((end - start) / MS_PER_DAY));
-  const daysRemaining = Math.max(0, Math.ceil((end - now) / MS_PER_DAY));
-  const daysElapsed = Math.max(0, daysTotal - daysRemaining);
+  // Días calendario en Lima, no bloques de 24h: el ancla del ciclo puede ser
+  // media tarde y "Día N" debe coincidir con el conteo del usuario.
+  const startDay = limaStartOfDay(start);
+  const endDay = limaStartOfDay(end);
+  const nowDay = limaStartOfDay(now);
+  const daysTotal = Math.max(1, Math.round((endDay - startDay) / MS_PER_DAY));
+  const daysElapsed = Math.min(
+    daysTotal,
+    Math.max(0, Math.round((nowDay - startDay) / MS_PER_DAY) + 1),
+  );
+  const daysRemaining = Math.max(0, daysTotal - daysElapsed);
   const progressPercent = Math.round(
     computeCycleProgress(start, end, now) * 100,
   );
@@ -182,6 +191,28 @@ export function buildValidationCopy(statusBadge: StatusBadge): string {
 
 export function buildEarlyCycleHeroBody(): string {
   return "Tu presupuesto ya está repartido en sobres. Registra tu primer gasto cuando llegue.";
+}
+
+/**
+ * Copy del héroe con unidad explícita: es una tasa diaria, no un saldo.
+ * "≈ S/ 47.98 por día. Te quedan S/ 1,919 en sobres para 39 días."
+ */
+export function buildDailyRateCopy(params: {
+  dailyCents: number;
+  spendableCents: number;
+  daysRemaining: number;
+  currencySymbol: string;
+}): string {
+  const format = (cents: number) =>
+    (cents / 100).toLocaleString("es-PE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  const horizon =
+    params.daysRemaining <= 1
+      ? "para hoy"
+      : `para ${params.daysRemaining} días`;
+  return `≈ ${params.currencySymbol} ${format(params.dailyCents)} por día. Te quedan ${params.currencySymbol} ${format(params.spendableCents)} en sobres ${horizon}.`;
 }
 
 export function buildEarlyCycleCoachMessage(profileName: string): string {

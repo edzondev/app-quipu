@@ -5,12 +5,12 @@ import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
+import { Money } from "@/shared/components/money/money";
 import {
   isCommitmentValid,
   isNamedChipTaken,
   validCommitmentsTotalCents,
 } from "@/shared/lib/onboarding/commitments";
-import { formatSoles } from "@/shared/lib/onboarding/daily";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
 
 const QUICK_CHIPS = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"];
@@ -134,12 +134,11 @@ export function Step4Commitments() {
 
         <View className="flex-row items-center justify-between">
           <MonoLabel>Se reserva de Necesidades</MonoLabel>
-          <Text
+          <Money
+            cents={totalCents}
             testID="commitments-total"
             className="font-hanken-semibold text-[13px] text-foreground"
-          >
-            {formatSoles(totalCents)}
-          </Text>
+          />
         </View>
       </View>
     </WizardShell>

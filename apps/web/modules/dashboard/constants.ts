@@ -47,9 +47,9 @@ export const UPCOMING_COMMITMENTS_DUE_IN_DAYS = (days: number) =>
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
 
-export const HERO_AVAILABLE_LABEL = "Puedes gastar hoy";
+export const HERO_AVAILABLE_LABEL = "Tu ritmo diario";
 export const HERO_AVAILABLE_BODY =
-  "Puedes gastar esto hoy sin comprometer tu ciclo.";
+  "Es lo que te queda en sobres repartido entre los días que faltan del ciclo.";
 export const HERO_DAYS_REMAINING = "Días restantes";
 export const HERO_CYCLE_HEALTH = "Salud del ciclo";
 export const HERO_LIQUIDITY_SPENDABLE = "En sobres";

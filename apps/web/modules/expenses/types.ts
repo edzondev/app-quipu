@@ -12,6 +12,11 @@ export type ExpenseRegisterResult = {
   envelopeType: ExpenseEnvelopeType;
   amount: number;
   remainingAmount: number;
+  spendableCents: number;
+  dailyBeforeCents: number;
+  dailyAfterCents: number;
+  dailyDeltaCents: number;
+  daysRemainingInCycle: number;
 };
 
 export type ExpenseFlowStep = "amount" | "envelope" | "success";

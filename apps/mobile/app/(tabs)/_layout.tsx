@@ -6,12 +6,20 @@ import { Home } from "reicon-react-native/icons/Home";
 import { ReceiptText } from "reicon-react-native/icons/ReceiptText";
 import { Wallet } from "reicon-react-native/icons/Wallet";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
-import { RegistrarSheetProvider } from "@/shared/components/navigation/registrar-sheet-context";
+import {
+  RegistrarSheetProvider,
+  type RegistrarView,
+} from "@/shared/components/navigation/registrar-sheet-context";
 import RegistrarTabButton from "@/shared/components/navigation/registrar-tab-button";
 
 export default function TabLayout() {
-  const [registrarOpen, setRegistrarOpen] = useState(false);
-  const openRegistrar = useCallback(() => setRegistrarOpen(true), []);
+  const [registrarView, setRegistrarView] = useState<RegistrarView | null>(
+    null,
+  );
+  const openRegistrar = useCallback(
+    (view: RegistrarView = "expense") => setRegistrarView(view),
+    [],
+  );
 
   return (
     <RegistrarSheetProvider open={openRegistrar}>
@@ -62,7 +70,10 @@ export default function TabLayout() {
             options={{
               title: "Registrar",
               tabBarButton: (props) => (
-                <RegistrarTabButton {...props} onPress={openRegistrar} />
+                <RegistrarTabButton
+                  {...props}
+                  onPress={() => openRegistrar("expense")}
+                />
               ),
             }}
           />
@@ -89,8 +100,9 @@ export default function TabLayout() {
         </Tabs>
 
         <RegistrarSheet
-          isPresented={registrarOpen}
-          onDismiss={() => setRegistrarOpen(false)}
+          key={registrarView ?? "closed"}
+          view={registrarView}
+          onDismiss={() => setRegistrarView(null)}
         />
       </View>
     </RegistrarSheetProvider>

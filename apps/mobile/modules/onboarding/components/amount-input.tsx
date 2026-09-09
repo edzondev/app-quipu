@@ -1,5 +1,4 @@
 import { Text, TextInput, View } from "react-native";
-import { formatIntegerEs } from "@/shared/lib/onboarding/daily";
 import { MonoLabel } from "./mono-label";
 
 type AmountInputProps = {
@@ -10,6 +9,11 @@ type AmountInputProps = {
 
 function digitsFromCents(cents: number | null): string {
   return cents != null ? String(Math.floor(cents / 100)) : "";
+}
+
+function formatThousands(digits: string): string {
+  if (!digits) return "";
+  return Number(digits).toLocaleString("es-PE");
 }
 
 export function AmountInput({
@@ -33,7 +37,7 @@ export function AmountInput({
         </Text>
         <TextInput
           testID="amount-input"
-          value={formatIntegerEs(digits)}
+          value={formatThousands(digits)}
           onChangeText={handleChange}
           keyboardType="number-pad"
           placeholder="0"

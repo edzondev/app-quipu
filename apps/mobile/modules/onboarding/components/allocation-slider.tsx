@@ -1,6 +1,6 @@
 import { Slider } from "@expo/ui/community/slider";
 import { Text, View } from "react-native";
-import { formatSoles } from "@/shared/lib/onboarding/daily";
+import { Money } from "@/shared/components/money/money";
 import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
 import { ENVELOPE_BG, ENVELOPE_LABELS } from "./envelopes";
 
@@ -45,12 +45,11 @@ export function AllocationSlider({
             {`${value}%`}
           </Text>
           {referenceIncomeCents ? (
-            <Text
+            <Money
+              cents={Math.floor((referenceIncomeCents * value) / 100)}
               testID={`allocation-amount-${envelope}`}
               className="font-hanken text-[13px] text-foreground/45"
-            >
-              {formatSoles(Math.floor((referenceIncomeCents * value) / 100))}
-            </Text>
+            />
           ) : null}
         </View>
       </View>

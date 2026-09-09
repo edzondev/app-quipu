@@ -1,39 +1,29 @@
 import { Pressable, Text, View } from "react-native";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
+import { Money } from "@/shared/components/money/money";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
 import {
   currentMonthLabel,
   cycleDaysForModel,
 } from "@/shared/lib/onboarding/cycle";
-import {
-  estimateDailyAvailable,
-  formatDailyAvailable,
-  formatSoles,
-} from "@/shared/lib/onboarding/daily";
+import { estimateDailyAvailable } from "@/shared/lib/onboarding/daily";
 import { MonoLabel } from "./mono-label";
 
 function SummaryRow({
   label,
   value,
-  testID,
 }: {
   label: string;
-  value: string;
-  testID?: string;
+  value: React.ReactNode;
 }) {
   return (
     <View className="flex-row items-center justify-between">
       <Text className="font-hanken text-[14px] text-foreground/70">
         {label}
       </Text>
-      <Text
-        testID={testID}
-        className="font-hanken-semibold text-[14px] text-foreground"
-      >
-        {value}
-      </Text>
+      {value}
     </View>
   );
 }
@@ -92,12 +82,21 @@ export function StepConfirm() {
           className="mt-6 rounded-xl bg-primary/10 px-4 py-4"
         >
           <MonoLabel>PODRÁS GASTAR AL DÍA</MonoLabel>
-          <Text
-            testID="confirm-daily"
-            className="mt-2 font-geist-mono text-[32px] text-foreground"
-          >
-            {dailyCents == null ? "—" : formatDailyAvailable(dailyCents)}
-          </Text>
+          {dailyCents == null ? (
+            <Text
+              testID="confirm-daily"
+              className="mt-2 font-geist-mono text-[32px] text-foreground"
+            >
+              —
+            </Text>
+          ) : (
+            <Money
+              testID="confirm-daily"
+              cents={dailyCents}
+              alwaysDecimals
+              className="mt-2 font-geist-mono text-[32px] text-foreground"
+            />
+          )}
           {referenceCents == null ? (
             <Text className="mt-2 font-hanken text-[13px] text-foreground/55">
               Registra tu primer ingreso para ver tu disponible al día.
@@ -108,8 +107,22 @@ export function StepConfirm() {
         <View className="mt-6 gap-3">
           <SummaryRow
             label="Ingreso del ciclo"
-            testID="confirm-income"
-            value={referenceCents == null ? "—" : formatSoles(referenceCents)}
+            value={
+              referenceCents == null ? (
+                <Text
+                  testID="confirm-income"
+                  className="font-hanken-semibold text-[14px] text-foreground"
+                >
+                  —
+                </Text>
+              ) : (
+                <Money
+                  testID="confirm-income"
+                  cents={referenceCents}
+                  className="font-hanken-semibold text-[14px] text-foreground"
+                />
+              )
+            }
           />
 
           {envelopes.map((envelope) => {
@@ -118,11 +131,28 @@ export function StepConfirm() {
               <SummaryRow
                 key={envelope.key}
                 label={envelope.label}
-                testID={`confirm-envelope-${envelope.key}`}
                 value={
-                  amount == null
-                    ? `${envelope.pct}%`
-                    : `${envelope.pct}% · ${formatSoles(amount)}`
+                  amount == null ? (
+                    <Text
+                      testID={`confirm-envelope-${envelope.key}`}
+                      className="font-hanken-semibold text-[14px] text-foreground"
+                    >
+                      {`${envelope.pct}%`}
+                    </Text>
+                  ) : (
+                    <View
+                      testID={`confirm-envelope-${envelope.key}`}
+                      className="flex-row items-baseline"
+                    >
+                      <Text className="font-hanken-semibold text-[14px] text-foreground">
+                        {`${envelope.pct}% · `}
+                      </Text>
+                      <Money
+                        cents={amount}
+                        className="font-hanken-semibold text-[14px] text-foreground"
+                      />
+                    </View>
+                  )
                 }
               />
             );
@@ -130,8 +160,13 @@ export function StepConfirm() {
 
           <SummaryRow
             label="Compromisos reservados"
-            testID="confirm-commitments"
-            value={formatSoles(commitmentsTotalCents)}
+            value={
+              <Money
+                testID="confirm-commitments"
+                cents={commitmentsTotalCents}
+                className="font-hanken-semibold text-[14px] text-foreground"
+              />
+            }
           />
         </View>
 

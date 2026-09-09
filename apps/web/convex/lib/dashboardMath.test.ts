@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildDailyRateCopy,
   buildEarlyCycleCoachMessage,
   buildEarlyCycleHeroBody,
   computeCommitmentCoverageMvp,
+  computeCycleDayMetrics,
   computeCycleProgress,
   computeDailyAvailable,
   computeDisplayDailyCents,
@@ -13,6 +15,77 @@ import {
   mergeRecentMovements,
   resolveHeroStatusBadge,
 } from "./dashboardMath";
+
+describe("buildDailyRateCopy", () => {
+  it("expresa el héroe como tasa diaria con saldo y horizonte", () => {
+    const copy = buildDailyRateCopy({
+      dailyCents: 50_50,
+      spendableCents: 191_900,
+      daysRemaining: 38,
+      currencySymbol: "S/",
+    });
+    expect(copy).toBe(
+      "≈ S/ 50.50 por día. Te quedan S/ 1,919.00 en sobres para 38 días.",
+    );
+  });
+
+  it("un solo día restante se lee como 'para hoy'", () => {
+    expect(
+      buildDailyRateCopy({
+        dailyCents: 10_00,
+        spendableCents: 10_00,
+        daysRemaining: 1,
+        currencySymbol: "S/",
+      }),
+    ).toBe("≈ S/ 10.00 por día. Te quedan S/ 10.00 en sobres para hoy.");
+  });
+});
+
+describe("computeCycleDayMetrics", () => {
+  const start = Date.parse("2026-09-03T00:00:00-05:00");
+  const end = start + 30 * MS_PER_DAY;
+
+  it("cuenta días calendario Lima inclusivos (8 sep → día 6)", () => {
+    const now = Date.parse("2026-09-08T12:30:00-05:00");
+    const m = computeCycleDayMetrics(start, end, now);
+    expect(m.daysTotal).toBe(30);
+    expect(m.daysElapsed).toBe(6);
+    expect(m.daysRemaining).toBe(24);
+  });
+
+  it("normaliza ciclos legacy anclados a media tarde (15:47)", () => {
+    const legacyStart = Date.parse("2026-09-03T15:47:00-05:00");
+    const legacyEnd = legacyStart + 30 * MS_PER_DAY;
+    const now = Date.parse("2026-09-08T12:30:00-05:00");
+    const m = computeCycleDayMetrics(legacyStart, legacyEnd, now);
+    expect(m.daysTotal).toBe(30);
+    expect(m.daysElapsed).toBe(6);
+    expect(m.daysRemaining).toBe(24);
+  });
+
+  it("el día de inicio cuenta como día 1", () => {
+    const now = Date.parse("2026-09-03T10:00:00-05:00");
+    const m = computeCycleDayMetrics(start, end, now);
+    expect(m.daysElapsed).toBe(1);
+    expect(m.daysRemaining).toBe(29);
+  });
+
+  it("cruce de mes: pago del 30 sep registrado el 2 oct, ciclo de 15 días", () => {
+    const octStart = Date.parse("2026-10-02T00:00:00-05:00");
+    const octEnd = octStart + 15 * MS_PER_DAY;
+    const now = Date.parse("2026-10-02T20:00:00-05:00");
+    const m = computeCycleDayMetrics(octStart, octEnd, now);
+    expect(m.daysTotal).toBe(15);
+    expect(m.daysElapsed).toBe(1);
+    expect(m.daysRemaining).toBe(14);
+  });
+
+  it("clamp a 0 si now es anterior al inicio", () => {
+    const now = Date.parse("2026-09-01T12:00:00-05:00");
+    const m = computeCycleDayMetrics(start, end, now);
+    expect(m.daysElapsed).toBe(0);
+  });
+});
 
 describe("computeDailyAvailable", () => {
   it("floors wants remaining over days remaining", () => {

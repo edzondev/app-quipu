@@ -1,7 +1,9 @@
 import { createContext, type ReactNode, useContext } from "react";
 
+export type RegistrarView = "expense" | "income";
+
 type RegistrarSheetApi = {
-  open: () => void;
+  open: (view?: RegistrarView) => void;
 };
 
 const RegistrarSheetContext = createContext<RegistrarSheetApi | null>(null);
@@ -10,7 +12,7 @@ export function RegistrarSheetProvider({
   open,
   children,
 }: {
-  open: () => void;
+  open: (view?: RegistrarView) => void;
   children: ReactNode;
 }) {
   return (

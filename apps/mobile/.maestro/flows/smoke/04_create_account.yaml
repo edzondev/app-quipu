@@ -1,0 +1,18 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- tapOn: "Cómo funciona"
+- tapOn: "Siguiente"
+- tapOn: "Crear mi cuenta"
+- assertVisible: "Crea tu cuenta."
+- assertVisible: "CREAR CUENTA · 01/03"
+- assertVisible: "Nombre"
+- assertVisible: "Email"
+- assertVisible: "Contraseña"
+- assertVisible: "Continuar"
+- back
+- assertVisible: "Cada día, un número. Ese es todo el trabajo."

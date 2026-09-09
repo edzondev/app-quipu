@@ -142,6 +142,11 @@ Si no, no pertenece a Quipu.
    señales distintas; marcar como pagado no mueve sobres (P3-7).
 7. **La métrica principal es disponibilidad diaria:** `remainingAmount / daysRemaining`
    → "Te quedan S/ 42 por día". Es una brújula, no un presupuesto rígido.
+   **Presentación (canon v3.1):** el héroe se etiqueta **"Tu ritmo diario"** (unidad explícita,
+   nunca un saldo) y su hint muestra la tasa + saldo + horizonte (`buildDailyRateCopy`):
+   "≈ S/ 47.98 por día. Te quedan S/ 1,919 en sobres para 39 días." Al registrar un gasto,
+   la confirmación muestra cómo amortiza: `computeDailyImpact` (convex/lib/spendableBalance.ts)
+   + `buildDailyImpactLine` (por app). El gasto grande visible → drop visible y explicado.
 8. **El coach sugiere, nunca aplica.** Detecta gastos acelerados, riesgos y desbalances;
    propone acciones (congelar sobre, transferencia de rescate). Toda acción requiere
    confirmación explícita del usuario (doble opt-in). **Excepción premium:** una regla de
@@ -442,8 +447,9 @@ Sin educación financiera, glosario, video ni tour: solo configuración.
 
 **Bloque 3 — Dashboard "¿Voy bien?"**
 5 niveles, misma jerarquía web y móvil, distinta densidad:
-1. **Disponible hoy (hero):** cifra Newsreader 64 web / 34 móvil + "Puedes gastar esto hoy sin
-   comprometer tu ciclo" + validación inline + días restantes con progress + badge de estado.
+1. **Disponible hoy (hero):** cifra Newsreader 64 web / 34 móvil + etiqueta "Tu ritmo diario" +
+   hint de tasa (≈ por día, saldo en sobres, días restantes) + validación inline + días restantes
+   con progress + badge de estado.
    **El hero nunca cambia de posición ni de propósito.**
 2. **Tus sobres:** 3 cards (orden fijo Necesidades·Gustos·Ahorro) con disponible/total + progress.
 3. **Próximos compromisos:** lista con "en N días" + monto + status de cobertura y pago en header.

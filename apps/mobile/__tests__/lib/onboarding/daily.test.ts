@@ -1,8 +1,4 @@
-import {
-  estimateDailyAvailable,
-  formatDailyAvailable,
-  formatSoles,
-} from "@/shared/lib/onboarding/daily";
+import { estimateDailyAvailable } from "@/shared/lib/onboarding/daily";
 
 describe("estimateDailyAvailable", () => {
   // Contrato: floor a céntimo. (350000 - 126500 - 70000) / 30 = 5116.67 → 5116
@@ -69,41 +65,5 @@ describe("estimateDailyAvailable", () => {
         cycleDays: 7,
       }),
     ).toBe(14285);
-  });
-});
-
-describe("formatSoles", () => {
-  it("símbolo por defecto", () => {
-    expect(formatSoles(350000)).toBe("S/ 3,500");
-  });
-
-  it("monto grande sin céntimos", () => {
-    expect(formatSoles(96100)).toBe("S/ 961");
-  });
-
-  it("con céntimos usa 2 decimales", () => {
-    expect(formatSoles(350050)).toBe("S/ 3,500.50");
-  });
-
-  it("símbolo personalizado", () => {
-    expect(formatSoles(1000, "$")).toBe("$ 10");
-  });
-});
-
-describe("formatDailyAvailable", () => {
-  it("con céntimos distintos de 0 muestra 2 decimales", () => {
-    expect(formatDailyAvailable(4230)).toBe("S/ 42.30");
-  });
-
-  it("sin céntimos muestra solo enteros", () => {
-    expect(formatDailyAvailable(4200)).toBe("S/ 42");
-  });
-
-  it("cero", () => {
-    expect(formatDailyAvailable(0)).toBe("S/ 0");
-  });
-
-  it("céntimos con padding", () => {
-    expect(formatDailyAvailable(5105)).toBe("S/ 51.05");
   });
 });

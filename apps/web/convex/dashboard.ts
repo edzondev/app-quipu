@@ -13,6 +13,7 @@ import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
+  buildDailyRateCopy,
   buildEarlyCycleHeroBody,
   buildValidationCopy,
   computeCycleDayMetrics,
@@ -214,6 +215,12 @@ export const getSummary = query({
     const hero = {
       dailyAvailableCents,
       displayDailyCents: computeDisplayDailyCents(dailyAvailableCents),
+      rateLine: buildDailyRateCopy({
+        dailyCents: dailyAvailableCents,
+        spendableCents: spendable.spendableCents,
+        daysRemaining: cycleMetrics.daysRemaining,
+        currencySymbol: profile.currencySymbol,
+      }),
       bodyCopy: isEarlyCycle ? buildEarlyCycleHeroBody() : undefined,
       validationCopy: isEarlyCycle
         ? undefined

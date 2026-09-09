@@ -12,6 +12,7 @@ import {
   EXPENSE_SUCCESS_ELAPSED_SUFFIX,
   EXPENSE_SUCCESS_TITLE,
 } from "../constants";
+import { buildDailyImpactLine } from "../lib/dailyImpactCopy";
 import type { ExpenseEnvelopeType } from "../lib/envelopeSuggestion";
 import { formatElapsedSeconds } from "../lib/keypad";
 
@@ -19,6 +20,9 @@ type Props = {
   amountCents: number;
   envelopeType: ExpenseEnvelopeType;
   remainingAmount: number;
+  dailyDeltaCents: number;
+  dailyAfterCents: number;
+  daysRemainingInCycle: number;
   currencyCode: string;
   startedAt: number;
   onClose: () => void;
@@ -28,6 +32,9 @@ export function ExpenseConfirmation({
   amountCents,
   envelopeType,
   remainingAmount,
+  dailyDeltaCents,
+  dailyAfterCents,
+  daysRemainingInCycle,
   currencyCode,
   startedAt,
   onClose,
@@ -35,6 +42,16 @@ export function ExpenseConfirmation({
   const styles = ENVELOPE_EXPENSE_STYLES[envelopeType];
   const elapsed = formatElapsedSeconds(startedAt, Date.now());
   const displayRemaining = Math.max(0, remainingAmount);
+  const impactLine = buildDailyImpactLine(
+    {
+      amountCents,
+      envelopeType,
+      dailyDeltaCents,
+      dailyAfterCents,
+      daysRemainingInCycle,
+    },
+    currencyCode,
+  );
 
   return (
     <div className="px-2 py-4 text-center">
@@ -61,6 +78,8 @@ export function ExpenseConfirmation({
         </span>{" "}
         en {ENVELOPE_LABELS[envelopeType]} {EXPENSE_REMAINING_SUFFIX}
       </div>
+
+      <p className="mt-2 text-[13px] leading-snug text-mute">{impactLine}</p>
 
       <p className="mt-5 font-mono text-[10.5px] tracking-wide text-mute/80 uppercase">
         {EXPENSE_SUCCESS_ELAPSED} {elapsed} {EXPENSE_SUCCESS_ELAPSED_SUFFIX}

@@ -1,5 +1,5 @@
-import { toHomeView } from "@/modules/home/to-home-view";
 import type { DashboardSummary } from "@/modules/home/types";
+import { toHomeView } from "@/modules/home/use-home-summary";
 
 const ALLOC = { needs: 50, wants: 30, savings: 20 };
 
@@ -104,33 +104,15 @@ describe("toHomeView — vacío", () => {
     expect(toHomeView(emptySummary(), ALLOC).kind).toBe("empty");
   });
 
-  it("vacío muestra sin ciclo, porcentajes del perfil y S/ —", () => {
+  it("vacío muestra sin ciclo, título y copy de invitación", () => {
     const view = toHomeView(emptySummary(), ALLOC);
     if (view.kind !== "empty") throw new Error("expected empty");
 
     expect(view.cycleLabel).toBe("Sin ciclo activo");
-    expect(view.badge.label).toBe("En espera");
-    expect(view.envelopes.map((e) => e.label)).toEqual([
-      "Necesidades",
-      "Gustos",
-      "Ahorro",
-    ]);
-    expect(view.envelopes.map((e) => e.suffix)).toEqual(["50%", "30%", "20%"]);
-    expect(view.envelopes.every((e) => e.amountLabel === "S/ —")).toBe(true);
-    expect(view.envelopes.every((e) => e.progress === 0)).toBe(true);
-    expect(view.coachMessage).toBe(
-      "Empecemos por tu sueldo. Lo demás se acomoda solo.",
+    expect(view.title).toBe("Empieza con tu primer ingreso.");
+    expect(view.heroHint).toBe(
+      "Registra cuánto ganas y Quipu lo reparte en tus tres sobres: Necesidades, Gustos y Ahorro.",
     );
-  });
-
-  it("usa los porcentajes del perfil, no un 50/30/20 fijo", () => {
-    const view = toHomeView(emptySummary(), {
-      needs: 60,
-      wants: 25,
-      savings: 15,
-    });
-    if (view.kind !== "empty") throw new Error("expected empty");
-    expect(view.envelopes.map((e) => e.suffix)).toEqual(["60%", "25%", "15%"]);
   });
 });
 
@@ -139,11 +121,11 @@ describe("toHomeView — ciclo activo", () => {
     const view = toHomeView(activeSummary(), ALLOC);
     if (view.kind !== "active") throw new Error("expected active");
 
-    expect(view.cycleLabel).toBe("Ciclo agosto · Día 15 / 30");
+    expect(view.cycleLabel).toBe("Ciclo · Día 15 / 30");
     expect(view.badge.label).toBe("Estable");
     expect(view.dailyCents).toBe(4230);
-    expect(view.daysRemainingLabel).toBe("15 días restantes");
-    expect(view.envelopesTotalLabel).toBe("S/ 1,240 en sobres");
+    expect(view.daysRemainingLabel).toMatch(/15 días · termina 31 ago/);
+    expect(view.envelopesTotalCents).toBe(124000);
     expect(view.cycleProgress).toBe(50);
     expect(view.coachMessage).toBe(
       "Vas bien. Puedes gastar S/ 42 hoy sin tocar tu ahorro.",
@@ -151,19 +133,19 @@ describe("toHomeView — ciclo activo", () => {
 
     expect(view.envelopes[0]).toMatchObject({
       label: "Necesidades",
-      amountLabel: "S/ 612",
+      cents: 61200,
       suffix: "de 1,750",
       progress: 35,
     });
     expect(view.envelopes[1]).toMatchObject({
       label: "Gustos",
-      amountLabel: "S/ 231",
+      cents: 23100,
       suffix: "de 1,050",
       progress: 22,
     });
     expect(view.envelopes[2]).toMatchObject({
       label: "Ahorro",
-      amountLabel: "S/ 700",
+      cents: 70000,
       suffix: "apartado",
       progress: 100,
     });
@@ -172,14 +154,16 @@ describe("toHomeView — ciclo activo", () => {
       {
         id: "m1",
         name: "Menú del día",
-        amountLabel: "– S/ 15.00",
-        tone: "wants",
+        cents: 1500,
+        kind: "expense",
+        envelopeType: "wants",
       },
       {
         id: "m2",
         name: "Metropolitano",
-        amountLabel: "– S/ 5.00",
-        tone: "needs",
+        cents: 500,
+        kind: "expense",
+        envelopeType: "needs",
       },
     ]);
   });

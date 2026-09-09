@@ -81,6 +81,9 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
             amountCents={result.amount}
             envelopeType={result.envelopeType}
             remainingAmount={result.remainingAmount}
+            dailyDeltaCents={result.dailyDeltaCents}
+            dailyAfterCents={result.dailyAfterCents}
+            daysRemainingInCycle={result.daysRemainingInCycle}
             currencyCode={currencyCode}
             startedAt={startedAt}
             onClose={close}

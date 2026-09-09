@@ -31,12 +31,7 @@ type RegisterExpenseFn = (args: {
   amount: number;
   description: string;
   envelopeType: ExpenseEnvelopeType;
-}) => Promise<{
-  expenseId: string;
-  envelopeType: ExpenseEnvelopeType;
-  amount: number;
-  remainingAmount: number;
-}>;
+}) => Promise<ExpenseRegisterResult>;
 
 type Props = {
   step: ExpenseFlowStep;
@@ -113,12 +108,7 @@ function ExpenseRegisterFormFields({
           envelope: response.envelopeType,
           entry_variant: variant,
         });
-        onSuccess({
-          expenseId: response.expenseId,
-          envelopeType: response.envelopeType,
-          amount: response.amount,
-          remainingAmount: response.remainingAmount,
-        });
+        onSuccess(response);
       } catch (error) {
         setServerError(fromConvexError(error).message);
       }

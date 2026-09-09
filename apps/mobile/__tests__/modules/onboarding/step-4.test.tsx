@@ -90,7 +90,7 @@ describe("Step4Commitments — compromisos", () => {
     expect(screen.getByTestId("chip-streaming")).toBeTruthy();
     expect(screen.getByTestId("chip-otro")).toBeTruthy();
     expect(screen.getByText("Se reserva de Necesidades")).toBeTruthy();
-    expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
+    expect(screen.getByText("S/ 0")).toBeTruthy();
   });
 
   it("tocar el chip '+ Agua' agrega una fila con nombre Agua vacía", async () => {
@@ -100,7 +100,7 @@ describe("Step4Commitments — compromisos", () => {
     expect(screen.getByTestId("commitment-name-0").props.value).toBe("Agua");
     expect(screen.getByTestId("commitment-amount-0").props.value).toBe("");
     expect(screen.getByTestId("commitment-day-0").props.value).toBe("");
-    expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
+    expect(screen.getByText("S/ 0")).toBeTruthy();
   });
 
   it("tras agregar Agua, el chip Agua queda deshabilitado y no duplica", async () => {
@@ -185,9 +185,7 @@ describe("Step4Commitments — compromisos", () => {
     });
     expect(getCommitments()[0].dueDay).toBe(5);
     expect(getCommitments()[0].name).toBe("Agua");
-    expect(screen.getByTestId("commitments-total").props.children).toBe(
-      "S/ 1,100",
-    );
+    expect(screen.getByText("S/ 1,100")).toBeTruthy();
   });
 
   it("39.99 guarda 3999 céntimos y se ve 39.99", async () => {
@@ -262,9 +260,7 @@ describe("Step4Commitments — compromisos", () => {
       fireEvent.changeText(screen.getByTestId("commitment-day-2"), "15");
     });
 
-    expect(screen.getByTestId("commitments-total").props.children).toBe(
-      "S/ 1,265",
-    );
+    expect(screen.getByText("S/ 1,265")).toBeTruthy();
   });
 
   it("antes de Continuar no muestra qué falta", async () => {

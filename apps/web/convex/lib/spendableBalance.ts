@@ -41,6 +41,37 @@ export function computeDailyAvailableFromSpendable(
   return Math.floor(Math.max(0, spendableCents) / Math.max(daysRemaining, 1));
 }
 
+export type DailyImpact = {
+  dailyBeforeCents: number;
+  dailyAfterCents: number;
+  dailyDeltaCents: number;
+};
+
+/**
+ * Impacto de un gasto en el ritmo diario: el déficit se amortiza entre los
+ * días restantes, igual que el hero. Delta negativo o 0 (sobre ya en
+ * negativo queda clampeado a 0 en spendable).
+ */
+export function computeDailyImpact(input: {
+  spendableBeforeCents: number;
+  spendableAfterCents: number;
+  daysRemaining: number;
+}): DailyImpact {
+  const dailyBeforeCents = computeDailyAvailableFromSpendable(
+    input.spendableBeforeCents,
+    input.daysRemaining,
+  );
+  const dailyAfterCents = computeDailyAvailableFromSpendable(
+    input.spendableAfterCents,
+    input.daysRemaining,
+  );
+  return {
+    dailyBeforeCents,
+    dailyAfterCents,
+    dailyDeltaCents: dailyAfterCents - dailyBeforeCents,
+  };
+}
+
 export function computeSpendableSnapshot(
   input: SpendableSnapshotInput,
 ): SpendableSnapshot {

@@ -1,11 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HomeScreen } from "@/modules/home/home-screen";
-import { toHomeView } from "@/modules/home/to-home-view";
 import type { DashboardSummary } from "@/modules/home/types";
+import { toHomeView } from "@/modules/home/use-home-summary";
 
 jest.mock("@/lib/auth-client", () => ({
   authClient: { signOut: jest.fn() },
 }));
+
+jest.mock("@/shared/components/ui/reicon", () => {
+  const { Text } = require("react-native");
+  return {
+    Plus: () => <Text testID="icon-plus">+</Text>,
+    Minus: () => <Text testID="icon-minus">-</Text>,
+  };
+});
 
 const ALLOC = { needs: 50, wants: 30, savings: 20 };
 
@@ -107,20 +115,15 @@ describe("HomeScreen — vacío", () => {
     jest.clearAllMocks();
   });
 
-  it("muestra el hueco de ciclo y no el de movimientos", async () => {
+  it("muestra la invitación simple y nada de dashboard", async () => {
     await renderHome(emptySummary());
 
     expect(screen.getByText(/sin ciclo activo/i)).toBeTruthy();
-    expect(screen.getByText("En espera")).toBeTruthy();
-    expect(
-      screen.getByText(/registra tu ingreso y quipu lo divide/i),
-    ).toBeTruthy();
-    expect(
-      screen.getByText(/el ciclo empieza con tu primer ingreso/i),
-    ).toBeTruthy();
-    expect(screen.getByText("50%")).toBeTruthy();
-    expect(screen.getAllByText("S/ —").length).toBeGreaterThanOrEqual(3);
-    expect(screen.getByText(/empecemos por tu sueldo/i)).toBeTruthy();
+    expect(screen.getByText(/empieza con tu primer ingreso/i)).toBeTruthy();
+    expect(screen.getByText(/reparte en tus tres sobres/i)).toBeTruthy();
+    expect(screen.queryByText("En espera")).toBeNull();
+    expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+    expect(screen.queryByText("S/ —")).toBeNull();
     expect(screen.queryByText("Hoy")).toBeNull();
     expect(screen.queryByText("Ver todos")).toBeNull();
   });
@@ -146,7 +149,7 @@ describe("HomeScreen — ciclo activo", () => {
   it("pinta cifras reales y oculta los CTAs de vacío", async () => {
     await renderHome(activeSummary());
 
-    expect(screen.getByText(/ciclo agosto · día 15 \/ 30/i)).toBeTruthy();
+    expect(screen.getByText(/ciclo · día 15 \/ 30/i)).toBeTruthy();
     expect(screen.getByText("Estable")).toBeTruthy();
     expect(screen.getByText("42")).toBeTruthy();
     expect(screen.getByText(".30")).toBeTruthy();
@@ -154,7 +157,8 @@ describe("HomeScreen — ciclo activo", () => {
     expect(screen.getByText("de 1,750")).toBeTruthy();
     expect(screen.getByText("apartado")).toBeTruthy();
     expect(screen.getByText("Menú del día")).toBeTruthy();
-    expect(screen.getByText("– S/ 15.00")).toBeTruthy();
+    expect(screen.getByText("S/ 15.00")).toBeTruthy();
+    expect(screen.getByTestId("icon-minus")).toBeTruthy();
     expect(screen.queryByText("Registrar mi ingreso")).toBeNull();
     expect(screen.queryByText("Revisar mis porcentajes")).toBeNull();
   });

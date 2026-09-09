@@ -1,0 +1,12 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- assertVisible: "Divide tu dinero antes de gastarlo, no después."
+- tapOn: "Cómo funciona"
+- assertVisible: "Todo lo que entra se reparte apenas llega."
+- tapOn: "Siguiente"
+- assertVisible: "Cada día, un número. Ese es todo el trabajo."

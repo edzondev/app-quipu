@@ -2,7 +2,6 @@ import Link from "next/link";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { formatCents } from "@/shared/lib/money";
 import {
-  HERO_AVAILABLE_BODY,
   HERO_AVAILABLE_LABEL,
   HERO_CORRECT_CTA,
   HERO_CORRECT_HINT,
@@ -96,7 +95,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
               hero.bodyCopy
             ) : (
               <>
-                {HERO_AVAILABLE_BODY}{" "}
+                {hero.rateLine}{" "}
                 <span className="font-semibold text-qp-deep">
                   {hero.validationCopy}
                 </span>

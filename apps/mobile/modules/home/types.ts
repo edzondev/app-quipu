@@ -29,6 +29,7 @@ export type DashboardMovement = {
 export type DashboardHero = {
   dailyAvailableCents: number;
   displayDailyCents: number;
+  rateLine?: string;
   bodyCopy?: string;
   validationCopy?: string;
   statusBadge: StatusBadge;
@@ -74,44 +75,44 @@ export type DashboardSummary = {
 export type HomeEnvelopeView = {
   type: EnvelopeType;
   label: string;
-  amountLabel: string;
+  cents: number | null;
   suffix: string;
   progress: number;
-  tone: HomeTone;
 };
 
 export type HomeMovementView = {
   id: string;
   name: string;
-  amountLabel: string;
-  tone: HomeTone;
+  cents: number;
+  kind: "income" | "expense";
+  envelopeType: EnvelopeType;
 };
-
-export type HomeBadgeTone = StatusBadge | "wait";
 
 export type HomeBadge = {
   label: string;
-  tone: HomeBadgeTone;
+  tone: StatusBadge;
 };
 
 type HomeViewBase = {
+  cycleLabel: string;
+  heroHint: string;
+};
+
+export type EmptyHomeView = HomeViewBase & {
+  kind: "empty";
+  title: string;
+};
+
+export type ActiveHomeView = {
+  kind: "active";
   cycleLabel: string;
   badge: HomeBadge;
   heroHint: string;
   envelopes: HomeEnvelopeView[];
   coachMessage: string;
-};
-
-export type EmptyHomeView = HomeViewBase & {
-  kind: "empty";
-  cycleHint: string;
-};
-
-export type ActiveHomeView = HomeViewBase & {
-  kind: "active";
   dailyCents: number;
   daysRemainingLabel: string;
-  envelopesTotalLabel: string;
+  envelopesTotalCents: number;
   cycleProgress: number;
   movements: HomeMovementView[];
 };

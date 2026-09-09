@@ -1,0 +1,15 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- tapOn: "Ya tengo cuenta"
+- tapOn: "Entrar con correo"
+- assertVisible: "Entra a tu cuenta."
+- assertVisible: "Email"
+- assertVisible: "Contraseña"
+- assertVisible: "Iniciar sesión"
+- back
+- assertVisible: "Divide tu dinero antes de gastarlo, no después."

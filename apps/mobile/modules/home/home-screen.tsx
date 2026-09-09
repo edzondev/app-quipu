@@ -1,6 +1,8 @@
+import { cn } from "cn";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import SignOutButton from "@/shared/components/auth/sign-out-button";
-import type { HomeBadgeTone, HomeTone, HomeView } from "./types";
+import { Money } from "@/shared/components/money/money";
+import type { HomeTone, HomeView, StatusBadge } from "./types";
 
 type Props = {
   view: HomeView;
@@ -21,73 +23,28 @@ const TONE_BAR: Record<HomeTone, string> = {
   savings: "bg-savings",
 };
 
-const BADGE_PILL: Record<HomeBadgeTone, string> = {
+const BADGE_PILL: Record<StatusBadge, string> = {
   stable: "bg-stable/15",
-  wait: "bg-foreground/8",
   attention: "bg-warning/15",
   risk: "bg-danger/15",
   starting: "bg-stable/15",
 };
 
-const BADGE_DOT: Record<HomeBadgeTone, string> = {
+const BADGE_DOT: Record<StatusBadge, string> = {
   stable: "bg-stable",
-  wait: "bg-foreground/35",
   attention: "bg-warning",
   risk: "bg-danger",
   starting: "bg-stable",
 };
 
-const BADGE_TEXT: Record<HomeBadgeTone, string> = {
+const BADGE_TEXT: Record<StatusBadge, string> = {
   stable: "text-stable",
-  wait: "text-foreground/55",
   attention: "text-warning",
   risk: "text-danger",
   starting: "text-stable",
 };
 
 const TRACK = "bg-[#E8E6DF]";
-
-function Money({
-  value,
-  size = "lg",
-  className = "",
-}: {
-  value: number;
-  size?: "lg" | "sm";
-  className?: string;
-}) {
-  const [intPart, decPart] = value.toFixed(2).split(".");
-  const isLg = size === "lg";
-  return (
-    <Text
-      className={`font-newsreader ${isLg ? "text-[64px] leading-17" : "text-[16px] leading-5"} text-foreground ${className}`}
-      selectable
-    >
-      S/{" "}
-      <Text
-        className={isLg ? "text-[64px] leading-17" : "text-[16px] leading-5"}
-      >
-        {intPart}
-      </Text>
-      <Text
-        className={`${isLg ? "text-[28px] leading-8" : "text-[12px] leading-4"} text-foreground/45 font-newsreader`}
-      >
-        .{decPart}
-      </Text>
-    </Text>
-  );
-}
-
-function EmptyMoney() {
-  return (
-    <View className="flex-row items-end gap-3 pt-1">
-      <Text className="font-newsreader text-[64px] leading-17 text-foreground/30">
-        S/
-      </Text>
-      <View className="mb-4 h-0 w-[72px] border-b border-dashed border-foreground/25" />
-    </View>
-  );
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -101,7 +58,7 @@ function Divider() {
   return <View className="h-px w-full bg-[#E8E6DF]" />;
 }
 
-function StatusPill({ label, tone }: { label: string; tone: HomeBadgeTone }) {
+function StatusPill({ label, tone }: { label: string; tone: StatusBadge }) {
   return (
     <View
       className={`flex-row items-center gap-1.5 rounded-full px-2.5 py-1 ${BADGE_PILL[tone]}`}
@@ -114,9 +71,45 @@ function StatusPill({ label, tone }: { label: string; tone: HomeBadgeTone }) {
   );
 }
 
-function DashedRule() {
+function EmptyState({
+  title,
+  hint,
+  onRegisterIncome,
+  onReviewAllocations,
+}: {
+  title: string;
+  hint: string;
+  onRegisterIncome: () => void;
+  onReviewAllocations: () => void;
+}) {
   return (
-    <View className="w-full border-t border-dashed border-foreground/20" />
+    <View className="gap-4">
+      <Text className="font-newsreader text-[24px] text-foreground">
+        {title}
+      </Text>
+      <Text className="font-hanken text-[14px] text-foreground/55">{hint}</Text>
+      <View className="gap-3 pt-2">
+        <Pressable
+          accessibilityRole="button"
+          onPress={onRegisterIncome}
+          className="h-14 items-center justify-center rounded-full bg-foreground"
+        >
+          <Text className="font-hanken-semibold text-[16px] text-background">
+            Registrar mi ingreso
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onReviewAllocations}
+          hitSlop={8}
+          className="items-center py-1"
+        >
+          <Text className="font-hanken text-[14px] text-foreground/45">
+            Revisar mis porcentajes
+          </Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -133,195 +126,161 @@ export function HomeScreen({
       showsVerticalScrollIndicator={false}
     >
       <View className="flex-row items-center justify-between">
-        <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase">
+        <Text className="font-geist-mono text-[10.5px] tracking-widest text-foreground/55 uppercase">
           {view.cycleLabel}
         </Text>
         <View className="flex-row items-center gap-3">
-          <StatusPill label={view.badge.label} tone={view.badge.tone} />
+          {view.kind === "active" ? (
+            <StatusPill label={view.badge.label} tone={view.badge.tone} />
+          ) : null}
           <SignOutButton />
         </View>
       </View>
 
-      <View className="gap-3">
-        <SectionLabel>Puedes gastar hoy</SectionLabel>
-
-        {view.kind === "empty" ? (
-          <EmptyMoney />
-        ) : (
-          <View className="pt-1">
-            <Money value={view.dailyCents / 100} />
-          </View>
-        )}
-
-        <Text className="font-hanken text-[14px] text-foreground/55 -mt-1">
-          {view.heroHint}
-        </Text>
-
-        {view.kind === "empty" ? (
-          <View className="pt-2 gap-2">
-            <DashedRule />
-            <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/35 uppercase">
-              {view.cycleHint}
-            </Text>
-          </View>
-        ) : (
-          <View className="pt-1 gap-1.5">
-            <View
-              className={`h-0.75 w-full rounded-full ${TRACK} overflow-hidden`}
-            >
-              <View
-                className="h-full rounded-full bg-stable"
-                style={{ width: `${view.cycleProgress}%` }}
+      {view.kind === "empty" ? (
+        <EmptyState
+          title={view.title}
+          hint={view.heroHint}
+          onRegisterIncome={onRegisterIncome}
+          onReviewAllocations={onReviewAllocations}
+        />
+      ) : (
+        <>
+          <View className="gap-3">
+            <SectionLabel>Tu ritmo diario</SectionLabel>
+            <View className="pt-1">
+              <Money
+                cents={view.dailyCents}
+                size="hero"
+                alwaysDecimals
+                className="font-newsreader text-[64px]"
               />
             </View>
-            <View className="flex-row items-center justify-between">
-              <Text
-                className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase"
-                selectable
-              >
-                {view.daysRemainingLabel}
-              </Text>
-              <Text
-                className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase"
-                selectable
-              >
-                {view.envelopesTotalLabel}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      <Divider />
-
-      <View className="gap-4">
-        <View className="flex-row items-center justify-between">
-          <SectionLabel>Tus sobres</SectionLabel>
-          {view.kind === "empty" ? null : (
-            <Pressable onPress={onSeeEnvelopes} hitSlop={8}>
-              <Text className="font-hanken-semibold text-[14px] text-stable">
-                Ver todos
-              </Text>
-            </Pressable>
-          )}
-        </View>
-
-        {view.envelopes.map((envelope) => (
-          <View key={envelope.type} className="gap-1.5">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-baseline gap-2">
-                <Text className="font-hanken-semibold text-[15px] text-foreground">
-                  {envelope.label}
-                </Text>
-                {view.kind === "empty" ? (
-                  <Text className="font-hanken text-[13px] text-foreground/40">
-                    {envelope.suffix}
-                  </Text>
-                ) : null}
-              </View>
-              <View className="flex-row items-baseline gap-1">
-                <Text
-                  className="font-newsreader text-[16px] text-foreground"
-                  selectable
-                >
-                  {envelope.amountLabel}
-                </Text>
-                {view.kind === "empty" ? null : (
-                  <Text className="font-hanken text-[13px] text-foreground/45">
-                    {envelope.suffix}
-                  </Text>
-                )}
-              </View>
-            </View>
-            {view.kind === "empty" ? (
-              <DashedRule />
-            ) : (
+            <Text className="font-hanken text-[14px] text-foreground/55 -mt-1">
+              {view.heroHint}
+            </Text>
+            <View className="pt-1 gap-1.5">
               <View
                 className={`h-0.75 w-full rounded-full ${TRACK} overflow-hidden`}
               >
                 <View
-                  className={`h-full rounded-full ${TONE_BAR[envelope.tone]}`}
-                  style={{ width: `${envelope.progress}%` }}
+                  className="h-full rounded-full bg-stable"
+                  style={{ width: `${view.cycleProgress}%` }}
                 />
               </View>
-            )}
-          </View>
-        ))}
-      </View>
-
-      <View className="flex-row gap-3 pt-1">
-        <View className="w-0.5 rounded-full bg-stable" />
-        <View className="flex-1 gap-3">
-          <Text
-            className="font-newsreader text-[20px] leading-6.5 text-foreground"
-            selectable
-          >
-            {view.coachMessage}
-          </Text>
-          {view.kind === "empty" ? null : (
-            <View className="flex-row items-center gap-5">
-              <Text className="font-hanken-semibold text-[14px] text-stable">
-                Ver detalle
-              </Text>
-              <Text className="font-hanken-semibold text-[14px] text-foreground/45">
-                Entendido
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {view.kind === "empty" ? (
-        <View className="gap-3 pt-4">
-          <Pressable
-            accessibilityRole="button"
-            onPress={onRegisterIncome}
-            className="h-14 items-center justify-center rounded-full bg-foreground"
-          >
-            <Text className="font-hanken-semibold text-[16px] text-background">
-              Registrar mi ingreso
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={onReviewAllocations}
-            hitSlop={8}
-            className="items-center py-1"
-          >
-            <Text className="font-hanken text-[14px] text-foreground/45">
-              Revisar mis porcentajes
-            </Text>
-          </Pressable>
-        </View>
-      ) : view.movements.length > 0 ? (
-        <>
-          <Divider />
-          <View className="gap-3">
-            <View className="flex-row items-center justify-between">
-              <SectionLabel>Hoy</SectionLabel>
-              <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase">
-                {view.movements.length} movimientos
-              </Text>
-            </View>
-            {view.movements.map((movement) => (
-              <View key={movement.id} className="flex-row items-center gap-3">
-                <View
-                  className={`h-1.5 w-1.5 rounded-full ${TONE_DOT[movement.tone]}`}
-                />
-                <Text className="flex-1 font-hanken-semibold text-[15px] text-foreground">
-                  {movement.name}
-                </Text>
+              <View className="flex-row items-center justify-between mt-0.5">
                 <Text
-                  className="font-hanken-semibold text-[15px] text-foreground"
+                  className="font-geist-mono text-[10.5px] tracking-wide text-foreground/55"
                   selectable
                 >
-                  {movement.amountLabel}
+                  {view.daysRemainingLabel}
                 </Text>
+                <View className="flex-row items-baseline">
+                  <Money
+                    cents={view.envelopesTotalCents}
+                    className="font-geist-mono text-[12px] tracking-wide"
+                  />
+                  <Text className="font-geist-mono text-[12px] tracking-wide text-foreground/55">
+                    {" en sobres"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <Divider />
+
+          <View className="gap-4">
+            <View className="flex-row items-center justify-between">
+              <SectionLabel>Tus sobres</SectionLabel>
+              <Pressable onPress={onSeeEnvelopes} hitSlop={8}>
+                <Text className="font-hanken-semibold text-[14px] text-stable">
+                  Ver todos
+                </Text>
+              </Pressable>
+            </View>
+
+            {view.envelopes.map((envelope) => (
+              <View key={envelope.type} className="gap-2">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-baseline gap-2">
+                    <Text className="font-hanken-semibold text-[15px] text-foreground">
+                      {envelope.label}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-baseline">
+                    <Money
+                      cents={envelope.cents}
+                      className="font-hanken text-sm"
+                    />
+                    <Text className="font-hanken text-sm text-foreground/45">
+                      {" "}
+                      {envelope.suffix}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  className={`h-0.75 w-full rounded-full ${TRACK} overflow-hidden`}
+                >
+                  <View
+                    className={`h-full rounded-full ${TONE_BAR[envelope.type]}`}
+                    style={{ width: `${envelope.progress}%` }}
+                  />
+                </View>
               </View>
             ))}
           </View>
+
+          <View className="flex-row gap-3 pt-1">
+            <View className="w-0.5 rounded-full bg-stable" />
+            <View className="flex-1 gap-3">
+              <Text
+                className="font-newsreader text-[20px] leading-6.5 text-foreground"
+                selectable
+              >
+                {view.coachMessage}
+              </Text>
+            </View>
+          </View>
+
+          {view.movements.length > 0 ? (
+            <>
+              <Divider />
+              <View className="gap-3">
+                <View className="flex-row items-center justify-between">
+                  <SectionLabel>Hoy</SectionLabel>
+                  <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase">
+                    {view.movements.length} movimientos
+                  </Text>
+                </View>
+                {view.movements.map((movement) => (
+                  <View
+                    key={movement.id}
+                    className="flex-row items-center gap-3 pb-2.5 border-b border-line"
+                  >
+                    <View
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        TONE_DOT[movement.envelopeType],
+                      )}
+                    />
+                    <Text className="flex-1 font-hanken-semibold text-[15px] text-foreground">
+                      {movement.name}
+                    </Text>
+                    <Money
+                      cents={movement.cents}
+                      sign="auto"
+                      tone={movement.kind}
+                      alwaysDecimals
+                      className="font-hanken-semibold text-[15px]"
+                    />
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
     </ScrollView>
   );
 }

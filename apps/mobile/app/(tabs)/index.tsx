@@ -6,14 +6,14 @@ import { useRegistrarSheet } from "@/shared/components/navigation/registrar-shee
 
 export default function HomePage() {
   const view = useHomeSummary();
-  const { open } = useRegistrarSheet();
   const router = useRouter();
+  const { open } = useRegistrarSheet();
 
   return (
     <AppShell>
       <HomeScreen
         view={view}
-        onRegisterIncome={open}
+        onRegisterIncome={() => open("income")}
         onReviewAllocations={() => router.push("/envelopes")}
         onSeeEnvelopes={() => router.push("/envelopes")}
       />
