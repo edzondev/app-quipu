@@ -1,6 +1,6 @@
 "use client";
 import { useForm } from "@tanstack/react-form";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import {
@@ -19,6 +19,7 @@ import {
 } from "../lib/auth-fetch-options";
 import { resolveAuthDestination } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
+import { useTurnstileChallenge } from "../lib/use-turnstile-challenge";
 import { passwordOnlySchema } from "../schemas";
 import { AuthSidePanel } from "./auth-side-panel";
 import { EmailStep } from "./sign-in-email-step";
@@ -62,15 +63,26 @@ export function SignInView({
   const [error, setError] = useState<
     "credentials" | "passkey" | "unverified" | null
   >(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useTurnstileChallenge();
+  const startedPasskeyAutofill = useRef(false);
 
   const postAuthDestination = resolveAuthDestination(returnTo, "/dashboard");
 
   useEffect(() => {
-    if (!support.conditionalUI) return;
+    if (!support.conditionalUI || startedPasskeyAutofill.current) return;
+    if (
+      !requireTurnstileToken(
+        turnstile.token,
+        clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+      )
+    ) {
+      return;
+    }
+    startedPasskeyAutofill.current = true;
     void authClient.signIn.passkey({
       autoFill: true,
       fetchOptions: {
+        ...authFetchOptions(turnstile.token),
         onSuccess: () => {
           trackLogin("passkey");
           toast.success("Bienvenido de vuelta");
@@ -78,7 +90,7 @@ export function SignInView({
         },
       },
     });
-  }, [support.conditionalUI, postAuthDestination]);
+  }, [support.conditionalUI, postAuthDestination, turnstile.token]);
 
   const emailForm = useForm({
     defaultValues: { email: initialEmail },
@@ -98,7 +110,7 @@ export function SignInView({
       setError(null);
       if (
         !requireTurnstileToken(
-          turnstileToken,
+          turnstile.token,
           clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
         )
       ) {
@@ -110,8 +122,9 @@ export function SignInView({
           email: step.email,
           password: value.password,
         },
-        authFetchOptions(turnstileToken),
+        authFetchOptions(turnstile.token),
       );
+      turnstile.reset();
       if (err) {
         setError(isEmailNotVerified(err) ? "unverified" : "credentials");
         return;
@@ -148,6 +161,10 @@ export function SignInView({
                 error={error}
                 showPasskey={support.webauthn}
                 returnTo={returnTo}
+                turnstileToken={turnstile.token}
+                onTurnstileTokenChange={turnstile.onTokenChange}
+                onTurnstileReady={turnstile.onReady}
+                onPasskeyAttemptComplete={turnstile.reset}
               />
             ) : (
               <PasswordStep
@@ -155,11 +172,13 @@ export function SignInView({
                 email={step.email}
                 error={error}
                 reason={reason}
-                turnstileToken={turnstileToken}
-                onTurnstileTokenChange={setTurnstileToken}
+                turnstileToken={turnstile.token}
+                onTurnstileTokenChange={turnstile.onTokenChange}
+                onTurnstileReady={turnstile.onReady}
+                onPasskeyAttemptComplete={turnstile.reset}
                 onChangeEmail={() => {
                   setError(null);
-                  setTurnstileToken(null);
+                  turnstile.reset();
                   setDirection("back");
                   setStep({ kind: "email" });
                 }}

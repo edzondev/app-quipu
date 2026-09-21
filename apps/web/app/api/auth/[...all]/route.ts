@@ -1,11 +1,7 @@
 import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { handler } from "@/auth/auth-server";
-import { isTurnstileEnabled } from "@/lib/turnstile/config";
-import {
-  authPathRequiresTurnstile,
-  verifyTurnstileToken,
-} from "@/lib/turnstile/verify";
+import { enforceAuthTurnstile } from "@/lib/turnstile/verify";
 
 async function guardAuthPost(
   request: NextRequest,
@@ -21,26 +17,16 @@ async function guardAuthPost(
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
-  const pathname = request.nextUrl.pathname;
-  if (!authPathRequiresTurnstile(pathname)) return null;
-  if (!isTurnstileEnabled() || !process.env.TURNSTILE_SECRET_KEY) return null;
+  const result = await enforceAuthTurnstile({
+    pathname: request.nextUrl.pathname,
+    token: request.headers.get("x-cf-turnstile-token"),
+    remoteIp:
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    cookieHeader: request.headers.get("cookie"),
+  });
 
-  const token = request.headers.get("x-cf-turnstile-token");
-  if (!token) {
-    return NextResponse.json(
-      { error: "Verification required" },
-      { status: 400 },
-    );
-  }
-
-  const remoteIp =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-  const valid = await verifyTurnstileToken(token, remoteIp);
-  if (!valid) {
-    return NextResponse.json({ error: "Verification failed" }, { status: 403 });
-  }
-
-  return null;
+  if (!result.blocked) return null;
+  return NextResponse.json({ error: result.error }, { status: result.status });
 }
 
 export async function GET(request: NextRequest) {

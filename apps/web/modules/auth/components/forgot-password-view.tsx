@@ -16,7 +16,11 @@ import {
 } from "@/shared/components/ui/field";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
-import { requireTurnstileToken } from "../lib/auth-fetch-options";
+import {
+  authFetchOptions,
+  requireTurnstileToken,
+} from "../lib/auth-fetch-options";
+import { useTurnstileChallenge } from "../lib/use-turnstile-challenge";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { AuthSidePanel } from "./auth-side-panel";
@@ -36,7 +40,7 @@ export function ForgotPasswordView({
 }) {
   const [sent, setSent] = useState(false);
   const [requestError, setRequestError] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useTurnstileChallenge();
 
   const form = useForm({
     defaultValues: { email: initialEmail },
@@ -45,7 +49,7 @@ export function ForgotPasswordView({
       setRequestError(false);
       if (
         !requireTurnstileToken(
-          turnstileToken,
+          turnstile.token,
           clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
         )
       ) {
@@ -58,10 +62,9 @@ export function ForgotPasswordView({
           email: value.email,
           redirectTo: `${clientEnv.NEXT_PUBLIC_APP_URL}/restablecer-contrasena`,
         },
-        ...(turnstileToken
-          ? { headers: { "x-cf-turnstile-token": turnstileToken } }
-          : {}),
+        ...authFetchOptions(turnstile.token),
       });
+      turnstile.reset();
       if (error) {
         setRequestError(true);
         return;
@@ -153,7 +156,8 @@ export function ForgotPasswordView({
                     </form.Field>
                   </FieldGroup>
                   <TurnstileWidget
-                    onTokenChange={setTurnstileToken}
+                    onTokenChange={turnstile.onTokenChange}
+                    onReady={turnstile.onReady}
                     className="min-h-16"
                   />
                   <form.Subscribe

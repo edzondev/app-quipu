@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { TurnstileWidgetApi } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -32,7 +33,10 @@ export function PasswordStep({
   email,
   error,
   reason,
+  turnstileToken,
   onTurnstileTokenChange,
+  onTurnstileReady,
+  onPasskeyAttemptComplete,
   onChangeEmail,
   showPasskey,
   returnTo,
@@ -43,6 +47,8 @@ export function PasswordStep({
   reason?: string;
   turnstileToken?: string | null;
   onTurnstileTokenChange: (token: string | null) => void;
+  onTurnstileReady: (api: TurnstileWidgetApi) => void;
+  onPasskeyAttemptComplete: () => void;
   onChangeEmail: VoidFunction;
   showPasskey: boolean;
   returnTo?: string;
@@ -160,6 +166,7 @@ export function PasswordStep({
         </div>
         <TurnstileWidget
           onTokenChange={onTurnstileTokenChange}
+          onReady={onTurnstileReady}
           className="min-h-16"
         />
         <form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>
@@ -182,7 +189,11 @@ export function PasswordStep({
             <span className="text-xs text-faint">o con passkey</span>
             <span className="h-px flex-1 bg-line" />
           </div>
-          <SignInPasskeyButton returnTo={returnTo} />
+          <SignInPasskeyButton
+            returnTo={returnTo}
+            turnstileToken={turnstileToken}
+            onAttemptComplete={onPasskeyAttemptComplete}
+          />
         </>
       )}
     </>

@@ -8,21 +8,47 @@ import {
   stampAndComputeDaysSinceLastLogin,
   track,
 } from "@/core/analytics";
+import { clientEnv } from "@/core/env.client";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { authSecondaryButtonClass } from "../constants";
+import {
+  authFetchOptions,
+  requireTurnstileToken,
+} from "../lib/auth-fetch-options";
 import { resolveAuthDestination } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 
-export function SignInPasskeyButton({ returnTo }: { returnTo?: string }) {
+export function SignInPasskeyButton({
+  returnTo,
+  turnstileToken = null,
+  onAttemptComplete,
+}: {
+  returnTo?: string;
+  turnstileToken?: string | null;
+  onAttemptComplete?: () => void;
+}) {
   const [pending, setPending] = useState(false);
   const postAuthDestination = resolveAuthDestination(returnTo, "/dashboard");
 
   async function handleClick() {
+    if (
+      !requireTurnstileToken(
+        turnstileToken,
+        clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+      )
+    ) {
+      return;
+    }
     setPending(true);
-    const { error } = await authClient.signIn.passkey().finally(() => {
-      setPending(false);
-    });
+    const { error } = await authClient.signIn
+      .passkey({
+        fetchOptions: authFetchOptions(turnstileToken),
+      })
+      .finally(() => {
+        setPending(false);
+        onAttemptComplete?.();
+      });
     if (error) return;
     track(AnalyticsEvents.USER_LOGGED_IN, {
       method: "passkey",
