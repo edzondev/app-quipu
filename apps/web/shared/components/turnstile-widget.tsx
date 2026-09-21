@@ -24,19 +24,39 @@ declare global {
   }
 }
 
+export type TurnstileWidgetApi = {
+  reset: () => void;
+};
+
 type TurnstileWidgetProps = {
   onTokenChange: (token: string | null) => void;
+  onReady?: (api: TurnstileWidgetApi) => void;
   className?: string;
 };
 
 export function TurnstileWidget({
   onTokenChange,
+  onReady,
   className,
 }: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const onTokenChangeRef = useRef(onTokenChange);
+  const onReadyRef = useRef(onReady);
   const [scriptReady, setScriptReady] = useState(false);
   const siteKey = clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  useEffect(() => {
+    onTokenChangeRef.current = onTokenChange;
+  }, [onTokenChange]);
+
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
+
+  useEffect(() => {
+    if (window.turnstile) setScriptReady(true);
+  }, []);
 
   useEffect(() => {
     if (
@@ -56,9 +76,18 @@ export function TurnstileWidget({
     widgetIdRef.current = window.turnstile.render(containerRef.current, {
       sitekey: siteKey,
       theme: "auto",
-      callback: (token) => onTokenChange(token),
-      "expired-callback": () => onTokenChange(null),
-      "error-callback": () => onTokenChange(null),
+      callback: (token) => onTokenChangeRef.current(token),
+      "expired-callback": () => onTokenChangeRef.current(null),
+      "error-callback": () => onTokenChangeRef.current(null),
+    });
+
+    onReadyRef.current?.({
+      reset: () => {
+        if (widgetIdRef.current != null) {
+          window.turnstile?.reset(widgetIdRef.current);
+        }
+        onTokenChangeRef.current(null);
+      },
     });
 
     return () => {
@@ -67,7 +96,7 @@ export function TurnstileWidget({
         widgetIdRef.current = null;
       }
     };
-  }, [onTokenChange, scriptReady]);
+  }, [scriptReady]);
 
   if (!isTurnstileEnabled() || !siteKey) return null;
 

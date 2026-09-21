@@ -28,6 +28,7 @@ import {
   resolveAuthDestination,
 } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
+import { useTurnstileChallenge } from "../lib/use-turnstile-challenge";
 import { signUpSchema } from "../schemas";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
@@ -91,7 +92,7 @@ export function SignUpView({
   const [serverError, setServerError] = useState(false);
 
   const [registeredEmail, setRegisteredEmail] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useTurnstileChallenge();
 
   const form = useForm({
     defaultValues: { name: "", email: initialEmail, password: "" },
@@ -100,7 +101,7 @@ export function SignUpView({
       setServerError(false);
       if (
         !requireTurnstileToken(
-          turnstileToken,
+          turnstile.token,
           clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
         )
       ) {
@@ -114,8 +115,9 @@ export function SignUpView({
           name: value.name,
           callbackURL: appendAuthReturnTo("/sign-in", returnTo),
         },
-        authFetchOptions(turnstileToken),
+        authFetchOptions(turnstile.token),
       );
+      turnstile.reset();
       if (error) {
         if (isUserAlreadyExists(error)) {
           router.push(
@@ -273,7 +275,8 @@ export function SignUpView({
                 </form.Field>
               </FieldGroup>
               <TurnstileWidget
-                onTokenChange={setTurnstileToken}
+                onTokenChange={turnstile.onTokenChange}
+                onReady={turnstile.onReady}
                 className="min-h-16"
               />
               <form.Subscribe

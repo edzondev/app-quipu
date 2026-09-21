@@ -56,14 +56,16 @@ Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
 
 - **Instalar deps:** `pnpm install` (Node 22 + pnpm 10 vía Corepack ya presentes).
   El script de arranque del entorno ya lo corre.
-- **`.env.local` no existe en el repo y no hay `.env.example`.** El front no
-  arranca sin él porque `core/env*.ts` valida env en build. Para dev local:
+- **`.env.local` no existe en el repo.** Copiar `apps/web/.env.example` a
+  `apps/web/.env.local`. El front no arranca sin las URLs públicas porque
+  `core/env*.ts` valida env en build. Para dev local:
   `CONVEX_AGENT_MODE=anonymous npx convex dev` crea un backend Convex **local
   anónimo** (sin cuenta) y escribe `CONVEX_DEPLOYMENT` + `NEXT_PUBLIC_CONVEX_URL`
-  + `NEXT_PUBLIC_CONVEX_SITE_URL` en `.env.local`. Faltan y hay que agregar a mano:
+  + `NEXT_PUBLIC_CONVEX_SITE_URL` en `.env.local`. Completar a mano lo que falte:
   `BETTER_AUTH_SECRET` (≥32 chars), `SITE_URL`, `NEXT_PUBLIC_APP_URL`,
-  `POLAR_PRODUCT_ID_PREMIUM` (placeholder), `POLAR_SERVER=sandbox`. Además el
-  backend Convex lee `BETTER_AUTH_SECRET` y `SITE_URL` de su propio env:
+  `POLAR_PRODUCT_ID_PREMIUM` (placeholder), `POLAR_SERVER=sandbox`, y las dummy
+  keys de Turnstile (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`).
+  El backend Convex lee `BETTER_AUTH_SECRET` y `SITE_URL` de su propio env:
   `npx convex env set BETTER_AUTH_SECRET <...>` / `... SITE_URL http://localhost:3000`.
 - **Convex typecheck falla con `Cannot find name 'process'`** al hacer `convex dev`:
   el runtime de Convex sí expone `process.env`, pero `convex/tsconfig.json` no

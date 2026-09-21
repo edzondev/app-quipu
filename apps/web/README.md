@@ -35,6 +35,9 @@ NEXT_PUBLIC_CONVEX_URL=https://<tu-deployment>.convex.cloud
 NEXT_PUBLIC_CONVEX_SITE_URL=https://<tu-deployment>.convex.site
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 BETTER_AUTH_SECRET=<mínimo 32 caracteres aleatorios>
+# Cloudflare Turnstile dummy keys (local). Do not skip verification via NODE_ENV.
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 ```
 
 Todas las variables se validan en build vía [`core/env.ts`](core/env.ts). Las que empiezan con `NEXT_PUBLIC_` son públicas en el bundle.

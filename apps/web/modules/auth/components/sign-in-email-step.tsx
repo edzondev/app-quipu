@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import type { TurnstileWidgetApi } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -21,18 +22,34 @@ const SignInPasskeyButton = dynamic(
   { ssr: false },
 );
 
+const TurnstileWidget = dynamic(
+  () =>
+    import("@/shared/components/turnstile-widget").then(
+      (mod) => mod.TurnstileWidget,
+    ),
+  { ssr: false },
+);
+
 export function EmailStep({
   form,
   reason,
   error,
   showPasskey,
   returnTo,
+  turnstileToken,
+  onTurnstileTokenChange,
+  onTurnstileReady,
+  onPasskeyAttemptComplete,
 }: {
   form: any;
   reason?: string;
   error: "credentials" | "passkey" | "unverified" | null;
   showPasskey: boolean;
   returnTo?: string;
+  turnstileToken?: string | null;
+  onTurnstileTokenChange: (token: string | null) => void;
+  onTurnstileReady: (api: TurnstileWidgetApi) => void;
+  onPasskeyAttemptComplete: () => void;
 }) {
   return (
     <>
@@ -107,6 +124,13 @@ export function EmailStep({
           )}
         </form.Subscribe>
       </form>
+      {showPasskey ? (
+        <TurnstileWidget
+          onTokenChange={onTurnstileTokenChange}
+          onReady={onTurnstileReady}
+          className="min-h-16"
+        />
+      ) : null}
       <div className="flex justify-end">
         <form.Subscribe
           selector={(s: { values: { email: string } }) => s.values.email}
@@ -121,7 +145,11 @@ export function EmailStep({
             <span className="text-xs text-faint">o</span>
             <span className="h-px flex-1 bg-line" />
           </div>
-          <SignInPasskeyButton returnTo={returnTo} />
+          <SignInPasskeyButton
+            returnTo={returnTo}
+            turnstileToken={turnstileToken}
+            onAttemptComplete={onPasskeyAttemptComplete}
+          />
         </>
       )}
       <div className="mt-1 flex justify-center lg:justify-end">
