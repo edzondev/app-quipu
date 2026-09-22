@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
-import { withPending } from "@/shared/lib/with-pending";
 import { useRegisterSpaceExpense } from "../actions";
 import {
   SpaceEnvelopePicker,
@@ -41,7 +40,7 @@ export function SpaceExpenseFlow({
   const [fundingSource, setFundingSource] = useState<
     "space_budget" | "personal_pocket"
   >("space_budget");
-  const [pending, setPending] = useState(false);
+  const [pending, startSubmit] = useTransition();
 
   const effectiveFundingSource = allowPersonalPocket
     ? fundingSource
@@ -115,7 +114,7 @@ export function SpaceExpenseFlow({
             type="button"
             className="rounded-[11px] bg-ink px-4 py-2 text-sm font-semibold text-canvas"
             disabled={pending}
-            onClick={async () => {
+            onClick={() => {
               const cents = Math.round(Number.parseFloat(amount) * 100);
               if (
                 !Number.isFinite(cents) ||
@@ -125,7 +124,7 @@ export function SpaceExpenseFlow({
                 toast.error("Completa descripción y monto válido.");
                 return;
               }
-              await withPending(setPending, async () => {
+              startSubmit(async () => {
                 try {
                   await register({
                     spaceId,

@@ -6,7 +6,6 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
-import { withFlag } from "@/shared/lib/with-pending";
 import { useCreateInvitation, useRevokeInvitation } from "../actions";
 import {
   ESPACIOS_INVITE_FULL_BODY,
@@ -39,80 +38,6 @@ function formatInviteExpiry(expiresAt: number): string {
   return inviteExpiryFormatter.format(expiresAt);
 }
 
-function MemberInvitePanel({
-  canManageInvites,
-  spaceIsFull,
-  pendingInvite,
-  inviteLink,
-  pendingAction,
-  onRevoke,
-  onGenerate,
-}: {
-  canManageInvites: boolean;
-  spaceIsFull: boolean;
-  pendingInvite: SpaceSettings["pendingInvitations"][number] | undefined;
-  inviteLink: string | null;
-  pendingAction: "generate" | Id<"spaceInvitations"> | null;
-  onRevoke: (invitationId: Id<"spaceInvitations">) => void;
-  onGenerate: () => void;
-}) {
-  if (!canManageInvites) return null;
-  if (spaceIsFull) {
-    return (
-      <div className="mt-4 border-t border-line/50 pt-4">
-        <p className="text-sm text-mute">{ESPACIOS_INVITE_FULL_BODY}</p>
-      </div>
-    );
-  }
-  if (!pendingInvite) {
-    return (
-      <div className="mt-4 border-t border-line/50 pt-4">
-        <button
-          type="button"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "h-9 px-3 text-xs",
-          )}
-          disabled={pendingAction === "generate"}
-          onClick={onGenerate}
-        >
-          {pendingAction === "generate"
-            ? "Generando enlace…"
-            : ESPACIOS_SETTINGS_INVITE_GENERATE}
-        </button>
-      </div>
-    );
-  }
-  return (
-    <div className="mt-4 border-t border-line/50 pt-4">
-      <div className="space-y-3">
-        <p className="text-sm text-mute">
-          {ESPACIOS_SETTINGS_INVITE_PENDING} · vence el{" "}
-          {formatInviteExpiry(pendingInvite.expiresAt)}
-        </p>
-        {inviteLink ? (
-          <p className="break-all rounded-lg bg-canvas px-3 py-2 text-xs text-ink">
-            {inviteLink}
-          </p>
-        ) : null}
-        <button
-          type="button"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "h-9 px-3 text-xs",
-          )}
-          disabled={pendingAction !== null}
-          onClick={() => onRevoke(pendingInvite._id)}
-        >
-          {pendingAction === pendingInvite._id
-            ? "Revocando…"
-            : ESPACIOS_SETTINGS_INVITE_REVOKE}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function SpaceSettingsMembersSection({ spaceId, settings }: Props) {
   const createInvitation = useCreateInvitation();
   const revokeInvitation = useRevokeInvitation();
@@ -131,29 +56,29 @@ export function SpaceSettingsMembersSection({ spaceId, settings }: Props) {
   const pendingInvite = settings.pendingInvitations[0];
 
   async function handleGenerateLink() {
-    await withFlag(setPendingAction, "generate", null, async () => {
-      try {
-        const { token } = await createInvitation({ spaceId });
-        const origin =
-          typeof window !== "undefined" ? window.location.origin : "";
-        setInviteLink(`${origin}/espacios/unirse/${token}`);
-        toast.success(ESPACIOS_SETTINGS_INVITE_GENERATED);
-      } catch (error) {
-        toast.error(fromConvexError(error).message);
-      }
-    });
+    setPendingAction("generate");
+    try {
+      const { token } = await createInvitation({ spaceId });
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+      setInviteLink(`${origin}/espacios/unirse/${token}`);
+      toast.success(ESPACIOS_SETTINGS_INVITE_GENERATED);
+    } catch (error) {
+      toast.error(fromConvexError(error).message);
+    }
+    setPendingAction(null);
   }
 
   async function handleRevoke(invitationId: Id<"spaceInvitations">) {
-    await withFlag(setPendingAction, invitationId, null, async () => {
-      try {
-        await revokeInvitation({ invitationId });
-        setInviteLink(null);
-        toast.success(ESPACIOS_SETTINGS_INVITE_REVOKED);
-      } catch (error) {
-        toast.error(fromConvexError(error).message);
-      }
-    });
+    setPendingAction(invitationId);
+    try {
+      await revokeInvitation({ invitationId });
+      setInviteLink(null);
+      toast.success(ESPACIOS_SETTINGS_INVITE_REVOKED);
+    } catch (error) {
+      toast.error(fromConvexError(error).message);
+    }
+    setPendingAction(null);
   }
 
   return (
@@ -177,15 +102,52 @@ export function SpaceSettingsMembersSection({ spaceId, settings }: Props) {
         ) : null}
       </ul>
 
-      <MemberInvitePanel
-        canManageInvites={canManageInvites}
-        spaceIsFull={spaceIsFull}
-        pendingInvite={pendingInvite}
-        inviteLink={inviteLink}
-        pendingAction={pendingAction}
-        onRevoke={handleRevoke}
-        onGenerate={handleGenerateLink}
-      />
+      {canManageInvites ? (
+        <div className="mt-4 border-t border-line/50 pt-4">
+          {spaceIsFull ? (
+            <p className="text-sm text-mute">{ESPACIOS_INVITE_FULL_BODY}</p>
+          ) : pendingInvite ? (
+            <div className="space-y-3">
+              <p className="text-sm text-mute">
+                {ESPACIOS_SETTINGS_INVITE_PENDING} · vence el{" "}
+                {formatInviteExpiry(pendingInvite.expiresAt)}
+              </p>
+              {inviteLink ? (
+                <p className="break-all rounded-lg bg-canvas px-3 py-2 text-xs text-ink">
+                  {inviteLink}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "h-9 px-3 text-xs",
+                )}
+                disabled={pendingAction !== null}
+                onClick={() => handleRevoke(pendingInvite._id)}
+              >
+                {pendingAction === pendingInvite._id
+                  ? "Revocando…"
+                  : ESPACIOS_SETTINGS_INVITE_REVOKE}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-9 px-3 text-xs",
+              )}
+              disabled={pendingAction === "generate"}
+              onClick={handleGenerateLink}
+            >
+              {pendingAction === "generate"
+                ? "Generando enlace…"
+                : ESPACIOS_SETTINGS_INVITE_GENERATE}
+            </button>
+          )}
+        </div>
+      ) : null}
     </SpaceSection>
   );
 }

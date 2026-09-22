@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
@@ -16,7 +16,6 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
-import { withPending } from "@/shared/lib/with-pending";
 import { useCloseSpace, useLeaveSpace } from "../actions";
 import {
   ESPACIOS_CLOSE_BODY,
@@ -47,7 +46,7 @@ export function SpaceSettingsDangerSection({ spaceId, settings }: Props) {
   const closeSpace = useCloseSpace();
   const leaveSpace = useLeaveSpace();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, startConfirm] = useTransition();
 
   const canClose = canEditSpaceSettingsSection(
     settings.viewerRole,
@@ -62,9 +61,9 @@ export function SpaceSettingsDangerSection({ spaceId, settings }: Props) {
 
   if (!canClose && !canLeave) return null;
 
-  async function handleConfirm() {
+  function handleConfirm() {
     if (!dialog) return;
-    await withPending(setPending, async () => {
+    startConfirm(async () => {
       try {
         if (dialog === "close") {
           await closeSpace({ spaceId });

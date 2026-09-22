@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -10,7 +10,6 @@ import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 import {
   CONTRIBUTE_NO_FUNDS,
   CONTRIBUTE_SUCCESS_PREFIX,
@@ -37,15 +36,15 @@ export function SavingsContributeButton({
   fullWidth = true,
 }: Props) {
   const contribute = useMutation(api.savings.contributeToSubEnvelope);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startContribute] = useTransition();
 
-  async function handleContribute() {
+  function handleContribute() {
     if (availableToContributeCents <= 0) {
       toast.message(CONTRIBUTE_NO_FUNDS);
       return;
     }
 
-    await withPending(setIsSubmitting, async () => {
+    startContribute(async () => {
       try {
         const result = await contribute({ subEnvelopeId });
         track(AnalyticsEvents.SAVINGS_CONTRIBUTION_COMPLETED, {

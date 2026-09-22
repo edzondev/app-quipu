@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
@@ -13,7 +13,6 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 import { useCloseSpace, useLeaveSpace } from "../actions";
 import {
   ESPACIOS_CLOSE_BODY,
@@ -65,14 +64,14 @@ export function SpaceDashboardHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const [closePending, setClosePending] = useState(false);
-  const [leavePending, setLeavePending] = useState(false);
+  const [closePending, startClose] = useTransition();
+  const [leavePending, startLeave] = useTransition();
 
   const showClose = viewerRole === "owner" && status !== "closed";
   const showLeave = viewerRole === "member";
 
-  async function handleClose() {
-    await withPending(setClosePending, async () => {
+  function handleClose() {
+    startClose(async () => {
       try {
         await closeSpace({ spaceId });
         toast.success(ESPACIOS_CLOSE_SUCCESS);
@@ -84,8 +83,8 @@ export function SpaceDashboardHeader({
     });
   }
 
-  async function handleLeave() {
-    await withPending(setLeavePending, async () => {
+  function handleLeave() {
+    startLeave(async () => {
       try {
         await leaveSpace({ spaceId });
         toast.success(ESPACIOS_LEAVE_SUCCESS);

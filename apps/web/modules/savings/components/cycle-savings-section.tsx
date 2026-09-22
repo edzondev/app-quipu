@@ -87,27 +87,6 @@ export function CycleSavingsSection({ breakdown }: Props) {
   }
 
   return (
-    <OnTargetCycleSavings
-      breakdown={breakdown}
-      format={format}
-      hasAnySurplus={hasAnySurplus}
-      roundUp={roundUp}
-    />
-  );
-}
-
-function OnTargetCycleSavings({
-  breakdown,
-  format,
-  hasAnySurplus,
-  roundUp,
-}: {
-  breakdown: CycleSavingsBreakdown;
-  format: (cents: number) => string;
-  hasAnySurplus: boolean;
-  roundUp: { targetCents: number; moveCents: number } | null;
-}) {
-  return (
     <section
       className="mt-6"
       id={CYCLE_SAVINGS_SECTION_ID}

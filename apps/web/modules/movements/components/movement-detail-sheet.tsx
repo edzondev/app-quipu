@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -16,7 +16,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { withPending } from "@/shared/lib/with-pending";
 import { MovementDetailCard } from "./movement-detail-card";
 import { MovementDetailConfirmDelete } from "./movement-detail-confirm-delete";
 import { MovementDetailEditExpense } from "./movement-detail-edit-expense";
@@ -80,7 +79,7 @@ export function MovementDetailSheet({
   const isMobile = useIsMobile();
   const [state, setState] = useState<SheetState>("detail");
   const [direction, setDirection] = useState<Direction>("forward");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting, startDelete] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const goTo = useCallback(
@@ -108,11 +107,11 @@ export function MovementDetailSheet({
   const deleteExpense = useMutation(api.expenses.deleteExpense);
   const deleteIncomeEvent = useMutation(api.incomeEvents.deleteIncomeEvent);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!movement) return;
     setDeleteError(null);
     const isIncome = movement.kind === "income";
-    await withPending(setIsDeleting, async () => {
+    startDelete(async () => {
       try {
         if (isIncome) {
           await deleteIncomeEvent({

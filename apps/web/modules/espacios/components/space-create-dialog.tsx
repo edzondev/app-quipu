@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 
 type Props = {
   open: boolean;
@@ -13,7 +12,7 @@ type Props = {
 
 export function SpaceCreateDialog({ open, onOpenChange, onSubmit }: Props) {
   const [name, setName] = useState("");
-  const [pending, setPending] = useState(false);
+  const [pending, startSubmit] = useTransition();
 
   if (!open) return null;
 
@@ -50,8 +49,8 @@ export function SpaceCreateDialog({ open, onOpenChange, onSubmit }: Props) {
             type="button"
             className={cn(buttonVariants({ variant: "default" }))}
             disabled={pending || name.trim().length === 0}
-            onClick={() =>
-              withPending(setPending, async () => {
+            onClick={() => {
+              startSubmit(async () => {
                 try {
                   await onSubmit(name.trim());
                   onOpenChange(false);
@@ -59,8 +58,8 @@ export function SpaceCreateDialog({ open, onOpenChange, onSubmit }: Props) {
                 } catch {
                   // El padre muestra toast; mantener el diálogo abierto.
                 }
-              })
-            }
+              });
+            }}
           >
             {pending ? "Creando espacio…" : "Crear"}
           </button>

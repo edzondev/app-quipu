@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
@@ -15,7 +15,6 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 import { useUpdateCycleSchedule } from "../actions";
 import {
   SETTINGS_CYCLE_WIZARD_BACK,
@@ -84,7 +83,7 @@ function CycleChangeWizardForm({ profile }: { profile: Profile }) {
   const [cycleDurationDays, setCycleDurationDays] = useState<15 | 30>(() =>
     initialCycleDurationDays(profile),
   );
-  const [pending, setPending] = useState(false);
+  const [pending, startSave] = useTransition();
 
   const isVariable = profile.incomeModel === "variable";
   const isBiweekly = payFrequency === "biweekly";
@@ -115,8 +114,8 @@ function CycleChangeWizardForm({ profile }: { profile: Profile }) {
     }
   }
 
-  async function confirmSave() {
-    await withPending(setPending, async () => {
+  function confirmSave() {
+    startSave(async () => {
       try {
         if (isVariable) {
           await updateCycle({ cycleDurationDays });

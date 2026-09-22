@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -14,7 +14,6 @@ import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 import { moveSurplusToSavings, useMoveSurplusToSavings } from "../actions";
 import {
   MOVE_SURPLUS_NO_CYCLE_BODY,
@@ -57,7 +56,7 @@ export function MoveSurplusView({
   const router = useRouter();
   const context = useQuery(api.savings.getMoveSurplusContext, {});
   const moveMutation = useMoveSurplusToSavings();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startSubmit] = useTransition();
 
   if (context === undefined) {
     return <MoveSurplusSkeleton />;
@@ -114,8 +113,8 @@ export function MoveSurplusView({
         initialDestinationId={initialDestinationId}
         isSubmitting={isSubmitting}
         onCancel={() => router.push("/savings")}
-        onSubmit={async (values) => {
-          await withPending(setIsSubmitting, async () => {
+        onSubmit={(values) => {
+          startSubmit(async () => {
             try {
               const result = await moveSurplusToSavings(
                 moveMutation,

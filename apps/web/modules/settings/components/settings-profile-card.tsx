@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
@@ -9,7 +9,6 @@ import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 import { useUpdateDisplayName } from "../actions";
 import {
   SETTINGS_EDIT_PROFILE,
@@ -33,7 +32,7 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
   const updateName = useUpdateDisplayName();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(profile.name);
-  const [pending, setPending] = useState(false);
+  const [pending, startSave] = useTransition();
 
   const subtitleParts = [profile.email, profile.country].filter(Boolean);
 
@@ -43,7 +42,7 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
       toast.error(parsed.error.issues[0]?.message ?? SETTINGS_NAME_ERROR);
       return;
     }
-    await withPending(setPending, async () => {
+    startSave(async () => {
       try {
         await updateName({ name: parsed.data });
         toast.success(SETTINGS_NAME_SAVED);

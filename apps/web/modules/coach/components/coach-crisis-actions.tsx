@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useTransition } from "react";
 import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -9,7 +9,6 @@ import { AnalyticsEvents, track } from "@/core/analytics";
 import { COACH_CRISIS_LATER_CTA } from "@/modules/coach/constants";
 import type { DashboardCoach } from "@/modules/dashboard/types";
 import { Button } from "@/shared/components/ui/button";
-import { withPending } from "@/shared/lib/with-pending";
 
 type CrisisOption = NonNullable<DashboardCoach["crisisOptions"]>[number];
 
@@ -23,10 +22,10 @@ export function CoachCrisisActions({ options }: Props) {
     api.coachEngine.postponeCommitmentForCycle,
   );
   const snoozeCrisis = useMutation(api.coachEngine.snoozeCrisisCoach);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startSubmit] = useTransition();
 
-  async function handleOption(option: CrisisOption) {
-    await withPending(setIsSubmitting, async () => {
+  function handleOption(option: CrisisOption) {
+    startSubmit(async () => {
       if (option.id === "cover_from_savings") {
         await applyCover({});
         track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
@@ -48,8 +47,8 @@ export function CoachCrisisActions({ options }: Props) {
     });
   }
 
-  async function handleSnooze() {
-    await withPending(setIsSubmitting, async () => {
+  function handleSnooze() {
+    startSubmit(async () => {
       await snoozeCrisis({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "dismissed",

@@ -1,14 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { LockKeyholeOpen } from "reicon-react/icons/LockKeyholeOpen";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import { fromConvexError } from "@/core/errors";
 import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
 import { cn } from "@/shared/lib/utils";
-import { withPending } from "@/shared/lib/with-pending";
 import { useRevokeAllSessions } from "../actions";
 import {
   SETTINGS_PASSKEY_ADD,
@@ -64,7 +63,7 @@ export function SettingsSecurityCard({
   const [addPending, setAddPending] = useState(false);
   const [addMessage, setAddMessage] = useState<string | null>(null);
   const [revokeOpen, setRevokeOpen] = useState(false);
-  const [revokePending, setRevokePending] = useState(false);
+  const [revokePending, startRevoke] = useTransition();
 
   async function handleAddPasskey() {
     setAddPending(true);
@@ -79,8 +78,8 @@ export function SettingsSecurityCard({
     void passkeysQuery.refetch?.();
   }
 
-  async function handleRevokeAllSessions() {
-    await withPending(setRevokePending, async () => {
+  function handleRevokeAllSessions() {
+    startRevoke(async () => {
       try {
         await revokeAll({});
         toast.success(SETTINGS_SESSIONS_REVOKE_SUCCESS);
