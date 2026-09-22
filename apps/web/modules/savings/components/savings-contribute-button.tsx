@@ -10,6 +10,7 @@ import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import {
   CONTRIBUTE_NO_FUNDS,
   CONTRIBUTE_SUCCESS_PREFIX,
@@ -44,26 +45,25 @@ export function SavingsContributeButton({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const result = await contribute({ subEnvelopeId });
-      track(AnalyticsEvents.SAVINGS_CONTRIBUTION_COMPLETED, {
-        amount: result.amount,
-        source_envelope: "needs",
-        goal_id: subEnvelopeId,
-        goal_label: subEnvelopeLabel,
-        is_emergency_fund: isEmergencyFund,
-      });
-      toast.success(
-        `${CONTRIBUTE_SUCCESS_PREFIX} Moviste ${formatCents(result.amount, {
-          currency: currencyCode,
-        })} a tu fondo.`,
-      );
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await withPending(setIsSubmitting, async () => {
+      try {
+        const result = await contribute({ subEnvelopeId });
+        track(AnalyticsEvents.SAVINGS_CONTRIBUTION_COMPLETED, {
+          amount: result.amount,
+          source_envelope: "needs",
+          goal_id: subEnvelopeId,
+          goal_label: subEnvelopeLabel,
+          is_emergency_fund: isEmergencyFund,
+        });
+        toast.success(
+          `${CONTRIBUTE_SUCCESS_PREFIX} Moviste ${formatCents(result.amount, {
+            currency: currencyCode,
+          })} a tu fondo.`,
+        );
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

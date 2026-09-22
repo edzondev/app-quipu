@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { withPending } from "@/shared/lib/with-pending";
 import { MovementDetailCard } from "./movement-detail-card";
 import { MovementDetailConfirmDelete } from "./movement-detail-confirm-delete";
 import { MovementDetailEditExpense } from "./movement-detail-edit-expense";
@@ -111,24 +112,25 @@ export function MovementDetailSheet({
     if (!movement) return;
     setDeleteError(null);
     const isIncome = movement.kind === "income";
-    try {
-      setIsDeleting(true);
-      if (isIncome) {
-        await deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> });
-      } else {
-        await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
+    await withPending(setIsDeleting, async () => {
+      try {
+        if (isIncome) {
+          await deleteIncomeEvent({
+            eventId: movement.id as Id<"incomeEvents">,
+          });
+        } else {
+          await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
+        }
+        track(AnalyticsEvents.MOVEMENT_DELETED, {
+          movement_kind: isIncome ? "income" : "expense",
+          amount: movement.amount,
+          preferred_correct_shown: isIncome,
+        });
+        onOpenChange(false);
+      } catch (error) {
+        setDeleteError(fromConvexError(error).message);
       }
-      track(AnalyticsEvents.MOVEMENT_DELETED, {
-        movement_kind: isIncome ? "income" : "expense",
-        amount: movement.amount,
-        preferred_correct_shown: isIncome,
-      });
-      onOpenChange(false);
-    } catch (error) {
-      setDeleteError(fromConvexError(error).message);
-    } finally {
-      setIsDeleting(false);
-    }
+    });
   }, [movement, deleteExpense, deleteIncomeEvent, onOpenChange]);
 
   const title = SHEET_TITLES[state];

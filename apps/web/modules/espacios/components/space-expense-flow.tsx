@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
+import { withPending } from "@/shared/lib/with-pending";
 import { useRegisterSpaceExpense } from "../actions";
 import {
   SpaceEnvelopePicker,
@@ -124,30 +125,29 @@ export function SpaceExpenseFlow({
                 toast.error("Completa descripción y monto válido.");
                 return;
               }
-              setPending(true);
-              try {
-                await register({
-                  spaceId,
-                  amount: cents,
-                  description: description.trim(),
-                  envelopeType,
-                  fundingSource: effectiveFundingSource,
-                });
-                track(AnalyticsEvents.SPACE_EXPENSE_REGISTERED, {
-                  space_id: spaceId,
-                  amount: cents,
-                  envelope: envelopeType,
-                  funding_source: effectiveFundingSource,
-                });
-                toast.success("Gasto registrado");
-                onOpenChange(false);
-                setAmount("");
-                setDescription("");
-              } catch (error) {
-                toast.error(fromConvexError(error).message);
-              } finally {
-                setPending(false);
-              }
+              await withPending(setPending, async () => {
+                try {
+                  await register({
+                    spaceId,
+                    amount: cents,
+                    description: description.trim(),
+                    envelopeType,
+                    fundingSource: effectiveFundingSource,
+                  });
+                  track(AnalyticsEvents.SPACE_EXPENSE_REGISTERED, {
+                    space_id: spaceId,
+                    amount: cents,
+                    envelope: envelopeType,
+                    funding_source: effectiveFundingSource,
+                  });
+                  toast.success("Gasto registrado");
+                  onOpenChange(false);
+                  setAmount("");
+                  setDescription("");
+                } catch (error) {
+                  toast.error(fromConvexError(error).message);
+                }
+              });
             }}
           >
             {pending ? "Registrando…" : "Registrar"}

@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import { useCloseSpace, useLeaveSpace } from "../actions";
 import {
   ESPACIOS_CLOSE_BODY,
@@ -71,31 +72,29 @@ export function SpaceDashboardHeader({
   const showLeave = viewerRole === "member";
 
   async function handleClose() {
-    setClosePending(true);
-    try {
-      await closeSpace({ spaceId });
-      toast.success(ESPACIOS_CLOSE_SUCCESS);
-      setCloseOpen(false);
-      router.push("/espacios");
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setClosePending(false);
-    }
+    await withPending(setClosePending, async () => {
+      try {
+        await closeSpace({ spaceId });
+        toast.success(ESPACIOS_CLOSE_SUCCESS);
+        setCloseOpen(false);
+        router.push("/espacios");
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   async function handleLeave() {
-    setLeavePending(true);
-    try {
-      await leaveSpace({ spaceId });
-      toast.success(ESPACIOS_LEAVE_SUCCESS);
-      setLeaveOpen(false);
-      router.push("/espacios");
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setLeavePending(false);
-    }
+    await withPending(setLeavePending, async () => {
+      try {
+        await leaveSpace({ spaceId });
+        toast.success(ESPACIOS_LEAVE_SUCCESS);
+        setLeaveOpen(false);
+        router.push("/espacios");
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

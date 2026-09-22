@@ -32,7 +32,7 @@ const MODE_OPTIONS = [
   { mode: "generic" as const, label: "Solo apartarlo, sin compromiso" },
 ];
 
-export function WizardStepReserved(props: Props) {
+function reservedStepState(props: Props) {
   const reservedCents = parseToCents(props.reservedText) ?? 0;
   const maxDistributable = props.incomeCents - props.spentCents;
   const exceeds = reservedCents > props.incomeCents;
@@ -56,6 +56,77 @@ export function WizardStepReserved(props: Props) {
     props.spentCents > 0
       ? `Disponible real: ${formatCents(maxDistributable, { currency: props.currencyCode })} (${formatCents(props.incomeCents, { currency: props.currencyCode })} − ${formatCents(props.spentCents, { currency: props.currencyCode })} gastado)`
       : null;
+  return { exceeds, exceedsReal, canContinue, disponibleReal };
+}
+
+function ReservedAmountField({
+  props,
+  exceeds,
+  exceedsReal,
+  disponibleReal,
+}: {
+  props: Props;
+  exceeds: boolean;
+  exceedsReal: boolean;
+  disponibleReal: string | null;
+}) {
+  return (
+    <div>
+      <Label htmlFor="wizard-reserved-amount">Monto apartado</Label>
+      <Input
+        id="wizard-reserved-amount"
+        className="mt-1.5 h-12 text-center font-serif text-xl"
+        inputMode="decimal"
+        placeholder="0.00"
+        value={props.reservedText}
+        onChange={(event) => props.onReservedChange(event.target.value)}
+      />
+      <ReservedAmountHint
+        exceeds={exceeds}
+        exceedsReal={exceedsReal}
+        disponibleReal={disponibleReal}
+        incomeCents={props.incomeCents}
+        currencyCode={props.currencyCode}
+      />
+    </div>
+  );
+}
+
+function ReservedAmountHint({
+  exceeds,
+  exceedsReal,
+  disponibleReal,
+  incomeCents,
+  currencyCode,
+}: {
+  exceeds: boolean;
+  exceedsReal: boolean;
+  disponibleReal: string | null;
+  incomeCents: number;
+  currencyCode: string;
+}) {
+  if (exceeds) {
+    return (
+      <p className="mt-1 text-[12px] text-danger-ink">
+        Lo apartado no puede superar lo ingresado (
+        {formatCents(incomeCents, { currency: currencyCode })}
+        ).
+      </p>
+    );
+  }
+  if (!disponibleReal) return null;
+  return (
+    <p
+      className={`mt-1 text-[12px] ${exceedsReal ? "text-danger-ink" : "text-mute"}`}
+    >
+      {disponibleReal}
+    </p>
+  );
+}
+
+export function WizardStepReserved(props: Props) {
+  const { exceeds, exceedsReal, canContinue, disponibleReal } =
+    reservedStepState(props);
 
   return (
     <div className="space-y-4">
@@ -66,30 +137,12 @@ export function WizardStepReserved(props: Props) {
         </p>
       </div>
       {props.reservedMode !== "none" ? (
-        <div>
-          <Label htmlFor="wizard-reserved-amount">Monto apartado</Label>
-          <Input
-            id="wizard-reserved-amount"
-            className="mt-1.5 h-12 text-center font-serif text-xl"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={props.reservedText}
-            onChange={(event) => props.onReservedChange(event.target.value)}
-          />
-          {exceeds ? (
-            <p className="mt-1 text-[12px] text-danger-ink">
-              Lo apartado no puede superar lo ingresado (
-              {formatCents(props.incomeCents, { currency: props.currencyCode })}
-              ).
-            </p>
-          ) : disponibleReal ? (
-            <p
-              className={`mt-1 text-[12px] ${exceedsReal ? "text-danger-ink" : "text-mute"}`}
-            >
-              {disponibleReal}
-            </p>
-          ) : null}
-        </div>
+        <ReservedAmountField
+          props={props}
+          exceeds={exceeds}
+          exceedsReal={exceedsReal}
+          disponibleReal={disponibleReal}
+        />
       ) : null}
       <fieldset className="space-y-2">
         <legend className="text-[13px] text-mute">¿A qué se destina?</legend>

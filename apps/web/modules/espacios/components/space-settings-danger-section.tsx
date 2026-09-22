@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
+import { withPending } from "@/shared/lib/with-pending";
 import { useCloseSpace, useLeaveSpace } from "../actions";
 import {
   ESPACIOS_CLOSE_BODY,
@@ -63,23 +64,22 @@ export function SpaceSettingsDangerSection({ spaceId, settings }: Props) {
 
   async function handleConfirm() {
     if (!dialog) return;
-    setPending(true);
-    try {
-      if (dialog === "close") {
-        await closeSpace({ spaceId });
-        toast.success(ESPACIOS_CLOSE_SUCCESS);
-      } else {
-        await leaveSpace({ spaceId });
-        toast.success(ESPACIOS_LEAVE_SUCCESS);
+    await withPending(setPending, async () => {
+      try {
+        if (dialog === "close") {
+          await closeSpace({ spaceId });
+          toast.success(ESPACIOS_CLOSE_SUCCESS);
+        } else {
+          await leaveSpace({ spaceId });
+          toast.success(ESPACIOS_LEAVE_SUCCESS);
+        }
+        setDialog(null);
+        router.push("/espacios");
+        router.refresh();
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
       }
-      setDialog(null);
-      router.push("/espacios");
-      router.refresh();
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   return (

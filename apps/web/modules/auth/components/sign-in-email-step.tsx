@@ -16,9 +16,11 @@ import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { RecoverPasswordLink } from "./recover-password-link";
 
-const SignInPasskeyButton = dynamic(
+const SignInPasskeyAlternative = dynamic(
   () =>
-    import("./sign-in-passkey-button").then((mod) => mod.SignInPasskeyButton),
+    import("./sign-in-passkey-button").then(
+      (mod) => mod.SignInPasskeyAlternative,
+    ),
   { ssr: false },
 );
 
@@ -138,20 +140,14 @@ export function EmailStep({
           {(email: string) => <RecoverPasswordLink email={email} />}
         </form.Subscribe>
       </div>
-      {showPasskey && (
-        <>
-          <div className="flex items-center gap-3">
-            <span className="h-px flex-1 bg-line" />
-            <span className="text-xs text-faint">o</span>
-            <span className="h-px flex-1 bg-line" />
-          </div>
-          <SignInPasskeyButton
-            returnTo={returnTo}
-            turnstileToken={turnstileToken}
-            onAttemptComplete={onPasskeyAttemptComplete}
-          />
-        </>
-      )}
+      {showPasskey ? (
+        <SignInPasskeyAlternative
+          label="o"
+          returnTo={returnTo}
+          turnstileToken={turnstileToken}
+          onAttemptComplete={onPasskeyAttemptComplete}
+        />
+      ) : null}
       <div className="mt-1 flex justify-center lg:justify-end">
         <Link
           href={appendAuthReturnTo("/sign-up", returnTo)}

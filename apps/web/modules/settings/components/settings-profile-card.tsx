@@ -9,6 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import { useUpdateDisplayName } from "../actions";
 import {
   SETTINGS_EDIT_PROFILE,
@@ -42,16 +43,15 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
       toast.error(parsed.error.issues[0]?.message ?? SETTINGS_NAME_ERROR);
       return;
     }
-    setPending(true);
-    try {
-      await updateName({ name: parsed.data });
-      toast.success(SETTINGS_NAME_SAVED);
-      setEditing(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    await withPending(setPending, async () => {
+      try {
+        await updateName({ name: parsed.data });
+        toast.success(SETTINGS_NAME_SAVED);
+        setEditing(false);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   function cancelEdit() {

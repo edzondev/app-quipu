@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 
 type Props = {
   open: boolean;
@@ -49,18 +50,17 @@ export function SpaceCreateDialog({ open, onOpenChange, onSubmit }: Props) {
             type="button"
             className={cn(buttonVariants({ variant: "default" }))}
             disabled={pending || name.trim().length === 0}
-            onClick={async () => {
-              setPending(true);
-              try {
-                await onSubmit(name.trim());
-                onOpenChange(false);
-                setName("");
-              } catch {
-                // El padre muestra toast; mantener el diálogo abierto.
-              } finally {
-                setPending(false);
-              }
-            }}
+            onClick={() =>
+              withPending(setPending, async () => {
+                try {
+                  await onSubmit(name.trim());
+                  onOpenChange(false);
+                  setName("");
+                } catch {
+                  // El padre muestra toast; mantener el diálogo abierto.
+                }
+              })
+            }
           >
             {pending ? "Creando espacio…" : "Crear"}
           </button>

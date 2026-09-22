@@ -9,6 +9,7 @@ import { AnalyticsEvents, track } from "@/core/analytics";
 import { COACH_CRISIS_LATER_CTA } from "@/modules/coach/constants";
 import type { DashboardCoach } from "@/modules/dashboard/types";
 import { Button } from "@/shared/components/ui/button";
+import { withPending } from "@/shared/lib/with-pending";
 
 type CrisisOption = NonNullable<DashboardCoach["crisisOptions"]>[number];
 
@@ -25,8 +26,7 @@ export function CoachCrisisActions({ options }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleOption(option: CrisisOption) {
-    setIsSubmitting(true);
-    try {
+    await withPending(setIsSubmitting, async () => {
       if (option.id === "cover_from_savings") {
         await applyCover({});
         track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
@@ -45,22 +45,17 @@ export function CoachCrisisActions({ options }: Props) {
           option_id: option.id,
         });
       }
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   async function handleSnooze() {
-    setIsSubmitting(true);
-    try {
+    await withPending(setIsSubmitting, async () => {
       await snoozeCrisis({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "dismissed",
         option_id: "snooze",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   if (options.length === 0) {

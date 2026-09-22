@@ -1,14 +1,23 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents, parseToCents } from "@/shared/lib/money";
+import { withPending } from "@/shared/lib/with-pending";
 import {
   type Allocation,
   buildSimpleCorrectionPlan,
@@ -38,14 +47,185 @@ const EMPTY_NEW_COMMITMENT: NewCommitment = {
 
 const FALLBACK_ALLOCATION: Allocation = { needs: 50, wants: 30, savings: 20 };
 
-export function CycleCorrectWizard() {
+type DashboardSummary = NonNullable<
+  FunctionReturnType<typeof api.dashboard.getSummary>
+>;
+type SettingsOverview = NonNullable<
+  FunctionReturnType<typeof api.settings.getSettingsOverview>
+>;
+
+function spentPerEnvelopeFrom(
+  summary: DashboardSummary | null | undefined,
+): EnvelopeTargets {
+  const envelopes = summary?.envelopes ?? [];
+  const spent = (type: "needs" | "wants" | "savings") => {
+    const envelope = envelopes.find((item) => item.type === type);
+    if (!envelope) return 0;
+    return Math.max(
+      0,
+      (envelope.allocatedAmount ?? 0) - (envelope.remainingAmount ?? 0),
+    );
+  };
+  return {
+    needs: spent("needs"),
+    wants: spent("wants"),
+    savings: spent("savings"),
+  };
+}
+
+function reservedBuckets(mode: Mode, reservedCents: number) {
+  return {
+    reservedWithCommitmentCents:
+      mode === "existing" || mode === "create" ? reservedCents : 0,
+    reservedGenericCents: mode === "generic" ? reservedCents : 0,
+  };
+}
+
+function MissingActiveCycle() {
+  return (
+    <section className="mx-auto max-w-lg px-4 py-8">
+      <h1 className="font-serif text-2xl text-ink">Corregir distribución</h1>
+      <p className="mt-2 text-sm text-mute">
+        Necesitas un ciclo activo para corregir cómo está repartido tu dinero.
+      </p>
+    </section>
+  );
+}
+
+function MissingRegisteredIncome() {
   const router = useRouter();
+  return (
+    <section className="mx-auto max-w-lg px-4 py-8">
+      <h2 className="font-serif text-xl text-ink">
+        Aún no registras tu ingreso de este ciclo
+      </h2>
+      <p className="mt-2 text-sm text-mute">
+        Para corregir cómo está repartido tu dinero, primero registra lo que
+        entró.
+      </p>
+      <Button className="mt-4" onClick={() => router.push("/income/register")}>
+        Registrar ingreso
+      </Button>
+    </section>
+  );
+}
+
+async function submitSimpleCorrection(input: {
+  createCommitment: (args: {
+    name: string;
+    amount: number;
+    envelope: "needs" | "wants";
+    dueDay: number;
+  }) => Promise<string>;
+  correct: (args: {
+    setEnvelopeRemaining: EnvelopeTargets;
+    setUnallocatedCents: number;
+    declaredLiquidCents: number;
+    reserveToCommitments: Array<{
+      commitmentId: Id<"fixedCommitments">;
+      amountCents: number;
+    }>;
+    contributeToSavings: [];
+    note: string;
+  }) => Promise<unknown>;
+  incomeCents: number;
+  reservedMode: Mode;
+  commitmentId: string;
+  newCommitment: NewCommitment;
+  reservedWithCommitmentCents: number;
+  reservedGenericCents: number;
+  allocation: Allocation;
+  spentPerEnvelope: EnvelopeTargets;
+  targets: EnvelopeTargets;
+}): Promise<string | null> {
+  let effectiveCommitmentId = input.commitmentId;
+  if (input.reservedMode === "create") {
+    try {
+      effectiveCommitmentId = await input.createCommitment({
+        name: input.newCommitment.name,
+        amount: input.newCommitment.amountCents,
+        envelope: input.newCommitment.envelope,
+        dueDay: input.newCommitment.dueDay,
+      });
+    } catch (error) {
+      return fromConvexError(error).message;
+    }
+  }
+
+  let plan: SimpleCorrectionResult;
+  try {
+    plan = buildSimpleCorrectionPlan({
+      incomeCents: input.incomeCents,
+      reservedWithCommitmentCents: input.reservedWithCommitmentCents,
+      reservedGenericCents: input.reservedGenericCents,
+      commitmentId: effectiveCommitmentId,
+      allocation: input.allocation,
+      spentPerEnvelope: input.spentPerEnvelope,
+      targets: input.targets,
+    });
+  } catch (error) {
+    return error instanceof Error ? error.message : "No se pudo armar el plan.";
+  }
+
+  try {
+    await input.correct({
+      setEnvelopeRemaining: plan.remainingByEnvelope,
+      setUnallocatedCents: plan.unallocatedCents,
+      declaredLiquidCents: plan.declaredLiquidCents,
+      reserveToCommitments: plan.reserveToCommitments.map((row) => ({
+        commitmentId: row.commitmentId as Id<"fixedCommitments">,
+        amountCents: row.amountCents,
+      })),
+      contributeToSavings: [],
+      note: "Corrección guiada del ciclo",
+    });
+  } catch (error) {
+    return fromConvexError(error).message;
+  }
+
+  return null;
+}
+
+export function CycleCorrectWizard() {
   const summary = useQuery(api.dashboard.getSummary, {});
   const settings = useQuery(api.settings.getSettingsOverview, {});
   const registeredIncomeCents = useQuery(
     api.cycleCorrection.getRegisteredCycleIncome,
     {},
   );
+
+  if (summary === undefined || settings === undefined) {
+    return <CycleCorrectViewSkeleton />;
+  }
+  if (summary === null || !summary.cycle) {
+    return <MissingActiveCycle />;
+  }
+  if (registeredIncomeCents === 0) {
+    return <MissingRegisteredIncome />;
+  }
+
+  return (
+    <CycleCorrectWizardForm
+      summary={summary}
+      settings={settings}
+      registeredIncomeCents={registeredIncomeCents}
+      activeCycle={summary.cycle}
+    />
+  );
+}
+
+function CycleCorrectWizardForm({
+  summary,
+  settings,
+  registeredIncomeCents,
+  activeCycle,
+}: {
+  summary: DashboardSummary;
+  settings: SettingsOverview | null;
+  registeredIncomeCents: number | undefined;
+  activeCycle: NonNullable<DashboardSummary["cycle"]>;
+}) {
+  const router = useRouter();
   const correct = useMutation(api.cycleCorrection.correctActiveCycleAllocation);
   const createCommitment = useMutation(
     api.fixedCommitments.createFixedCommitment,
@@ -90,69 +270,19 @@ export function CycleCorrectWizard() {
     registeredIncomeCents !== undefined &&
     incomeCents !== registeredIncomeCents;
 
-  const spentPerEnvelope = useMemo<EnvelopeTargets>(() => {
-    const envelopes = summary?.envelopes ?? [];
-    const spent = (type: "needs" | "wants" | "savings") => {
-      const envelope = envelopes.find((e) => e.type === type);
-      if (!envelope) return 0;
-      return Math.max(
-        0,
-        (envelope.allocatedAmount ?? 0) - (envelope.remainingAmount ?? 0),
-      );
-    };
-    return {
-      needs: spent("needs"),
-      wants: spent("wants"),
-      savings: spent("savings"),
-    };
-  }, [summary]);
-
-  const reservedWithCommitmentCents =
-    reservedMode === "existing" || reservedMode === "create"
-      ? reservedCents
-      : 0;
-  const reservedGenericCents = reservedMode === "generic" ? reservedCents : 0;
+  const spentPerEnvelope = useMemo(
+    () => spentPerEnvelopeFrom(summary),
+    [summary],
+  );
+  const { reservedWithCommitmentCents, reservedGenericCents } = reservedBuckets(
+    reservedMode,
+    reservedCents,
+  );
   const freeCents = computeFreeCents({
     incomeCents,
     reservedWithCommitmentCents,
     reservedGenericCents,
   });
-
-  if (summary === undefined || settings === undefined) {
-    return <CycleCorrectViewSkeleton />;
-  }
-  if (summary === null || !summary.cycle) {
-    return (
-      <section className="mx-auto max-w-lg px-4 py-8">
-        <h1 className="font-serif text-2xl text-ink">Corregir distribución</h1>
-        <p className="mt-2 text-sm text-mute">
-          Necesitas un ciclo activo para corregir cómo está repartido tu dinero.
-        </p>
-      </section>
-    );
-  }
-
-  const activeCycle = summary.cycle;
-
-  if (registeredIncomeCents === 0) {
-    return (
-      <section className="mx-auto max-w-lg px-4 py-8">
-        <h2 className="font-serif text-xl text-ink">
-          Aún no registras tu ingreso de este ciclo
-        </h2>
-        <p className="mt-2 text-sm text-mute">
-          Para corregir cómo está repartido tu dinero, primero registra lo que
-          entró.
-        </p>
-        <Button
-          className="mt-4"
-          onClick={() => router.push("/income/register")}
-        >
-          Registrar ingreso
-        </Button>
-      </section>
-    );
-  }
 
   function startStep3() {
     setTargets(
@@ -185,53 +315,22 @@ export function CycleCorrectWizard() {
       setServerError(parsed.error.issues[0]?.message ?? "Revisa los datos.");
       return;
     }
-    setSaving(true);
-    try {
-      let effectiveCommitmentId = commitmentId;
-      if (reservedMode === "create") {
-        try {
-          effectiveCommitmentId = await createCommitment({
-            name: newCommitment.name,
-            amount: newCommitment.amountCents,
-            envelope: newCommitment.envelope,
-            dueDay: newCommitment.dueDay,
-          });
-        } catch (error) {
-          setServerError(fromConvexError(error).message);
-          return;
-        }
-      }
-      let plan: SimpleCorrectionResult;
-      try {
-        plan = buildSimpleCorrectionPlan({
-          incomeCents,
-          reservedWithCommitmentCents,
-          reservedGenericCents,
-          commitmentId: effectiveCommitmentId,
-          allocation,
-          spentPerEnvelope,
-          targets,
-        });
-      } catch (error) {
-        setServerError(
-          error instanceof Error ? error.message : "No se pudo armar el plan.",
-        );
-        return;
-      }
-      try {
-        await correct({
-          setEnvelopeRemaining: plan.remainingByEnvelope,
-          setUnallocatedCents: plan.unallocatedCents,
-          declaredLiquidCents: plan.declaredLiquidCents,
-          reserveToCommitments: plan.reserveToCommitments.map((row) => ({
-            commitmentId: row.commitmentId as Id<"fixedCommitments">,
-            amountCents: row.amountCents,
-          })),
-          contributeToSavings: [],
-          note: "Corrección guiada del ciclo",
-        });
-      } catch (error) {
-        setServerError(fromConvexError(error).message);
+    await withPending(setSaving, async () => {
+      const errorMessage = await submitSimpleCorrection({
+        createCommitment,
+        correct,
+        incomeCents,
+        reservedMode,
+        commitmentId,
+        newCommitment,
+        reservedWithCommitmentCents,
+        reservedGenericCents,
+        allocation,
+        spentPerEnvelope,
+        targets,
+      });
+      if (errorMessage) {
+        setServerError(errorMessage);
         return;
       }
       track(AnalyticsEvents.ALLOCATION_CORRECT_COMPLETED, {
@@ -239,9 +338,7 @@ export function CycleCorrectWizard() {
         needs_review_before: activeCycle.needsReview === true,
       });
       router.push("/dashboard");
-    } finally {
-      setSaving(false);
-    }
+    });
   }
 
   const assigned = targets.needs + targets.wants + targets.savings;
@@ -252,6 +349,108 @@ export function CycleCorrectWizard() {
     reservedWithCommitmentCents + reservedGenericCents + assigned >
     maxDistributable;
 
+  return (
+    <CycleCorrectSteps
+      step={step}
+      incomeText={incomeText}
+      currencyCode={currencyCode}
+      setIncomeText={setIncomeText}
+      setMismatchConfirmed={setMismatchConfirmed}
+      setStep={setStep}
+      registeredIncomeCents={registeredIncomeCents}
+      mismatch={mismatch}
+      mismatchConfirmed={mismatchConfirmed}
+      incomeCents={incomeCents}
+      spentCents={spentCents}
+      reservedText={reservedText}
+      reservedMode={reservedMode}
+      commitmentId={commitmentId}
+      newCommitment={newCommitment}
+      summary={summary}
+      setReservedText={setReservedText}
+      setReservedMode={setReservedMode}
+      setCommitmentId={setCommitmentId}
+      setNewCommitment={setNewCommitment}
+      reservedCents={reservedCents}
+      startStep3={startStep3}
+      freeCents={freeCents}
+      targets={targets}
+      saving={saving}
+      capExceeded={capExceeded}
+      setTargets={setTargets}
+      resetProposal={resetProposal}
+      apply={apply}
+      maxDistributable={maxDistributable}
+      serverError={serverError}
+    />
+  );
+}
+
+function CycleCorrectSteps({
+  step,
+  incomeText,
+  currencyCode,
+  setIncomeText,
+  setMismatchConfirmed,
+  setStep,
+  registeredIncomeCents,
+  mismatch,
+  mismatchConfirmed,
+  incomeCents,
+  spentCents,
+  reservedText,
+  reservedMode,
+  commitmentId,
+  newCommitment,
+  summary,
+  setReservedText,
+  setReservedMode,
+  setCommitmentId,
+  setNewCommitment,
+  reservedCents,
+  startStep3,
+  freeCents,
+  targets,
+  saving,
+  capExceeded,
+  setTargets,
+  resetProposal,
+  apply,
+  maxDistributable,
+  serverError,
+}: {
+  step: 1 | 2 | 3;
+  incomeText: string;
+  currencyCode: string;
+  setIncomeText: (value: string) => void;
+  setMismatchConfirmed: (value: boolean) => void;
+  setStep: (step: 1 | 2 | 3) => void;
+  registeredIncomeCents: number | undefined;
+  mismatch: boolean;
+  mismatchConfirmed: boolean;
+  incomeCents: number;
+  spentCents: number;
+  reservedText: string;
+  reservedMode: Mode;
+  commitmentId: string;
+  newCommitment: NewCommitment;
+  summary: DashboardSummary;
+  setReservedText: (value: string) => void;
+  setReservedMode: (mode: Mode) => void;
+  setCommitmentId: (id: string) => void;
+  setNewCommitment: Dispatch<SetStateAction<NewCommitment>>;
+  reservedCents: number;
+  startStep3: () => void;
+  freeCents: number;
+  targets: EnvelopeTargets;
+  saving: boolean;
+  capExceeded: boolean;
+  setTargets: Dispatch<SetStateAction<EnvelopeTargets>>;
+  resetProposal: () => void;
+  apply: () => void;
+  maxDistributable: number;
+  serverError: string | null;
+}) {
   return (
     <section className="mx-auto max-w-lg px-4 py-8">
       {step === 1 ? (

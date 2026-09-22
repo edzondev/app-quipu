@@ -43,6 +43,7 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
 
   const [step, setStep] = useState<ExpenseFlowStep>("amount");
   const [startedAt] = useState(() => Date.now());
+  const [confirmedAt, setConfirmedAt] = useState<number | null>(null);
   const [result, setResult] = useState<ExpenseRegisterResult | undefined>();
 
   const variant = options.variant ?? "fab";
@@ -76,13 +77,14 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
     >
       {/* viewKey estable: key={step} remontaría el form y resetearía el monto */}
       <AnimatedView viewKey="expense-register-flow" aria-live="polite">
-        {step === "success" && result ? (
+        {step === "success" && result && confirmedAt !== null ? (
           <ExpenseConfirmation
             amountCents={result.amount}
             envelopeType={result.envelopeType}
             remainingAmount={result.remainingAmount}
             currencyCode={currencyCode}
             startedAt={startedAt}
+            confirmedAt={confirmedAt}
             onClose={close}
           />
         ) : (
@@ -95,6 +97,7 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
             currencySymbol={currencySymbol}
             registerExpense={registerExpense}
             onSuccess={(response) => {
+              setConfirmedAt(Date.now());
               setResult(response);
               setStep("success");
             }}

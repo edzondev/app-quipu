@@ -11,6 +11,7 @@ import {
 } from "@/modules/coach/constants";
 import type { DashboardCoach } from "@/modules/dashboard/types";
 import { Button } from "@/shared/components/ui/button";
+import { withPending } from "@/shared/lib/with-pending";
 
 type CrisisPlan = NonNullable<DashboardCoach["crisisPlan"]>;
 
@@ -24,29 +25,23 @@ export function CoachCrisisPlanActions({ plan }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleApplyPlan() {
-    setIsSubmitting(true);
-    try {
+    await withPending(setIsSubmitting, async () => {
       await applyCrisisPlan({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "completed",
         option_id: "crisis_plan",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   async function handleSnooze() {
-    setIsSubmitting(true);
-    try {
+    await withPending(setIsSubmitting, async () => {
       await snoozeCrisis({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "dismissed",
         option_id: "snooze",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   return (

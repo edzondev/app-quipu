@@ -14,6 +14,7 @@ import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import { moveSurplusToSavings, useMoveSurplusToSavings } from "../actions";
 import {
   MOVE_SURPLUS_NO_CYCLE_BODY,
@@ -114,31 +115,30 @@ export function MoveSurplusView({
         isSubmitting={isSubmitting}
         onCancel={() => router.push("/savings")}
         onSubmit={async (values) => {
-          setIsSubmitting(true);
-          try {
-            const result = await moveSurplusToSavings(
-              moveMutation,
-              moveSurplusFormToMutationArgs(values),
-            );
-            track(AnalyticsEvents.ADDITIONAL_SAVINGS_ADDED, {
-              amount: result.amount,
-              source: values.fromSource,
-            });
-            const params = new URLSearchParams({
-              moved: String(result.amount),
-              objective: String(result.savingsObjectiveCents),
-              additional: String(result.savingsAdditionalCents),
-              total: String(result.savingsTotalCents),
-              needs: String(result.allocationNeeds),
-              wants: String(result.allocationWants),
-              savings: String(result.allocationSavings),
-            });
-            router.push(`/savings/move/success?${params.toString()}`);
-          } catch (error) {
-            toast.error(fromConvexError(error).message);
-          } finally {
-            setIsSubmitting(false);
-          }
+          await withPending(setIsSubmitting, async () => {
+            try {
+              const result = await moveSurplusToSavings(
+                moveMutation,
+                moveSurplusFormToMutationArgs(values),
+              );
+              track(AnalyticsEvents.ADDITIONAL_SAVINGS_ADDED, {
+                amount: result.amount,
+                source: values.fromSource,
+              });
+              const params = new URLSearchParams({
+                moved: String(result.amount),
+                objective: String(result.savingsObjectiveCents),
+                additional: String(result.savingsAdditionalCents),
+                total: String(result.savingsTotalCents),
+                needs: String(result.allocationNeeds),
+                wants: String(result.allocationWants),
+                savings: String(result.allocationSavings),
+              });
+              router.push(`/savings/move/success?${params.toString()}`);
+            } catch (error) {
+              toast.error(fromConvexError(error).message);
+            }
+          });
         }}
       />
     </AppPageShell>

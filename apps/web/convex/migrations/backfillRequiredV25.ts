@@ -7,31 +7,32 @@ import { internalMutation } from "../_generated/server";
 export const backfillRequiredV25Fields = internalMutation({
   args: {},
   handler: async (ctx) => {
-    let profilesPatched = 0;
-    let cyclesPatched = 0;
-    let commitmentsPatched = 0;
+    const profiles = (await ctx.db.query("profiles").collect()).filter(
+      (profile) => profile.incomeModel === undefined,
+    );
+    const cycles = (await ctx.db.query("financialCycles").collect()).filter(
+      (cycle) => cycle.totalIncomeReceived === undefined,
+    );
+    const commitments = (
+      await ctx.db.query("fixedCommitments").collect()
+    ).filter((commitment) => commitment.dueDay === undefined);
 
-    for (const profile of await ctx.db.query("profiles").collect()) {
-      if (profile.incomeModel === undefined) {
-        await ctx.db.patch(profile._id, { incomeModel: "fixed" });
-        profilesPatched++;
-      }
-    }
+    await Promise.all([
+      ...profiles.map((profile) =>
+        ctx.db.patch(profile._id, { incomeModel: "fixed" }),
+      ),
+      ...cycles.map((cycle) =>
+        ctx.db.patch(cycle._id, { totalIncomeReceived: 0 }),
+      ),
+      ...commitments.map((commitment) =>
+        ctx.db.patch(commitment._id, { dueDay: 1 }),
+      ),
+    ]);
 
-    for (const cycle of await ctx.db.query("financialCycles").collect()) {
-      if (cycle.totalIncomeReceived === undefined) {
-        await ctx.db.patch(cycle._id, { totalIncomeReceived: 0 });
-        cyclesPatched++;
-      }
-    }
-
-    for (const commitment of await ctx.db.query("fixedCommitments").collect()) {
-      if (commitment.dueDay === undefined) {
-        await ctx.db.patch(commitment._id, { dueDay: 1 });
-        commitmentsPatched++;
-      }
-    }
-
-    return { profilesPatched, cyclesPatched, commitmentsPatched };
+    return {
+      profilesPatched: profiles.length,
+      cyclesPatched: cycles.length,
+      commitmentsPatched: commitments.length,
+    };
   },
 });

@@ -9,6 +9,7 @@ import { fromConvexError } from "@/core/errors";
 import { PremiumLockCard } from "@/shared/components/premium-lock-card";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import { useReactivateSpace } from "../actions";
 import {
   ESPACIOS_READONLY_BANNER,
@@ -43,16 +44,15 @@ export function SpaceReadonlyBanner({
     });
 
   async function handleReactivate() {
-    setPending(true);
-    try {
-      await reactivate({ spaceId });
-      track(AnalyticsEvents.SPACE_REACTIVATED, { space_id: spaceId });
-      toast.success(ESPACIOS_SETTINGS_REACTIVATED);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    await withPending(setPending, async () => {
+      try {
+        await reactivate({ spaceId });
+        track(AnalyticsEvents.SPACE_REACTIVATED, { space_id: spaceId });
+        toast.success(ESPACIOS_SETTINGS_REACTIVATED);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

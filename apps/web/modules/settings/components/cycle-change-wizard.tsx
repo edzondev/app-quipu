@@ -15,6 +15,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import { useUpdateCycleSchedule } from "../actions";
 import {
   SETTINGS_CYCLE_WIZARD_BACK,
@@ -115,20 +116,19 @@ function CycleChangeWizardForm({ profile }: { profile: Profile }) {
   }
 
   async function confirmSave() {
-    setPending(true);
-    try {
-      if (isVariable) {
-        await updateCycle({ cycleDurationDays });
-      } else {
-        await updateCycle({ payFrequency, paydays });
+    await withPending(setPending, async () => {
+      try {
+        if (isVariable) {
+          await updateCycle({ cycleDurationDays });
+        } else {
+          await updateCycle({ payFrequency, paydays });
+        }
+        toast.success(SETTINGS_CYCLE_WIZARD_SAVED);
+        router.push("/settings/system");
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
       }
-      toast.success(SETTINGS_CYCLE_WIZARD_SAVED);
-      router.push("/settings/system");
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   return (

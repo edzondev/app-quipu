@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
+import { withPending } from "@/shared/lib/with-pending";
 import { useContributeToSpace } from "../actions";
 import {
   SpaceEnvelopePicker,
@@ -74,28 +75,27 @@ export function SpaceContributeFlow({ open, onOpenChange, spaceId }: Props) {
                 toast.error("Ingresa un monto válido.");
                 return;
               }
-              setPending(true);
-              try {
-                await contribute({
-                  spaceId,
-                  amountCents: cents,
-                  personalEnvelopeType,
-                  spaceEnvelopeType,
-                });
-                track(AnalyticsEvents.SPACE_CONTRIBUTION_COMPLETED, {
-                  space_id: spaceId,
-                  amount: cents,
-                  personal_envelope: personalEnvelopeType,
-                  space_envelope: spaceEnvelopeType,
-                });
-                toast.success("Aporte registrado");
-                onOpenChange(false);
-                setAmount("");
-              } catch (error) {
-                toast.error(fromConvexError(error).message);
-              } finally {
-                setPending(false);
-              }
+              await withPending(setPending, async () => {
+                try {
+                  await contribute({
+                    spaceId,
+                    amountCents: cents,
+                    personalEnvelopeType,
+                    spaceEnvelopeType,
+                  });
+                  track(AnalyticsEvents.SPACE_CONTRIBUTION_COMPLETED, {
+                    space_id: spaceId,
+                    amount: cents,
+                    personal_envelope: personalEnvelopeType,
+                    space_envelope: spaceEnvelopeType,
+                  });
+                  toast.success("Aporte registrado");
+                  onOpenChange(false);
+                  setAmount("");
+                } catch (error) {
+                  toast.error(fromConvexError(error).message);
+                }
+              });
             }}
           >
             {pending ? "Registrando…" : "Confirmar aporte"}

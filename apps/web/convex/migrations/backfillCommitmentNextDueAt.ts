@@ -7,21 +7,21 @@ export const backfillCommitmentNextDueAt = internalMutation({
   args: {},
   returns: v.object({ updated: v.number() }),
   handler: async (ctx) => {
-    const commitments = await ctx.db.query("fixedCommitments").collect();
-    let updated = 0;
+    const commitments = (
+      await ctx.db.query("fixedCommitments").collect()
+    ).filter((commitment) => commitment.nextDueAt == null);
 
-    for (const commitment of commitments) {
-      if (commitment.nextDueAt != null) continue;
+    await Promise.all(
+      commitments.map((commitment) =>
+        ctx.db.patch(commitment._id, {
+          nextDueAt: computeInitialNextDueAt(
+            commitment.dueDay,
+            commitment._creationTime,
+          ),
+        }),
+      ),
+    );
 
-      await ctx.db.patch(commitment._id, {
-        nextDueAt: computeInitialNextDueAt(
-          commitment.dueDay,
-          commitment._creationTime,
-        ),
-      });
-      updated += 1;
-    }
-
-    return { updated };
+    return { updated: commitments.length };
   },
 });

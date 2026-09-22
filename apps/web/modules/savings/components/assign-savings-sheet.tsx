@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import {
   assignSavingsEnvelope as assignSavingsEnvelopeAction,
   useAssignSavingsEnvelope,
@@ -49,11 +50,13 @@ export function AssignSavingsSheet({
   const assign = useAssignSavingsEnvelope();
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [seeded, setSeeded] = useState<{ open: boolean; plan: Plan | null }>({
+    open: false,
+    plan: null,
+  });
 
-  const lines = useMemo(() => plan?.lines ?? [], [plan]);
-  const rationale = plan ? ASSIGN_SHEET_RATIONALE[plan.rationale] : null;
-
-  useEffect(() => {
+  if (open !== seeded.open || plan !== seeded.plan) {
+    setSeeded({ open, plan });
     if (open && plan) {
       setAmounts(
         Object.fromEntries(
@@ -64,7 +67,10 @@ export function AssignSavingsSheet({
         ),
       );
     }
-  }, [open, plan]);
+  }
+
+  const lines = useMemo(() => plan?.lines ?? [], [plan]);
+  const rationale = plan ? ASSIGN_SHEET_RATIONALE[plan.rationale] : null;
 
   const parsedLines = lines.map((line) => {
     const raw = amounts[line.subEnvelopeId] ?? "";
@@ -87,23 +93,22 @@ export function AssignSavingsSheet({
 
   async function handleSubmit() {
     if (!canSubmit) return;
-    setIsSubmitting(true);
-    try {
-      const result = await assignSavingsEnvelopeAction(assign, {
-        lines: includedLines.map((line) => ({
-          subEnvelopeId: line.subEnvelopeId,
-          amountCents: line.amountCents,
-        })),
-      });
-      toast.success(
-        `${ASSIGN_SHEET_SUCCESS_PREFIX} Asignaste ${formatCents(result.assignedCents, { currency: currencyCode })} a ${result.results.length} ${result.results.length === 1 ? "destino" : "destinos"}.`,
-      );
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await withPending(setIsSubmitting, async () => {
+      try {
+        const result = await assignSavingsEnvelopeAction(assign, {
+          lines: includedLines.map((line) => ({
+            subEnvelopeId: line.subEnvelopeId,
+            amountCents: line.amountCents,
+          })),
+        });
+        toast.success(
+          `${ASSIGN_SHEET_SUCCESS_PREFIX} Asignaste ${formatCents(result.assignedCents, { currency: currencyCode })} a ${result.results.length} ${result.results.length === 1 ? "destino" : "destinos"}.`,
+        );
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

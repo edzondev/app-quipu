@@ -54,6 +54,115 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
+function paymentStatusClass(
+  status: NonNullable<CommitmentForDetail["paymentStatus"]>,
+) {
+  if (status === "paid") return "text-qp-deep";
+  if (status === "overdue") return "text-danger-ink";
+  return "text-ink";
+}
+
+function CommitmentDetailBody({
+  commitment,
+  currencyCode,
+  hasActiveCycle,
+  isMarkingPaid,
+  onMarkAsPaid,
+  onDelete,
+}: {
+  commitment: CommitmentForDetail;
+  currencyCode: string;
+  hasActiveCycle: boolean;
+  isMarkingPaid: boolean;
+  onMarkAsPaid: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <>
+      <dl className="space-y-3 text-sm">
+        <div className="flex justify-between gap-4">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            Monto
+          </dt>
+          <dd className="font-serif text-lg text-ink">
+            {formatCents(commitment.amount, {
+              currency: currencyCode,
+            })}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            Sobre
+          </dt>
+          <dd className="font-medium text-ink">
+            {ENVELOPE_LABELS[commitment.envelope]}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            {COMMITMENT_NEXT_DUE_LABEL}
+          </dt>
+          <dd className="text-right font-medium text-ink">
+            <div>{formatLimaDate(commitment.nextDueAt)}</div>
+            {commitment.paymentStatus !== "paid" ? (
+              <div className="text-xs font-normal text-mute">
+                {formatDueInDays(commitment.daysUntilDue)}
+              </div>
+            ) : null}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            {COMMITMENT_COVERAGE_LABEL}
+          </dt>
+          <dd className="font-medium text-ink">
+            {formatCoverageStatusLabel(commitment.coverageStatus)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            {COMMITMENT_PAYMENT_LABEL}
+          </dt>
+          <dd
+            className={cn(
+              "font-medium",
+              paymentStatusClass(commitment.paymentStatus ?? "pending"),
+            )}
+          >
+            {formatPaymentStatusLabel(
+              commitment.paymentStatus ?? "pending",
+              commitment.paidAtForCycle,
+              commitment.daysUntilDue,
+            )}
+          </dd>
+        </div>
+      </dl>
+      <div className="mt-6 space-y-2.5">
+        {hasActiveCycle && commitment.paymentStatus !== "paid" ? (
+          <Button
+            type="button"
+            disabled={isMarkingPaid}
+            onClick={onMarkAsPaid}
+            className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
+          >
+            {isMarkingPaid ? "Guardando…" : COMMITMENT_MARK_PAID}
+          </Button>
+        ) : null}
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "h-12 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
+          )}
+          onClick={onDelete}
+        >
+          Eliminar compromiso
+        </button>
+      </div>
+    </>
+  );
+}
+
 async function runMutationWithBusyFlag(
   setBusy: (busy: boolean) => void,
   run: () => Promise<unknown>,
@@ -121,92 +230,14 @@ export function CommitmentDetailSheet({
   const contentKey = commitment?.id ?? "empty";
 
   const body = commitment ? (
-    <>
-      <dl className="space-y-3 text-sm">
-        <div className="flex justify-between gap-4">
-          <dt className="text-[12.5px] font-medium text-ink-secondary">
-            Monto
-          </dt>
-          <dd className="font-serif text-lg text-ink">
-            {formatCents(commitment.amount, {
-              currency: currencyCode,
-            })}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-[12.5px] font-medium text-ink-secondary">
-            Sobre
-          </dt>
-          <dd className="font-medium text-ink">
-            {ENVELOPE_LABELS[commitment.envelope]}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-[12.5px] font-medium text-ink-secondary">
-            {COMMITMENT_NEXT_DUE_LABEL}
-          </dt>
-          <dd className="text-right font-medium text-ink">
-            <div>{formatLimaDate(commitment.nextDueAt)}</div>
-            {commitment.paymentStatus !== "paid" ? (
-              <div className="text-xs font-normal text-mute">
-                {formatDueInDays(commitment.daysUntilDue)}
-              </div>
-            ) : null}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-[12.5px] font-medium text-ink-secondary">
-            {COMMITMENT_COVERAGE_LABEL}
-          </dt>
-          <dd className="font-medium text-ink">
-            {formatCoverageStatusLabel(commitment.coverageStatus)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-[12.5px] font-medium text-ink-secondary">
-            {COMMITMENT_PAYMENT_LABEL}
-          </dt>
-          <dd
-            className={cn(
-              "font-medium",
-              commitment.paymentStatus === "paid"
-                ? "text-qp-deep"
-                : commitment.paymentStatus === "overdue"
-                  ? "text-danger-ink"
-                  : "text-ink",
-            )}
-          >
-            {formatPaymentStatusLabel(
-              commitment.paymentStatus ?? "pending",
-              commitment.paidAtForCycle,
-              commitment.daysUntilDue,
-            )}
-          </dd>
-        </div>
-      </dl>
-      <div className="mt-6 space-y-2.5">
-        {hasActiveCycle && commitment.paymentStatus !== "paid" ? (
-          <Button
-            type="button"
-            disabled={isMarkingPaid}
-            onClick={() => void handleMarkAsPaid()}
-            className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
-          >
-            {isMarkingPaid ? "Guardando…" : COMMITMENT_MARK_PAID}
-          </Button>
-        ) : null}
-        <button
-          type="button"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "h-12 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
-          )}
-          onClick={() => setConfirmOpen(true)}
-        >
-          Eliminar compromiso
-        </button>
-      </div>
-    </>
+    <CommitmentDetailBody
+      commitment={commitment}
+      currencyCode={currencyCode}
+      hasActiveCycle={hasActiveCycle}
+      isMarkingPaid={isMarkingPaid}
+      onMarkAsPaid={() => void handleMarkAsPaid()}
+      onDelete={() => setConfirmOpen(true)}
+    />
   ) : null;
 
   return (

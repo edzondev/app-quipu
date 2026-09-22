@@ -21,6 +21,7 @@ type Props = {
   remainingAmount: number;
   currencyCode: string;
   startedAt: number;
+  confirmedAt: number;
   onClose: () => void;
 };
 
@@ -30,10 +31,11 @@ export function ExpenseConfirmation({
   remainingAmount,
   currencyCode,
   startedAt,
+  confirmedAt,
   onClose,
 }: Props) {
   const styles = ENVELOPE_EXPENSE_STYLES[envelopeType];
-  const elapsed = formatElapsedSeconds(startedAt, Date.now());
+  const elapsed = formatElapsedSeconds(startedAt, confirmedAt);
   const displayRemaining = Math.max(0, remainingAmount);
 
   return (

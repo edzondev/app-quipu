@@ -7,6 +7,7 @@ import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
+import { withFlag } from "@/shared/lib/with-pending";
 import { useRespondProposal } from "../actions";
 import { ESPACIOS_PROPOSAL_TITLE } from "../constants";
 import {
@@ -74,26 +75,25 @@ export function SpaceProposalResponseList({
     decision: "approve" | "reject",
     proposalKind: SpaceProposalKind,
   ) {
-    setPendingId(proposalId);
-    try {
-      await respond({ proposalId, decision });
-      track(
-        decision === "approve"
-          ? AnalyticsEvents.SPACE_PROPOSAL_CONFIRMED
-          : AnalyticsEvents.SPACE_PROPOSAL_REJECTED,
-        {
-          space_id: spaceId,
-          proposal_kind: proposalKind,
-        },
-      );
-      toast.success(
-        decision === "approve" ? "Cambio aprobado" : "Cambio rechazado",
-      );
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPendingId(null);
-    }
+    await withFlag(setPendingId, proposalId, null, async () => {
+      try {
+        await respond({ proposalId, decision });
+        track(
+          decision === "approve"
+            ? AnalyticsEvents.SPACE_PROPOSAL_CONFIRMED
+            : AnalyticsEvents.SPACE_PROPOSAL_REJECTED,
+          {
+            space_id: spaceId,
+            proposal_kind: proposalKind,
+          },
+        );
+        toast.success(
+          decision === "approve" ? "Cambio aprobado" : "Cambio rechazado",
+        );
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

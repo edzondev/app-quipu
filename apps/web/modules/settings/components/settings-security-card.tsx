@@ -8,6 +8,7 @@ import { authClient } from "@/auth/auth-client";
 import { fromConvexError } from "@/core/errors";
 import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
 import { cn } from "@/shared/lib/utils";
+import { withPending } from "@/shared/lib/with-pending";
 import { useRevokeAllSessions } from "../actions";
 import {
   SETTINGS_PASSKEY_ADD,
@@ -79,20 +80,19 @@ export function SettingsSecurityCard({
   }
 
   async function handleRevokeAllSessions() {
-    setRevokePending(true);
-    try {
-      await revokeAll({});
-      toast.success(SETTINGS_SESSIONS_REVOKE_SUCCESS);
-      setRevokeOpen(false);
-      await authClient.signOut();
-      router.push("/sign-in");
-    } catch (error) {
-      toast.error(
-        fromConvexError(error).message ?? SETTINGS_SESSIONS_REVOKE_ERROR,
-      );
-    } finally {
-      setRevokePending(false);
-    }
+    await withPending(setRevokePending, async () => {
+      try {
+        await revokeAll({});
+        toast.success(SETTINGS_SESSIONS_REVOKE_SUCCESS);
+        setRevokeOpen(false);
+        await authClient.signOut();
+        router.push("/sign-in");
+      } catch (error) {
+        toast.error(
+          fromConvexError(error).message ?? SETTINGS_SESSIONS_REVOKE_ERROR,
+        );
+      }
+    });
   }
 
   return (
