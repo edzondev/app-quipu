@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -79,7 +79,7 @@ export function MovementDetailSheet({
   const isMobile = useIsMobile();
   const [state, setState] = useState<SheetState>("detail");
   const [direction, setDirection] = useState<Direction>("forward");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting, startDelete] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const goTo = useCallback(
@@ -107,28 +107,29 @@ export function MovementDetailSheet({
   const deleteExpense = useMutation(api.expenses.deleteExpense);
   const deleteIncomeEvent = useMutation(api.incomeEvents.deleteIncomeEvent);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!movement) return;
     setDeleteError(null);
     const isIncome = movement.kind === "income";
-    try {
-      setIsDeleting(true);
-      if (isIncome) {
-        await deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> });
-      } else {
-        await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
+    startDelete(async () => {
+      try {
+        if (isIncome) {
+          await deleteIncomeEvent({
+            eventId: movement.id as Id<"incomeEvents">,
+          });
+        } else {
+          await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
+        }
+        track(AnalyticsEvents.MOVEMENT_DELETED, {
+          movement_kind: isIncome ? "income" : "expense",
+          amount: movement.amount,
+          preferred_correct_shown: isIncome,
+        });
+        onOpenChange(false);
+      } catch (error) {
+        setDeleteError(fromConvexError(error).message);
       }
-      track(AnalyticsEvents.MOVEMENT_DELETED, {
-        movement_kind: isIncome ? "income" : "expense",
-        amount: movement.amount,
-        preferred_correct_shown: isIncome,
-      });
-      onOpenChange(false);
-    } catch (error) {
-      setDeleteError(fromConvexError(error).message);
-    } finally {
-      setIsDeleting(false);
-    }
+    });
   }, [movement, deleteExpense, deleteIncomeEvent, onOpenChange]);
 
   const title = SHEET_TITLES[state];

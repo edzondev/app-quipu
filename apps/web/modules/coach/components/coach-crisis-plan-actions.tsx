@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useTransition } from "react";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import {
@@ -21,32 +21,26 @@ type Props = {
 export function CoachCrisisPlanActions({ plan }: Props) {
   const applyCrisisPlan = useMutation(api.coachEngine.applyCrisisPlan);
   const snoozeCrisis = useMutation(api.coachEngine.snoozeCrisisCoach);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startSubmit] = useTransition();
 
-  async function handleApplyPlan() {
-    setIsSubmitting(true);
-    try {
+  function handleApplyPlan() {
+    startSubmit(async () => {
       await applyCrisisPlan({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "completed",
         option_id: "crisis_plan",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
-  async function handleSnooze() {
-    setIsSubmitting(true);
-    try {
+  function handleSnooze() {
+    startSubmit(async () => {
       await snoozeCrisis({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "dismissed",
         option_id: "snooze",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   return (

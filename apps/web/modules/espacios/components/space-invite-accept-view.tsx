@@ -69,11 +69,8 @@ export function SpaceInviteAcceptView({ token }: Props) {
           } catch (caught) {
             if (requestRef.current !== requestId) return;
             setError(fromConvexError(caught).message);
-          } finally {
-            if (requestRef.current === requestId) {
-              setPending(false);
-            }
           }
+          if (requestRef.current === requestId) setPending(false);
         }}
       >
         {pending ? "Uniéndote…" : "Unirme al espacio"}

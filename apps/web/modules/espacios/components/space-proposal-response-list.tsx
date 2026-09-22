@@ -91,9 +91,8 @@ export function SpaceProposalResponseList({
       );
     } catch (error) {
       toast.error(fromConvexError(error).message);
-    } finally {
-      setPendingId(null);
     }
+    setPendingId(null);
   }
 
   return (

@@ -3,7 +3,7 @@
 import { CheckoutLink } from "@convex-dev/polar/react";
 import { useAction } from "convex/react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
@@ -59,7 +59,7 @@ export function SettingsPlanCard({ subscription, className }: Props) {
   const canCheckout = subscription.checkoutAvailable && Boolean(productId);
 
   const generatePortal = useAction(api.polar.generateCustomerPortalUrl);
-  const [portalPending, setPortalPending] = useState(false);
+  const [portalPending, startPortal] = useTransition();
   const searchParams = useSearchParams();
   const paywallTracked = useRef(false);
   const checkoutCompletedTracked = useRef(false);
@@ -95,8 +95,7 @@ export function SettingsPlanCard({ subscription, className }: Props) {
 
   const onManage = () => {
     track(AnalyticsEvents.PLUS_PORTAL_OPENED, {});
-    void (async () => {
-      setPortalPending(true);
+    startPortal(async () => {
       try {
         const { url } = await generatePortal({
           returnUrl: `${window.location.origin}/settings#plan`,
@@ -104,10 +103,8 @@ export function SettingsPlanCard({ subscription, className }: Props) {
         window.open(url, "_blank", "noopener,noreferrer");
       } catch {
         // Portal errors surface via Polar; keep button usable.
-      } finally {
-        setPortalPending(false);
       }
-    })();
+    });
   };
 
   const handleCheckoutStart = () => {

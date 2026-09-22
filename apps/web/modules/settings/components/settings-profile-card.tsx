@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
@@ -32,7 +32,7 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
   const updateName = useUpdateDisplayName();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(profile.name);
-  const [pending, setPending] = useState(false);
+  const [pending, startSave] = useTransition();
 
   const subtitleParts = [profile.email, profile.country].filter(Boolean);
 
@@ -42,16 +42,15 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
       toast.error(parsed.error.issues[0]?.message ?? SETTINGS_NAME_ERROR);
       return;
     }
-    setPending(true);
-    try {
-      await updateName({ name: parsed.data });
-      toast.success(SETTINGS_NAME_SAVED);
-      setEditing(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    startSave(async () => {
+      try {
+        await updateName({ name: parsed.data });
+        toast.success(SETTINGS_NAME_SAVED);
+        setEditing(false);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   function cancelEdit() {

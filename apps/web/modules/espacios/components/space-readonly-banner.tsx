@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -34,7 +34,7 @@ export function SpaceReadonlyBanner({
   className,
 }: Props) {
   const reactivate = useReactivateSpace();
-  const [pending, setPending] = useState(false);
+  const [pending, startReactivate] = useTransition();
 
   const canReactivate =
     status === "readonly" &&
@@ -42,17 +42,16 @@ export function SpaceReadonlyBanner({
       canReactivate: viewerRole === "owner" && ownerIsPremium,
     });
 
-  async function handleReactivate() {
-    setPending(true);
-    try {
-      await reactivate({ spaceId });
-      track(AnalyticsEvents.SPACE_REACTIVATED, { space_id: spaceId });
-      toast.success(ESPACIOS_SETTINGS_REACTIVATED);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+  function handleReactivate() {
+    startReactivate(async () => {
+      try {
+        await reactivate({ spaceId });
+        track(AnalyticsEvents.SPACE_REACTIVATED, { space_id: spaceId });
+        toast.success(ESPACIOS_SETTINGS_REACTIVATED);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

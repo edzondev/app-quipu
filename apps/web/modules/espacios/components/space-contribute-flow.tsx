@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -24,7 +24,7 @@ export function SpaceContributeFlow({ open, onOpenChange, spaceId }: Props) {
     useState<SpaceEnvelopeType>("needs");
   const [spaceEnvelopeType, setSpaceEnvelopeType] =
     useState<SpaceEnvelopeType>("needs");
-  const [pending, setPending] = useState(false);
+  const [pending, startSubmit] = useTransition();
 
   if (!open) return null;
 
@@ -68,34 +68,33 @@ export function SpaceContributeFlow({ open, onOpenChange, spaceId }: Props) {
             type="button"
             className="rounded-[11px] bg-ink px-4 py-2 text-sm font-semibold text-canvas"
             disabled={pending}
-            onClick={async () => {
+            onClick={() => {
               const cents = Math.round(Number.parseFloat(amount) * 100);
               if (!Number.isFinite(cents) || cents <= 0) {
                 toast.error("Ingresa un monto válido.");
                 return;
               }
-              setPending(true);
-              try {
-                await contribute({
-                  spaceId,
-                  amountCents: cents,
-                  personalEnvelopeType,
-                  spaceEnvelopeType,
-                });
-                track(AnalyticsEvents.SPACE_CONTRIBUTION_COMPLETED, {
-                  space_id: spaceId,
-                  amount: cents,
-                  personal_envelope: personalEnvelopeType,
-                  space_envelope: spaceEnvelopeType,
-                });
-                toast.success("Aporte registrado");
-                onOpenChange(false);
-                setAmount("");
-              } catch (error) {
-                toast.error(fromConvexError(error).message);
-              } finally {
-                setPending(false);
-              }
+              startSubmit(async () => {
+                try {
+                  await contribute({
+                    spaceId,
+                    amountCents: cents,
+                    personalEnvelopeType,
+                    spaceEnvelopeType,
+                  });
+                  track(AnalyticsEvents.SPACE_CONTRIBUTION_COMPLETED, {
+                    space_id: spaceId,
+                    amount: cents,
+                    personal_envelope: personalEnvelopeType,
+                    space_envelope: spaceEnvelopeType,
+                  });
+                  toast.success("Aporte registrado");
+                  onOpenChange(false);
+                  setAmount("");
+                } catch (error) {
+                  toast.error(fromConvexError(error).message);
+                }
+              });
             }}
           >
             {pending ? "Registrando…" : "Confirmar aporte"}

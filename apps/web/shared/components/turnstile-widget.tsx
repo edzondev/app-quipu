@@ -43,7 +43,9 @@ export function TurnstileWidget({
   const widgetIdRef = useRef<string | null>(null);
   const onTokenChangeRef = useRef(onTokenChange);
   const onReadyRef = useRef(onReady);
-  const [scriptReady, setScriptReady] = useState(false);
+  const [scriptReady, setScriptReady] = useState(
+    () => typeof window !== "undefined" && window.turnstile != null,
+  );
   const siteKey = clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -53,10 +55,6 @@ export function TurnstileWidget({
   useEffect(() => {
     onReadyRef.current = onReady;
   }, [onReady]);
-
-  useEffect(() => {
-    if (window.turnstile) setScriptReady(true);
-  }, []);
 
   useEffect(() => {
     if (

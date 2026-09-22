@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
@@ -39,32 +39,41 @@ function toSolesInput(cents: number): string {
   return String(cents / 100);
 }
 
-export function AssignSavingsSheet({
-  open,
-  onOpenChange,
+function suggestedAmounts(plan: Plan | null): Record<string, string> {
+  if (!plan) return {};
+  return Object.fromEntries(
+    plan.lines.map((line) => [
+      line.subEnvelopeId,
+      toSolesInput(line.suggestedCents),
+    ]),
+  );
+}
+
+function assignFormKey(open: boolean, plan: Plan | null): string {
+  const lines =
+    plan?.lines
+      .map((line) => `${line.subEnvelopeId}:${line.suggestedCents}`)
+      .join("|") ?? "";
+  return `${open}:${lines}`;
+}
+
+function AssignSavingsFields({
+  plan,
   availableCents,
   currencyCode,
-  plan,
-}: Props) {
-  const assign = useAssignSavingsEnvelope();
-  const [amounts, setAmounts] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const lines = useMemo(() => plan?.lines ?? [], [plan]);
+  onOpenChange,
+  assign,
+}: {
+  plan: Plan | null;
+  availableCents: number;
+  currencyCode: string;
+  onOpenChange: (open: boolean) => void;
+  assign: ReturnType<typeof useAssignSavingsEnvelope>;
+}) {
+  const [amounts, setAmounts] = useState(() => suggestedAmounts(plan));
+  const [isSubmitting, startSubmit] = useTransition();
+  const lines = plan?.lines ?? [];
   const rationale = plan ? ASSIGN_SHEET_RATIONALE[plan.rationale] : null;
-
-  useEffect(() => {
-    if (open && plan) {
-      setAmounts(
-        Object.fromEntries(
-          plan.lines.map((line) => [
-            line.subEnvelopeId,
-            toSolesInput(line.suggestedCents),
-          ]),
-        ),
-      );
-    }
-  }, [open, plan]);
 
   const parsedLines = lines.map((line) => {
     const raw = amounts[line.subEnvelopeId] ?? "";
@@ -85,33 +94,28 @@ export function AssignSavingsSheet({
     totalCents > 0 &&
     totalCents <= availableCents;
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (!canSubmit) return;
-    setIsSubmitting(true);
-    try {
-      const result = await assignSavingsEnvelopeAction(assign, {
-        lines: includedLines.map((line) => ({
-          subEnvelopeId: line.subEnvelopeId,
-          amountCents: line.amountCents,
-        })),
-      });
-      toast.success(
-        `${ASSIGN_SHEET_SUCCESS_PREFIX} Asignaste ${formatCents(result.assignedCents, { currency: currencyCode })} a ${result.results.length} ${result.results.length === 1 ? "destino" : "destinos"}.`,
-      );
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    startSubmit(async () => {
+      try {
+        const result = await assignSavingsEnvelopeAction(assign, {
+          lines: includedLines.map((line) => ({
+            subEnvelopeId: line.subEnvelopeId,
+            amountCents: line.amountCents,
+          })),
+        });
+        toast.success(
+          `${ASSIGN_SHEET_SUCCESS_PREFIX} Asignaste ${formatCents(result.assignedCents, { currency: currencyCode })} a ${result.results.length} ${result.results.length === 1 ? "destino" : "destinos"}.`,
+        );
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (
-    <SavingsFormShell
-      open={open}
-      onOpenChange={onOpenChange}
-      title={ASSIGN_SHEET_TITLE}
-    >
+    <>
       <p className="text-[12.5px] text-mute">
         {ASSIGN_SHEET_AVAILABLE_PREFIX}{" "}
         {formatCents(availableCents, { currency: currencyCode })}
@@ -183,7 +187,7 @@ export function AssignSavingsSheet({
         <Button
           type="button"
           disabled={!canSubmit || isSubmitting}
-          onClick={() => void handleSubmit()}
+          onClick={handleSubmit}
         >
           {ASSIGN_SHEET_CONFIRM_CTA}
         </Button>
@@ -195,6 +199,33 @@ export function AssignSavingsSheet({
           {ASSIGN_SHEET_DISMISS}
         </Button>
       </div>
+    </>
+  );
+}
+
+export function AssignSavingsSheet({
+  open,
+  onOpenChange,
+  availableCents,
+  currencyCode,
+  plan,
+}: Props) {
+  const assign = useAssignSavingsEnvelope();
+
+  return (
+    <SavingsFormShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={ASSIGN_SHEET_TITLE}
+    >
+      <AssignSavingsFields
+        key={assignFormKey(open, plan)}
+        plan={plan}
+        availableCents={availableCents}
+        currencyCode={currencyCode}
+        onOpenChange={onOpenChange}
+        assign={assign}
+      />
     </SavingsFormShell>
   );
 }

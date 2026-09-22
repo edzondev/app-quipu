@@ -22,9 +22,11 @@ const TurnstileWidget = dynamic(
   { ssr: false },
 );
 
-const SignInPasskeyButton = dynamic(
+const SignInPasskeyAlternative = dynamic(
   () =>
-    import("./sign-in-passkey-button").then((mod) => mod.SignInPasskeyButton),
+    import("./sign-in-passkey-button").then(
+      (mod) => mod.SignInPasskeyAlternative,
+    ),
   { ssr: false },
 );
 
@@ -182,20 +184,14 @@ export function PasswordStep({
         </form.Subscribe>
       </form>
 
-      {showPasskey && (
-        <>
-          <div className="flex items-center gap-3">
-            <span className="h-px flex-1 bg-line" />
-            <span className="text-xs text-faint">o con passkey</span>
-            <span className="h-px flex-1 bg-line" />
-          </div>
-          <SignInPasskeyButton
-            returnTo={returnTo}
-            turnstileToken={turnstileToken}
-            onAttemptComplete={onPasskeyAttemptComplete}
-          />
-        </>
-      )}
+      {showPasskey ? (
+        <SignInPasskeyAlternative
+          label="o con passkey"
+          returnTo={returnTo}
+          turnstileToken={turnstileToken}
+          onAttemptComplete={onPasskeyAttemptComplete}
+        />
+      ) : null}
     </>
   );
 }

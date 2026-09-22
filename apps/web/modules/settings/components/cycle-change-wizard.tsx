@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
@@ -83,7 +83,7 @@ function CycleChangeWizardForm({ profile }: { profile: Profile }) {
   const [cycleDurationDays, setCycleDurationDays] = useState<15 | 30>(() =>
     initialCycleDurationDays(profile),
   );
-  const [pending, setPending] = useState(false);
+  const [pending, startSave] = useTransition();
 
   const isVariable = profile.incomeModel === "variable";
   const isBiweekly = payFrequency === "biweekly";
@@ -114,21 +114,20 @@ function CycleChangeWizardForm({ profile }: { profile: Profile }) {
     }
   }
 
-  async function confirmSave() {
-    setPending(true);
-    try {
-      if (isVariable) {
-        await updateCycle({ cycleDurationDays });
-      } else {
-        await updateCycle({ payFrequency, paydays });
+  function confirmSave() {
+    startSave(async () => {
+      try {
+        if (isVariable) {
+          await updateCycle({ cycleDurationDays });
+        } else {
+          await updateCycle({ payFrequency, paydays });
+        }
+        toast.success(SETTINGS_CYCLE_WIZARD_SAVED);
+        router.push("/settings/system");
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
       }
-      toast.success(SETTINGS_CYCLE_WIZARD_SAVED);
-      router.push("/settings/system");
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   return (

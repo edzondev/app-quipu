@@ -56,14 +56,13 @@ export function ForgotPasswordView({
         setRequestError(true);
         return;
       }
-      const { error } = await authClient.$fetch("/request-password-reset", {
-        method: "POST",
-        body: {
+      const { error } = await authClient.requestPasswordReset(
+        {
           email: value.email,
           redirectTo: `${clientEnv.NEXT_PUBLIC_APP_URL}/restablecer-contrasena`,
         },
-        ...authFetchOptions(turnstile.token),
-      });
+        authFetchOptions(turnstile.token),
+      );
       turnstile.reset();
       if (error) {
         setRequestError(true);

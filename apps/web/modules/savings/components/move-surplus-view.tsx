@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -56,7 +56,7 @@ export function MoveSurplusView({
   const router = useRouter();
   const context = useQuery(api.savings.getMoveSurplusContext, {});
   const moveMutation = useMoveSurplusToSavings();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startSubmit] = useTransition();
 
   if (context === undefined) {
     return <MoveSurplusSkeleton />;
@@ -113,32 +113,31 @@ export function MoveSurplusView({
         initialDestinationId={initialDestinationId}
         isSubmitting={isSubmitting}
         onCancel={() => router.push("/savings")}
-        onSubmit={async (values) => {
-          setIsSubmitting(true);
-          try {
-            const result = await moveSurplusToSavings(
-              moveMutation,
-              moveSurplusFormToMutationArgs(values),
-            );
-            track(AnalyticsEvents.ADDITIONAL_SAVINGS_ADDED, {
-              amount: result.amount,
-              source: values.fromSource,
-            });
-            const params = new URLSearchParams({
-              moved: String(result.amount),
-              objective: String(result.savingsObjectiveCents),
-              additional: String(result.savingsAdditionalCents),
-              total: String(result.savingsTotalCents),
-              needs: String(result.allocationNeeds),
-              wants: String(result.allocationWants),
-              savings: String(result.allocationSavings),
-            });
-            router.push(`/savings/move/success?${params.toString()}`);
-          } catch (error) {
-            toast.error(fromConvexError(error).message);
-          } finally {
-            setIsSubmitting(false);
-          }
+        onSubmit={(values) => {
+          startSubmit(async () => {
+            try {
+              const result = await moveSurplusToSavings(
+                moveMutation,
+                moveSurplusFormToMutationArgs(values),
+              );
+              track(AnalyticsEvents.ADDITIONAL_SAVINGS_ADDED, {
+                amount: result.amount,
+                source: values.fromSource,
+              });
+              const params = new URLSearchParams({
+                moved: String(result.amount),
+                objective: String(result.savingsObjectiveCents),
+                additional: String(result.savingsAdditionalCents),
+                total: String(result.savingsTotalCents),
+                needs: String(result.allocationNeeds),
+                wants: String(result.allocationWants),
+                savings: String(result.allocationSavings),
+              });
+              router.push(`/savings/move/success?${params.toString()}`);
+            } catch (error) {
+              toast.error(fromConvexError(error).message);
+            }
+          });
         }}
       />
     </AppPageShell>

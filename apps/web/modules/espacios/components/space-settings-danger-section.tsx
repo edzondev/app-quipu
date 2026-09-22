@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
@@ -46,7 +46,7 @@ export function SpaceSettingsDangerSection({ spaceId, settings }: Props) {
   const closeSpace = useCloseSpace();
   const leaveSpace = useLeaveSpace();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, startConfirm] = useTransition();
 
   const canClose = canEditSpaceSettingsSection(
     settings.viewerRole,
@@ -61,25 +61,24 @@ export function SpaceSettingsDangerSection({ spaceId, settings }: Props) {
 
   if (!canClose && !canLeave) return null;
 
-  async function handleConfirm() {
+  function handleConfirm() {
     if (!dialog) return;
-    setPending(true);
-    try {
-      if (dialog === "close") {
-        await closeSpace({ spaceId });
-        toast.success(ESPACIOS_CLOSE_SUCCESS);
-      } else {
-        await leaveSpace({ spaceId });
-        toast.success(ESPACIOS_LEAVE_SUCCESS);
+    startConfirm(async () => {
+      try {
+        if (dialog === "close") {
+          await closeSpace({ spaceId });
+          toast.success(ESPACIOS_CLOSE_SUCCESS);
+        } else {
+          await leaveSpace({ spaceId });
+          toast.success(ESPACIOS_LEAVE_SUCCESS);
+        }
+        setDialog(null);
+        router.push("/espacios");
+        router.refresh();
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
       }
-      setDialog(null);
-      router.push("/espacios");
-      router.refresh();
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
@@ -64,38 +64,36 @@ export function SpaceDashboardHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const [closePending, setClosePending] = useState(false);
-  const [leavePending, setLeavePending] = useState(false);
+  const [closePending, startClose] = useTransition();
+  const [leavePending, startLeave] = useTransition();
 
   const showClose = viewerRole === "owner" && status !== "closed";
   const showLeave = viewerRole === "member";
 
-  async function handleClose() {
-    setClosePending(true);
-    try {
-      await closeSpace({ spaceId });
-      toast.success(ESPACIOS_CLOSE_SUCCESS);
-      setCloseOpen(false);
-      router.push("/espacios");
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setClosePending(false);
-    }
+  function handleClose() {
+    startClose(async () => {
+      try {
+        await closeSpace({ spaceId });
+        toast.success(ESPACIOS_CLOSE_SUCCESS);
+        setCloseOpen(false);
+        router.push("/espacios");
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
-  async function handleLeave() {
-    setLeavePending(true);
-    try {
-      await leaveSpace({ spaceId });
-      toast.success(ESPACIOS_LEAVE_SUCCESS);
-      setLeaveOpen(false);
-      router.push("/espacios");
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setLeavePending(false);
-    }
+  function handleLeave() {
+    startLeave(async () => {
+      try {
+        await leaveSpace({ spaceId });
+        toast.success(ESPACIOS_LEAVE_SUCCESS);
+        setLeaveOpen(false);
+        router.push("/espacios");
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

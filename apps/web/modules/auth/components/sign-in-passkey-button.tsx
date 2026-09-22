@@ -19,6 +19,33 @@ import {
 import { resolveAuthDestination } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 
+export function SignInPasskeyAlternative({
+  label,
+  returnTo,
+  turnstileToken = null,
+  onAttemptComplete,
+}: {
+  label: string;
+  returnTo?: string;
+  turnstileToken?: string | null;
+  onAttemptComplete?: () => void;
+}) {
+  return (
+    <>
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-line" />
+        <span className="text-xs text-faint">{label}</span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+      <SignInPasskeyButton
+        returnTo={returnTo}
+        turnstileToken={turnstileToken}
+        onAttemptComplete={onAttemptComplete}
+      />
+    </>
+  );
+}
+
 export function SignInPasskeyButton({
   returnTo,
   turnstileToken = null,

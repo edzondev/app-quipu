@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -36,34 +36,33 @@ export function SavingsContributeButton({
   fullWidth = true,
 }: Props) {
   const contribute = useMutation(api.savings.contributeToSubEnvelope);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startContribute] = useTransition();
 
-  async function handleContribute() {
+  function handleContribute() {
     if (availableToContributeCents <= 0) {
       toast.message(CONTRIBUTE_NO_FUNDS);
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const result = await contribute({ subEnvelopeId });
-      track(AnalyticsEvents.SAVINGS_CONTRIBUTION_COMPLETED, {
-        amount: result.amount,
-        source_envelope: "needs",
-        goal_id: subEnvelopeId,
-        goal_label: subEnvelopeLabel,
-        is_emergency_fund: isEmergencyFund,
-      });
-      toast.success(
-        `${CONTRIBUTE_SUCCESS_PREFIX} Moviste ${formatCents(result.amount, {
-          currency: currencyCode,
-        })} a tu fondo.`,
-      );
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    startContribute(async () => {
+      try {
+        const result = await contribute({ subEnvelopeId });
+        track(AnalyticsEvents.SAVINGS_CONTRIBUTION_COMPLETED, {
+          amount: result.amount,
+          source_envelope: "needs",
+          goal_id: subEnvelopeId,
+          goal_label: subEnvelopeLabel,
+          is_emergency_fund: isEmergencyFund,
+        });
+        toast.success(
+          `${CONTRIBUTE_SUCCESS_PREFIX} Moviste ${formatCents(result.amount, {
+            currency: currencyCode,
+          })} a tu fondo.`,
+        );
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (

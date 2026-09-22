@@ -65,9 +65,8 @@ export function SpaceSettingsMembersSection({ spaceId, settings }: Props) {
       toast.success(ESPACIOS_SETTINGS_INVITE_GENERATED);
     } catch (error) {
       toast.error(fromConvexError(error).message);
-    } finally {
-      setPendingAction(null);
     }
+    setPendingAction(null);
   }
 
   async function handleRevoke(invitationId: Id<"spaceInvitations">) {
@@ -78,9 +77,8 @@ export function SpaceSettingsMembersSection({ spaceId, settings }: Props) {
       toast.success(ESPACIOS_SETTINGS_INVITE_REVOKED);
     } catch (error) {
       toast.error(fromConvexError(error).message);
-    } finally {
-      setPendingAction(null);
     }
+    setPendingAction(null);
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -64,7 +64,7 @@ export function CycleCorrectWizard() {
     savings: 0,
   });
   const [serverError, setServerError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saving, startSave] = useTransition();
   const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
   const startedTracked = useRef(false);
 
@@ -171,7 +171,7 @@ export function CycleCorrectWizard() {
     );
   }
 
-  async function apply() {
+  function apply() {
     setServerError(null);
     const parsed = simpleCorrectionWizardSchema.safeParse({
       incomeCents,
@@ -185,8 +185,7 @@ export function CycleCorrectWizard() {
       setServerError(parsed.error.issues[0]?.message ?? "Revisa los datos.");
       return;
     }
-    setSaving(true);
-    try {
+    startSave(async () => {
       let effectiveCommitmentId = commitmentId;
       if (reservedMode === "create") {
         try {
@@ -239,9 +238,7 @@ export function CycleCorrectWizard() {
         needs_review_before: activeCycle.needsReview === true,
       });
       router.push("/dashboard");
-    } finally {
-      setSaving(false);
-    }
+    });
   }
 
   const assigned = targets.needs + targets.wants + targets.savings;

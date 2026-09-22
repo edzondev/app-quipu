@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useTransition } from "react";
 import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -22,11 +22,10 @@ export function CoachCrisisActions({ options }: Props) {
     api.coachEngine.postponeCommitmentForCycle,
   );
   const snoozeCrisis = useMutation(api.coachEngine.snoozeCrisisCoach);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startSubmit] = useTransition();
 
-  async function handleOption(option: CrisisOption) {
-    setIsSubmitting(true);
-    try {
+  function handleOption(option: CrisisOption) {
+    startSubmit(async () => {
       if (option.id === "cover_from_savings") {
         await applyCover({});
         track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
@@ -45,22 +44,17 @@ export function CoachCrisisActions({ options }: Props) {
           option_id: option.id,
         });
       }
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
-  async function handleSnooze() {
-    setIsSubmitting(true);
-    try {
+  function handleSnooze() {
+    startSubmit(async () => {
       await snoozeCrisis({});
       track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
         action: "dismissed",
         option_id: "snooze",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   if (options.length === 0) {

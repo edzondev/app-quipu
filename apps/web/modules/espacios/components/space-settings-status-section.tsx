@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -30,7 +30,7 @@ type Props = {
 
 export function SpaceSettingsStatusSection({ spaceId, settings }: Props) {
   const reactivate = useReactivateSpace();
-  const [pending, setPending] = useState(false);
+  const [pending, startReactivate] = useTransition();
 
   const canReactivate = canEditSpaceSettingsSection(
     settings.viewerRole,
@@ -39,17 +39,16 @@ export function SpaceSettingsStatusSection({ spaceId, settings }: Props) {
     { canReactivate: settings.canReactivate },
   );
 
-  async function handleReactivate() {
-    setPending(true);
-    try {
-      await reactivate({ spaceId });
-      track(AnalyticsEvents.SPACE_REACTIVATED, { space_id: spaceId });
-      toast.success(ESPACIOS_SETTINGS_REACTIVATED);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
-    }
+  function handleReactivate() {
+    startReactivate(async () => {
+      try {
+        await reactivate({ spaceId });
+        track(AnalyticsEvents.SPACE_REACTIVATED, { space_id: spaceId });
+        toast.success(ESPACIOS_SETTINGS_REACTIVATED);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    });
   }
 
   return (
