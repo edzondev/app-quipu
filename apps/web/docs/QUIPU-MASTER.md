@@ -1434,8 +1434,9 @@ cuenta limpia (borrar el user de Better Auth en Convex dashboard entre runs).
 
 | Workflow | Qué corre | Ramas |
 |---|---|---|
-| `.github/workflows/ci.yml` | `pnpm ci:quality` (Biome format+lint), `pnpm typecheck`, `pnpm test` | `main`, `master`, `chore/quipu-2.0` |
-| `.github/workflows/react-doctor.yml` | complementario | según archivo |
+| `.github/workflows/ci.yml` (raíz del repo) | `pnpm ci:quality` (Biome), `pnpm typecheck:ci` (móvil, `@quipu/convex-api`, `tsc` de `apps/web/convex`), `pnpm test:mobile` (Jest `--watchman=false --coverage=false`) | `master` |
+
+GitHub solo ejecuta workflows en `.github/workflows/` de la raíz. Los archivos que vivían en `apps/web/.github/workflows/` no gateaban PRs y se eliminaron. `pnpm typecheck` de la raíz sigue siendo Turbo e incluye `convex codegen` de web; ese paso no corre en CI porque exige un deployment de Convex.
 
 ### 9.4 Deploy y entorno
 

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # pnpm 11+: this action installs pnpm and Node. Skip its install so CI
+      # can pass --frozen-lockfile explicitly.
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format + lint (Biome)
+        run: pnpm ci:quality
+
+      - name: Typecheck mobile and Convex
+        run: pnpm typecheck:ci
+
+      - name: Mobile unit tests (Jest)
+        run: pnpm test:mobile

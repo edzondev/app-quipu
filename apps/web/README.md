@@ -133,7 +133,7 @@ npx convex dashboard  # UI de Convex
 
 Todo el desarrollo va en la rama de trabajo actual. **Nada mergea a `main` hasta que la app esté completa.** Los P0 bloquean el release del producto, no un merge intermedio.
 
-CI: lint, typecheck y Vitest corren en push/PR a `main`/`master` (ver [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+CI del monorepo: Biome, typecheck de móvil y Convex, y Jest de `@quipu/mobile` corren en push/PR a `master` (ver [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)).
 
 ---
 
