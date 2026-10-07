@@ -42,6 +42,7 @@ function summary(
       },
     ],
     coach: { message: "Vas bien." },
+    commitments: [],
     movements: [
       {
         id: "e1",

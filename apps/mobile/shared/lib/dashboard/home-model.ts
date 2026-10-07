@@ -1,4 +1,14 @@
+import type { api } from "@quipu/convex-api";
+import type { FunctionReturnType } from "convex/server";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+
+type DashboardSummary = NonNullable<
+  FunctionReturnType<typeof api.dashboard.getSummary>
+>;
+type SummaryEnvelope = DashboardSummary["envelopes"][number];
+type SummaryCommitment = DashboardSummary["commitments"][number];
+type SummaryMovement = DashboardSummary["movements"][number];
+type EnvelopeType = HomeEnvelope["tone"];
 
 export type HomeTone = "needs" | "wants" | "savings" | "income";
 export type BadgeTone = "stable" | "attention" | "risk" | "starting";
@@ -55,47 +65,6 @@ export type HomeModel = {
   recentMovements: HomeMovement[];
 };
 
-type EnvelopeSlice = {
-  type: "needs" | "wants" | "savings";
-  allocatedAmount: number;
-  remainingAmount: number;
-  percentRemaining: number;
-};
-
-export type DashboardHomeInput = {
-  profile: { name: string; currencyCode: string };
-  cycle: {
-    startDate: number;
-    daysTotal: number;
-    daysRemaining: number;
-    daysElapsed: number;
-    progressPercent: number;
-  } | null;
-  hero: {
-    displayDailyCents: number;
-    statusBadge: BadgeTone;
-    bodyCopy?: string;
-  } | null;
-  envelopes: EnvelopeSlice[];
-  coach: { message: string } | null;
-  movements: Array<{
-    id: string;
-    kind: "expense" | "income";
-    label: string;
-    amount: number;
-    timestamp: number;
-    envelopeLabel?: string;
-  }>;
-  commitments?: Array<{
-    id: string;
-    name: string;
-    amount: number;
-    nextDueAt: number;
-    daysUntilDue: number;
-    paymentStatus: "paid" | "pending" | "overdue";
-  }>;
-};
-
 const ENVELOPE_LABEL = {
   needs: "Necesidades",
   wants: "Gustos",
@@ -131,12 +100,11 @@ const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
 const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
 const LIMA = "America/Lima";
 
-export function mapDashboardHome(
-  summary: DashboardHomeInput,
-): HomeModel | null {
+export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
   if (!summary.cycle || !summary.hero) return null;
 
-  const envelopes = summary.envelopes.map(mapEnvelopeRow);
+  const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
+  const tone = readBadgeTone(summary.hero.statusBadge);
   const symbol =
     marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ??
     "S/";
@@ -147,9 +115,9 @@ export function mapDashboardHome(
     cycleTotal: summary.cycle.daysTotal,
     daysLeft: summary.cycle.daysRemaining,
     cycleProgress: summary.cycle.progressPercent,
-    badgeLabel: BADGE_LABEL[summary.hero.statusBadge],
-    badgeTone: summary.hero.statusBadge,
-    cycleStatusLabel: CYCLE_STATUS_LABEL[summary.hero.statusBadge],
+    badgeLabel: BADGE_LABEL[tone],
+    badgeTone: tone,
+    cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
     dailyCents: summary.hero.displayDailyCents,
     heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
     currencySymbol: symbol,
@@ -159,12 +127,13 @@ export function mapDashboardHome(
       0,
     ),
     surplusCents: summary.envelopes.reduce(
-      (acc, envelope) => acc + Math.max(0, envelope.remainingAmount),
+      (acc: number, envelope: SummaryEnvelope) =>
+        acc + Math.max(0, envelope.remainingAmount),
       0,
     ),
     coachMessage: summary.coach?.message ?? null,
     commitments: mapCommitments(summary.commitments),
-    recentMovements: summary.movements.map((movement) => ({
+    recentMovements: summary.movements.map((movement: SummaryMovement) => ({
       id: movement.id,
       name: movement.label.trim() || "Movimiento",
       amountCents: movement.amount,
@@ -173,8 +142,9 @@ export function mapDashboardHome(
   };
 }
 
-export function mapEnvelopeRow(envelope: EnvelopeSlice): HomeEnvelope {
-  if (envelope.type === "savings") {
+export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
+  const type = readEnvelopeType(envelope.type);
+  if (type === "savings") {
     return {
       label: ENVELOPE_LABEL.savings,
       shortLabel: SHORT_ENVELOPE_LABEL.savings,
@@ -198,26 +168,31 @@ export function mapEnvelopeRow(envelope: EnvelopeSlice): HomeEnvelope {
       : 0;
 
   return {
-    label: ENVELOPE_LABEL[envelope.type],
-    shortLabel: SHORT_ENVELOPE_LABEL[envelope.type],
+    label: ENVELOPE_LABEL[type],
+    shortLabel: SHORT_ENVELOPE_LABEL[type],
     spentCents,
     remainingCents: envelope.remainingAmount,
     remainingPercent: clampPercent(envelope.percentRemaining),
     totalCents: envelope.allocatedAmount,
     progress,
-    tone: envelope.type,
+    tone: type,
     suffix: `de ${formatGroupedSoles(envelope.allocatedAmount)}`,
   };
 }
 
 function mapCommitments(
-  commitments: DashboardHomeInput["commitments"],
+  commitments: DashboardSummary["commitments"],
 ): HomeCommitment[] {
-  return (commitments ?? [])
-    .filter((commitment) => commitment.paymentStatus !== "paid")
+  return commitments
+    .filter(
+      (commitment: SummaryCommitment) => commitment.paymentStatus !== "paid",
+    )
     .slice()
-    .sort((a, b) => a.daysUntilDue - b.daysUntilDue)
-    .map((commitment) => {
+    .sort(
+      (a: SummaryCommitment, b: SummaryCommitment) =>
+        a.daysUntilDue - b.daysUntilDue,
+    )
+    .map((commitment: SummaryCommitment) => {
       const due = formatCommitmentDue(
         commitment.daysUntilDue,
         commitment.nextDueAt,
@@ -250,6 +225,25 @@ export function formatCommitmentDue(
     .toLocaleLowerCase("es-PE")
     .trim();
   return { label: formatted, tone: "later" };
+}
+
+function readBadgeTone(value: unknown): BadgeTone {
+  if (
+    value === "stable" ||
+    value === "attention" ||
+    value === "risk" ||
+    value === "starting"
+  ) {
+    return value;
+  }
+  return "starting";
+}
+
+function readEnvelopeType(value: unknown): EnvelopeType {
+  if (value === "needs" || value === "wants" || value === "savings") {
+    return value;
+  }
+  return "needs";
 }
 
 function clampPercent(value: number): number {
