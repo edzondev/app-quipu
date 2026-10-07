@@ -1,9 +1,10 @@
 import { BottomSheet, Host } from "@expo/ui";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { ExpenseForm } from "@/shared/components/expenses/expense-form";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useRecentExpenses } from "@/shared/hooks/use-expenses";
+import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import type {
   ExpenseDraftInput,
   ExpenseField,
@@ -15,6 +16,9 @@ import {
   type EditableExpense,
   editableFromRecentExpense,
 } from "@/shared/lib/movements/model";
+import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+
+const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 
 type Session = {
   nonce: number;
@@ -58,6 +62,13 @@ function SheetBody({
 }) {
   const { register, update, remove } = useExpenseActions();
   const recent = useRecentExpenses();
+  const { profile } = useProfileGate();
+  const currencySymbol =
+    marketFromCurrencyCode(
+      profile && typeof profile.currencyCode === "string"
+        ? profile.currencyCode
+        : "",
+    )?.currencySymbol ?? "S/";
   const [editing, setEditing] = useState(expense);
   const [fieldError, setFieldError] = useState<{
     field: ExpenseField;
@@ -66,51 +77,45 @@ function SheetBody({
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setSubmitting] = useState(false);
 
-  const submit = useCallback(
-    async (input: ExpenseDraftInput) => {
-      setFieldError(null);
-      setFormError(null);
-      setSubmitting(true);
-      try {
-        if (editing) await update(editing.id, input);
-        else await register(input);
-        onDone();
-      } catch (error) {
-        if (error instanceof ExpenseValidationError) {
-          setFieldError({ field: error.field, message: error.message });
-        } else {
-          setFormError(readActionError(error, "No se pudo guardar el gasto."));
-        }
-      } finally {
-        setSubmitting(false);
+  async function submit(input: ExpenseDraftInput) {
+    setFieldError(null);
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      if (editing) await update(editing.id, input);
+      else await register(input);
+      onDone();
+    } catch (error) {
+      if (error instanceof ExpenseValidationError) {
+        setFieldError({ field: error.field, message: error.message });
+      } else {
+        setFormError(readActionError(error, "No se pudo guardar el gasto."));
       }
-    },
-    [editing, onDone, register, update],
-  );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
-  const confirmDelete = useCallback(
-    (id: string) => {
-      Alert.alert("Eliminar gasto", "El monto vuelve al sobre.", [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => {
-            void remove(id)
-              .then(() => {
-                if (editing?.id === id) onDone();
-              })
-              .catch((error: unknown) => {
-                setFormError(
-                  readActionError(error, "No se pudo eliminar el gasto."),
-                );
-              });
-          },
+  function confirmDelete(id: string) {
+    Alert.alert("Eliminar gasto", "El monto vuelve al sobre.", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: () => {
+          void remove(id)
+            .then(() => {
+              if (editing?.id === id) onDone();
+            })
+            .catch((error: unknown) => {
+              setFormError(
+                readActionError(error, "No se pudo eliminar el gasto."),
+              );
+            });
         },
-      ]);
-    },
-    [editing?.id, onDone, remove],
-  );
+      },
+    ]);
+  }
 
   return (
     <ScrollView contentContainerClassName="gap-5 p-6 pb-10">
@@ -151,11 +156,12 @@ function SheetBody({
                   {item.description || "Gasto"}
                 </Text>
                 <Text className="font-hanken-semibold text-[15px] text-foreground">
-                  {formatCents(item.amount)}
+                  {formatCents(item.amount, currencySymbol)}
                 </Text>
                 {editable ? (
                   <Pressable
                     accessibilityRole="button"
+                    hitSlop={HIT_SLOP}
                     onPress={() => {
                       setFieldError(null);
                       setFormError(null);
@@ -169,6 +175,7 @@ function SheetBody({
                 ) : null}
                 <Pressable
                   accessibilityRole="button"
+                  hitSlop={HIT_SLOP}
                   onPress={() => confirmDelete(item._id)}
                 >
                   <Text className="font-hanken-semibold text-[14px] text-danger">

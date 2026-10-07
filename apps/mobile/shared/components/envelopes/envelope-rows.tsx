@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import type { HomeEnvelope } from "@/shared/lib/dashboard/home-model";
+import { formatCents } from "@/shared/lib/money";
 
 const TONE_BAR = {
   needs: "bg-needs",
@@ -29,7 +30,7 @@ export function EnvelopeRows({
                 className="font-newsreader text-[16px] text-foreground"
                 selectable
               >
-                {symbol} {envelope.spent.toLocaleString("es-PE")}
+                {formatCents(envelope.spentCents, symbol)}
               </Text>
               <Text className="font-hanken text-[13px] text-foreground/45">
                 {envelope.suffix}

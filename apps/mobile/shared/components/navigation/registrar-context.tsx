@@ -1,11 +1,4 @@
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 import type { EditableExpense } from "@/shared/lib/movements/model";
 import RegistrarSheet from "./registrar-sheet";
 
@@ -33,20 +26,18 @@ export function RegistrarProvider({ children }: { children: ReactNode }) {
   const [isPresented, setPresented] = useState(false);
   const [session, setSession] = useState<Session>({ nonce: 0, expense: null });
 
-  const openCreate = useCallback(() => {
+  function openCreate() {
     setSession((current) => ({ nonce: current.nonce + 1, expense: null }));
     setPresented(true);
-  }, []);
+  }
 
-  const openEdit = useCallback((expense: EditableExpense) => {
+  function openEdit(expense: EditableExpense) {
     setSession((current) => ({ nonce: current.nonce + 1, expense }));
     setPresented(true);
-  }, []);
-
-  const api = useMemo(() => ({ openCreate, openEdit }), [openCreate, openEdit]);
+  }
 
   return (
-    <RegistrarContext.Provider value={api}>
+    <RegistrarContext.Provider value={{ openCreate, openEdit }}>
       {children}
       <RegistrarSheet
         isPresented={isPresented}

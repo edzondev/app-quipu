@@ -1,7 +1,6 @@
 import { api } from "@quipu/convex-api";
 import { useMutation } from "convex/react";
 import type { GenericId } from "convex/values";
-import { useCallback } from "react";
 import {
   type ExpenseDraftInput,
   ExpenseValidationError,
@@ -23,21 +22,11 @@ export function useExpenseActions() {
   const updateExpense = useMutation(api.expenses.updateExpense);
   const deleteExpense = useMutation(api.expenses.deleteExpense);
 
-  const register = useCallback(
-    async (input: ExpenseDraftInput) => registerExpense(parseOrThrow(input)),
-    [registerExpense],
-  );
-
-  const update = useCallback(
-    async (id: string, input: ExpenseDraftInput) =>
+  return {
+    register: async (input: ExpenseDraftInput) =>
+      registerExpense(parseOrThrow(input)),
+    update: async (id: string, input: ExpenseDraftInput) =>
       updateExpense({ expenseId: expenseId(id), ...parseOrThrow(input) }),
-    [updateExpense],
-  );
-
-  const remove = useCallback(
-    (id: string) => deleteExpense({ expenseId: expenseId(id) }),
-    [deleteExpense],
-  );
-
-  return { register, update, remove };
+    remove: (id: string) => deleteExpense({ expenseId: expenseId(id) }),
+  };
 }

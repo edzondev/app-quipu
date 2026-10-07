@@ -1,6 +1,5 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
 import {
   type RecentExpense,
   readRecentExpenses,
@@ -14,10 +13,8 @@ export function useRecentExpenses() {
     isAuthReady ? {} : "skip",
   );
 
-  return useMemo(() => {
-    if (data === undefined) {
-      return { status: "loading" as const, expenses: [] as RecentExpense[] };
-    }
-    return { status: "ready" as const, expenses: readRecentExpenses(data) };
-  }, [data]);
+  if (data === undefined) {
+    return { status: "loading" as const, expenses: [] as RecentExpense[] };
+  }
+  return { status: "ready" as const, expenses: readRecentExpenses(data) };
 }

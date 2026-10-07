@@ -22,6 +22,8 @@ type Props = {
   onDelete?: () => void;
 };
 
+const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+
 const ENVELOPES = [
   { type: "needs", label: "Necesidades" },
   { type: "wants", label: "Gustos" },
@@ -67,6 +69,7 @@ export function ExpenseForm({
             <Pressable
               key={option.type}
               accessibilityRole="button"
+              hitSlop={HIT_SLOP}
               onPress={() => setEnvelopeType(option.type)}
               className={`rounded-full px-3 py-2 ${selected ? "bg-foreground" : "bg-foreground/10"}`}
             >
@@ -89,6 +92,7 @@ export function ExpenseForm({
       ) : null}
       <Pressable
         accessibilityRole="button"
+        hitSlop={HIT_SLOP}
         disabled={isSubmitting}
         onPress={() => onSubmit({ amountRaw, description, envelopeType })}
       >
@@ -97,7 +101,11 @@ export function ExpenseForm({
         </Text>
       </Pressable>
       {onDelete ? (
-        <Pressable accessibilityRole="button" onPress={onDelete}>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={HIT_SLOP}
+          onPress={onDelete}
+        >
           <Text className="font-hanken-semibold text-[15px] text-danger">
             Eliminar
           </Text>

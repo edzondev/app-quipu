@@ -5,6 +5,7 @@ import SignOutButton from "@/shared/components/auth/sign-out-button";
 import { EnvelopeRows } from "@/shared/components/envelopes/envelope-rows";
 import { useHomeModel } from "@/shared/hooks/use-dashboard";
 import type { BadgeTone, HomeTone } from "@/shared/lib/dashboard/home-model";
+import { formatCents } from "@/shared/lib/money";
 
 const TONE_DOT: Record<HomeTone, string> = {
   needs: "bg-needs",
@@ -39,17 +40,17 @@ const BADGE: Record<BadgeTone, { wrap: string; dot: string; text: string }> = {
 const TRACK = "bg-[#E8E6DF]";
 
 function Money({
-  value,
+  cents,
   symbol,
   size = "lg",
   className = "",
 }: {
-  value: number;
+  cents: number;
   symbol: string;
   size?: "lg" | "sm";
   className?: string;
 }) {
-  const [intPart, decPart] = value.toFixed(2).split(".");
+  const [intPart, decPart] = (cents / 100).toFixed(2).split(".");
   const isLg = size === "lg";
   return (
     <Text
@@ -148,7 +149,7 @@ function HomeBody({
       <View className="gap-3">
         <SectionLabel>Puedes gastar hoy</SectionLabel>
         <View className="pt-1">
-          <Money value={model.dailySoles} symbol={model.currencySymbol} />
+          <Money cents={model.dailyCents} symbol={model.currencySymbol} />
         </View>
         <Text className="font-hanken text-[14px] text-foreground/55 -mt-1">
           {model.heroSubtitle}
@@ -173,8 +174,8 @@ function HomeBody({
               className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase"
               selectable
             >
-              {model.currencySymbol}{" "}
-              {model.envelopesBalanceSoles.toLocaleString("es-PE")} en sobres
+              {formatCents(model.envelopesBalanceCents, model.currencySymbol)}{" "}
+              en sobres
             </Text>
           </View>
         </View>
@@ -223,8 +224,8 @@ function HomeBody({
                 className="font-hanken-semibold text-[15px] text-foreground"
                 selectable
               >
-                {movement.tone === "income" ? "+" : "–"} {model.currencySymbol}{" "}
-                {movement.amount.toFixed(2)}
+                {movement.tone === "income" ? "+" : "–"}{" "}
+                {formatCents(movement.amountCents, model.currencySymbol)}
               </Text>
             </View>
           ))

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import AppShell from "@/shared/components/app-shell";
 import AppTittle from "@/shared/components/app-title";
@@ -19,29 +19,28 @@ const TONE_DOT = {
   income: "bg-foreground/35",
 } as const;
 
+const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+
 export default function MovementsPage() {
   const list = useMovements();
   const { openEdit } = useRegistrar();
   const { remove } = useExpenseActions();
   const [error, setError] = useState<string | null>(null);
 
-  const confirmDelete = useCallback(
-    (id: string) => {
-      Alert.alert("Eliminar gasto", "El monto vuelve al sobre.", [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => {
-            void remove(id).catch((cause: unknown) => {
-              setError(readActionError(cause, "No se pudo eliminar el gasto."));
-            });
-          },
+  function confirmDelete(id: string) {
+    Alert.alert("Eliminar gasto", "El monto vuelve al sobre.", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: () => {
+          void remove(id).catch((cause: unknown) => {
+            setError(readActionError(cause, "No se pudo eliminar el gasto."));
+          });
         },
-      ]);
-    },
-    [remove],
-  );
+      },
+    ]);
+  }
 
   return (
     <AppShell>
@@ -111,6 +110,7 @@ function MovementLine({
           {editable ? (
             <Pressable
               accessibilityRole="button"
+              hitSlop={HIT_SLOP}
               onPress={() => onEdit(editable)}
             >
               <Text className="font-hanken-semibold text-[14px] text-stable">
@@ -120,6 +120,7 @@ function MovementLine({
           ) : null}
           <Pressable
             accessibilityRole="button"
+            hitSlop={HIT_SLOP}
             onPress={() => onDelete(row.id)}
           >
             <Text className="font-hanken-semibold text-[14px] text-danger">

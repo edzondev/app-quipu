@@ -1,6 +1,5 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
 import {
   type MovementRow,
   type MovementSource,
@@ -21,26 +20,24 @@ export function useMovements() {
     isAuthReady ? {} : "skip",
   ) as MovementsQuery | undefined;
 
-  return useMemo(() => {
-    if (data === undefined) {
-      return {
-        status: "loading" as const,
-        rows: [] as MovementRow[],
-        currencySymbol: "S/",
-      };
-    }
-    if (!data?.movements) {
-      return {
-        status: "empty" as const,
-        rows: [] as MovementRow[],
-        currencySymbol: "S/",
-      };
-    }
+  if (data === undefined) {
     return {
-      status: "ready" as const,
-      rows: mapMovementRows(data.movements),
-      currencySymbol:
-        marketFromCurrencyCode(data.currencyCode ?? "")?.currencySymbol ?? "S/",
+      status: "loading" as const,
+      rows: [] as MovementRow[],
+      currencySymbol: "S/",
     };
-  }, [data]);
+  }
+  if (!data?.movements) {
+    return {
+      status: "empty" as const,
+      rows: [] as MovementRow[],
+      currencySymbol: "S/",
+    };
+  }
+  return {
+    status: "ready" as const,
+    rows: mapMovementRows(data.movements),
+    currencySymbol:
+      marketFromCurrencyCode(data.currencyCode ?? "")?.currencySymbol ?? "S/",
+  };
 }

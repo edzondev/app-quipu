@@ -82,7 +82,7 @@ describe("mapDashboardHome", () => {
       cycleProgress: 50,
       badgeLabel: "Estable",
       badgeTone: "stable",
-      dailySoles: 42.3,
+      dailyCents: 4230,
       heroSubtitle: "Sin tocar tus compromisos ni tu ahorro.",
       coachMessage: "Vas bien.",
       currencySymbol: "S/",
@@ -123,30 +123,30 @@ describe("mapDashboardHome", () => {
     expect(home?.envelopes).toEqual([
       {
         label: "Necesidades",
-        spent: 1138,
-        total: 1750,
+        spentCents: 113800,
+        totalCents: 175000,
         progress: 65,
         tone: "needs",
         suffix: "de 1,750",
       },
       {
         label: "Gustos",
-        spent: 819,
-        total: 1050,
+        spentCents: 81900,
+        totalCents: 105000,
         progress: 78,
         tone: "wants",
         suffix: "de 1,050",
       },
       {
         label: "Ahorro",
-        spent: 700,
-        total: 700,
+        spentCents: 70000,
+        totalCents: 70000,
         progress: 100,
         tone: "savings",
         suffix: "apartado",
       },
     ]);
-    expect(home?.envelopesBalanceSoles).toBe(1543);
+    expect(home?.envelopesBalanceCents).toBe(154300);
   });
 
   it("acota la barra si el sobre quedó en negativo", () => {
@@ -164,8 +164,8 @@ describe("mapDashboardHome", () => {
       NOW,
     );
     expect(home?.envelopes[0]).toMatchObject({
-      spent: 15,
-      total: 10,
+      spentCents: 1500,
+      totalCents: 1000,
       progress: 100,
     });
   });
@@ -176,7 +176,7 @@ describe("mapDashboardHome", () => {
       {
         id: "e1",
         name: "Menú del día",
-        amount: 15,
+        amountCents: 1500,
         tone: "wants",
       },
     ]);
@@ -198,7 +198,7 @@ describe("mapDashboardHome", () => {
       NOW,
     );
     expect(home?.todayMovements).toEqual([
-      { id: "i1", name: "Sueldo", amount: 3500, tone: "income" },
+      { id: "i1", name: "Sueldo", amountCents: 350000, tone: "income" },
     ]);
   });
 });

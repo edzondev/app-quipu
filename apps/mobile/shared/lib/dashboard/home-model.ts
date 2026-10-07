@@ -5,8 +5,8 @@ export type BadgeTone = "stable" | "attention" | "risk" | "starting";
 
 export type HomeEnvelope = {
   label: string;
-  spent: number;
-  total: number;
+  spentCents: number;
+  totalCents: number;
   progress: number;
   tone: "needs" | "wants" | "savings";
   suffix: string;
@@ -15,7 +15,7 @@ export type HomeEnvelope = {
 export type HomeMovement = {
   id: string;
   name: string;
-  amount: number;
+  amountCents: number;
   tone: HomeTone;
 };
 
@@ -27,11 +27,11 @@ export type HomeModel = {
   cycleProgress: number;
   badgeLabel: string;
   badgeTone: BadgeTone;
-  dailySoles: number;
+  dailyCents: number;
   heroSubtitle: string;
   currencySymbol: string;
   envelopes: HomeEnvelope[];
-  envelopesBalanceSoles: number;
+  envelopesBalanceCents: number;
   coachMessage: string | null;
   todayMovements: HomeMovement[];
 };
@@ -110,16 +110,16 @@ export function mapDashboardHome(
     cycleProgress: summary.cycle.progressPercent,
     badgeLabel: BADGE_LABEL[summary.hero.statusBadge],
     badgeTone: summary.hero.statusBadge,
-    dailySoles: summary.hero.displayDailyCents / 100,
+    dailyCents: summary.hero.displayDailyCents,
     heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
     currencySymbol: symbol,
     envelopes,
-    envelopesBalanceSoles: envelopes.reduce(
+    envelopesBalanceCents: envelopes.reduce(
       (acc, envelope) =>
         acc +
         (envelope.tone === "savings"
-          ? envelope.total
-          : envelope.total - envelope.spent),
+          ? envelope.totalCents
+          : envelope.totalCents - envelope.spentCents),
       0,
     ),
     coachMessage: summary.coach?.message ?? null,
@@ -128,7 +128,7 @@ export function mapDashboardHome(
       .map((movement) => ({
         id: movement.id,
         name: movement.label,
-        amount: movement.amount / 100,
+        amountCents: movement.amount,
         tone: movementTone(movement.kind, movement.envelopeLabel),
       })),
   };
@@ -136,11 +136,10 @@ export function mapDashboardHome(
 
 export function mapEnvelopeRow(envelope: EnvelopeSlice): HomeEnvelope {
   if (envelope.type === "savings") {
-    const apartados = envelope.allocatedAmount / 100;
     return {
       label: ENVELOPE_LABEL.savings,
-      spent: apartados,
-      total: apartados,
+      spentCents: envelope.allocatedAmount,
+      totalCents: envelope.allocatedAmount,
       progress: envelope.allocatedAmount > 0 ? 100 : 0,
       tone: "savings",
       suffix: "apartado",
@@ -158,8 +157,8 @@ export function mapEnvelopeRow(envelope: EnvelopeSlice): HomeEnvelope {
 
   return {
     label: ENVELOPE_LABEL[envelope.type],
-    spent: spentCents / 100,
-    total: envelope.allocatedAmount / 100,
+    spentCents,
+    totalCents: envelope.allocatedAmount,
     progress,
     tone: envelope.type,
     suffix: `de ${formatGroupedSoles(envelope.allocatedAmount)}`,

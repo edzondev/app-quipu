@@ -1,6 +1,5 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
 import {
   type DashboardHomeInput,
   mapDashboardHome,
@@ -19,28 +18,24 @@ export function useDashboardSummary() {
 
 export function useHomeModel() {
   const summary = useDashboardSummary();
-  return useMemo(() => {
-    if (summary === undefined) return { status: "loading" as const };
-    const home = summary ? mapDashboardHome(summary, Date.now()) : null;
-    if (!home) return { status: "empty" as const };
-    return { status: "ready" as const, home };
-  }, [summary]);
+  if (summary === undefined) return { status: "loading" as const };
+  const home = summary ? mapDashboardHome(summary, Date.now()) : null;
+  if (!home) return { status: "empty" as const };
+  return { status: "ready" as const, home };
 }
 
 export function useEnvelopeRows() {
   const summary = useDashboardSummary();
-  return useMemo(() => {
-    if (summary === undefined) return { status: "loading" as const };
-    if (!summary?.cycle) {
-      return { status: "empty" as const, rows: [], currencySymbol: "S/" };
-    }
-    const currencySymbol =
-      marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ??
-      "S/";
-    return {
-      status: "ready" as const,
-      rows: summary.envelopes.map(mapEnvelopeRow),
-      currencySymbol,
-    };
-  }, [summary]);
+  if (summary === undefined) return { status: "loading" as const };
+  if (!summary?.cycle) {
+    return { status: "empty" as const, rows: [], currencySymbol: "S/" };
+  }
+  const currencySymbol =
+    marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ??
+    "S/";
+  return {
+    status: "ready" as const,
+    rows: summary.envelopes.map(mapEnvelopeRow),
+    currencySymbol,
+  };
 }
