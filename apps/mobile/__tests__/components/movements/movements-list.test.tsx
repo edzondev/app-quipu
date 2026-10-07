@@ -1,5 +1,8 @@
 import { act, cleanup, fireEvent, render } from "@testing-library/react-native";
-import { MovementsList } from "@/shared/components/movements/movements-list";
+import {
+  MOVEMENT_SEARCH_DEBOUNCE_MS,
+  MovementsList,
+} from "@/shared/components/movements/movements-list";
 
 const NOW = Date.parse("2026-08-15T21:00:00-05:00");
 const START = Date.parse("2026-08-01T00:00:00-05:00");
@@ -51,6 +54,7 @@ async function type(
 describe("MovementsList", () => {
   afterEach(() => {
     cleanup();
+    jest.useRealTimers();
   });
 
   it("abre el detalle al tocar un gasto y deja el ingreso quieto", async () => {
@@ -127,7 +131,8 @@ describe("MovementsList", () => {
     expect(view.queryByText("—")).toBeNull();
   });
 
-  it("busca por el nombre del movimiento", async () => {
+  it("busca por el nombre del movimiento una vez pasado el debounce", async () => {
+    jest.useFakeTimers();
     const view = await render(
       <MovementsList
         status="ready"
@@ -139,6 +144,13 @@ describe("MovementsList", () => {
     );
     await press(view.getByLabelText("Buscar"));
     await type(view.getByLabelText("Buscar movimientos"), "sueldo");
+
+    expect(view.getByText("Plaza Vea")).toBeTruthy();
+
+    await act(async () => {
+      jest.advanceTimersByTime(MOVEMENT_SEARCH_DEBOUNCE_MS);
+    });
+
     expect(view.getByText("Sueldo")).toBeTruthy();
     expect(view.queryByText("Plaza Vea")).toBeNull();
     expect(view.queryByText("exp_plaza")).toBeNull();

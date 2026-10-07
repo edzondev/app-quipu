@@ -1,3 +1,4 @@
+import { useForm, useStore } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -58,9 +59,15 @@ export function ExpenseDetailForm({
   onBack,
   onDelete,
 }: Props) {
-  const [amountRaw, setAmountRaw] = useState(initial.amountRaw);
-  const [description, setDescription] = useState(initial.description);
-  const [envelopeType, setEnvelopeType] = useState(initial.envelopeType);
+  const form = useForm({
+    defaultValues: initial,
+    onSubmit: ({ value }) => onSubmit(value),
+  });
+  const amountRaw = useStore(form.store, (state) => state.values.amountRaw);
+  const envelopeType = useStore(
+    form.store,
+    (state) => state.values.envelopeType,
+  );
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
   const remaining =
     dailyCents == null
@@ -70,10 +77,6 @@ export function ExpenseDetailForm({
           previewCents(amountRaw),
           previousAmountCents,
         );
-
-  function draft(): ExpenseDraftInput {
-    return { amountRaw, description, envelopeType };
-  }
 
   return (
     <View className="flex-1">
@@ -103,13 +106,18 @@ export function ExpenseDetailForm({
             <Text className="font-newsreader text-[24px] text-foreground/55">
               {currencySymbol}
             </Text>
-            <TextInput
-              value={amountRaw}
-              onChangeText={setAmountRaw}
-              keyboardType="decimal-pad"
-              accessibilityLabel="Monto"
-              className="min-w-[140px] font-newsreader text-[68px] leading-[76px] tracking-tight text-foreground"
-            />
+            <form.Field name="amountRaw">
+              {(field) => (
+                <TextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  onBlur={field.handleBlur}
+                  keyboardType="decimal-pad"
+                  accessibilityLabel="Monto"
+                  className="min-w-[140px] font-newsreader text-[68px] leading-[76px] tracking-tight text-foreground"
+                />
+              )}
+            </form.Field>
           </View>
           {remaining == null ? null : (
             <Text className="mt-3.5 font-geist-mono text-[12.5px] uppercase text-foreground/45">
@@ -123,15 +131,20 @@ export function ExpenseDetailForm({
 
         <View className="mt-8">
           <DetailRow label="Comercio">
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Opcional"
-              placeholderTextColor="#8C8880"
-              maxLength={120}
-              accessibilityLabel="Comercio"
-              className="min-w-[140px] flex-1 text-right font-hanken-semibold text-[15.5px] text-foreground"
-            />
+            <form.Field name="description">
+              {(field) => (
+                <TextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  onBlur={field.handleBlur}
+                  placeholder="Opcional"
+                  placeholderTextColor="#8C8880"
+                  maxLength={120}
+                  accessibilityLabel="Comercio"
+                  className="min-w-[140px] flex-1 text-right font-hanken-semibold text-[15.5px] text-foreground"
+                />
+              )}
+            </form.Field>
           </DetailRow>
           {fieldError?.field === "description" ? (
             <ErrorText message={fieldError.message} />
@@ -162,7 +175,7 @@ export function ExpenseDetailForm({
                 value={envelopeType}
                 disabled={isSubmitting}
                 onChange={(type) => {
-                  setEnvelopeType(type);
+                  form.setFieldValue("envelopeType", type);
                   setEnvelopeOpen(false);
                 }}
               />
@@ -195,8 +208,11 @@ export function ExpenseDetailForm({
                   key={chip.id}
                   accessibilityRole="button"
                   onPress={() => {
-                    setDescription(chip.label);
-                    setAmountRaw(formatKeypadAmount(chip.amountCents));
+                    form.setFieldValue("description", chip.label);
+                    form.setFieldValue(
+                      "amountRaw",
+                      formatKeypadAmount(chip.amountCents),
+                    );
                   }}
                   className="rounded-full border border-line px-3.5 py-[9px]"
                 >
@@ -225,7 +241,7 @@ export function ExpenseDetailForm({
         <Pressable
           accessibilityRole="button"
           disabled={isSubmitting}
-          onPress={() => onSubmit(draft())}
+          onPress={() => void form.handleSubmit()}
           className={`items-center rounded-[13px] bg-foreground py-4 ${
             isSubmitting ? "opacity-60" : ""
           }`}

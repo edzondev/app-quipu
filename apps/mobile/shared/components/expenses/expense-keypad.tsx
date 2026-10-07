@@ -46,7 +46,7 @@ export function ExpenseKeypad({
             accessibilityRole="button"
             accessibilityLabel={key === "backspace" ? "Borrar" : key}
             onPress={() => onKey(key)}
-            className="items-center py-3.5"
+            className="items-center py-3.5 active:opacity-40"
           >
             {key === "backspace" ? (
               <Backspace size={22} color="#6B6B6B" />

@@ -1,4 +1,4 @@
-import { BottomSheet, Host } from "@expo/ui";
+import { BottomSheet, RNHostView } from "@expo/ui";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
@@ -26,17 +26,17 @@ export default function RegistrarSheet({
   onDismiss,
 }: Props) {
   return (
-    <Host>
-      <BottomSheet
-        isPresented={isPresented}
-        onDismiss={onDismiss}
-        snapPoints={["full"]}
-        contentPadding={0}
-        containerColor="#FBFAF7"
-      >
+    <BottomSheet
+      isPresented={isPresented}
+      onDismiss={onDismiss}
+      snapPoints={["full"]}
+      contentPadding={0}
+      containerColor="#FBFAF7"
+    >
+      <RNHostView>
         <SheetBody key={session.nonce} onDone={onDismiss} />
-      </BottomSheet>
-    </Host>
+      </RNHostView>
+    </BottomSheet>
   );
 }
 

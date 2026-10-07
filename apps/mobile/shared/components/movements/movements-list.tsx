@@ -1,5 +1,7 @@
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import Animated, { Easing, FadeInDown } from "react-native-reanimated";
 import { Search } from "reicon-react-native/icons/Search";
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
 import {
@@ -10,6 +12,13 @@ import {
   type MovementTone,
   presentMovementList,
 } from "@/shared/lib/movements/model";
+
+export const MOVEMENT_SEARCH_DEBOUNCE_MS = 300;
+
+// Entrada mínima del buscador: aparece con un fundido y baja 6 px.
+const SEARCH_ENTERING = FadeInDown.duration(180)
+  .easing(Easing.bezier(0.23, 1, 0.32, 1))
+  .withInitialValues({ opacity: 0, transform: [{ translateY: -6 }] });
 
 const EMPTY_TITLE = "Todavía no hay nada registrado en este ciclo.";
 const EMPTY_BODY =
@@ -76,26 +85,15 @@ export function MovementsList({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Buscar"
-          hitSlop={8}
+          hitSlop={12}
           onPress={toggleSearch}
+          className="active:scale-90 active:opacity-60"
         >
           <Search size={20} color="#6B6B6B" />
         </Pressable>
       </View>
 
-      {searchOpen ? (
-        <TextInput
-          accessibilityLabel="Buscar movimientos"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoFocus
-          className="mt-3 border-b border-line pb-2 font-hanken text-[16px] text-foreground"
-          onChangeText={setQuery}
-          placeholder="Buscar"
-          placeholderTextColor="#8C8880"
-          value={query}
-        />
-      ) : null}
+      {searchOpen ? <SearchField onChange={setQuery} /> : null}
 
       {model ? (
         <Text className="mt-2.5 font-geist-mono text-[11px] uppercase tracking-[0.12em] text-foreground/45">
@@ -149,6 +147,37 @@ export function MovementsList({
         </View>
       ))}
     </ScrollView>
+  );
+}
+
+function SearchField({ onChange }: { onChange: (query: string) => void }) {
+  const form = useForm({ defaultValues: { query: "" } });
+
+  return (
+    <Animated.View entering={SEARCH_ENTERING}>
+      <form.Field
+        name="query"
+        listeners={{
+          onChange: ({ value }) => onChange(value),
+          onChangeDebounceMs: MOVEMENT_SEARCH_DEBOUNCE_MS,
+        }}
+      >
+        {(field) => (
+          <TextInput
+            accessibilityLabel="Buscar movimientos"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus
+            className="mt-3 border-b border-line pb-2 font-hanken text-[16px] text-foreground"
+            onChangeText={field.handleChange}
+            onBlur={field.handleBlur}
+            placeholder="Buscar"
+            placeholderTextColor="#8C8880"
+            value={field.state.value}
+          />
+        )}
+      </form.Field>
+    </Animated.View>
   );
 }
 
@@ -212,9 +241,8 @@ function MovementRow({
         </View>
       </View>
       <Text
-        className={`font-hanken-semibold text-[14.5px] ${AMOUNT[row.amountTone]}`}
+        className={`font-hanken-semibold text-[14.5px] tabular-nums ${AMOUNT[row.amountTone]}`}
         selectable
-        style={{ fontVariant: ["tabular-nums"] }}
       >
         {row.amountLabel}
       </Text>

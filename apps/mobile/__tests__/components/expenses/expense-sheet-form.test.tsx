@@ -54,15 +54,35 @@ describe("ExpenseSheetForm", () => {
     await fireEvent.press(view.getByText("1"));
     await fireEvent.press(view.getByText("5"));
     await fireEvent.press(view.getByLabelText("Borrar"));
-    await fireEvent.press(view.getByText("Ahorro"));
+    await fireEvent.press(view.getByText("Necesidades"));
     await fireEvent.press(view.getByLabelText("Abrir detalle del gasto"));
 
     expect(view.queryByText(/HOY QUEDA/)).toBeNull();
     expect(onOpenDetail).toHaveBeenCalledWith({
       amountRaw: "0.01",
       description: "",
-      envelopeType: "savings",
+      envelopeType: "needs",
     });
+  });
+
+  it("no ofrece Ahorro como sobre de gasto y cancela", async () => {
+    const onCancel = jest.fn();
+    const view = await render(
+      <ExpenseSheetForm
+        currencySymbol="S/"
+        dailyCents={null}
+        onSubmit={jest.fn()}
+        onCancel={onCancel}
+        onOpenDetail={jest.fn()}
+      />,
+    );
+
+    expect(view.queryByText("Ahorro")).toBeNull();
+    expect(view.getByText("Necesidades")).toBeTruthy();
+    expect(view.getByText("Gustos")).toBeTruthy();
+
+    await fireEvent.press(view.getByLabelText("Cancelar"));
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it("muestra el error del campo", async () => {

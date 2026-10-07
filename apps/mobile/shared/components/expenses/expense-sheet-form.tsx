@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Camera } from "reicon-react-native/icons/Camera";
 import type {
   ExpenseDraftInput,
@@ -18,6 +17,20 @@ import { EnvelopeChoices } from "./envelope-choices";
 import { ExpenseKeypad } from "./expense-keypad";
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+
+type SheetValues = Omit<ExpenseDraftInput, "amountRaw"> & {
+  amountCents: number;
+};
+
+const DEFAULT_VALUES: SheetValues = {
+  amountCents: 0,
+  description: "",
+  envelopeType: null,
+};
+
+function toDraft({ amountCents, ...rest }: SheetValues): ExpenseDraftInput {
+  return { amountRaw: formatKeypadAmount(amountCents), ...rest };
+}
 
 type Props = {
   currencySymbol: string;
@@ -40,36 +53,27 @@ export function ExpenseSheetForm({
   onCancel,
   onOpenDetail,
 }: Props) {
-  const [amountCents, setAmountCents] = useState(0);
-  const [description, setDescription] = useState("");
-  const [envelopeType, setEnvelopeType] =
-    useState<ExpenseDraftInput["envelopeType"]>(null);
+  const form = useForm({
+    defaultValues: DEFAULT_VALUES,
+    onSubmit: ({ value }) => onSubmit(toDraft(value)),
+  });
+  const amountCents = useStore(form.store, (state) => state.values.amountCents);
   const figures = keypadFigures(amountCents);
   const remaining =
     dailyCents == null ? null : remainingAfterExpense(dailyCents, amountCents);
 
-  function draft(): ExpenseDraftInput {
-    return {
-      amountRaw: formatKeypadAmount(amountCents),
-      description,
-      envelopeType,
-    };
-  }
-
   return (
-    <KeyboardAwareScrollView
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={24}
-      contentContainerClassName="px-[22px] pb-8"
-    >
+    <View className="flex-1 px-[22px] pt-1.5 pb-8">
       <View className="flex-row items-center justify-between">
         <Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
           NUEVO GASTO
         </Text>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Cancelar"
           hitSlop={HIT_SLOP}
           onPress={onCancel}
+          className="active:opacity-60"
         >
           <Text className="font-hanken-semibold text-[13px] text-foreground/45">
             Cancelar
@@ -93,36 +97,46 @@ export function ExpenseSheetForm({
         <ErrorText message={fieldError.message} />
       ) : null}
 
-      <View className="mt-5 flex-row items-center border-b border-line pb-3">
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Comercio"
-          placeholderTextColor="#8C8880"
-          maxLength={120}
-          accessibilityLabel="Comercio"
-          className="flex-1 font-hanken text-[16px] text-foreground"
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Abrir detalle del gasto"
-          hitSlop={HIT_SLOP}
-          onPress={() => onOpenDetail(draft())}
-        >
-          <Camera size={19} color="#9A968C" />
-        </Pressable>
-      </View>
+      <form.Field name="description">
+        {(field) => (
+          <View className="mt-5 flex-row items-center border-b border-line pb-3">
+            <TextInput
+              value={field.state.value}
+              onChangeText={field.handleChange}
+              onBlur={field.handleBlur}
+              placeholder="Comercio"
+              placeholderTextColor="#8C8880"
+              maxLength={120}
+              accessibilityLabel="Comercio"
+              className="flex-1 font-hanken text-[16px] text-foreground"
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Abrir detalle del gasto"
+              hitSlop={HIT_SLOP}
+              onPress={() => onOpenDetail(toDraft(form.state.values))}
+              className="active:opacity-60"
+            >
+              <Camera size={19} color="#9A968C" />
+            </Pressable>
+          </View>
+        )}
+      </form.Field>
       {fieldError?.field === "description" ? (
         <ErrorText message={fieldError.message} />
       ) : null}
 
-      <View className="mt-3.5">
-        <EnvelopeChoices
-          value={envelopeType}
-          disabled={isSubmitting}
-          onChange={setEnvelopeType}
-        />
-      </View>
+      <form.Field name="envelopeType">
+        {(field) => (
+          <View className="mt-3.5">
+            <EnvelopeChoices
+              value={field.state.value}
+              disabled={isSubmitting}
+              onChange={field.handleChange}
+            />
+          </View>
+        )}
+      </form.Field>
       {fieldError?.field === "envelopeType" ? (
         <ErrorText message={fieldError.message} />
       ) : null}
@@ -136,7 +150,7 @@ export function ExpenseSheetForm({
       <View className="mt-4">
         <ExpenseKeypad
           amountCents={amountCents}
-          onAmountChange={setAmountCents}
+          onAmountChange={(cents) => form.setFieldValue("amountCents", cents)}
         />
       </View>
 
@@ -144,8 +158,8 @@ export function ExpenseSheetForm({
       <Pressable
         accessibilityRole="button"
         disabled={isSubmitting}
-        onPress={() => onSubmit(draft())}
-        className={`mt-2 items-center rounded-[13px] bg-foreground py-4 ${
+        onPress={() => void form.handleSubmit()}
+        className={`mt-2 items-center rounded-[13px] bg-foreground py-4 active:opacity-80 ${
           isSubmitting ? "opacity-60" : ""
         }`}
       >
@@ -153,7 +167,7 @@ export function ExpenseSheetForm({
           {isSubmitting ? "Guardando…" : "Registrar gasto"}
         </Text>
       </Pressable>
-    </KeyboardAwareScrollView>
+    </View>
   );
 }
 
