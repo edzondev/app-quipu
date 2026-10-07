@@ -164,9 +164,7 @@ export const getRecentExpenses = query({
 
     const expenses = await ctx.db
       .query("expenses")
-      .withIndex("by_cycle_envelope_time", (q) =>
-        q.eq("cycleId", activeCycle._id),
-      )
+      .withIndex("by_cycle_time", (q) => q.eq("cycleId", activeCycle._id))
       .order("desc")
       .take(RECENT_EXPENSES_LIMIT);
 
