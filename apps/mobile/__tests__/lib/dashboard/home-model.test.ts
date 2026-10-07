@@ -1,7 +1,6 @@
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
-const NOW = Date.UTC(2026, 7, 15, 17, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
 const YESTERDAY_MOVE = Date.UTC(2026, 7, 14, 15, 0, 0);
 
@@ -43,6 +42,7 @@ function summary(
       },
     ],
     coach: { message: "Vas bien." },
+    commitments: [],
     movements: [
       {
         id: "e1",
@@ -67,13 +67,11 @@ function summary(
 
 describe("mapDashboardHome", () => {
   it("devuelve null si no hay ciclo activo", () => {
-    expect(
-      mapDashboardHome(summary({ cycle: null, hero: null }), NOW),
-    ).toBeNull();
+    expect(mapDashboardHome(summary({ cycle: null, hero: null }))).toBeNull();
   });
 
   it("mapea el héroe, el ciclo y el coach sin datos ficticios", () => {
-    const home = mapDashboardHome(summary(), NOW);
+    const home = mapDashboardHome(summary());
     expect(home).toMatchObject({
       cycleLabel: "Ciclo agosto",
       cycleDay: 15,
@@ -82,10 +80,13 @@ describe("mapDashboardHome", () => {
       cycleProgress: 50,
       badgeLabel: "Estable",
       badgeTone: "stable",
+      cycleStatusLabel: "Ciclo estable",
       dailyCents: 4230,
       heroSubtitle: "Sin tocar tus compromisos ni tu ahorro.",
       coachMessage: "Vas bien.",
       currencySymbol: "S/",
+      surplusCents: 154300,
+      commitments: [],
     });
   });
 
@@ -98,7 +99,6 @@ describe("mapDashboardHome", () => {
             statusBadge: "risk",
           },
         }),
-        NOW,
       )?.badgeLabel,
     ).toBe("En riesgo");
     expect(
@@ -110,20 +110,23 @@ describe("mapDashboardHome", () => {
             bodyCopy: "Registra tu primer gasto.",
           },
         }),
-        NOW,
       ),
     ).toMatchObject({
       badgeLabel: "Recién empiezas",
+      cycleStatusLabel: "Recién empiezas",
       heroSubtitle: "Registra tu primer gasto.",
     });
   });
 
   it("muestra gastado contra asignado y deja el ahorro como apartado", () => {
-    const home = mapDashboardHome(summary(), NOW);
+    const home = mapDashboardHome(summary());
     expect(home?.envelopes).toEqual([
       {
         label: "Necesidades",
+        shortLabel: "Necesid.",
         spentCents: 113800,
+        remainingCents: 61200,
+        remainingPercent: 35,
         totalCents: 175000,
         progress: 65,
         tone: "needs",
@@ -131,7 +134,10 @@ describe("mapDashboardHome", () => {
       },
       {
         label: "Gustos",
+        shortLabel: "Gustos",
         spentCents: 81900,
+        remainingCents: 23100,
+        remainingPercent: 22,
         totalCents: 105000,
         progress: 78,
         tone: "wants",
@@ -139,7 +145,10 @@ describe("mapDashboardHome", () => {
       },
       {
         label: "Ahorro",
+        shortLabel: "Ahorro",
         spentCents: 70000,
+        remainingCents: 70000,
+        remainingPercent: 100,
         totalCents: 70000,
         progress: 100,
         tone: "savings",
@@ -161,23 +170,31 @@ describe("mapDashboardHome", () => {
           },
         ],
       }),
-      NOW,
     );
     expect(home?.envelopes[0]).toMatchObject({
       spentCents: 1500,
+      remainingCents: -500,
+      remainingPercent: 0,
       totalCents: 1000,
       progress: 100,
     });
+    expect(home?.surplusCents).toBe(0);
   });
 
-  it("deja en Hoy solo los movimientos del día en Lima", () => {
-    const home = mapDashboardHome(summary(), NOW);
-    expect(home?.todayMovements).toEqual([
+  it("lista los movimientos recientes del resumen", () => {
+    const home = mapDashboardHome(summary());
+    expect(home?.recentMovements).toEqual([
       {
         id: "e1",
         name: "Menú del día",
         amountCents: 1500,
         tone: "wants",
+      },
+      {
+        id: "e0",
+        name: "Ayer",
+        amountCents: 500,
+        tone: "needs",
       },
     ]);
   });
@@ -195,10 +212,74 @@ describe("mapDashboardHome", () => {
           },
         ],
       }),
-      NOW,
     );
-    expect(home?.todayMovements).toEqual([
+    expect(home?.recentMovements).toEqual([
       { id: "i1", name: "Sueldo", amountCents: 350000, tone: "income" },
     ]);
+  });
+
+  it("arma los próximos compromisos sin filas pagadas ni montos vacíos", () => {
+    const home = mapDashboardHome(
+      summary({
+        commitments: [
+          {
+            id: "paid",
+            name: "Netflix",
+            amount: 3000,
+            nextDueAt: Date.UTC(2026, 7, 16, 17, 0, 0),
+            daysUntilDue: 1,
+            paymentStatus: "paid",
+          },
+          {
+            id: "rent",
+            name: "Alquiler",
+            amount: 110000,
+            nextDueAt: Date.UTC(2026, 7, 16, 17, 0, 0),
+            daysUntilDue: 1,
+            paymentStatus: "pending",
+          },
+          {
+            id: "light",
+            name: "Luz del Sur",
+            amount: 9600,
+            nextDueAt: Date.UTC(2026, 7, 22, 17, 0, 0),
+            daysUntilDue: 7,
+            paymentStatus: "pending",
+          },
+          {
+            id: "late",
+            name: "Agua",
+            amount: 4500,
+            nextDueAt: Date.UTC(2026, 7, 10, 17, 0, 0),
+            daysUntilDue: -5,
+            paymentStatus: "overdue",
+          },
+        ],
+      }),
+    );
+    expect(home?.commitments).toEqual([
+      {
+        id: "late",
+        name: "Agua",
+        amountCents: 4500,
+        dueLabel: "vencido",
+        dueTone: "soon",
+      },
+      {
+        id: "rent",
+        name: "Alquiler",
+        amountCents: 110000,
+        dueLabel: "mañana",
+        dueTone: "soon",
+      },
+      {
+        id: "light",
+        name: "Luz del Sur",
+        amountCents: 9600,
+        dueLabel: "22 ago",
+        dueTone: "later",
+      },
+    ]);
+    expect(JSON.stringify(home?.commitments)).not.toContain("—");
   });
 });

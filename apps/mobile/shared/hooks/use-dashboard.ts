@@ -1,7 +1,6 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
 import {
-  type DashboardHomeInput,
   mapDashboardHome,
   mapEnvelopeRow,
 } from "@/shared/lib/dashboard/home-model";
@@ -10,16 +9,13 @@ import { useProfileGate } from "./use-profile-gate";
 
 export function useDashboardSummary() {
   const { isAuthReady } = useProfileGate();
-  return useQuery(api.dashboard.getSummary, isAuthReady ? {} : "skip") as
-    | DashboardHomeInput
-    | null
-    | undefined;
+  return useQuery(api.dashboard.getSummary, isAuthReady ? {} : "skip");
 }
 
 export function useHomeModel() {
   const summary = useDashboardSummary();
   if (summary === undefined) return { status: "loading" as const };
-  const home = summary ? mapDashboardHome(summary, Date.now()) : null;
+  const home = summary ? mapDashboardHome(summary) : null;
   if (!home) return { status: "empty" as const };
   return { status: "ready" as const, home };
 }

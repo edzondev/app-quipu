@@ -1,11 +1,25 @@
+import type { api } from "@quipu/convex-api";
+import type { FunctionReturnType } from "convex/server";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+
+type DashboardSummary = NonNullable<
+  FunctionReturnType<typeof api.dashboard.getSummary>
+>;
+type SummaryEnvelope = DashboardSummary["envelopes"][number];
+type SummaryCommitment = DashboardSummary["commitments"][number];
+type SummaryMovement = DashboardSummary["movements"][number];
+type EnvelopeType = HomeEnvelope["tone"];
 
 export type HomeTone = "needs" | "wants" | "savings" | "income";
 export type BadgeTone = "stable" | "attention" | "risk" | "starting";
 
 export type HomeEnvelope = {
   label: string;
+  shortLabel: string;
   spentCents: number;
+  remainingCents: number;
+  /** 0–100, share of the allocation that is still in the envelope. */
+  remainingPercent: number;
   totalCents: number;
   progress: number;
   tone: "needs" | "wants" | "savings";
@@ -19,6 +33,16 @@ export type HomeMovement = {
   tone: HomeTone;
 };
 
+export type DueTone = "soon" | "later";
+
+export type HomeCommitment = {
+  id: string;
+  name: string;
+  amountCents: number;
+  dueLabel: string;
+  dueTone: DueTone;
+};
+
 export type HomeModel = {
   cycleLabel: string;
   cycleDay: number;
@@ -27,46 +51,18 @@ export type HomeModel = {
   cycleProgress: number;
   badgeLabel: string;
   badgeTone: BadgeTone;
+  /** Right-column status in Home 1d, e.g. "Ciclo estable". */
+  cycleStatusLabel: string;
   dailyCents: number;
   heroSubtitle: string;
   currencySymbol: string;
   envelopes: HomeEnvelope[];
   envelopesBalanceCents: number;
+  /** Sum of remaining envelope balances, matching dashboard surplus projection. */
+  surplusCents: number;
   coachMessage: string | null;
-  todayMovements: HomeMovement[];
-};
-
-type EnvelopeSlice = {
-  type: "needs" | "wants" | "savings";
-  allocatedAmount: number;
-  remainingAmount: number;
-  percentRemaining: number;
-};
-
-export type DashboardHomeInput = {
-  profile: { name: string; currencyCode: string };
-  cycle: {
-    startDate: number;
-    daysTotal: number;
-    daysRemaining: number;
-    daysElapsed: number;
-    progressPercent: number;
-  } | null;
-  hero: {
-    displayDailyCents: number;
-    statusBadge: BadgeTone;
-    bodyCopy?: string;
-  } | null;
-  envelopes: EnvelopeSlice[];
-  coach: { message: string } | null;
-  movements: Array<{
-    id: string;
-    kind: "expense" | "income";
-    label: string;
-    amount: number;
-    timestamp: number;
-    envelopeLabel?: string;
-  }>;
+  commitments: HomeCommitment[];
+  recentMovements: HomeMovement[];
 };
 
 const ENVELOPE_LABEL = {
@@ -82,6 +78,19 @@ const BADGE_LABEL: Record<BadgeTone, string> = {
   starting: "Recién empiezas",
 };
 
+const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
+  stable: "Ciclo estable",
+  attention: "Ciclo en atención",
+  risk: "Ciclo en riesgo",
+  starting: "Recién empiezas",
+};
+
+const SHORT_ENVELOPE_LABEL = {
+  needs: "Necesid.",
+  wants: "Gustos",
+  savings: "Ahorro",
+} as const;
+
 const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
   Necesidades: "needs",
   Gustos: "wants",
@@ -91,13 +100,11 @@ const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
 const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
 const LIMA = "America/Lima";
 
-export function mapDashboardHome(
-  summary: DashboardHomeInput,
-  now: number,
-): HomeModel | null {
+export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
   if (!summary.cycle || !summary.hero) return null;
 
-  const envelopes = summary.envelopes.map(mapEnvelopeRow);
+  const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
+  const tone = readBadgeTone(summary.hero.statusBadge);
   const symbol =
     marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ??
     "S/";
@@ -108,37 +115,42 @@ export function mapDashboardHome(
     cycleTotal: summary.cycle.daysTotal,
     daysLeft: summary.cycle.daysRemaining,
     cycleProgress: summary.cycle.progressPercent,
-    badgeLabel: BADGE_LABEL[summary.hero.statusBadge],
-    badgeTone: summary.hero.statusBadge,
+    badgeLabel: BADGE_LABEL[tone],
+    badgeTone: tone,
+    cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
     dailyCents: summary.hero.displayDailyCents,
     heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
     currencySymbol: symbol,
     envelopes,
     envelopesBalanceCents: envelopes.reduce(
-      (acc, envelope) =>
-        acc +
-        (envelope.tone === "savings"
-          ? envelope.totalCents
-          : envelope.totalCents - envelope.spentCents),
+      (acc, envelope) => acc + Math.max(0, envelope.remainingCents),
+      0,
+    ),
+    surplusCents: summary.envelopes.reduce(
+      (acc: number, envelope: SummaryEnvelope) =>
+        acc + Math.max(0, envelope.remainingAmount),
       0,
     ),
     coachMessage: summary.coach?.message ?? null,
-    todayMovements: summary.movements
-      .filter((movement) => isSameLimaDay(movement.timestamp, now))
-      .map((movement) => ({
-        id: movement.id,
-        name: movement.label,
-        amountCents: movement.amount,
-        tone: movementTone(movement.kind, movement.envelopeLabel),
-      })),
+    commitments: mapCommitments(summary.commitments),
+    recentMovements: summary.movements.map((movement: SummaryMovement) => ({
+      id: movement.id,
+      name: movement.label.trim() || "Movimiento",
+      amountCents: movement.amount,
+      tone: movementTone(movement.kind, movement.envelopeLabel),
+    })),
   };
 }
 
-export function mapEnvelopeRow(envelope: EnvelopeSlice): HomeEnvelope {
-  if (envelope.type === "savings") {
+export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
+  const type = readEnvelopeType(envelope.type);
+  if (type === "savings") {
     return {
       label: ENVELOPE_LABEL.savings,
+      shortLabel: SHORT_ENVELOPE_LABEL.savings,
       spentCents: envelope.allocatedAmount,
+      remainingCents: envelope.remainingAmount,
+      remainingPercent: clampPercent(envelope.percentRemaining),
       totalCents: envelope.allocatedAmount,
       progress: envelope.allocatedAmount > 0 ? 100 : 0,
       tone: "savings",
@@ -156,13 +168,87 @@ export function mapEnvelopeRow(envelope: EnvelopeSlice): HomeEnvelope {
       : 0;
 
   return {
-    label: ENVELOPE_LABEL[envelope.type],
+    label: ENVELOPE_LABEL[type],
+    shortLabel: SHORT_ENVELOPE_LABEL[type],
     spentCents,
+    remainingCents: envelope.remainingAmount,
+    remainingPercent: clampPercent(envelope.percentRemaining),
     totalCents: envelope.allocatedAmount,
     progress,
-    tone: envelope.type,
+    tone: type,
     suffix: `de ${formatGroupedSoles(envelope.allocatedAmount)}`,
   };
+}
+
+function mapCommitments(
+  commitments: DashboardSummary["commitments"],
+): HomeCommitment[] {
+  return commitments
+    .filter(
+      (commitment: SummaryCommitment) => commitment.paymentStatus !== "paid",
+    )
+    .slice()
+    .sort(
+      (a: SummaryCommitment, b: SummaryCommitment) =>
+        a.daysUntilDue - b.daysUntilDue,
+    )
+    .map((commitment: SummaryCommitment) => {
+      const due = formatCommitmentDue(
+        commitment.daysUntilDue,
+        commitment.nextDueAt,
+      );
+      return {
+        id: commitment.id,
+        name: commitment.name.trim() || "Compromiso",
+        amountCents: commitment.amount,
+        dueLabel: due.label,
+        dueTone: due.tone,
+      };
+    });
+}
+
+export function formatCommitmentDue(
+  daysUntilDue: number,
+  nextDueAt: number,
+): { label: string; tone: DueTone } {
+  if (daysUntilDue < 0) return { label: "vencido", tone: "soon" };
+  if (daysUntilDue === 0) return { label: "hoy", tone: "soon" };
+  if (daysUntilDue === 1) return { label: "mañana", tone: "soon" };
+  const formatted = new Intl.DateTimeFormat("es-PE", {
+    day: "numeric",
+    month: "short",
+    timeZone: LIMA,
+  })
+    .format(new Date(nextDueAt))
+    .replaceAll(".", "")
+    .replace(/\s+de\s+/i, " ")
+    .toLocaleLowerCase("es-PE")
+    .trim();
+  return { label: formatted, tone: "later" };
+}
+
+function readBadgeTone(value: unknown): BadgeTone {
+  if (
+    value === "stable" ||
+    value === "attention" ||
+    value === "risk" ||
+    value === "starting"
+  ) {
+    return value;
+  }
+  return "starting";
+}
+
+function readEnvelopeType(value: unknown): EnvelopeType {
+  if (value === "needs" || value === "wants" || value === "savings") {
+    return value;
+  }
+  return "needs";
+}
+
+function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
 }
 
 function cycleLabel(startDate: number): string {
@@ -181,16 +267,6 @@ function movementTone(
 ): HomeTone {
   if (kind !== "expense") return "income";
   return (envelopeLabel && TONE_BY_ENVELOPE_LABEL[envelopeLabel]) || "income";
-}
-
-function isSameLimaDay(a: number, b: number): boolean {
-  const format = new Intl.DateTimeFormat("en-CA", {
-    timeZone: LIMA,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return format.format(a) === format.format(b);
 }
 
 function formatGroupedSoles(cents: number): string {
