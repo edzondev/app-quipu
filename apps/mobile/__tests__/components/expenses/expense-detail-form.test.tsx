@@ -54,7 +54,7 @@ describe("ExpenseDetailForm", () => {
     });
   });
 
-  it("edita el sobre, muestra el id y permite eliminar", async () => {
+  it("edita el sobre y permite eliminar", async () => {
     const onSubmit = jest.fn();
     const onDelete = jest.fn();
     const view = await render(
@@ -69,7 +69,6 @@ describe("ExpenseDetailForm", () => {
           envelopeType: "wants",
         }}
         timestamp={AUGUST_15}
-        envelopeId="env_wants"
         frecuentes={[]}
         onSubmit={onSubmit}
         onBack={jest.fn()}
@@ -78,8 +77,8 @@ describe("ExpenseDetailForm", () => {
     );
 
     expect(view.getByText("EDITAR GASTO")).toBeTruthy();
-    expect(view.getByText("Id de sobre")).toBeTruthy();
-    expect(view.getByText("env_wants")).toBeTruthy();
+    expect(view.queryByText("Id de sobre")).toBeNull();
+    expect(view.queryByText("env_wants")).toBeNull();
     expect(view.getByText("HOY QUEDARÍA S/ 42.30")).toBeTruthy();
     expect(view.queryByText("FRECUENTES")).toBeNull();
 

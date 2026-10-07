@@ -18,8 +18,6 @@ export type ExpenseView = {
   description: string;
   envelopeType: ExpenseEnvelopeChoice | null;
   timestamp: number;
-  /** Id de sobre devuelto por getRecentExpenses; no está en el canon 1f. */
-  envelopeId?: string;
 };
 
 export type ExpenseLookup =
@@ -35,7 +33,6 @@ export type FrequentExpense = {
 
 export function lookupExpense(
   movements: CycleMovementsResult | undefined,
-  recent: RecentExpensesResult | undefined,
   expenseId: string,
 ): ExpenseLookup {
   if (movements === undefined) return { status: "loading" };
@@ -59,7 +56,6 @@ export function lookupExpense(
           typeof movement.timestamp === "number"
             ? movement.timestamp
             : Date.now(),
-        envelopeId: readEnvelopeId(recent, expenseId),
       },
     };
   }
@@ -129,18 +125,4 @@ function readMovementEnvelope(movement: {
   }
   if (movement.envelopeLabel === "Ahorro") return "savings";
   return null;
-}
-
-function readEnvelopeId(
-  recent: RecentExpensesResult | undefined,
-  expenseId: string,
-): string | undefined {
-  if (!Array.isArray(recent)) return undefined;
-  for (const item of recent) {
-    if (!item || item._id !== expenseId) continue;
-    if (typeof item.envelopeId === "string" && item.envelopeId.length > 0) {
-      return item.envelopeId;
-    }
-  }
-  return undefined;
 }

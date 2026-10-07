@@ -48,7 +48,7 @@ export default function ExpenseDetailScreen() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [openedAt] = useState(() => Date.now());
 
-  const lookup = lookupExpense(movements, recent, id);
+  const lookup = lookupExpense(movements, id);
   const editing = lookup.status === "ready" ? lookup.expense : null;
   const seed = readCreateDraft({
     amountRaw: routeParam(params.amountRaw),
@@ -142,7 +142,6 @@ export default function ExpenseDetailScreen() {
             previousAmountCents={editing ? editing.amountCents : 0}
             initial={initial}
             timestamp={editing ? editing.timestamp : openedAt}
-            envelopeId={editing?.envelopeId}
             frecuentes={mapFrequentExpenses(recent)}
             fieldError={fieldError}
             formError={formError}

@@ -34,7 +34,6 @@ type Props = {
   previousAmountCents: number;
   initial: ExpenseDraftInput;
   timestamp: number;
-  envelopeId?: string;
   frecuentes: FrequentExpense[];
   fieldError?: { field: ExpenseField; message: string } | null;
   formError?: string | null;
@@ -51,7 +50,6 @@ export function ExpenseDetailForm({
   previousAmountCents,
   initial,
   timestamp,
-  envelopeId,
   frecuentes,
   fieldError,
   formError,
@@ -184,16 +182,6 @@ export function ExpenseDetailForm({
               Opcional
             </Text>
           </DetailRow>
-          {envelopeId ? (
-            <DetailRow label="Id de sobre">
-              <Text
-                numberOfLines={1}
-                className="max-w-[200px] font-hanken-semibold text-[15.5px] text-foreground"
-              >
-                {envelopeId}
-              </Text>
-            </DetailRow>
-          ) : null}
         </View>
 
         {frecuentes.length > 0 ? (

@@ -57,11 +57,11 @@ const recent = [
 
 describe("lookupExpense", () => {
   it("espera la consulta", () => {
-    expect(lookupExpense(undefined, undefined, "exp1").status).toBe("loading");
+    expect(lookupExpense(undefined, "exp1").status).toBe("loading");
   });
 
-  it("arma el gasto con el id de sobre de recientes", () => {
-    expect(lookupExpense(movements, recent, "exp1")).toEqual({
+  it("arma el gasto editable desde el movimiento", () => {
+    expect(lookupExpense(movements, "exp1")).toEqual({
       status: "ready",
       expense: {
         id: "exp1",
@@ -69,22 +69,20 @@ describe("lookupExpense", () => {
         description: "Plaza Vea",
         envelopeType: "wants",
         timestamp: 1_700_000_000_000,
-        envelopeId: "env_wants",
       },
     });
   });
 
   it("reconoce ahorro por la etiqueta", () => {
-    const result = lookupExpense(movements, recent, "exp2");
+    const result = lookupExpense(movements, "exp2");
     expect(result.status).toBe("ready");
     if (result.status === "ready") {
       expect(result.expense.envelopeType).toBe("savings");
-      expect(result.expense.envelopeId).toBeUndefined();
     }
   });
 
   it("no inventa un gasto que no está en el ciclo", () => {
-    expect(lookupExpense(movements, recent, "nope").status).toBe("missing");
+    expect(lookupExpense(movements, "nope").status).toBe("missing");
   });
 });
 
