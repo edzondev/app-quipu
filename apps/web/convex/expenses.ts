@@ -170,12 +170,23 @@ export const getRecentExpenses = query({
       .order("desc")
       .take(RECENT_EXPENSES_LIMIT);
 
-    return expenses.map((e) => ({
-      _id: e._id,
-      amount: e.amount,
-      description: e.description,
-      timestamp: e.timestamp,
-      envelopeId: e.envelopeId,
+    const envelopeTypeById = new Map<
+      (typeof expenses)[number]["envelopeId"],
+      "needs" | "wants" | "savings"
+    >();
+    for (const expense of expenses) {
+      if (envelopeTypeById.has(expense.envelopeId)) continue;
+      const envelope = await ctx.db.get(expense.envelopeId);
+      if (envelope) envelopeTypeById.set(expense.envelopeId, envelope.type);
+    }
+
+    return expenses.map((expense) => ({
+      _id: expense._id,
+      amount: expense.amount,
+      description: expense.description,
+      timestamp: expense.timestamp,
+      envelopeId: expense.envelopeId,
+      envelopeType: envelopeTypeById.get(expense.envelopeId),
     }));
   },
 });
