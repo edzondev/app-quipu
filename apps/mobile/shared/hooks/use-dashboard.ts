@@ -1,10 +1,10 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
+import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import {
-  mapDashboardHome,
-  mapEnvelopeRow,
-} from "@/shared/lib/dashboard/home-model";
-import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+  mapSobresScreen,
+  savingsLineFromOverview,
+} from "@/shared/lib/dashboard/sobres-model";
 import { useProfileGate } from "./use-profile-gate";
 
 export function useDashboardSummary() {
@@ -20,18 +20,14 @@ export function useHomeModel() {
   return { status: "ready" as const, home };
 }
 
-export function useEnvelopeRows() {
+export function useSobresScreen() {
+  const { isAuthReady } = useProfileGate();
   const summary = useDashboardSummary();
+  const savings = useQuery(api.savings.getOverview, isAuthReady ? {} : "skip");
   if (summary === undefined) return { status: "loading" as const };
-  if (!summary?.cycle) {
-    return { status: "empty" as const, rows: [], currencySymbol: "S/" };
-  }
-  const currencySymbol =
-    marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ??
-    "S/";
-  return {
-    status: "ready" as const,
-    rows: summary.envelopes.map(mapEnvelopeRow),
-    currencySymbol,
-  };
+  const screen = summary
+    ? mapSobresScreen(summary, savingsLineFromOverview(savings))
+    : null;
+  if (!screen) return { status: "empty" as const };
+  return { status: "ready" as const, screen };
 }
