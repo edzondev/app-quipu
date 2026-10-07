@@ -214,6 +214,7 @@ export const appTables = {
     updatedAt: v.optional(v.number()),
   })
     .index("by_cycle_envelope_time", ["cycleId", "envelopeId", "timestamp"])
+    .index("by_cycle_time", ["cycleId", "timestamp"])
     .index("by_profile_time", ["profileId", "timestamp"]),
 
   // COACH DE IA PROACTIVO: Interacciones interactivas de un click (Opción 2)
