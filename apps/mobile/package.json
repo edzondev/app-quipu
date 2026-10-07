@@ -66,6 +66,7 @@
     "preset": "jest-expo",
     "moduleNameMapper": {
       "^react-native-keyboard-controller$": "react-native-keyboard-controller/jest",
+      "^reicon-react-native/icons/(.*)$": "<rootDir>/__mocks__/reicon-icon.js",
       "^@/(.*)$": "<rootDir>/$1"
     },
     "transformIgnorePatterns": [

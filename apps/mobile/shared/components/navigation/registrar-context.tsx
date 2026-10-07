@@ -1,10 +1,10 @@
+import { useRouter } from "expo-router";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import type { EditableExpense } from "@/shared/lib/movements/model";
 import RegistrarSheet from "./registrar-sheet";
 
 type Session = {
   nonce: number;
-  expense: EditableExpense | null;
 };
 
 type RegistrarApi = {
@@ -23,17 +23,17 @@ export function useRegistrar() {
 }
 
 export function RegistrarProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [isPresented, setPresented] = useState(false);
-  const [session, setSession] = useState<Session>({ nonce: 0, expense: null });
+  const [session, setSession] = useState<Session>({ nonce: 0 });
 
   function openCreate() {
-    setSession((current) => ({ nonce: current.nonce + 1, expense: null }));
+    setSession((current) => ({ nonce: current.nonce + 1 }));
     setPresented(true);
   }
 
   function openEdit(expense: EditableExpense) {
-    setSession((current) => ({ nonce: current.nonce + 1, expense }));
-    setPresented(true);
+    router.push(`/expense/${expense.id}`);
   }
 
   return (
