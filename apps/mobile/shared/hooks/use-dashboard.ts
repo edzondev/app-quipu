@@ -19,7 +19,7 @@ export function useDashboardSummary() {
 export function useHomeModel() {
   const summary = useDashboardSummary();
   if (summary === undefined) return { status: "loading" as const };
-  const home = summary ? mapDashboardHome(summary, Date.now()) : null;
+  const home = summary ? mapDashboardHome(summary) : null;
   if (!home) return { status: "empty" as const };
   return { status: "ready" as const, home };
 }

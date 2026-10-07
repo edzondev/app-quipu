@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
 import type { BottomTabBarButtonProps } from "expo-router/tabs";
 import { View } from "react-native";
-import { Graph } from "reicon-react-native/icons/Graph";
+import { ChartBar } from "reicon-react-native/icons/ChartBar";
+import { Envelope } from "reicon-react-native/icons/Envelope";
 import { Home } from "reicon-react-native/icons/Home";
 import { ReceiptText } from "reicon-react-native/icons/ReceiptText";
-import { Wallet } from "reicon-react-native/icons/Wallet";
 import OnboardingGate from "@/shared/components/auth/onboarding-gate";
 import {
   RegistrarProvider,
@@ -28,7 +28,8 @@ export default function TabLayout() {
               tabBarActiveTintColor: "#1A1A1A",
               tabBarInactiveTintColor: "#9A968C",
               tabBarLabelStyle: {
-                fontSize: 11,
+                fontFamily: "HankenGrotesk-SemiBold",
+                fontSize: 10,
               },
               tabBarStyle: {
                 backgroundColor: "#FBFAF7",
@@ -73,20 +74,20 @@ export default function TabLayout() {
             <Tabs.Screen
               name="envelopes"
               options={{
-                title: "Sobres",
-                tabBarLabel: "Sobres",
+                title: "Plan",
+                tabBarLabel: "Plan",
                 tabBarIcon: ({ focused }) => (
-                  <Graph size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
+                  <Envelope size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
                 ),
               }}
             />
             <Tabs.Screen
               name="savings"
               options={{
-                title: "Ahorro",
-                tabBarLabel: "Ahorro",
+                title: "Progreso",
+                tabBarLabel: "Progreso",
                 tabBarIcon: ({ focused }) => (
-                  <Wallet size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
+                  <ChartBar size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
                 ),
               }}
             />
