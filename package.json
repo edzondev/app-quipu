@@ -12,11 +12,11 @@
     "test:mobile": "node scripts/ensure-convex-api.mjs && pnpm --filter @quipu/mobile exec jest --watchman=false --coverage=false --watchAll=false"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.11",
-    "turbo": "^2.10.12",
+    "@biomejs/biome": "2.5.14",
+    "turbo": "^2.11.7",
     "typescript": "7.0.2"
   },
-  "packageManager": "pnpm@11.24.0",
+  "packageManager": "pnpm@12.10.1",
   "engines": {
     "node": ">=24"
   }

@@ -5,12 +5,8 @@ allowBuilds:
   "@sentry/cli": true
   core-js: true
   esbuild: true
-minimumReleaseAgeExclude:
-  - expo-font@57.0.3
-  - expo-dev-client@57.0.18
-  - expo-dev-launcher@57.0.19
-  - expo-dev-menu@57.0.18
-  - expo-updates@57.0.21
+trustLockfile: true
+verifyDepsBeforeRun: false
 overrides:
   better-auth: 1.6.30
   "@better-auth/passkey": 1.6.30
