@@ -6,7 +6,6 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
-import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
@@ -18,6 +17,7 @@ import {
 } from "./lib/email/authMail";
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
 import { androidApkKeyHashOrigins } from "./lib/passkeyOrigins";
+import { resolvePasskeyRegistrationUser } from "./lib/passkeyRegistration";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
@@ -28,12 +28,6 @@ const androidApkKeyHashes = androidApkKeyHashOrigins(process.env.PASSKEY_ANDROID
 const passkeyOrigins = [siteUrl, ...androidApkKeyHashes];
 const rpName = process.env.PASSKEY_RP_NAME || "quipu";
 
-const emailSchema = z
-	.string({ error: "Email is required" })
-	.trim()
-	.toLowerCase()
-	.min(1, "Email is required")
-	.pipe(z.email("Email inválido"));
 const authFunctions: AuthFunctions = internal.auth;
 
 async function enforceAuthEmailRateLimit(
@@ -138,29 +132,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					userVerification: "preferred",
 				},
 				registration: {
+					// true monta freshSessionMiddleware (freshAge por defecto: 1 día)
+					// y Ajustes no podría agregar una passkey con una sesión más vieja.
+					// En false, si hay sesión el plugin usa esa sesión y no llama a
+					// resolveUser. Sin sesión, resolveUser rechaza.
 					requireSession: false,
-					resolveUser: async ({ context, ctx: passkeyCtx }) => {
-						const { success, data: email } = emailSchema.safeParse(context);
-						if (!success) throw new Error("Email inválido");
-						assertEmailAllowed(email);
-
-						const { internalAdapter } = passkeyCtx.context;
-						const found = await internalAdapter.findUserByEmail(email);
-						if (found?.user) {
-							return {
-								id: found.user.id,
-								name: found.user.name,
-								displayName: email,
-							};
-						}
-						const localPart = email.split("@")[0] ?? email;
-						const created = await internalAdapter.createUser({
-							email,
-							name: localPart.length > 0 ? localPart : email,
-							emailVerified: false,
-						});
-						return { id: created.id, name: created.name, displayName: email };
-					},
+					resolveUser: resolvePasskeyRegistrationUser,
 				},
 			}),
 			emailOTP({

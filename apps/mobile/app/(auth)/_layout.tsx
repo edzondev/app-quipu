@@ -9,6 +9,7 @@ export default function AuthLayout() {
 		>
 			<Stack.Screen name="sign-in" options={{ animation: "fade" }} />
 			<Stack.Screen name="create-account" options={{ animation: "fade" }} />
+			<Stack.Screen name="recuperar" options={{ animation: "fade" }} />
 		</Stack>
 	);
 }

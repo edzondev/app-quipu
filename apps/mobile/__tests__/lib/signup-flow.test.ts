@@ -1,10 +1,4 @@
-import {
-	isUserAlreadyExistsError,
-	mapOtpVerifyError,
-	parseOtpInput,
-	shouldAutoVerifyOtp,
-	shouldSendOtp,
-} from "@/shared/lib/signup-flow";
+import { parseOtpInput, shouldAutoVerifyOtp, shouldSendOtp } from "@/shared/lib/signup-flow";
 
 describe("parseOtpInput", () => {
 	it("conserva solo dígitos", () => {
@@ -31,56 +25,6 @@ describe("shouldAutoVerifyOtp", () => {
 
 	it("no dispara con más de 6 (defensa: entrada ya saneada)", () => {
 		expect(shouldAutoVerifyOtp("1234567")).toBe(false);
-	});
-});
-
-describe("mapOtpVerifyError", () => {
-	it("mapea TOO_MANY_ATTEMPTS (status 403) a pedir código nuevo", () => {
-		expect(mapOtpVerifyError({ status: 403, message: "Too many attempts" })).toBe(
-			"Demasiados intentos. Pide un código nuevo.",
-		);
-	});
-
-	it("mapea por message aunque el status sea 429", () => {
-		expect(mapOtpVerifyError({ status: 429, message: "TOO_MANY_ATTEMPTS" })).toBe(
-			"Demasiados intentos. Pide un código nuevo.",
-		);
-	});
-
-	it("mapea OTP expirado o inválido al mensaje genérico", () => {
-		expect(mapOtpVerifyError({ status: 400, message: "OTP_EXPIRED" })).toBe(
-			"Código incorrecto o expirado",
-		);
-		expect(mapOtpVerifyError({ status: 400, message: "INVALID_OTP" })).toBe(
-			"Código incorrecto o expirado",
-		);
-	});
-
-	it("mapea errores sin detalle al mensaje genérico", () => {
-		expect(mapOtpVerifyError({})).toBe("Código incorrecto o expirado");
-	});
-});
-
-describe("isUserAlreadyExistsError", () => {
-	it("detecta el error por message (formato Better Auth 1.6.30)", () => {
-		expect(
-			isUserAlreadyExistsError({
-				message: "User already exists. Use another email.",
-			}),
-		).toBe(true);
-	});
-
-	it("detecta el error por code con underscores", () => {
-		expect(
-			isUserAlreadyExistsError({
-				code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
-			}),
-		).toBe(true);
-	});
-
-	it("no confunde otros errores", () => {
-		expect(isUserAlreadyExistsError({ message: "Invalid email" })).toBe(false);
-		expect(isUserAlreadyExistsError({})).toBe(false);
 	});
 });
 

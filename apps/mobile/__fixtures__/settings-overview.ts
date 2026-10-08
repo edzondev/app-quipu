@@ -69,12 +69,15 @@ export function settingsOverview(options: SettingsFixtureOptions = {}): Settings
 			passkeys: Array.from({ length: passkeyCount }, (_, index) => ({
 				id: `pk-${index + 1}`,
 				name: null,
+				label: null,
 				deviceType: "unknown",
 				backedUp: false,
 				createdAt: null,
 			})),
 			passkeysSource: options.passkeysSource ?? "better_auth",
 			sessions: { count: 0, apiReady: true },
+			hasPassword: true,
+			emailVerified: true,
 		},
 	} satisfies SettingsOverview;
 	return overview;
