@@ -25,12 +25,8 @@ export function ProgressStreakChart({ bars }: Props) {
 					return (
 						<span
 							key={bar.id}
-							className="w-[11px] rounded-[3px] md:w-3.5 md:rounded"
-							style={{
-								height: bar.heightPx,
-								backgroundImage:
-									"repeating-linear-gradient(-45deg, var(--qp) 0 3px, transparent 3px 6px)",
-							}}
+							className="w-[11px] rounded-[3px] bg-[repeating-linear-gradient(-45deg,var(--qp),var(--qp)_3px,transparent_3px,transparent_6px)] md:w-3.5 md:rounded"
+							style={{ height: bar.heightPx }}
 						/>
 					);
 				}

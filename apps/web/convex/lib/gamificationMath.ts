@@ -1,5 +1,5 @@
 import { type Infer, v } from "convex/values";
-import { limaDateToInputValue, limaStartOfDay } from "../../shared/lib/date";
+import { limaStartOfDay } from "../../shared/lib/date";
 import { buildCycleLabel } from "./cycleCloseReport";
 
 export const REWARD_THRESHOLDS = {
@@ -72,66 +72,80 @@ export function endOfLimaDayInclusive(now: number): number {
 	return limaStartOfDay(now) + MS_PER_DAY - 1;
 }
 
-/**
- * Días seguidos con al menos un gasto, en America/Lima.
- * Si hoy ya tiene un gasto, la racha termina hoy. Si no, termina ayer.
- * Hoy vacío y ayer vacío vale 0. No es `streaks.currentStreak` (eso cuenta ciclos cerrados).
- */
-export function countDaysWithoutSkipping(
-	expenseTimestamps: readonly number[],
-	now: number,
-): number {
-	const days = new Set(expenseTimestamps.map((timestamp) => limaDateToInputValue(timestamp)));
-	const todayStart = limaStartOfDay(now);
-	const yesterdayStart = todayStart - MS_PER_DAY;
-	const todayKey = limaDateToInputValue(todayStart);
-	const yesterdayKey = limaDateToInputValue(yesterdayStart);
-	const anchor = days.has(todayKey) ? todayStart : days.has(yesterdayKey) ? yesterdayStart : null;
-	if (anchor === null) return 0;
+const LIMA_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-US", {
+	timeZone: "America/Lima",
+	year: "numeric",
+	month: "2-digit",
+	day: "2-digit",
+});
 
-	let count = 0;
-	let cursor = anchor;
-	while (days.has(limaDateToInputValue(cursor))) {
-		count += 1;
-		cursor = limaStartOfDay(cursor) - MS_PER_DAY;
+function limaDayKey(timestamp: number): string {
+	let year = "";
+	let month = "";
+	let day = "";
+	for (const part of LIMA_DAY_KEY_FORMATTER.formatToParts(new Date(timestamp))) {
+		if (part.type === "year") year = part.value;
+		else if (part.type === "month") month = part.value;
+		else if (part.type === "day") day = part.value;
 	}
-	return count;
+	return `${year}-${month}-${day}`;
 }
 
-/**
- * Newest-first timestamps to feed `countDaysWithoutSkipping`.
- * Stops before the first Lima day that breaks the streak, and before any
- * expense older than yesterday when today and yesterday are both empty.
- */
-export function readTimestampsForLoggingStreak(
-	timestampsNewestFirst: readonly number[],
-	now: number,
-): number[] {
-	const todayKey = limaDateToInputValue(limaStartOfDay(now));
-	const yesterdayKey = limaDateToInputValue(limaStartOfDay(now) - MS_PER_DAY);
-	const kept: number[] = [];
-	let previousKey: string | null = null;
+function previousLimaDayKey(dayKey: string): string {
+	const year = Number(dayKey.slice(0, 4));
+	const month = Number(dayKey.slice(5, 7));
+	const day = Number(dayKey.slice(8, 10));
+	const previous = new Date(Date.UTC(year, month - 1, day) - MS_PER_DAY);
+	const monthText = String(previous.getUTCMonth() + 1).padStart(2, "0");
+	const dayText = String(previous.getUTCDate()).padStart(2, "0");
+	return `${previous.getUTCFullYear()}-${monthText}-${dayText}`;
+}
 
-	for (const timestamp of timestampsNewestFirst) {
-		const key = limaDateToInputValue(timestamp);
-		if (previousKey === null) {
-			if (key !== todayKey && key !== yesterdayKey) return kept;
-			kept.push(timestamp);
-			previousKey = key;
-			continue;
+export type LoggingStreakScan = {
+	count: number;
+	lastKey: string | null;
+	todayKey: string;
+	yesterdayKey: string;
+	keepReading: boolean;
+};
+
+/** Una sola pasada, de más nuevo a más viejo. today/yesterday se fijan una vez. */
+export function startLoggingStreakScan(now: number): LoggingStreakScan {
+	return {
+		count: 0,
+		lastKey: null,
+		todayKey: limaDayKey(now),
+		yesterdayKey: limaDayKey(now - MS_PER_DAY),
+		keepReading: true,
+	};
+}
+
+export function observeLoggingStreakExpense(
+	scan: LoggingStreakScan,
+	timestamp: number,
+): LoggingStreakScan {
+	if (!scan.keepReading) return scan;
+	const key = limaDayKey(timestamp);
+	if (scan.lastKey === null) {
+		if (key !== scan.todayKey && key !== scan.yesterdayKey) {
+			return { ...scan, keepReading: false };
 		}
-		if (key === previousKey) {
-			kept.push(timestamp);
-			continue;
-		}
-		const lastKept = kept.at(-1);
-		if (lastKept === undefined) return kept;
-		const expectedKey = limaDateToInputValue(limaStartOfDay(lastKept) - MS_PER_DAY);
-		if (key !== expectedKey) return kept;
-		kept.push(timestamp);
-		previousKey = key;
+		return { ...scan, count: 1, lastKey: key };
 	}
-	return kept;
+	if (key === scan.lastKey) return scan;
+	if (key === previousLimaDayKey(scan.lastKey)) {
+		return { ...scan, count: scan.count + 1, lastKey: key };
+	}
+	return { ...scan, keepReading: false };
+}
+
+export function countLoggingStreak(timestampsNewestFirst: Iterable<number>, now: number): number {
+	let scan = startLoggingStreakScan(now);
+	for (const timestamp of timestampsNewestFirst) {
+		scan = observeLoggingStreakExpense(scan, timestamp);
+		if (!scan.keepReading) break;
+	}
+	return scan.count;
 }
 
 export function buildCycleChartBars(

@@ -9,12 +9,12 @@ import {
 	buildCycleChartBars,
 	canUseAccentPreset,
 	canUseTheme,
-	countDaysWithoutSkipping,
 	endOfLimaDayInclusive,
 	isRewardUnlocked,
+	observeLoggingStreakExpense,
 	progressChartBarValidator,
 	REWARD_THRESHOLDS,
-	readTimestampsForLoggingStreak,
+	startLoggingStreakScan,
 } from "./lib/gamificationMath";
 import {
 	computeEmergencyFundTargetCents,
@@ -39,7 +39,7 @@ async function loadDaysWithoutSkipping(
 	profileId: Id<"profiles">,
 	now: number,
 ): Promise<number> {
-	const read: number[] = [];
+	let scan = startLoggingStreakScan(now);
 	const expenses = ctx.db
 		.query("expenses")
 		.withIndex("by_profile_time", (q) =>
@@ -47,11 +47,10 @@ async function loadDaysWithoutSkipping(
 		)
 		.order("desc");
 	for await (const expense of expenses) {
-		const next = readTimestampsForLoggingStreak([...read, expense.timestamp], now);
-		if (next.length !== read.length + 1) break;
-		read.push(expense.timestamp);
+		scan = observeLoggingStreakExpense(scan, expense.timestamp);
+		if (!scan.keepReading) break;
 	}
-	return countDaysWithoutSkipping(read, now);
+	return scan.count;
 }
 
 const ACHIEVEMENT_TITLES: Record<AchievementId, string> = {

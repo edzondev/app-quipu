@@ -3,9 +3,8 @@ import {
 	buildCycleChartBars,
 	computeNextStreak,
 	countConsecutiveWantsDiscipline,
-	countDaysWithoutSkipping,
+	countLoggingStreak,
 	isRewardUnlocked,
-	readTimestampsForLoggingStreak,
 } from "./gamificationMath";
 
 describe("computeNextStreak", () => {
@@ -98,12 +97,13 @@ describe("countConsecutiveWantsDiscipline", () => {
 	});
 });
 
-describe("countDaysWithoutSkipping", () => {
+describe("countLoggingStreak", () => {
 	const now = Date.parse("2026-10-08T15:00:00-05:00");
+	const day = 86_400_000;
 
 	it("counts consecutive Lima days backward from today", () => {
 		expect(
-			countDaysWithoutSkipping(
+			countLoggingStreak(
 				[
 					Date.parse("2026-10-08T09:00:00-05:00"),
 					Date.parse("2026-10-07T09:00:00-05:00"),
@@ -116,7 +116,7 @@ describe("countDaysWithoutSkipping", () => {
 
 	it("starts at yesterday when today has no expense yet", () => {
 		expect(
-			countDaysWithoutSkipping(
+			countLoggingStreak(
 				[Date.parse("2026-10-07T09:00:00-05:00"), Date.parse("2026-10-06T09:00:00-05:00")],
 				now,
 			),
@@ -124,64 +124,49 @@ describe("countDaysWithoutSkipping", () => {
 	});
 
 	it("is zero when today and yesterday are both empty", () => {
-		expect(countDaysWithoutSkipping([Date.parse("2026-10-05T09:00:00-05:00")], now)).toBe(0);
+		expect(countLoggingStreak([Date.parse("2026-10-05T09:00:00-05:00")], now)).toBe(0);
 	});
 
 	it("counts a calendar day once and stops at the first gap", () => {
-		expect(
-			countDaysWithoutSkipping(
-				[
-					Date.parse("2026-10-08T08:00:00-05:00"),
-					Date.parse("2026-10-08T21:00:00-05:00"),
-					Date.parse("2026-10-06T08:00:00-05:00"),
-				],
-				now,
-			),
-		).toBe(1);
+		let reads = 0;
+		function* source() {
+			const values = [
+				Date.parse("2026-10-08T08:00:00-05:00"),
+				Date.parse("2026-10-08T21:00:00-05:00"),
+				Date.parse("2026-10-06T08:00:00-05:00"),
+				Date.parse("2026-10-05T08:00:00-05:00"),
+			];
+			for (const value of values) {
+				reads += 1;
+				yield value;
+			}
+		}
+		expect(countLoggingStreak(source(), now)).toBe(1);
+		expect(reads).toBe(3);
 	});
 
 	it("uses the Lima calendar instead of the UTC date", () => {
 		const limaEveningThatIsNextUtcDay = Date.parse("2026-10-08T02:00:00Z");
 		expect(
-			countDaysWithoutSkipping(
-				[Date.parse("2026-10-07T21:00:00-05:00")],
-				limaEveningThatIsNextUtcDay,
-			),
+			countLoggingStreak([Date.parse("2026-10-07T21:00:00-05:00")], limaEveningThatIsNextUtcDay),
 		).toBe(1);
 	});
 
 	it("crosses a month boundary", () => {
 		expect(
-			countDaysWithoutSkipping(
+			countLoggingStreak(
 				[Date.parse("2026-10-01T10:00:00-05:00"), Date.parse("2026-09-30T10:00:00-05:00")],
 				Date.parse("2026-10-01T18:00:00-05:00"),
 			),
 		).toBe(2);
 	});
-});
 
-describe("readTimestampsForLoggingStreak", () => {
-	const now = Date.parse("2026-10-08T15:00:00-05:00");
-
-	it("stops at the first Lima day that breaks the streak", () => {
-		const newestFirst = [
-			Date.parse("2026-10-08T09:00:00-05:00"),
-			Date.parse("2026-10-08T20:00:00-05:00"),
-			Date.parse("2026-10-07T09:00:00-05:00"),
-			Date.parse("2026-10-05T09:00:00-05:00"),
-			Date.parse("2026-10-04T09:00:00-05:00"),
-		];
-		const read = readTimestampsForLoggingStreak(newestFirst, now);
-		expect(read).toEqual(newestFirst.slice(0, 3));
-		expect(countDaysWithoutSkipping(read, now)).toBe(2);
-	});
-
-	it("stops immediately when the newest expense is older than yesterday", () => {
-		const newestFirst = [
-			Date.parse("2026-10-05T09:00:00-05:00"),
-			Date.parse("2026-10-04T09:00:00-05:00"),
-		];
-		expect(readTimestampsForLoggingStreak(newestFirst, now)).toEqual([]);
+	it("counts a thousand consecutive days in one pass", () => {
+		const stamps = Array.from({ length: 1000 }, (_, index) => now - index * day);
+		const started = performance.now();
+		expect(countLoggingStreak(stamps, now)).toBe(1000);
+		const elapsed = performance.now() - started;
+		expect(elapsed).toBeLessThan(50);
 	});
 });
 
