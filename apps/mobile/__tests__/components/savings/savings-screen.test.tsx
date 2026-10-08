@@ -158,9 +158,9 @@ describe("SavingsScreen", () => {
 				hasActiveCycle: false,
 				totalSavedCents: 0,
 				cycleContributionCents: 0,
-				emergencyFund: null,
+				emergencyFund: { ...fund, targetAmount: 0, currentAmount: 0 },
 				goals: [],
-				canCreateGoal: false,
+				canCreateGoal: true,
 				assignPlan: null,
 			} satisfies Overview,
 			null,
@@ -185,10 +185,33 @@ describe("SavingsScreen", () => {
 				"Un viaje, una laptop, la inicial del depa. Primero dale tracción al Fondo; las metas vienen después.",
 			),
 		).toBeTruthy();
+		expect(view.getByText("+ Nueva meta")).toBeTruthy();
 		expect(view.queryByLabelText(/por ciento/)).toBeNull();
 
 		await fireEvent.press(view.getByLabelText("Crear mi primera meta"));
 		expect(onAddGoal).toHaveBeenCalledTimes(1);
+	});
+
+	it("oculta crear meta cuando todavía no hay fondo", async () => {
+		const model = presentAhorro(
+			{
+				profile: { name: "Ana", currencyCode: "PEN" },
+				hasActiveCycle: false,
+				totalSavedCents: 0,
+				cycleContributionCents: 0,
+				emergencyFund: null,
+				goals: [],
+				canCreateGoal: false,
+				assignPlan: null,
+			} satisfies Overview,
+			null,
+		);
+		const view = await render(<SavingsScreen {...screenProps} model={model} />);
+
+		expect(view.queryByText("Crear mi primera meta")).toBeNull();
+		expect(view.queryByText("+ Nueva meta")).toBeNull();
+		expect(view.queryByLabelText("Crear mi primera meta")).toBeNull();
+		expect(view.queryByLabelText("Nueva meta")).toBeNull();
 	});
 });
 

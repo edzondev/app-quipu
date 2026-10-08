@@ -260,7 +260,7 @@ function GoalsSection({
 	canCreateGoal: boolean;
 	onAddGoal: () => void;
 }) {
-	const showAdd = canCreateGoal || goals.length === 0;
+	const showAdd = canCreateGoal;
 
 	return (
 		<View className="mt-[26px]">
@@ -293,16 +293,18 @@ function GoalsSection({
 						Un viaje, una laptop, la inicial del depa. Primero dale tracción al Fondo; las metas
 						vienen después.
 					</Text>
-					<Pressable
-						accessibilityRole="button"
-						accessibilityLabel="Crear mi primera meta"
-						onPress={onAddGoal}
-						className="mt-[22px] self-start rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
-					>
-						<Text className="font-hanken-semibold text-[14px] text-foreground">
-							Crear mi primera meta
-						</Text>
-					</Pressable>
+					{canCreateGoal ? (
+						<Pressable
+							accessibilityRole="button"
+							accessibilityLabel="Crear mi primera meta"
+							onPress={onAddGoal}
+							className="mt-[22px] self-start rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
+						>
+							<Text className="font-hanken-semibold text-[14px] text-foreground">
+								Crear mi primera meta
+							</Text>
+						</Pressable>
+					) : null}
 				</View>
 			) : (
 				<View className="mt-4 gap-4">
