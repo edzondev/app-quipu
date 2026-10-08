@@ -23,7 +23,7 @@ export type BarTone = ChartBar["status"];
 export type ProgressBarView = {
 	key: string;
 	tone: Exclude<BarTone, "empty">;
-	/** Mes corto del diseño (MAY). Null si Convex manda monthLabel null. */
+	/** Mes corto de Lima. Null si el ciclo no trae cycleStart. */
 	monthLabel: string | null;
 };
 
@@ -57,6 +57,8 @@ export type CloseSegmentTone = SpendType | "surplus";
 export type CloseSegmentView = {
 	tone: CloseSegmentTone;
 	percent: number;
+	/** Misma etiqueta que la fila del sobre. El sobrante usa «Sobró». */
+	label: string;
 };
 
 export type CloseRowView = {
@@ -85,12 +87,12 @@ export function presentProgress(
 	const bars = overview == null ? [] : toBars(overview.chartBars);
 	const streak = overview == null ? 0 : overview.currentStreak;
 	const closeEntry = toCloseEntry(closeReport);
-	const empty = closeEntry == null && streak === 0 && bars.length === 0;
+	const empty = closeEntry == null && streak === 0 && bars.every((bar) => bar.tone === "current");
 
 	return {
 		empty,
 		streakLabel: String(streak),
-		sinceLabel: overview == null ? null : sinceLabelFromBars(overview.chartBars),
+		sinceLabel: empty || overview == null ? null : sinceLabelFromBars(overview.chartBars),
 		bars,
 		savedLabel: savedLabel(savings),
 		registeredExpenseLabel: overview == null ? null : countLabel(overview.registeredExpenseCount),
@@ -128,52 +130,31 @@ export function presentClose(
 	};
 }
 
-const LONG_MONTH_INDEX: Record<string, number> = {
-	enero: 0,
-	febrero: 1,
-	marzo: 2,
-	abril: 3,
-	mayo: 4,
-	junio: 5,
-	julio: 6,
-	agosto: 7,
-	setiembre: 8,
-	septiembre: 8,
-	octubre: 9,
-	noviembre: 10,
-	diciembre: 11,
-};
-
 function toBars(chartBars: Overview["chartBars"]): ProgressBarView[] {
 	return chartBars.flatMap((bar: ChartBar) =>
 		bar.status === "empty"
 			? []
-			: [{ key: String(bar.id), tone: bar.status, monthLabel: barMonthLabel(bar) }],
+			: [{ key: String(bar.id), tone: bar.status, monthLabel: barMonthLabel(bar.cycleStart) }],
 	);
 }
 
-function barMonthLabel(bar: ChartBar): string | null {
-	if (typeof bar.monthLabel !== "string" || bar.monthLabel.length === 0) return null;
-	const fromName = LONG_MONTH_INDEX[bar.monthLabel.toLocaleLowerCase("es-PE")];
-	if (fromName != null) return LIMA_MONTHS[fromName] ?? null;
-	if (typeof bar.cycleStart === "number") {
-		return LIMA_MONTHS[limaStamp(bar.cycleStart).monthIndex] ?? null;
-	}
-	return bar.monthLabel.toLocaleUpperCase("es-PE");
+function barMonthLabel(cycleStart: ChartBar["cycleStart"]): string | null {
+	if (cycleStart === null) return null;
+	return LIMA_MONTHS[limaStamp(cycleStart).monthIndex] ?? null;
 }
 
 function sinceLabelFromBars(chartBars: Overview["chartBars"]): string | null {
 	for (const bar of chartBars) {
-		if (typeof bar.cycleStart === "number") return `DESDE ${limaMonthName(bar.cycleStart)}`;
-		if (typeof bar.monthLabel === "string" && bar.monthLabel.length > 0) {
-			return `DESDE ${bar.monthLabel.toLocaleUpperCase("es-PE")}`;
-		}
+		if (bar.cycleStart === null) continue;
+		return `DESDE ${limaMonthName(bar.cycleStart)}`;
 	}
 	return null;
 }
 
-function countLabel(value: number | null | undefined): string | null {
-	return typeof value === "number" ? String(value) : null;
+function countLabel(
+	value: Overview["registeredExpenseCount"] | Overview["daysWithoutSkipping"],
+): string {
+	return String(value);
 }
 
 function savedLabel(savings: SavingsOverview): string | null {
@@ -235,9 +216,14 @@ function toSegments(
 	const segments: CloseSegmentView[] = report.spendByEnvelope.map((row: SpendRow) => ({
 		tone: row.type,
 		percent: barPercent(row.spentCents, whole),
+		label: row.label,
 	}));
 	if (surplusCents != null) {
-		segments.push({ tone: "surplus", percent: barPercent(surplusCents, whole) });
+		segments.push({
+			tone: "surplus",
+			percent: barPercent(surplusCents, whole),
+			label: "Sobró",
+		});
 	}
 	return segments.filter((segment) => segment.percent > 0);
 }

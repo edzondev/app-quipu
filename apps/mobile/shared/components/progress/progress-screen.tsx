@@ -13,16 +13,9 @@ const SOLID_BAR: Record<Exclude<ProgressBarView["tone"], "current">, string> = {
 	failed: "bg-foreground/30",
 };
 
-const CURRENT_STRIPES = [
-	"bg-line",
-	"bg-background",
-	"bg-line",
-	"bg-background",
-	"bg-line",
-	"bg-background",
-	"bg-line",
-	"bg-background",
-] as const;
+const CURRENT_STRIPES = Array.from({ length: 8 }, (_, index) =>
+	index % 2 === 0 ? "bg-line" : "bg-background",
+);
 
 type Props = {
 	status: "loading" | "ready";
@@ -42,7 +35,7 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 				<View className="flex-row items-baseline justify-between">
 					<Text className="font-newsreader text-[27px] leading-8 text-foreground">Progreso</Text>
 					{model?.sinceLabel ? (
-						<Text className="font-geist-mono text-[11px] tracking-[0.12em] text-[#8C8880]">
+						<Text className="font-geist-mono text-[11px] tracking-[0.12em] text-foreground/50">
 							{model.sinceLabel}
 						</Text>
 					) : null}
@@ -121,7 +114,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			) : null}
 
 			{model.savedLabel || model.registeredExpenseLabel || model.daysWithoutSkippingLabel ? (
-				<View className="mt-7 flex-row justify-between gap-3 border-y border-[#E8E6DF] py-[18px]">
+				<View className="mt-7 flex-row justify-between border-y border-[#E8E6DF] py-[18px]">
 					{model.savedLabel ? <Stat label="AHORRADO TOTAL" value={model.savedLabel} /> : null}
 					{model.registeredExpenseLabel ? (
 						<Stat label="GASTOS REGISTRADOS" value={model.registeredExpenseLabel} />
@@ -164,8 +157,8 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 function CycleBar({ bar }: { bar: ProgressBarView }) {
 	const monthClass =
 		bar.tone === "current"
-			? "mt-[7px] text-center font-geist-mono text-[10px] text-[#B6B2A8]"
-			: "mt-[7px] text-center font-geist-mono text-[10px] text-[#8C8880]";
+			? "mt-[7px] text-center font-geist-mono text-[10px] text-foreground/35"
+			: "mt-[7px] text-center font-geist-mono text-[10px] text-foreground/50";
 	return (
 		<View className="flex-1">
 			{bar.tone === "current" ? (
@@ -187,7 +180,7 @@ function CycleBar({ bar }: { bar: ProgressBarView }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
 	return (
-		<View className="min-w-0 flex-1">
+		<View>
 			<Text className="font-geist-mono text-[12px] text-[#8C8880]">{label}</Text>
 			<Text className="mt-[9px] font-newsreader text-[24px] text-foreground tabular-nums">
 				{value}

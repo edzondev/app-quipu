@@ -43,7 +43,7 @@ describe("presentProgress", () => {
 		expect(JSON.stringify(model)).not.toContain("Quipu Plus");
 	});
 
-	it("omite la etiqueta si monthLabel es null y pinta la barra current", () => {
+	it("etiqueta con cycleStart aunque monthLabel sea null, incluida la barra current", () => {
 		const model = presentProgress(
 			{
 				...progressOverview,
@@ -70,32 +70,9 @@ describe("presentProgress", () => {
 		);
 
 		expect(model.bars).toEqual([
-			{ key: String(MAY), tone: "compliant", monthLabel: null },
+			{ key: String(MAY), tone: "compliant", monthLabel: "MAY" },
 			{ key: String(SEP), tone: "current", monthLabel: "SEP" },
 		]);
-		expect(model.sinceLabel).toBe("DESDE MAYO");
-	});
-
-	it("arma DESDE con monthLabel cuando no hay cycleStart", () => {
-		const model = presentProgress(
-			{
-				...progressOverview,
-				chartBars: [
-					{
-						id: 1,
-						status: "compliant",
-						heightPx: 26,
-						cycleStart: null,
-						monthLabel: "Mayo",
-					},
-				],
-			} satisfies Overview,
-			progressRewards,
-			savingsOverview,
-			null,
-		);
-
-		expect(model.bars).toEqual([{ key: "1", tone: "compliant", monthLabel: "MAY" }]);
 		expect(model.sinceLabel).toBe("DESDE MAYO");
 	});
 
@@ -121,6 +98,35 @@ describe("presentProgress", () => {
 
 		expect(model.bars).toEqual([{ key: String(MAY), tone: "failed", monthLabel: null }]);
 		expect(model.sinceLabel).toBeNull();
+	});
+
+	it("queda vacío cuando la única barra es el ciclo en curso", () => {
+		const model = presentProgress(
+			{
+				...progressOverview,
+				currentStreak: 0,
+				chartBars: [
+					{
+						id: SEP,
+						status: "current",
+						heightPx: 26,
+						cycleStart: SEP,
+						monthLabel: "Setiembre",
+					},
+				],
+				achievements: [],
+			} satisfies Overview,
+			{
+				...progressRewards,
+				rewards: progressRewards.rewards.map((reward) => ({ ...reward, unlocked: true })),
+			} satisfies Rewards,
+			null,
+			null,
+		);
+
+		expect(model.empty).toBe(true);
+		expect(model.sinceLabel).toBeNull();
+		expect(model.bars).toEqual([{ key: String(SEP), tone: "current", monthLabel: "SEP" }]);
 	});
 
 	it("queda vacío sin racha ni ciclos", () => {
@@ -160,7 +166,7 @@ describe("presentProgress", () => {
 });
 
 describe("presentClose", () => {
-	it("calcula el sobrante y omite desvíos, expenseCount y la acción sin origen", () => {
+	it("calcula el sobrante y omite desvíos y la acción sin origen", () => {
 		const model = presentClose(closeReport, savingsOverview);
 
 		expect(model?.title).toBe("Cerraste julio con S/ 210 de sobra.");
@@ -169,11 +175,36 @@ describe("presentClose", () => {
 		expect(model?.surplusLabel).toBe("SOBRÓ S/ 210");
 		expect(model?.rows.map((row) => row.amountLabel)).toEqual(["S/ 2,000", "S/ 1,000", "S/ 290"]);
 		expect(model?.segments.map((segment) => segment.percent)).toEqual([57, 29, 8, 6]);
+		expect(model?.segments.map((segment) => segment.label)).toEqual([
+			"Necesidades",
+			"Gustos",
+			"Ahorro",
+			"Sobró",
+		]);
 		expect(model?.showMove).toBe(false);
-		expect(model).not.toHaveProperty("expenseCount");
 		expect(JSON.stringify(model)).not.toContain("%");
 		expect(JSON.stringify(model)).not.toContain("cycle-1");
-		expect(JSON.stringify(model)).not.toContain("expenseCount");
+	});
+
+	it("omite el tramo de un sobre con gasto 0", () => {
+		const model = presentClose(
+			{
+				...closeReport,
+				report: {
+					...closeReport.report,
+					totalIncomeCents: 350000,
+					spendByEnvelope: [
+						{ type: "needs" as const, label: "Necesidades", spentCents: 0 },
+						{ type: "wants" as const, label: "Gustos", spentCents: 100000 },
+						{ type: "savings" as const, label: "Ahorro", spentCents: 29000 },
+					],
+				},
+			} satisfies ClosePayload,
+			savingsOverview,
+		);
+
+		expect(model?.segments.map((segment) => segment.tone)).toEqual(["wants", "savings", "surplus"]);
+		expect(model?.segments.every((segment) => segment.percent > 0)).toBe(true);
 	});
 
 	it("el subtítulo sigue a la racha aunque el estado sea aviso o fallo", () => {

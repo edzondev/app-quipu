@@ -17,7 +17,6 @@ type Props = {
 };
 
 export function CloseScreen({ status, model, onBack }: Props) {
-	const segments = model?.segments.filter((segment) => segment.percent > 0) ?? [];
 	return (
 		<View className="flex-1">
 			<View className="flex-row items-center">
@@ -51,12 +50,12 @@ export function CloseScreen({ status, model, onBack }: Props) {
 						{model.subtitle}
 					</Text>
 
-					{segments.length > 0 ? (
+					{model.segments.length > 0 ? (
 						<View className="mt-7 h-2.5 flex-row gap-0.5 overflow-hidden rounded-[5px]">
-							{segments.map((segment) => (
+							{model.segments.map((segment) => (
 								<View
 									key={segment.tone}
-									accessibilityLabel={`Tramo ${segment.tone}`}
+									accessibilityLabel={segment.label}
 									className={`h-full ${SEGMENT[segment.tone]}`}
 									// El tramo es un % de datos: Uniwind no tiene clase para ese ancho.
 									style={{ width: `${segment.percent}%` }}
