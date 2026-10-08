@@ -10,7 +10,7 @@ export function usePlanHub() {
 	const summary = useDashboardSummary();
 	const settings = useQuery(api.settings.getSettingsOverview, isAuthReady ? {} : "skip");
 	const ahorro = useAhorroPlanRow();
-	if (!isAuthReady || summary === undefined || settings === undefined) {
+	if (!isAuthReady || summary === undefined || settings === undefined || ahorro === undefined) {
 		return { status: "loading" as const, model: null, ahorro: null };
 	}
 	if (summary == null) return { status: "empty" as const, model: null, ahorro };
