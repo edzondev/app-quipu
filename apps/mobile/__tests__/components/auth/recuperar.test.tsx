@@ -13,6 +13,7 @@ jest.mock("@/shared/components/app-shell", () => {
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ back: jest.fn(), push: jest.fn(), replace: jest.fn() }),
+	useLocalSearchParams: () => ({ email: "ana@quipu.test" }),
 }));
 
 jest.mock("@/shared/components/ui/reicon", () => ({

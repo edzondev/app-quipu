@@ -117,10 +117,11 @@ describe("SignInScreen", () => {
 		expect(view.queryByText(/no existe/i)).toBeNull();
 	});
 
-	it("Olvidé la mía abre recuperar", async () => {
+	it("Olvidé la mía abre recuperar con el correo escrito", async () => {
 		const view = await render(<SignInScreen />);
 		await fireEvent.press(view.getByText("Entrar con correo"));
+		await fireEvent.changeText(view.getByLabelText("Correo"), "ana@quipu.test");
 		await fireEvent.press(view.getByText("Olvidé la mía"));
-		expect(mockPush).toHaveBeenCalledWith("/recuperar");
+		expect(mockPush).toHaveBeenCalledWith("/recuperar?email=ana%40quipu.test");
 	});
 });

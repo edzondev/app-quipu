@@ -194,7 +194,11 @@ export default function SignInScreen() {
 									passkeysOk={passkeysOk}
 									passkeyLoading={passkeyLoading}
 									onPasskey={() => void signInWithPasskey()}
-									onForgot={() => router.push("/recuperar")}
+									onForgot={() =>
+										router.push(
+											email ? `/recuperar?email=${encodeURIComponent(email)}` : "/recuperar",
+										)
+									}
 									onCreate={() => router.push("/create-account")}
 								/>
 							) : (

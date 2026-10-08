@@ -1,26 +1,26 @@
 import { useForm, useStore } from "@tanstack/react-form";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AppShell from "@/shared/components/app-shell";
 import AuthButton from "@/shared/components/auth/auth-button";
-import FieldError from "@/shared/components/auth/field-error";
+import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { formatResendCountdown, useCountdown } from "@/shared/hooks/use-countdown";
+import { emailSchema } from "@/shared/lib/auth/email-schema";
 import { passwordResetRedirectTo, shouldShowPasswordResetSent } from "@/shared/lib/auth/errors";
 import { revalidateOnBlur } from "@/shared/lib/form";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
-const emailSchema = z
-	.string()
-	.trim()
-	.toLowerCase()
-	.min(1, "El email es obligatorio")
-	.pipe(z.email("Email inválido"));
+const RESET_SEND_ERROR = "No pudimos enviar el enlace. Intenta de nuevo.";
+
+function emailFromRoute(value: string | string[] | undefined): string {
+	return typeof value === "string" ? value : "";
+}
 
 const RESET_STEPS = [
 	"Abre el enlace desde este teléfono",
@@ -37,17 +37,18 @@ async function requestReset(email: string) {
 
 export default function RecuperarScreen() {
 	const router = useRouter();
+	const params = useLocalSearchParams<{ email?: string }>();
 	const [sent, setSent] = useState(false);
 	const [requestError, setRequestError] = useState<string | null>(null);
 	const form = useForm({
-		defaultValues: { email: "" },
+		defaultValues: { email: emailFromRoute(params.email) },
 		validators: { onSubmit: z.object({ email: emailSchema }) },
 		onSubmit: async ({ value, formApi }) => {
 			setRequestError(null);
 			const email = value.email.trim().toLowerCase();
 			const result = await requestReset(email);
 			if (!result.ok) {
-				setRequestError("No pudimos enviar el enlace. Intenta de nuevo.");
+				setRequestError(RESET_SEND_ERROR);
 				return;
 			}
 			formApi.setFieldValue("email", email);
@@ -97,22 +98,13 @@ export default function RecuperarScreen() {
 								listeners={{ onChange: revalidateOnBlur }}
 							>
 								{(field) => (
-									<View className="gap-1">
-										<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
-											Correo
-										</Text>
-										<TextInput
-											value={field.state.value}
-											onChangeText={field.handleChange}
-											onBlur={field.handleBlur}
-											autoCapitalize="none"
-											autoComplete="email"
-											inputMode="email"
-											accessibilityLabel="Correo"
-											className="border-b border-line py-2.5 font-hanken text-[17px] text-foreground"
-										/>
-										<FieldError field={field} />
-									</View>
+									<AuthLabeledField
+										label="Correo"
+										field={field}
+										autoCapitalize="none"
+										autoComplete="email"
+										inputMode="email"
+									/>
 								)}
 							</form.Field>
 							{requestError ? <ErrorText message={requestError} /> : null}
@@ -202,7 +194,7 @@ function ResetSent({
 					</Pressable>
 				)}
 			</View>
-			{failed ? <ErrorText message="No pudimos enviar el enlace. Intenta de nuevo." /> : null}
+			{failed ? <ErrorText message={RESET_SEND_ERROR} /> : null}
 			<View className="mt-auto">
 				<Pressable
 					onPress={onOther}
