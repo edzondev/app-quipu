@@ -52,11 +52,14 @@ describe("ClosedCycleSurplusCard", () => {
 		expect(view.queryByLabelText("Mover al Fondo")).toBeNull();
 	});
 
-	it("no renderiza si el sobrante ya se movió", async () => {
+	it("muestra el estado movido sin botón cuando el sobrante ya se movió", async () => {
 		mockUseQuery.mockReturnValue({ ...closedCycleSurplus, movedAt: 1_700_000_000_000 });
 		const view = await render(<ClosedCycleSurplusCard />);
-		expect(view.queryByText("S/ 210")).toBeNull();
+		expect(view.getByText("Movido al Fondo")).toBeTruthy();
+		expect(view.getByText("S/ 210")).toBeTruthy();
+		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.queryByLabelText("Mover al Fondo")).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 
 	it("muestra el total y el desglose", async () => {

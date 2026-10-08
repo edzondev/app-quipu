@@ -23,7 +23,7 @@ export function ClosedCycleSurplusCard() {
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	if (surplus == null || surplus.total === 0 || surplus.movedAt !== null) return null;
+	if (surplus == null || surplus.total === 0) return null;
 	const closedCycleId = surplus.closedCycleId;
 
 	async function onMove() {
@@ -62,21 +62,32 @@ export function ClosedCycleSurplusCard() {
 					</View>
 				))}
 			</View>
-			<Pressable
-				accessibilityRole="button"
-				accessibilityLabel="Mover al Fondo"
-				accessibilityState={{ disabled: pending }}
-				disabled={pending}
-				onPress={() => void onMove()}
-				className={`mt-[22px] items-center rounded-[13px] bg-primary py-4 active:opacity-80 ${
-					pending ? "opacity-60" : ""
-				}`}
-			>
-				<Text className="font-hanken-semibold text-[15px] text-background">
-					{pending ? "Moviendo…" : "Mover al Fondo"}
+			{surplus.movedAt === null ? (
+				<>
+					<Pressable
+						accessibilityRole="button"
+						accessibilityLabel="Mover al Fondo"
+						accessibilityState={{ disabled: pending }}
+						disabled={pending}
+						onPress={() => void onMove()}
+						className={`mt-[22px] items-center rounded-[13px] bg-primary py-4 active:opacity-80 ${
+							pending ? "opacity-60" : ""
+						}`}
+					>
+						<Text className="font-hanken-semibold text-[15px] text-background">
+							{pending ? "Moviendo…" : "Mover al Fondo"}
+						</Text>
+					</Pressable>
+					{error ? <ErrorText message={error} /> : null}
+				</>
+			) : (
+				<Text
+					accessibilityLabel="Sobrante movido al Fondo"
+					className="mt-[22px] text-center font-hanken text-[14px] text-foreground/45"
+				>
+					Movido al Fondo
 				</Text>
-			</Pressable>
-			{error ? <ErrorText message={error} /> : null}
+			)}
 		</View>
 	);
 }
