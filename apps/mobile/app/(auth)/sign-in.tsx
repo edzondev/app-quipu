@@ -185,7 +185,6 @@ export default function SignInScreen() {
 									passkeysOk={passkeysOk}
 									passkeyLoading={passkeyLoading}
 									onPasskey={() => void signInWithPasskey()}
-									onForgot={() => router.push("/recuperar")}
 									onCreate={() => router.push("/create-account")}
 								/>
 							) : (
@@ -264,7 +263,6 @@ function Backup({
 	passkeysOk,
 	passkeyLoading,
 	onPasskey,
-	onForgot,
 	onCreate,
 }: {
 	form: SignInForm;
@@ -273,7 +271,6 @@ function Backup({
 	passkeysOk: boolean;
 	passkeyLoading: boolean;
 	onPasskey: () => void;
-	onForgot: () => void;
 	onCreate: () => void;
 }) {
 	return (
@@ -317,21 +314,9 @@ function Backup({
 				>
 					{(field) => (
 						<View className="gap-1">
-							<View className="flex-row items-center justify-between">
-								<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
-									Contraseña
-								</Text>
-								<Pressable
-									onPress={onForgot}
-									hitSlop={HIT_SLOP}
-									accessibilityRole="button"
-									className="active:opacity-60"
-								>
-									<Text className="font-hanken-semibold text-[12.5px] text-primary">
-										Olvidé la mía
-									</Text>
-								</Pressable>
-							</View>
+							<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
+								Contraseña
+							</Text>
 							<TextInput
 								value={field.state.value}
 								onChangeText={field.handleChange}

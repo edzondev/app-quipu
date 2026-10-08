@@ -116,11 +116,4 @@ describe("SignInScreen", () => {
 		expect(view.queryByText(/User not found/)).toBeNull();
 		expect(view.queryByText(/no existe/i)).toBeNull();
 	});
-
-	it("Olvidé la mía abre recuperar", async () => {
-		const view = await render(<SignInScreen />);
-		await fireEvent.press(view.getByText("Entrar con correo"));
-		await fireEvent.press(view.getByText("Olvidé la mía"));
-		expect(mockPush).toHaveBeenCalledWith("/recuperar");
-	});
 });
