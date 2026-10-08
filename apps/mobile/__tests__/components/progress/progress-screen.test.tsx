@@ -7,12 +7,11 @@ import {
 	type ProgressRewards,
 	presentClose,
 	presentProgress,
-	type SavingsOverview,
 } from "@/shared/lib/progress/model";
+import { savingsOverview } from "@/shared/lib/progress/savings-overview-fixture";
 
 type Overview = NonNullable<ProgressOverview>;
 type Rewards = NonNullable<ProgressRewards>;
-type Savings = NonNullable<SavingsOverview>;
 type ClosePayload = NonNullable<CloseReportResult>;
 
 const MAY = Date.parse("2026-05-15T17:00:00.000Z");
@@ -52,11 +51,6 @@ const rewards = {
 	appIcons: [],
 } satisfies Rewards;
 
-const savings = {
-	profile: { name: "Ana", currencyCode: "PEN" },
-	totalSavedCents: 432000,
-} satisfies Savings;
-
 const closeReport = {
 	justClosed: false,
 	report: {
@@ -84,14 +78,17 @@ describe("ProgressScreen", () => {
 
 	it("muestra la racha y no ofrece Ver ahorro", async () => {
 		const view = await render(
-			<ProgressScreen {...screenProps} model={presentProgress(overview, rewards, savings, null)} />,
+			<ProgressScreen
+				{...screenProps}
+				model={presentProgress(overview, rewards, savingsOverview, null)}
+			/>,
 		);
 
 		expect(view.getByText("Progreso")).toBeTruthy();
 		expect(view.getByText("3")).toBeTruthy();
 		expect(view.getByText("seguidos")).toBeTruthy();
-		expect(view.getByText("DESDE MAY")).toBeTruthy();
-		expect(view.getAllByText("MAY").length).toBeGreaterThan(0);
+		expect(view.queryByText(/DESDE/)).toBeNull();
+		expect(view.getByText("MAYO")).toBeTruthy();
 		expect(view.getByText("AHORRADO TOTAL")).toBeTruthy();
 		expect(view.getByText("S/ 4,320")).toBeTruthy();
 		expect(view.getByText("Primer ciclo cerrado")).toBeTruthy();
@@ -129,14 +126,17 @@ describe("ProgressScreen", () => {
 			<ProgressScreen
 				{...screenProps}
 				onOpenClose={onOpenClose}
-				model={presentProgress(overview, rewards, savings, closeReport)}
+				model={presentProgress(overview, rewards, savingsOverview, closeReport)}
 			/>,
 		);
 		await fireEvent.press(present.getByLabelText("CICLO CERRADO · JULIO"));
 		expect(onOpenClose).toHaveBeenCalledTimes(1);
 
 		const absent = await render(
-			<ProgressScreen {...screenProps} model={presentProgress(overview, rewards, savings, null)} />,
+			<ProgressScreen
+				{...screenProps}
+				model={presentProgress(overview, rewards, savingsOverview, null)}
+			/>,
 		);
 		expect(absent.queryByText("CICLO CERRADO · JULIO")).toBeNull();
 	});
@@ -161,7 +161,11 @@ describe("CloseScreen", () => {
 			},
 		} satisfies ClosePayload;
 		const view = await render(
-			<CloseScreen model={presentClose(income, savings)} onBack={jest.fn()} />,
+			<CloseScreen
+				status="ready"
+				model={presentClose(income, savingsOverview)}
+				onBack={jest.fn()}
+			/>,
 		);
 
 		expect(view.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
@@ -172,5 +176,21 @@ describe("CloseScreen", () => {
 		expect(view.queryByText("Dejarlos en Gustos")).toBeNull();
 		expect(view.queryByText(/%/)).toBeNull();
 		expect(view.queryByText("cycle-secret")).toBeNull();
+	});
+
+	it("muestra carga mientras el reporte no llega", async () => {
+		const view = await render(<CloseScreen status="loading" model={null} onBack={jest.fn()} />);
+		expect(view.getByText("Cargando…")).toBeTruthy();
+		expect(view.queryByText("Aún no hay un cierre.")).toBeNull();
+	});
+
+	it("centra el vacío y vuelve a Progreso cuando el query es null", async () => {
+		const onBack = jest.fn();
+		const view = await render(<CloseScreen status="ready" model={null} onBack={onBack} />);
+		expect(view.getByText("Aún no hay un cierre.")).toBeTruthy();
+		expect(view.getByText("El resumen aparece al cerrar un ciclo.")).toBeTruthy();
+		expect(view.queryByText("Cargando…")).toBeNull();
+		await fireEvent.press(view.getByLabelText("Volver a Progreso"));
+		expect(onBack).toHaveBeenCalledTimes(1);
 	});
 });

@@ -1,7 +1,6 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Check } from "reicon-react-native/icons/Check";
 import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
-import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type {
 	AchievementRowView,
 	ProgressBarView,
@@ -9,9 +8,9 @@ import type {
 } from "@/shared/lib/progress/model";
 
 const BAR: Record<ProgressBarView["tone"], string> = {
-	compliant: "bg-[#5E8C79]",
-	warning: "bg-[#C99A3E]",
-	failed: "bg-[#9A968C]",
+	compliant: "bg-savings",
+	warning: "bg-warning",
+	failed: "bg-foreground/30",
 };
 
 type Props = {
@@ -29,14 +28,7 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 				contentContainerClassName="grow pb-8"
 				showsVerticalScrollIndicator={false}
 			>
-				<View className="flex-row items-baseline justify-between">
-					<Text className="font-newsreader text-[27px] leading-8 text-foreground">Progreso</Text>
-					{model?.sinceLabel ? (
-						<Text className="font-geist-mono text-[11px] tracking-[0.12em] text-[#8C8880]">
-							{model.sinceLabel}
-						</Text>
-					) : null}
-				</View>
+				<Text className="font-newsreader text-[27px] leading-8 text-foreground">Progreso</Text>
 
 				{status === "loading" ? (
 					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
@@ -46,7 +38,6 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 					<Pressable
 						accessibilityRole="button"
 						accessibilityLabel={model.closeEntry.label}
-						hitSlop={HIT_SLOP}
 						onPress={onOpenClose}
 						className={`mt-6 flex-row items-center justify-between rounded-2xl px-4 py-4 active:opacity-70 ${
 							model.closeEntry.highlighted
@@ -71,18 +62,18 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 
 function EmptyProgress({ onOpenPlan }: { onOpenPlan: () => void }) {
 	return (
-		<View className="flex-1 justify-center">
-			<Text className="font-newsreader text-[23px] leading-8 text-foreground">
+		<View className="flex-1 items-center justify-center">
+			<Text className="text-center font-newsreader text-[23px] leading-8 text-foreground">
 				Aún no cierras un ciclo.
 			</Text>
-			<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
+			<Text className="mt-3 max-w-[300px] text-center font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
 				La constancia aparece cuando el primero queda cerrado. Sin medallas ni apuro.
 			</Text>
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Ir a Plan"
 				onPress={onOpenPlan}
-				className="mt-[22px] self-start rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
+				className="mt-[22px] rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
 			>
 				<Text className="font-hanken-semibold text-[14px] text-foreground">Ir a Plan</Text>
 			</Pressable>
@@ -106,12 +97,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			{model.bars.length > 0 ? (
 				<View className="mt-5 flex-row gap-[7px]">
 					{model.bars.map((bar) => (
-						<View key={bar.key} className="flex-1">
-							<View className={`h-[34px] rounded-[5px] ${BAR[bar.tone]}`} />
-							<Text className="mt-[7px] text-center font-geist-mono text-[10px] text-[#8C8880]">
-								{bar.monthLabel}
-							</Text>
-						</View>
+						<View key={bar.key} className={`h-[34px] flex-1 rounded-[5px] ${BAR[bar.tone]}`} />
 					))}
 				</View>
 			) : null}
@@ -130,8 +116,12 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 					<Text className="mb-1.5 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
 						LOGROS
 					</Text>
-					{model.achievements.map((row) => (
-						<AchievementRow key={row.key} row={row} />
+					{model.achievements.map((row, index) => (
+						<AchievementRow
+							key={row.key}
+							row={row}
+							isLast={index === model.achievements.length - 1}
+						/>
 					))}
 				</View>
 			) : null}
@@ -150,15 +140,17 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 	);
 }
 
-function AchievementRow({ row }: { row: AchievementRowView }) {
+function AchievementRow({ row, isLast }: { row: AchievementRowView; isLast: boolean }) {
 	return (
-		<View className="flex-row items-center gap-3 border-b border-[#F0EEE8] py-3.5">
+		<View
+			className={`flex-row items-center gap-3 py-3.5 ${isLast ? "" : "border-b border-[#F0EEE8]"}`}
+		>
 			<View
 				className={`h-[30px] w-[30px] items-center justify-center rounded-[9px] ${
 					row.done ? "bg-savings/15" : "border border-dashed border-[#DAD7CE]"
 				}`}
 			>
-				{row.done ? <Check size={16} color="#3C7D6E" /> : null}
+				{row.done ? <Check size={15} color="#3C7D6E" /> : null}
 			</View>
 			<View className="min-w-0 flex-1">
 				<Text

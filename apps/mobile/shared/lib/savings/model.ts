@@ -1,8 +1,7 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { parseAmountToCents } from "@/shared/lib/expenses/amount";
-import { formatCentsTrimmed } from "@/shared/lib/money";
-import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+import { currencySymbol, formatCentsTrimmed } from "@/shared/lib/money";
 
 export type SavingsOverview = FunctionReturnType<typeof api.savings.getOverview>;
 
@@ -102,7 +101,7 @@ export function presentAhorro(
 ): AhorroScreenModel {
 	if (overview == null) return emptyAhorro();
 
-	const symbol = marketFromCurrencyCode(overview.profile.currencyCode)?.currencySymbol ?? "S/";
+	const symbol = currencySymbol(overview.profile.currencyCode);
 	const cycleContributionCents = overview.cycleContributionCents;
 
 	return {
@@ -121,7 +120,7 @@ export function presentAhorro(
 
 export function ahorroPlanRow(overview: SavingsOverview): AhorroPlanRow | null {
 	if (overview == null) return null;
-	const symbol = marketFromCurrencyCode(overview.profile.currencyCode)?.currencySymbol ?? "S/";
+	const symbol = currencySymbol(overview.profile.currencyCode);
 	return {
 		subtitle: planSubtitle(overview),
 		totalLabel: formatCentsTrimmed(overview.totalSavedCents, symbol),

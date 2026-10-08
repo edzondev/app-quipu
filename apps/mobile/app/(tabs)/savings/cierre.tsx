@@ -9,7 +9,7 @@ export default function ClosePage() {
 
 	return (
 		<AppShell>
-			<CloseScreen model={progress.close} onBack={() => router.back()} />
+			<CloseScreen status={progress.status} model={progress.close} onBack={() => router.back()} />
 		</AppShell>
 	);
 }

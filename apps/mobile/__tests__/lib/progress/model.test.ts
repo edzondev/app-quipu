@@ -4,12 +4,11 @@ import {
 	type ProgressRewards,
 	presentClose,
 	presentProgress,
-	type SavingsOverview,
 } from "@/shared/lib/progress/model";
+import { savingsOverview } from "@/shared/lib/progress/savings-overview-fixture";
 
 type Overview = NonNullable<ProgressOverview>;
 type Rewards = NonNullable<ProgressRewards>;
-type Savings = NonNullable<SavingsOverview>;
 type ClosePayload = NonNullable<CloseReportResult>;
 
 const MAY = Date.parse("2026-05-15T17:00:00.000Z");
@@ -69,17 +68,6 @@ const rewards = {
 	appIcons: [],
 } satisfies Rewards;
 
-const savings = {
-	profile: { name: "Ana", currencyCode: "PEN" },
-	hasActiveCycle: true,
-	totalSavedCents: 432000,
-	cycleContributionCents: 0,
-	emergencyFund: null,
-	goals: [],
-	canCreateGoal: false,
-	assignPlan: null,
-} satisfies Savings;
-
 const closeReport = {
 	justClosed: true,
 	report: {
@@ -100,16 +88,14 @@ const closeReport = {
 
 describe("presentProgress", () => {
 	it("arma la racha, los meses y la siguiente recompensa", () => {
-		const model = presentProgress(overview, rewards, savings, null);
+		const model = presentProgress(overview, rewards, savingsOverview, null);
 
 		expect(model.empty).toBe(false);
 		expect(model.streakLabel).toBe("3");
-		expect(model.sinceLabel).toBe("DESDE MAY");
-		expect(model.bars.map((bar) => bar.monthLabel)).toEqual(["MAY", "SEP"]);
 		expect(model.bars.map((bar) => bar.tone)).toEqual(["compliant", "warning"]);
 		expect(model.savedLabel).toBe("S/ 4,320");
 		expect(model.achievements).toEqual([
-			{ key: "first_cycle_closed", title: "Primer ciclo cerrado", done: true, detail: "MAY" },
+			{ key: "first_cycle_closed", title: "Primer ciclo cerrado", done: true, detail: "MAYO" },
 			{
 				key: "emergency_fund_25",
 				title: "Fondo al 25%",
@@ -117,14 +103,12 @@ describe("presentProgress", () => {
 				detail: "Te falta S/ 200 para el 25%",
 			},
 		]);
-		expect(model.rewardText).toBe(
-			"Faltan 3 ciclos para Acento Arcilla. Paleta alterna · desbloqueado con 6 ciclos",
-		);
+		expect(model.rewardText).toBe("Acento Arcilla a los 6 ciclos");
 		expect(model.closeEntry).toBeNull();
 		expect(JSON.stringify(model)).not.toContain("Quipu Plus");
 	});
 
-	it("queda vacío sin racha ni ciclos, y omite DESDE", () => {
+	it("queda vacío sin racha ni ciclos", () => {
 		const model = presentProgress(
 			{
 				...overview,
@@ -141,15 +125,14 @@ describe("presentProgress", () => {
 		);
 
 		expect(model.empty).toBe(true);
-		expect(model.sinceLabel).toBeNull();
 		expect(model.bars).toEqual([]);
 		expect(model.savedLabel).toBeNull();
 		expect(model.rewardText).toBeNull();
 	});
 
 	it("muestra el cierre solo cuando el query trae reporte", () => {
-		expect(presentProgress(overview, rewards, savings, null).closeEntry).toBeNull();
-		expect(presentProgress(overview, rewards, savings, closeReport).closeEntry).toEqual({
+		expect(presentProgress(overview, rewards, savingsOverview, null).closeEntry).toBeNull();
+		expect(presentProgress(overview, rewards, savingsOverview, closeReport).closeEntry).toEqual({
 			label: "CICLO CERRADO · JULIO",
 			highlighted: true,
 		});
@@ -158,10 +141,10 @@ describe("presentProgress", () => {
 
 describe("presentClose", () => {
 	it("calcula el sobrante y omite desvíos y la acción sin origen", () => {
-		const model = presentClose(closeReport, savings);
+		const model = presentClose(closeReport, savingsOverview);
 
 		expect(model?.title).toBe("Cerraste julio con S/ 210 de sobra.");
-		expect(model?.subtitle).toBe("3 ciclos seguidos en verde.");
+		expect(model?.subtitle).toBe("3 ciclos seguidos.");
 		expect(model?.spentLabel).toBe("GASTADO S/ 3,290");
 		expect(model?.surplusLabel).toBe("SOBRÓ S/ 210");
 		expect(model?.rows.map((row) => row.amountLabel)).toEqual(["S/ 2,000", "S/ 1,000", "S/ 290"]);
@@ -169,6 +152,25 @@ describe("presentClose", () => {
 		expect(model?.showMove).toBe(false);
 		expect(JSON.stringify(model)).not.toContain("%");
 		expect(JSON.stringify(model)).not.toContain("cycle-1");
+	});
+
+	it("el subtítulo sigue a la racha aunque el estado sea aviso o fallo", () => {
+		const warning = presentClose(
+			{
+				...closeReport,
+				report: { ...closeReport.report, status: "warning", streak: 2 },
+			} satisfies ClosePayload,
+			savingsOverview,
+		);
+		const failed = presentClose(
+			{
+				...closeReport,
+				report: { ...closeReport.report, status: "failed", streak: 0 },
+			} satisfies ClosePayload,
+			savingsOverview,
+		);
+		expect(warning?.subtitle).toBe("2 ciclos seguidos.");
+		expect(failed?.subtitle).toBe("La racha vuelve a empezar.");
 	});
 
 	it("titula sin cifra cuando no sobra", () => {
@@ -180,7 +182,7 @@ describe("presentClose", () => {
 					totalIncomeCents: 329000,
 				},
 			} satisfies ClosePayload,
-			savings,
+			savingsOverview,
 		);
 
 		expect(model?.title).toBe("Cerraste julio.");
@@ -189,6 +191,6 @@ describe("presentClose", () => {
 	});
 
 	it("devuelve null sin reporte", () => {
-		expect(presentClose(null, savings)).toBeNull();
+		expect(presentClose(null, savingsOverview)).toBeNull();
 	});
 });
