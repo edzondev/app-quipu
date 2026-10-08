@@ -1,37 +1,56 @@
+import type { GenericId as Id } from "convex/values";
 import {
+	type CommitmentCoverage,
 	type CoverageRow,
 	emptyCommitments,
 	presentCommitments,
 	toCreateCommitment,
 } from "@/shared/lib/commitments/model";
 
+function commitmentId(id: string): Id<"fixedCommitments"> {
+	return id as Id<"fixedCommitments">;
+}
+
+function financialCycleId(id: string): Id<"financialCycles"> {
+	return id as Id<"financialCycles">;
+}
+
 const AUG_16 = Date.UTC(2026, 7, 16, 17, 0, 0);
 const AUG_22 = Date.UTC(2026, 7, 22, 17, 0, 0);
 const AUG_6 = Date.UTC(2026, 7, 6, 17, 0, 0);
 const AUG_3 = Date.UTC(2026, 7, 3, 17, 0, 0);
 
-function row(overrides: Partial<CoverageRow> = {}) {
+function row(overrides: Omit<Partial<CoverageRow>, "id"> & { id?: string } = {}): CoverageRow {
+	const { id = "c1", ...rest } = overrides;
 	return {
-		id: "c1",
+		id: commitmentId(id),
 		name: "Alquiler",
 		amount: 110_000,
-		envelope: "needs" as const,
+		envelope: "needs",
 		dueDay: 16,
 		nextDueAt: AUG_16,
 		daysUntilDue: 1,
-		coverageStatus: "covered" as const,
-		paymentStatus: "pending" as const,
+		covered: 0,
+		remaining: 110_000,
+		progressPercent: 0,
+		coverageStatus: "covered",
+		cascadeStatus: "not-started",
+		fundingEvents: [],
+		coveredAt: undefined,
+		paymentStatus: "pending",
 		paidAtForCycle: undefined,
-		...overrides,
+		...rest,
 	};
 }
 
 function coverage(
-	commitments: ReturnType<typeof row>[],
+	commitments: CoverageRow[],
 	totalCents = commitments.reduce((sum, item) => sum + item.amount, 0),
-) {
+): NonNullable<CommitmentCoverage> {
 	return {
 		currencyCode: "PEN",
+		cycle: { startDate: AUG_16, endDate: AUG_16 },
+		cycleId: financialCycleId("cycle"),
 		totalCents,
 		commitments,
 	};

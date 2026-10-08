@@ -1,16 +1,82 @@
+import type { GenericId as Id } from "convex/values";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
 
-function summary(overrides: Partial<NonNullable<Parameters<typeof mapSobresScreen>[0]>> = {}) {
+type Summary = NonNullable<Parameters<typeof mapSobresScreen>[0]>;
+type ActiveSummary = Extract<Summary, { cycle: { startDate: number } }>;
+type SummaryCommitment = ActiveSummary["commitments"][number];
+
+const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
+
+function cycleId(id: string): Id<"financialCycles"> {
+	return id as Id<"financialCycles">;
+}
+
+function commitmentId(id: string): Id<"fixedCommitments"> {
+	return id as Id<"fixedCommitments">;
+}
+
+function subEnvelopeId(id: string): Id<"subEnvelopes"> {
+	return id as Id<"subEnvelopes">;
+}
+
+function commitment(
+	overrides: Omit<Partial<SummaryCommitment>, "id"> & { id: string },
+): SummaryCommitment {
+	const amount = overrides.amount ?? 0;
 	return {
-		profile: { name: "Edzon", currencyCode: "PEN" },
+		id: commitmentId(overrides.id),
+		name: overrides.name ?? "",
+		amount,
+		envelope: overrides.envelope ?? "needs",
+		dueDay: overrides.dueDay ?? 1,
+		nextDueAt: overrides.nextDueAt ?? 0,
+		daysUntilDue: overrides.daysUntilDue ?? 0,
+		covered: overrides.covered ?? 0,
+		remaining: overrides.remaining ?? amount,
+		progressPercent: overrides.progressPercent ?? 0,
+		coverageStatus: overrides.coverageStatus ?? "uncovered",
+		cascadeStatus: overrides.cascadeStatus ?? "not-started",
+		paymentStatus: overrides.paymentStatus ?? "pending",
+		paidAtForCycle: overrides.paidAtForCycle,
+	};
+}
+
+function summary(
+	overrides: {
+		envelopes?: ActiveSummary["envelopes"];
+		commitments?: ActiveSummary["commitments"];
+	} = {},
+): ActiveSummary {
+	return {
+		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
 		cycle: {
-			startDate: Date.UTC(2026, 7, 1, 5, 0, 0),
+			id: cycleId("cycle"),
+			startDate: AUGUST_START,
+			endDate: AUGUST_START,
+			needsReview: false,
+			unallocatedCents: 0,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
 			progressPercent: 50,
 		},
-		envelopes: [
+		hero: {
+			dailyAvailableCents: 0,
+			displayDailyCents: 0,
+			bodyCopy: undefined,
+			validationCopy: undefined,
+			statusBadge: "stable",
+			spendableCents: 0,
+			reservedCents: 0,
+			unallocatedCents: 0,
+		},
+		liquidity: {
+			spendableCents: 0,
+			reservedCents: 0,
+			unallocatedCents: 0,
+			savingsParkedInEnvelopeCents: 0,
+		},
+		envelopes: overrides.envelopes ?? [
 			{
 				type: "needs" as const,
 				allocatedAmount: 175_000,
@@ -30,31 +96,53 @@ function summary(overrides: Partial<NonNullable<Parameters<typeof mapSobresScree
 				percentRemaining: 100,
 			},
 		],
-		commitments: [
-			{
+		commitments: overrides.commitments ?? [
+			commitment({
 				id: "rent",
 				name: "Alquiler",
 				amount: 110_000,
-				envelope: "needs" as const,
+				envelope: "needs",
 				daysUntilDue: 1,
-				paymentStatus: "pending" as const,
-			},
-			{
+				paymentStatus: "pending",
+			}),
+			commitment({
 				id: "paid",
 				name: "Netflix",
 				amount: 3_000,
-				envelope: "wants" as const,
+				envelope: "wants",
 				daysUntilDue: 2,
-				paymentStatus: "paid" as const,
-			},
+				paymentStatus: "paid",
+			}),
 		],
-		...overrides,
+		coach: {
+			kind: "tranquil",
+			message: "",
+			interactionId: undefined,
+			options: undefined,
+			crisisOptions: undefined,
+			crisisPlan: undefined,
+			rescueSuggestion: undefined,
+			awaitingRescueConfirmation: false,
+		},
+		movements: [],
+		isEarlyCycle: false,
 	};
 }
 
 describe("mapSobresScreen", () => {
 	it("devuelve null sin ciclo", () => {
-		expect(mapSobresScreen(summary({ cycle: null }))).toBeNull();
+		expect(
+			mapSobresScreen({
+				profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+				cycle: null,
+				hero: null,
+				envelopes: [],
+				commitments: [],
+				coach: null,
+				movements: [],
+				isEarlyCycle: false,
+			}),
+		).toBeNull();
 		expect(mapSobresScreen(null)).toBeNull();
 	});
 
@@ -155,13 +243,13 @@ describe("mapSobresScreen", () => {
 					},
 				],
 				commitments: [
-					{
+					commitment({
 						id: "secret-id",
 						name: "Cine",
 						envelope: "wants",
 						daysUntilDue: 3,
 						paymentStatus: "pending",
-					},
+					}),
 				],
 			}),
 		);
@@ -225,11 +313,44 @@ describe("mapSobresScreen", () => {
 describe("savingsLineFromOverview", () => {
 	it("une fondo y metas en mayúsculas, sin ids", () => {
 		const line = savingsLineFromOverview({
-			emergencyFund: { id: "sub_secret", label: " Fondo " },
+			profile: { name: "Ana", currencyCode: "PEN" },
+			hasActiveCycle: true,
+			totalSavedCents: 0,
+			cycleContributionCents: 0,
+			emergencyFund: {
+				id: subEnvelopeId("sub_secret"),
+				label: " Fondo ",
+				currentAmount: 0,
+				targetAmount: 0,
+				monthlyEssentialsCents: 0,
+				monthsCovered: 0,
+				monthsCoveredCopy: "",
+				progressPercent: 0,
+				cycleContributionCents: 0,
+				cyclesToComplete: null,
+				contributionStreak: 0,
+				availableToContributeCents: 0,
+			},
 			goals: [
-				{ id: "goal_secret", label: "Viaje" },
-				{ id: "blank", label: "   " },
+				{
+					id: subEnvelopeId("goal_secret"),
+					label: "Viaje",
+					currentAmount: 0,
+					targetAmount: 0,
+					progressPercent: 0,
+					isSystemDefault: false,
+				},
+				{
+					id: subEnvelopeId("blank"),
+					label: "   ",
+					currentAmount: 0,
+					targetAmount: 0,
+					progressPercent: 0,
+					isSystemDefault: false,
+				},
 			],
+			canCreateGoal: false,
+			assignPlan: null,
 		});
 		expect(line).toBe("FONDO + VIAJE");
 		expect(line).not.toContain("secret");
@@ -238,6 +359,17 @@ describe("savingsLineFromOverview", () => {
 	it("devuelve null si aún no hay nombres", () => {
 		expect(savingsLineFromOverview(undefined)).toBeNull();
 		expect(savingsLineFromOverview(null)).toBeNull();
-		expect(savingsLineFromOverview({ emergencyFund: null, goals: [] })).toBeNull();
+		expect(
+			savingsLineFromOverview({
+				profile: { name: "Ana", currencyCode: "PEN" },
+				hasActiveCycle: false,
+				totalSavedCents: 0,
+				cycleContributionCents: 0,
+				emergencyFund: null,
+				goals: [],
+				canCreateGoal: false,
+				assignPlan: null,
+			}),
+		).toBeNull();
 	});
 });

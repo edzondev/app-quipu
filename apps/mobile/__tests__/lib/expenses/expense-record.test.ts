@@ -1,8 +1,17 @@
+import type { GenericId as Id } from "convex/values";
 import {
 	lookupExpense,
 	mapFrequentExpenses,
 	readCreateDraft,
 } from "@/shared/lib/expenses/expense-record";
+
+function expenseId(id: string): Id<"expenses"> {
+	return id as Id<"expenses">;
+}
+
+function envelopeId(id: string): Id<"envelopes"> {
+	return id as Id<"envelopes">;
+}
 
 const movements = {
 	currencyCode: "PEN",
@@ -30,27 +39,27 @@ const movements = {
 
 const recent = [
 	{
-		_id: "exp1",
+		_id: expenseId("exp1"),
 		amount: 4200,
 		description: "Plaza Vea",
 		timestamp: 1_700_000_000_000,
-		envelopeId: "env_wants",
+		envelopeId: envelopeId("env_wants"),
 		envelopeType: "wants" as const,
 	},
 	{
-		_id: "exp3",
+		_id: expenseId("exp3"),
 		amount: 500,
 		description: "  Metropolitano ",
 		timestamp: 1,
-		envelopeId: "env_needs",
+		envelopeId: envelopeId("env_needs"),
 		envelopeType: "needs" as const,
 	},
 	{
-		_id: "exp4",
+		_id: expenseId("exp4"),
 		amount: 800,
 		description: "metropolitano",
 		timestamp: 2,
-		envelopeId: "env_needs",
+		envelopeId: envelopeId("env_needs"),
 		envelopeType: "needs" as const,
 	},
 ];

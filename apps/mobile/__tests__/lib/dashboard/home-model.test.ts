@@ -1,25 +1,85 @@
+import type { GenericId as Id } from "convex/values";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
 const YESTERDAY_MOVE = Date.UTC(2026, 7, 14, 15, 0, 0);
 
-function summary(overrides: Partial<Parameters<typeof mapDashboardHome>[0]> = {}) {
+type Summary = Parameters<typeof mapDashboardHome>[0];
+type ActiveSummary = Extract<Summary, { cycle: { startDate: number } }>;
+type Hero = NonNullable<ActiveSummary["hero"]>;
+type SummaryCommitment = ActiveSummary["commitments"][number];
+
+function cycleId(id: string): Id<"financialCycles"> {
+	return id as Id<"financialCycles">;
+}
+
+function commitmentId(id: string): Id<"fixedCommitments"> {
+	return id as Id<"fixedCommitments">;
+}
+
+const hero: Hero = {
+	dailyAvailableCents: 4230,
+	displayDailyCents: 4230,
+	bodyCopy: undefined,
+	validationCopy: undefined,
+	statusBadge: "stable",
+	spendableCents: 0,
+	reservedCents: 0,
+	unallocatedCents: 0,
+};
+
+function commitment(
+	overrides: Omit<Partial<SummaryCommitment>, "id"> & { id: string },
+): SummaryCommitment {
+	const amount = overrides.amount ?? 0;
 	return {
-		profile: { name: "Edzon", currencyCode: "PEN" },
+		id: commitmentId(overrides.id),
+		name: overrides.name ?? "",
+		amount,
+		envelope: overrides.envelope ?? "needs",
+		dueDay: overrides.dueDay ?? 1,
+		nextDueAt: overrides.nextDueAt ?? 0,
+		daysUntilDue: overrides.daysUntilDue ?? 0,
+		covered: overrides.covered ?? 0,
+		remaining: overrides.remaining ?? amount,
+		progressPercent: overrides.progressPercent ?? 0,
+		coverageStatus: overrides.coverageStatus ?? "uncovered",
+		cascadeStatus: overrides.cascadeStatus ?? "not-started",
+		paymentStatus: overrides.paymentStatus ?? "pending",
+		paidAtForCycle: overrides.paidAtForCycle,
+	};
+}
+
+function summary(
+	overrides: {
+		hero?: Hero;
+		envelopes?: ActiveSummary["envelopes"];
+		movements?: ActiveSummary["movements"];
+		commitments?: ActiveSummary["commitments"];
+	} = {},
+): ActiveSummary {
+	return {
+		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
 		cycle: {
+			id: cycleId("cycle"),
 			startDate: AUGUST_START,
+			endDate: AUGUST_START,
+			needsReview: false,
+			unallocatedCents: 0,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
 			progressPercent: 50,
 		},
-		hero: {
-			displayDailyCents: 4230,
-			statusBadge: "stable" as const,
-			bodyCopy: undefined,
+		hero: overrides.hero ?? hero,
+		liquidity: {
+			spendableCents: 0,
+			reservedCents: 0,
+			unallocatedCents: 0,
+			savingsParkedInEnvelopeCents: 0,
 		},
-		envelopes: [
+		envelopes: overrides.envelopes ?? [
 			{
 				type: "needs" as const,
 				allocatedAmount: 175000,
@@ -39,9 +99,18 @@ function summary(overrides: Partial<Parameters<typeof mapDashboardHome>[0]> = {}
 				percentRemaining: 100,
 			},
 		],
-		coach: { message: "Vas bien." },
-		commitments: [],
-		movements: [
+		coach: {
+			kind: "tranquil",
+			message: "Vas bien.",
+			interactionId: undefined,
+			options: undefined,
+			crisisOptions: undefined,
+			crisisPlan: undefined,
+			rescueSuggestion: undefined,
+			awaitingRescueConfirmation: false,
+		},
+		commitments: overrides.commitments ?? [],
+		movements: overrides.movements ?? [
 			{
 				id: "e1",
 				kind: "expense" as const,
@@ -59,13 +128,24 @@ function summary(overrides: Partial<Parameters<typeof mapDashboardHome>[0]> = {}
 				envelopeLabel: "Necesidades",
 			},
 		],
-		...overrides,
+		isEarlyCycle: false,
 	};
 }
 
 describe("mapDashboardHome", () => {
 	it("devuelve null si no hay ciclo activo", () => {
-		expect(mapDashboardHome(summary({ cycle: null, hero: null }))).toBeNull();
+		expect(
+			mapDashboardHome({
+				profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+				cycle: null,
+				hero: null,
+				envelopes: [],
+				commitments: [],
+				coach: null,
+				movements: [],
+				isEarlyCycle: false,
+			}),
+		).toBeNull();
 	});
 
 	it("mapea el héroe, el ciclo y el coach sin datos ficticios", () => {
@@ -92,10 +172,7 @@ describe("mapDashboardHome", () => {
 		expect(
 			mapDashboardHome(
 				summary({
-					hero: {
-						displayDailyCents: 0,
-						statusBadge: "risk",
-					},
+					hero: { ...hero, displayDailyCents: 0, statusBadge: "risk" },
 				}),
 			)?.badgeLabel,
 		).toBe("En riesgo");
@@ -103,6 +180,7 @@ describe("mapDashboardHome", () => {
 			mapDashboardHome(
 				summary({
 					hero: {
+						...hero,
 						displayDailyCents: 0,
 						statusBadge: "starting",
 						bodyCopy: "Registra tu primer gasto.",
@@ -207,6 +285,7 @@ describe("mapDashboardHome", () => {
 						label: "Sueldo",
 						amount: 350000,
 						timestamp: TODAY_MOVE,
+						envelopeLabel: undefined,
 					},
 				],
 			}),
@@ -220,38 +299,38 @@ describe("mapDashboardHome", () => {
 		const home = mapDashboardHome(
 			summary({
 				commitments: [
-					{
+					commitment({
 						id: "paid",
 						name: "Netflix",
 						amount: 3000,
 						nextDueAt: Date.UTC(2026, 7, 16, 17, 0, 0),
 						daysUntilDue: 1,
 						paymentStatus: "paid",
-					},
-					{
+					}),
+					commitment({
 						id: "rent",
 						name: "Alquiler",
 						amount: 110000,
 						nextDueAt: Date.UTC(2026, 7, 16, 17, 0, 0),
 						daysUntilDue: 1,
 						paymentStatus: "pending",
-					},
-					{
+					}),
+					commitment({
 						id: "light",
 						name: "Luz del Sur",
 						amount: 9600,
 						nextDueAt: Date.UTC(2026, 7, 22, 17, 0, 0),
 						daysUntilDue: 7,
 						paymentStatus: "pending",
-					},
-					{
+					}),
+					commitment({
 						id: "late",
 						name: "Agua",
 						amount: 4500,
 						nextDueAt: Date.UTC(2026, 7, 10, 17, 0, 0),
 						daysUntilDue: -5,
 						paymentStatus: "overdue",
-					},
+					}),
 				],
 			}),
 		);
