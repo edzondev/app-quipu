@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
@@ -14,9 +15,10 @@ type Props = {
 	status: "loading" | "ready";
 	model: CloseScreenModel | null;
 	onBack: () => void;
+	footer?: ReactNode;
 };
 
-export function CloseScreen({ status, model, onBack }: Props) {
+export function CloseScreen({ status, model, onBack, footer }: Props) {
 	return (
 		<View className="flex-1">
 			<View className="flex-row items-center">
@@ -88,6 +90,7 @@ export function CloseScreen({ status, model, onBack }: Props) {
 							</View>
 						))}
 					</View>
+					{footer}
 				</ScrollView>
 			) : (
 				<View className="flex-1 items-center justify-center">
