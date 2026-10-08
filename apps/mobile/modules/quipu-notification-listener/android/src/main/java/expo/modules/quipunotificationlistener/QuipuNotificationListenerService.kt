@@ -48,14 +48,16 @@ class QuipuNotificationListenerService : NotificationListenerService() {
       }
       val pending = NotificationExtractor.extract(readRaw(sbn)) ?: return
       store.offer(pending)
-    } catch (_: Throwable) {
+    } catch (e: Exception) {
+      logFailure("onNotificationPosted", e)
     }
   }
 
   private fun startStore() {
     try {
       currentStore()
-    } catch (_: Throwable) {
+    } catch (e: Exception) {
+      logFailure("start", e)
     }
   }
 
@@ -77,6 +79,11 @@ class QuipuNotificationListenerService : NotificationListenerService() {
       isGroupSummary = notification != null &&
         (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0,
     )
+  }
+
+  // Exception class only: the message of an exception can carry notification text.
+  private fun logFailure(where: String, error: Exception) {
+    Log.w(TAG, "$where failed: ${error.javaClass.simpleName}")
   }
 
   private fun logDebug(message: String) {

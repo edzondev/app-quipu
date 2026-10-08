@@ -1,12 +1,16 @@
 package expo.modules.quipunotificationlistener
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.provider.Settings
+import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+
+private const val TAG = "QuipuNotificationListener"
 
 class QuipuNotificationListenerModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -99,12 +103,7 @@ class QuipuNotificationListenerModule : Module() {
 
   private fun bind(): NotificationStore? {
     val store = storeOrNull() ?: return null
-    store.setListener { item ->
-      try {
-        sendEvent("onNotification", item.toPayload())
-      } catch (_: Throwable) {
-      }
-    }
+    store.setListener { item -> sendEvent("onNotification", item.toPayload()) }
     return store
   }
 
@@ -112,18 +111,13 @@ class QuipuNotificationListenerModule : Module() {
     val context = applicationContext() ?: return null
     return try {
       NotificationStore.shared(context.noBackupFilesDir).also { it.start() }
-    } catch (_: Throwable) {
+    } catch (e: Exception) {
+      Log.w(TAG, "store start failed: ${e.javaClass.simpleName}")
       null
     }
   }
 
-  private fun applicationContext(): Context? {
-    return try {
-      appContext.reactContext?.applicationContext
-    } catch (_: Throwable) {
-      null
-    }
-  }
+  private fun applicationContext(): Context? = appContext.reactContext?.applicationContext
 }
 
 private fun isDebuggable(context: Context): Boolean {
@@ -133,7 +127,8 @@ private fun isDebuggable(context: Context): Boolean {
 private fun isAccessEnabled(context: Context): Boolean {
   return try {
     NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
-  } catch (_: Throwable) {
+  } catch (e: SecurityException) {
+    Log.w(TAG, "access check failed: ${e.javaClass.simpleName}")
     false
   }
 }
@@ -143,7 +138,8 @@ private fun openAccessSettings(context: Context) {
     val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     context.startActivity(intent)
-  } catch (_: Throwable) {
+  } catch (e: ActivityNotFoundException) {
+    Log.w(TAG, "settings screen missing: ${e.javaClass.simpleName}")
   }
 }
 
