@@ -5,6 +5,7 @@ import {
 	countConsecutiveWantsDiscipline,
 	countDaysWithoutSkipping,
 	isRewardUnlocked,
+	readTimestampsForLoggingStreak,
 } from "./gamificationMath";
 
 describe("computeNextStreak", () => {
@@ -68,8 +69,8 @@ describe("buildCycleChartBars", () => {
 			{ cycleStart: september },
 		);
 		const current = bars.at(-1);
-		expect(bars).toHaveLength(13);
-		expect(bars.filter((bar) => bar.status === "empty")).toHaveLength(11);
+		expect(bars).toHaveLength(12);
+		expect(bars.filter((bar) => bar.status === "empty")).toHaveLength(10);
 		expect(current?.status).toBe("current");
 		expect(current?.id).toBe(september);
 		expect(current?.cycleStart).toBe(september);
@@ -156,6 +157,31 @@ describe("countDaysWithoutSkipping", () => {
 				Date.parse("2026-10-01T18:00:00-05:00"),
 			),
 		).toBe(2);
+	});
+});
+
+describe("readTimestampsForLoggingStreak", () => {
+	const now = Date.parse("2026-10-08T15:00:00-05:00");
+
+	it("stops at the first Lima day that breaks the streak", () => {
+		const newestFirst = [
+			Date.parse("2026-10-08T09:00:00-05:00"),
+			Date.parse("2026-10-08T20:00:00-05:00"),
+			Date.parse("2026-10-07T09:00:00-05:00"),
+			Date.parse("2026-10-05T09:00:00-05:00"),
+			Date.parse("2026-10-04T09:00:00-05:00"),
+		];
+		const read = readTimestampsForLoggingStreak(newestFirst, now);
+		expect(read).toEqual(newestFirst.slice(0, 3));
+		expect(countDaysWithoutSkipping(read, now)).toBe(2);
+	});
+
+	it("stops immediately when the newest expense is older than yesterday", () => {
+		const newestFirst = [
+			Date.parse("2026-10-05T09:00:00-05:00"),
+			Date.parse("2026-10-04T09:00:00-05:00"),
+		];
+		expect(readTimestampsForLoggingStreak(newestFirst, now)).toEqual([]);
 	});
 });
 

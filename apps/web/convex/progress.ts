@@ -4,6 +4,7 @@ import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
 	type AchievementId,
+	achievementIdValidator,
 	buildAchievements,
 	buildCycleChartBars,
 	canUseAccentPreset,
@@ -13,6 +14,7 @@ import {
 	isRewardUnlocked,
 	progressChartBarValidator,
 	REWARD_THRESHOLDS,
+	readTimestampsForLoggingStreak,
 } from "./lib/gamificationMath";
 import {
 	computeEmergencyFundTargetCents,
@@ -37,16 +39,19 @@ async function loadDaysWithoutSkipping(
 	profileId: Id<"profiles">,
 	now: number,
 ): Promise<number> {
-	const rows = await ctx.db
+	const read: number[] = [];
+	const expenses = ctx.db
 		.query("expenses")
 		.withIndex("by_profile_time", (q) =>
 			q.eq("profileId", profileId).lte("timestamp", endOfLimaDayInclusive(now)),
 		)
-		.collect();
-	return countDaysWithoutSkipping(
-		rows.map((row) => row.timestamp),
-		now,
-	);
+		.order("desc");
+	for await (const expense of expenses) {
+		const next = readTimestampsForLoggingStreak([...read, expense.timestamp], now);
+		if (next.length !== read.length + 1) break;
+		read.push(expense.timestamp);
+	}
+	return countDaysWithoutSkipping(read, now);
 }
 
 const ACHIEVEMENT_TITLES: Record<AchievementId, string> = {
@@ -104,14 +109,23 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 	const progressPercent = computeProgressPercent(currentCents, targetCents);
 
 	const now = Date.now();
-	const [history, registeredExpenseCount, daysWithoutSkipping] = await Promise.all([
+	const history = historyRows.map((row) => ({
+		status: row.status,
+		wantsWithinBudget: row.wantsWithinBudget,
+		allCommitmentsCovered: row.allCommitmentsCovered,
+		evaluatedAt: row.evaluatedAt,
+	}));
+	const currentCycle =
+		activeCycle !== null && !historyRows.some((row) => row.cycleId === activeCycle._id)
+			? { cycleStart: activeCycle.startDate }
+			: null;
+	const chartRows = [...historyRows].sort((a, b) => a.evaluatedAt - b.evaluatedAt).slice(-12);
+	const [chartHistory, registeredExpenseCount, daysWithoutSkipping] = await Promise.all([
 		Promise.all(
-			historyRows.map(async (row) => {
+			chartRows.map(async (row) => {
 				const cycle = await ctx.db.get("financialCycles", row.cycleId);
 				return {
 					status: row.status,
-					wantsWithinBudget: row.wantsWithinBudget,
-					allCommitmentsCovered: row.allCommitmentsCovered,
 					evaluatedAt: row.evaluatedAt,
 					cycleStart: cycle === null ? null : cycle.startDate,
 				};
@@ -120,10 +134,6 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 		activeCycle === null ? Promise.resolve(0) : countExpensesInCycle(ctx, activeCycle._id),
 		loadDaysWithoutSkipping(ctx, profile._id, now),
 	]);
-	const currentCycle =
-		activeCycle !== null && !historyRows.some((row) => row.cycleId === activeCycle._id)
-			? { cycleStart: activeCycle.startDate }
-			: null;
 
 	const currentStreak = streak?.currentStreak ?? 0;
 	const formatRemaining = (cents: number) =>
@@ -148,7 +158,7 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 		profile,
 		currentStreak,
 		longestStreak: streak?.longestStreak ?? 0,
-		chartBars: buildCycleChartBars(history, currentCycle),
+		chartBars: buildCycleChartBars(chartHistory, currentCycle),
 		registeredExpenseCount,
 		daysWithoutSkipping,
 		achievements,
@@ -163,14 +173,7 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 }
 
 const progressAchievementValidator = v.object({
-	id: v.union(
-		v.literal("first_cycle_closed"),
-		v.literal("emergency_fund_25"),
-		v.literal("three_cycles_wants_discipline"),
-		v.literal("six_times_all_covered"),
-		v.literal("emergency_fund_complete"),
-		v.literal("one_year_in_order"),
-	),
+	id: achievementIdValidator,
 	title: v.string(),
 	state: v.union(v.literal("done"), v.literal("locked")),
 	earnedAt: v.union(v.number(), v.null()),

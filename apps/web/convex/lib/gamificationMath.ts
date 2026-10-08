@@ -8,15 +8,18 @@ export const REWARD_THRESHOLDS = {
 	annualReport: 12,
 } as const;
 
-export type CycleComplianceStatus = "compliant" | "warning" | "failed";
+export const achievementIdValidator = v.union(
+	v.literal("first_cycle_closed"),
+	v.literal("emergency_fund_25"),
+	v.literal("three_cycles_wants_discipline"),
+	v.literal("six_times_all_covered"),
+	v.literal("emergency_fund_complete"),
+	v.literal("one_year_in_order"),
+);
 
-export type AchievementId =
-	| "first_cycle_closed"
-	| "emergency_fund_25"
-	| "three_cycles_wants_discipline"
-	| "six_times_all_covered"
-	| "emergency_fund_complete"
-	| "one_year_in_order";
+export type AchievementId = Infer<typeof achievementIdValidator>;
+
+export type CycleComplianceStatus = "compliant" | "warning" | "failed";
 
 export type AchievementPresentationState = "done" | "locked";
 
@@ -90,24 +93,57 @@ export function countDaysWithoutSkipping(
 	let cursor = anchor;
 	while (days.has(limaDateToInputValue(cursor))) {
 		count += 1;
-		const previous = limaStartOfDay(cursor) - MS_PER_DAY;
-		if (previous >= cursor) break;
-		cursor = previous;
+		cursor = limaStartOfDay(cursor) - MS_PER_DAY;
 	}
 	return count;
 }
 
+/**
+ * Newest-first timestamps to feed `countDaysWithoutSkipping`.
+ * Stops before the first Lima day that breaks the streak, and before any
+ * expense older than yesterday when today and yesterday are both empty.
+ */
+export function readTimestampsForLoggingStreak(
+	timestampsNewestFirst: readonly number[],
+	now: number,
+): number[] {
+	const todayKey = limaDateToInputValue(limaStartOfDay(now));
+	const yesterdayKey = limaDateToInputValue(limaStartOfDay(now) - MS_PER_DAY);
+	const kept: number[] = [];
+	let previousKey: string | null = null;
+
+	for (const timestamp of timestampsNewestFirst) {
+		const key = limaDateToInputValue(timestamp);
+		if (previousKey === null) {
+			if (key !== todayKey && key !== yesterdayKey) return kept;
+			kept.push(timestamp);
+			previousKey = key;
+			continue;
+		}
+		if (key === previousKey) {
+			kept.push(timestamp);
+			continue;
+		}
+		const lastKept = kept.at(-1);
+		if (lastKept === undefined) return kept;
+		const expectedKey = limaDateToInputValue(limaStartOfDay(lastKept) - MS_PER_DAY);
+		if (key !== expectedKey) return kept;
+		kept.push(timestamp);
+		previousKey = key;
+	}
+	return kept;
+}
+
 export function buildCycleChartBars(
-	history: ReadonlyArray<{
-		status: "compliant" | "warning" | "failed";
-		evaluatedAt: number;
-		cycleStart: number | null;
-	}>,
+	history: ReadonlyArray<
+		Pick<CycleHistoryFact, "status" | "evaluatedAt"> & Pick<ProgressChartBar, "cycleStart">
+	>,
 	currentCycle: { cycleStart: number } | null = null,
 	limit = 12,
 ): ProgressChartBar[] {
 	const sorted = [...history].sort((a, b) => a.evaluatedAt - b.evaluatedAt);
-	const recent = sorted.slice(-limit);
+	const closedLimit = currentCycle === null ? limit : limit - 1;
+	const recent = sorted.slice(-closedLimit);
 	const bars: ProgressChartBar[] = recent.map((entry, index) => {
 		const base = entry.status === "compliant" ? 26 : entry.status === "warning" ? 22 : 18;
 		const wobble = (index % 3) * 4;
@@ -120,7 +156,7 @@ export function buildCycleChartBars(
 		};
 	});
 	let emptySlot = 0;
-	while (bars.length < limit) {
+	while (bars.length < closedLimit) {
 		bars.unshift({
 			id: -(emptySlot + 1),
 			status: "empty",

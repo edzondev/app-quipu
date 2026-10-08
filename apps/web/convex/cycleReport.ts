@@ -22,7 +22,6 @@ const reportValidator = v.object({
 	streak: v.number(),
 	status: v.union(v.literal("compliant"), v.literal("warning"), v.literal("failed")),
 	hasExtraordinaryIncome: v.boolean(),
-	expenseCount: v.number(),
 });
 
 const latestCloseReportValidator = v.nullable(
@@ -76,7 +75,7 @@ export const getLatestCloseReport = query({
 			now,
 		});
 
-		const [envelopes, incomeEvents, streakRow, cycleExpenses] = await Promise.all([
+		const [envelopes, incomeEvents, streakRow] = await Promise.all([
 			ctx.db
 				.query("envelopes")
 				.withIndex("by_cycle_type", (q) => q.eq("cycleId", latestHistory.cycleId))
@@ -89,10 +88,6 @@ export const getLatestCloseReport = query({
 				.query("streaks")
 				.withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
 				.unique(),
-			ctx.db
-				.query("expenses")
-				.withIndex("by_cycle_time", (q) => q.eq("cycleId", latestHistory.cycleId))
-				.collect(),
 		]);
 
 		const report = buildCycleCloseReport({
@@ -108,7 +103,6 @@ export const getLatestCloseReport = query({
 			})),
 			cycleHistory: { status: latestHistory.status },
 			streak: streakRow?.currentStreak ?? 0,
-			expenseCount: cycleExpenses.length,
 		});
 
 		return {

@@ -24,7 +24,6 @@ export type CycleCloseReport = {
 	streak: number;
 	status: "compliant" | "warning" | "failed";
 	hasExtraordinaryIncome: boolean;
-	expenseCount: number;
 };
 
 export type CycleCloseReportInput = {
@@ -42,7 +41,6 @@ export type CycleCloseReportInput = {
 		status: "compliant" | "warning" | "failed";
 	};
 	streak: number;
-	expenseCount: number;
 };
 
 export function buildCycleLabel(cycleStartDate: number): string {
@@ -107,6 +105,5 @@ export function buildCycleCloseReport(input: CycleCloseReportInput): CycleCloseR
 		streak: input.streak,
 		status: input.cycleHistory.status,
 		hasExtraordinaryIncome,
-		expenseCount: input.expenseCount,
 	};
 }

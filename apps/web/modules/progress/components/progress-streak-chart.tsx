@@ -21,12 +21,20 @@ export function ProgressStreakChart({ bars }: Props) {
 						/>
 					);
 				}
-				const color =
-					bar.status === "compliant"
-						? "bg-qp"
-						: bar.status === "warning"
-							? "bg-[#E7E3DC]"
-							: "bg-[#E7E3DC]";
+				if (bar.status === "current") {
+					return (
+						<span
+							key={bar.id}
+							className="w-[11px] rounded-[3px] md:w-3.5 md:rounded"
+							style={{
+								height: bar.heightPx,
+								backgroundImage:
+									"repeating-linear-gradient(-45deg, var(--qp) 0 3px, transparent 3px 6px)",
+							}}
+						/>
+					);
+				}
+				const color = bar.status === "compliant" ? "bg-qp" : "bg-[#E7E3DC]";
 				return (
 					<span
 						key={bar.id}
