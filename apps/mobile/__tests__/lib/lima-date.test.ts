@@ -1,4 +1,4 @@
-import { limaDayLabel, limaStamp } from "@/shared/lib/lima-date";
+import { limaDayLabel, limaMonthName, limaStamp } from "@/shared/lib/lima-date";
 
 const AUG_16 = Date.UTC(2026, 7, 16, 17, 0, 0);
 
@@ -11,5 +11,7 @@ describe("limaStamp", () => {
 			time: "12:00",
 		});
 		expect(limaDayLabel(AUG_16)).toBe("16 AGO");
+		expect(limaMonthName(AUG_16)).toBe("AGOSTO");
+		expect(limaMonthName(Date.parse("2026-05-15T17:00:00.000Z"))).toBe("MAYO");
 	});
 });

@@ -43,6 +43,16 @@ export function limaStamp(ms: number): LimaStamp {
 	};
 }
 
+const LIMA_MONTH_LONG = new Intl.DateTimeFormat("es-PE", {
+	timeZone: LIMA,
+	month: "long",
+});
+
+/** Mes completo en Lima, en mayúsculas. P. ej. "MAYO". */
+export function limaMonthName(ms: number): string {
+	return LIMA_MONTH_LONG.format(new Date(ms)).toLocaleUpperCase("es-PE");
+}
+
 /** Día y mes corto en Lima, p. ej. "16 AGO". */
 export function limaDayLabel(ms: number): string {
 	const stamp = limaStamp(ms);
