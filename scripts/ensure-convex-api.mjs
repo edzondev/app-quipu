@@ -6,9 +6,10 @@ import { fileURLToPath } from "node:url";
 // Mobile and CI import `@quipu/convex-api`, whose entry is gitignored.
 // `convex-helpers ts-api-spec` needs a deployment and types missing `returns`
 // validators as `any`. The checked-in `convex/_generated/api.d.ts` already
-// carries the public API (handler inference, or the `returns` validator when
-// one exists). Expand that type into a standalone module so `tsc` does not
-// follow Convex sources under the mobile compiler options.
+// carries the public API. Return types are inferred from each handler; a
+// `returns` validator only constrains that inference. Expand that type into a
+// standalone module so `tsc` does not follow Convex sources under the mobile
+// compiler options.
 //
 // A deployment-generated spec is unnecessary: the next ensure run replaces it.
 
@@ -38,7 +39,7 @@ if (configFile.error) {
 
 const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, convexDir);
 const program = ts.createProgram({
-	rootNames: parsed.fileNames,
+	rootNames: [...parsed.fileNames, generatedApiPath],
 	options: { ...parsed.options, noEmit: true },
 });
 const checker = program.getTypeChecker();
@@ -58,6 +59,8 @@ if (!apiExport) {
 }
 
 const apiType = checker.getTypeOfSymbolAtLocation(apiExport, source);
+// `typeToTypeNode` verbosity (alias expansion) is a TypeScript-internal parameter,
+// not part of the public `typeToString` signature.
 const typeNode = checker.typeToTypeNode(
 	apiType,
 	undefined,

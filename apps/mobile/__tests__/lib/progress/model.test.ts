@@ -1,4 +1,5 @@
-import type { GenericId as Id } from "convex/values";
+import { fixtureId } from "@/__fixtures__/convex-id";
+import { savingsOverview } from "@/__fixtures__/savings-overview";
 import {
 	type CloseReportResult,
 	type ProgressOverview,
@@ -6,15 +7,6 @@ import {
 	presentClose,
 	presentProgress,
 } from "@/shared/lib/progress/model";
-import { savingsOverview } from "@/shared/lib/progress/savings-overview-fixture";
-
-function financialCycleId(id: string): Id<"financialCycles"> {
-	return fixtureId("financialCycles", id);
-}
-
-function fixtureId<const Table extends string>(table: Table, id: string): Id<Table> {
-	return Object.assign(id, { __tableName: table });
-}
 
 type Overview = NonNullable<ProgressOverview>;
 type Rewards = NonNullable<ProgressRewards>;
@@ -80,7 +72,7 @@ const rewards = {
 const closeReport = {
 	justClosed: true,
 	report: {
-		closedCycleId: financialCycleId("cycle-1"),
+		closedCycleId: fixtureId("financialCycles", "cycle-1"),
 		cycleLabel: "Julio",
 		totalIncomeCents: 350000,
 		spendByEnvelope: [

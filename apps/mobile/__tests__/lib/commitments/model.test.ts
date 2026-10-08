@@ -1,4 +1,4 @@
-import type { GenericId as Id } from "convex/values";
+import { fixtureId } from "@/__fixtures__/convex-id";
 import {
 	type CommitmentCoverage,
 	type CoverageRow,
@@ -6,14 +6,6 @@ import {
 	presentCommitments,
 	toCreateCommitment,
 } from "@/shared/lib/commitments/model";
-
-function commitmentId(id: string): Id<"fixedCommitments"> {
-	return id as Id<"fixedCommitments">;
-}
-
-function financialCycleId(id: string): Id<"financialCycles"> {
-	return id as Id<"financialCycles">;
-}
 
 const AUG_16 = Date.UTC(2026, 7, 16, 17, 0, 0);
 const AUG_22 = Date.UTC(2026, 7, 22, 17, 0, 0);
@@ -23,7 +15,7 @@ const AUG_3 = Date.UTC(2026, 7, 3, 17, 0, 0);
 function row(overrides: Omit<Partial<CoverageRow>, "id"> & { id?: string } = {}): CoverageRow {
 	const { id = "c1", ...rest } = overrides;
 	return {
-		id: commitmentId(id),
+		id: fixtureId("fixedCommitments", id),
 		name: "Alquiler",
 		amount: 110_000,
 		envelope: "needs",
@@ -50,7 +42,7 @@ function coverage(
 	return {
 		currencyCode: "PEN",
 		cycle: { startDate: AUG_16, endDate: AUG_16 },
-		cycleId: financialCycleId("cycle"),
+		cycleId: fixtureId("financialCycles", "cycle"),
 		totalCents,
 		commitments,
 	};

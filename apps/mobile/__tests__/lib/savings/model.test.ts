@@ -1,4 +1,4 @@
-import type { GenericId as Id } from "convex/values";
+import { fixtureId } from "@/__fixtures__/convex-id";
 import {
 	ahorroPlanRow,
 	emptyAhorro,
@@ -10,16 +10,12 @@ import {
 	toCreateSavingsGoal,
 } from "@/shared/lib/savings/model";
 
-function subEnvelopeId(id: string): Id<"subEnvelopes"> {
-	return id as Id<"subEnvelopes">;
-}
-
 type Overview = NonNullable<SavingsOverview>;
 type Fund = NonNullable<Overview["emergencyFund"]>;
 type Surplus = NonNullable<MoveSurplusContext>;
 
 const fund = {
-	id: subEnvelopeId("fund-1"),
+	id: fixtureId("subEnvelopes", "fund-1"),
 	label: "Fondo de emergencia",
 	currentAmount: 185000,
 	targetAmount: 450000,
@@ -41,7 +37,7 @@ const overview = {
 	emergencyFund: fund,
 	goals: [
 		{
-			id: subEnvelopeId("goal-viaje"),
+			id: fixtureId("subEnvelopes", "goal-viaje"),
 			label: "Viaje",
 			currentAmount: 120000,
 			targetAmount: 200000,
@@ -61,7 +57,11 @@ const extraIncome = {
 		extraordinary: { availableCents: 9600 },
 	},
 	destinations: [
-		{ id: subEnvelopeId("fund-1"), label: "Fondo de emergencia", isSystemDefault: true },
+		{
+			id: fixtureId("subEnvelopes", "fund-1"),
+			label: "Fondo de emergencia",
+			isSystemDefault: true,
+		},
 	],
 } satisfies Surplus;
 
@@ -102,7 +102,7 @@ describe("presentAhorro", () => {
 
 		expect(model.goals).toEqual([
 			{
-				id: subEnvelopeId("goal-viaje"),
+				id: fixtureId("subEnvelopes", "goal-viaje"),
 				name: "Viaje",
 				currentLabel: "S/ 1,200",
 				targetLabel: "de 2,000",
@@ -116,7 +116,7 @@ describe("presentAhorro", () => {
 			...overview,
 			goals: [
 				{
-					id: subEnvelopeId("goal-abierta"),
+					id: fixtureId("subEnvelopes", "goal-abierta"),
 					label: "Laptop",
 					currentAmount: 0,
 					targetAmount: undefined,
@@ -208,7 +208,7 @@ describe("ahorroPlanRow", () => {
 				goals: [
 					...overview.goals,
 					{
-						id: subEnvelopeId("g2"),
+						id: fixtureId("subEnvelopes", "g2"),
 						label: "Casa",
 						currentAmount: 0,
 						targetAmount: 100,

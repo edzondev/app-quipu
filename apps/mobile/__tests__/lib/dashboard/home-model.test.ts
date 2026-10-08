@@ -1,4 +1,5 @@
-import type { GenericId as Id } from "convex/values";
+import { fixtureId } from "@/__fixtures__/convex-id";
+import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
@@ -8,16 +9,6 @@ const YESTERDAY_MOVE = Date.UTC(2026, 7, 14, 15, 0, 0);
 type Summary = Parameters<typeof mapDashboardHome>[0];
 type ActiveSummary = Extract<Summary, { cycle: { startDate: number } }>;
 type Hero = NonNullable<ActiveSummary["hero"]>;
-type SummaryCommitment = ActiveSummary["commitments"][number];
-
-function cycleId(id: string): Id<"financialCycles"> {
-	return id as Id<"financialCycles">;
-}
-
-function commitmentId(id: string): Id<"fixedCommitments"> {
-	return id as Id<"fixedCommitments">;
-}
-
 const hero: Hero = {
 	dailyAvailableCents: 4230,
 	displayDailyCents: 4230,
@@ -28,28 +19,6 @@ const hero: Hero = {
 	reservedCents: 0,
 	unallocatedCents: 0,
 };
-
-function commitment(
-	overrides: Omit<Partial<SummaryCommitment>, "id"> & { id: string },
-): SummaryCommitment {
-	const amount = overrides.amount ?? 0;
-	return {
-		id: commitmentId(overrides.id),
-		name: overrides.name ?? "",
-		amount,
-		envelope: overrides.envelope ?? "needs",
-		dueDay: overrides.dueDay ?? 1,
-		nextDueAt: overrides.nextDueAt ?? 0,
-		daysUntilDue: overrides.daysUntilDue ?? 0,
-		covered: overrides.covered ?? 0,
-		remaining: overrides.remaining ?? amount,
-		progressPercent: overrides.progressPercent ?? 0,
-		coverageStatus: overrides.coverageStatus ?? "uncovered",
-		cascadeStatus: overrides.cascadeStatus ?? "not-started",
-		paymentStatus: overrides.paymentStatus ?? "pending",
-		paidAtForCycle: overrides.paidAtForCycle,
-	};
-}
 
 function summary(
 	overrides: {
@@ -62,7 +31,7 @@ function summary(
 	return {
 		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
 		cycle: {
-			id: cycleId("cycle"),
+			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
 			endDate: AUGUST_START,
 			needsReview: false,
@@ -134,18 +103,7 @@ function summary(
 
 describe("mapDashboardHome", () => {
 	it("devuelve null si no hay ciclo activo", () => {
-		expect(
-			mapDashboardHome({
-				profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
-				cycle: null,
-				hero: null,
-				envelopes: [],
-				commitments: [],
-				coach: null,
-				movements: [],
-				isEarlyCycle: false,
-			}),
-		).toBeNull();
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
 	});
 
 	it("mapea el héroe, el ciclo y el coach sin datos ficticios", () => {

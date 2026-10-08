@@ -1,45 +1,11 @@
-import type { GenericId as Id } from "convex/values";
+import { fixtureId } from "@/__fixtures__/convex-id";
+import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
 
 type Summary = NonNullable<Parameters<typeof mapSobresScreen>[0]>;
 type ActiveSummary = Extract<Summary, { cycle: { startDate: number } }>;
-type SummaryCommitment = ActiveSummary["commitments"][number];
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
-
-function cycleId(id: string): Id<"financialCycles"> {
-	return id as Id<"financialCycles">;
-}
-
-function commitmentId(id: string): Id<"fixedCommitments"> {
-	return id as Id<"fixedCommitments">;
-}
-
-function subEnvelopeId(id: string): Id<"subEnvelopes"> {
-	return id as Id<"subEnvelopes">;
-}
-
-function commitment(
-	overrides: Omit<Partial<SummaryCommitment>, "id"> & { id: string },
-): SummaryCommitment {
-	const amount = overrides.amount ?? 0;
-	return {
-		id: commitmentId(overrides.id),
-		name: overrides.name ?? "",
-		amount,
-		envelope: overrides.envelope ?? "needs",
-		dueDay: overrides.dueDay ?? 1,
-		nextDueAt: overrides.nextDueAt ?? 0,
-		daysUntilDue: overrides.daysUntilDue ?? 0,
-		covered: overrides.covered ?? 0,
-		remaining: overrides.remaining ?? amount,
-		progressPercent: overrides.progressPercent ?? 0,
-		coverageStatus: overrides.coverageStatus ?? "uncovered",
-		cascadeStatus: overrides.cascadeStatus ?? "not-started",
-		paymentStatus: overrides.paymentStatus ?? "pending",
-		paidAtForCycle: overrides.paidAtForCycle,
-	};
-}
 
 function summary(
 	overrides: {
@@ -50,7 +16,7 @@ function summary(
 	return {
 		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
 		cycle: {
-			id: cycleId("cycle"),
+			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
 			endDate: AUGUST_START,
 			needsReview: false,
@@ -131,18 +97,7 @@ function summary(
 
 describe("mapSobresScreen", () => {
 	it("devuelve null sin ciclo", () => {
-		expect(
-			mapSobresScreen({
-				profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
-				cycle: null,
-				hero: null,
-				envelopes: [],
-				commitments: [],
-				coach: null,
-				movements: [],
-				isEarlyCycle: false,
-			}),
-		).toBeNull();
+		expect(mapSobresScreen(summaryWithoutCycle)).toBeNull();
 		expect(mapSobresScreen(null)).toBeNull();
 	});
 
@@ -318,7 +273,7 @@ describe("savingsLineFromOverview", () => {
 			totalSavedCents: 0,
 			cycleContributionCents: 0,
 			emergencyFund: {
-				id: subEnvelopeId("sub_secret"),
+				id: fixtureId("subEnvelopes", "sub_secret"),
 				label: " Fondo ",
 				currentAmount: 0,
 				targetAmount: 0,
@@ -333,7 +288,7 @@ describe("savingsLineFromOverview", () => {
 			},
 			goals: [
 				{
-					id: subEnvelopeId("goal_secret"),
+					id: fixtureId("subEnvelopes", "goal_secret"),
 					label: "Viaje",
 					currentAmount: 0,
 					targetAmount: 0,
@@ -341,7 +296,7 @@ describe("savingsLineFromOverview", () => {
 					isSystemDefault: false,
 				},
 				{
-					id: subEnvelopeId("blank"),
+					id: fixtureId("subEnvelopes", "blank"),
 					label: "   ",
 					currentAmount: 0,
 					targetAmount: 0,
