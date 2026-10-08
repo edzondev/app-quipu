@@ -35,3 +35,6 @@ jobs:
 
       - name: Mobile unit tests (Jest)
         run: pnpm test:mobile
+
+      - name: Web unit tests (Vitest)
+        run: pnpm test:web

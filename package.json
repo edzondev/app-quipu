@@ -9,7 +9,8 @@
 		"ci:quality": "biome ci .",
 		"typecheck": "turbo run typecheck",
 		"typecheck:ci": "node scripts/ensure-convex-api.mjs && pnpm exec turbo run typecheck --filter=@quipu/mobile --filter=@quipu/convex-api && pnpm --filter @quipu/web exec tsc -p convex/tsconfig.json --pretty false",
-		"test:mobile": "node scripts/ensure-convex-api.mjs && pnpm --filter @quipu/mobile exec jest --watchman=false --coverage=false --watchAll=false"
+		"test:mobile": "node scripts/ensure-convex-api.mjs && pnpm --filter @quipu/mobile exec jest --watchman=false --coverage=false --watchAll=false",
+		"test:web": "pnpm --filter @quipu/web exec vitest run"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.14",
