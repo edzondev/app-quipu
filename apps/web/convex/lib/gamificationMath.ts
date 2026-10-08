@@ -1,5 +1,6 @@
 import { type Infer, v } from "convex/values";
 import { limaDayKey, limaStartOfDay } from "../../shared/lib/date";
+import { type AccentPreset, type AppearanceTheme } from "./appearanceValidators";
 import { buildCycleLabel } from "./cycleCloseReport";
 
 export const REWARD_THRESHOLDS = {
@@ -201,17 +202,14 @@ export function isRewardUnlocked(
 	return currentStreak >= REWARD_THRESHOLDS[rewardId];
 }
 
-export function canUseAccentPreset(
-	preset: "moss" | "steel" | "clay",
-	currentStreak: number,
-): boolean {
+export function canUseAccentPreset(preset: AccentPreset, currentStreak: number): boolean {
 	if (preset === "clay") {
 		return currentStreak >= REWARD_THRESHOLDS.clayAccent;
 	}
 	return true;
 }
 
-export function canUseTheme(theme: "light" | "tinta", currentStreak: number): boolean {
+export function canUseTheme(theme: AppearanceTheme, currentStreak: number): boolean {
 	if (theme === "tinta") {
 		return currentStreak >= REWARD_THRESHOLDS.tintaTheme;
 	}

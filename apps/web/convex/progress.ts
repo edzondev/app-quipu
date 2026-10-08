@@ -340,13 +340,18 @@ export const getRewards = query({
 	},
 });
 
+const updateAppearanceResultValidator = v.object({
+	appearance: progressAppearanceValidator,
+});
+
 export const updateAppearance = mutation({
 	args: {
 		appearanceTheme: v.optional(appearanceThemeValidator),
 		accentPreset: v.optional(accentPresetValidator),
 		appIconVariant: v.optional(appIconVariantValidator),
 	},
-	handler: async (ctx, args) => {
+	returns: updateAppearanceResultValidator,
+	handler: async (ctx, args): Promise<Infer<typeof updateAppearanceResultValidator>> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) {
 			throw new ConvexError({
@@ -381,9 +386,12 @@ export const updateAppearance = mutation({
 	},
 });
 
+const getAppearanceResultValidator = v.nullable(progressAppearanceValidator);
+
 export const getAppearance = query({
 	args: {},
-	handler: async (ctx) => {
+	returns: getAppearanceResultValidator,
+	handler: async (ctx): Promise<Infer<typeof getAppearanceResultValidator>> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
 
