@@ -25,7 +25,7 @@ import {
 	PROGRESS_STREAK_SUFFIX,
 	PROGRESS_STREAK_SUFFIX_MOBILE,
 } from "../constants";
-import type { ProgressAchievement, ProgressChartBar } from "../types";
+import type { ProgressAchievement } from "../types";
 import { ProgressStreakChart } from "./progress-streak-chart";
 
 function AchievementCard({ achievement }: { achievement: ProgressAchievement }) {
@@ -172,7 +172,7 @@ export function ProgressView() {
 					<div className="mb-2 text-[12.5px] font-medium text-ink-secondary md:mb-3">
 						{PROGRESS_CHART_LABEL}
 					</div>
-					<ProgressStreakChart bars={overview.chartBars as ProgressChartBar[]} />
+					<ProgressStreakChart bars={overview.chartBars} />
 					<p className="mt-2 text-[11px] text-mute-subtle md:mt-2.5 md:text-[11.5px]">
 						{PROGRESS_CHART_CAPTION}
 					</p>

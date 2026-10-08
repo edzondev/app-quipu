@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { query } from "./_generated/server";
 import {
 	buildCycleCloseReport,
@@ -24,16 +24,17 @@ const reportValidator = v.object({
 	hasExtraordinaryIncome: v.boolean(),
 });
 
+const latestCloseReportValidator = v.nullable(
+	v.object({
+		justClosed: v.boolean(),
+		report: reportValidator,
+	}),
+);
+
 export const getLatestCloseReport = query({
 	args: {},
-	returns: v.union(
-		v.null(),
-		v.object({
-			justClosed: v.boolean(),
-			report: reportValidator,
-		}),
-	),
-	handler: async (ctx) => {
+	returns: latestCloseReportValidator,
+	handler: async (ctx): Promise<Infer<typeof latestCloseReportValidator>> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
 

@@ -3,6 +3,7 @@ import {
 	buildCycleChartBars,
 	computeNextStreak,
 	countConsecutiveWantsDiscipline,
+	countLoggingStreak,
 	isRewardUnlocked,
 } from "./gamificationMath";
 
@@ -35,14 +36,52 @@ describe("computeNextStreak", () => {
 
 describe("buildCycleChartBars", () => {
 	it("pads to 12 slots and keeps chronological order", () => {
+		const july = Date.parse("2026-07-15T12:00:00-05:00");
+		const august = Date.parse("2026-08-15T12:00:00-05:00");
 		const bars = buildCycleChartBars([
-			{ status: "warning", evaluatedAt: 1 },
-			{ status: "compliant", evaluatedAt: 2 },
+			{ status: "warning", evaluatedAt: 1, cycleStart: july },
+			{ status: "compliant", evaluatedAt: 2, cycleStart: august },
 		]);
 		expect(bars).toHaveLength(12);
 		expect(bars.filter((b) => b.status === "empty")).toHaveLength(10);
 		expect(bars.at(-2)?.status).toBe("warning");
+		expect(bars.at(-2)?.id).toBe(1);
+		expect(bars.at(-2)?.cycleStart).toBe(july);
+		expect(bars.at(-2)?.monthLabel).toBe("Julio");
 		expect(bars.at(-1)?.status).toBe("compliant");
+		expect(bars.at(-1)?.cycleStart).toBe(august);
+		expect(bars.at(-1)?.monthLabel).toBe("Agosto");
+		expect(bars.at(0)?.cycleStart).toBeNull();
+		expect(bars.at(0)?.monthLabel).toBeNull();
+	});
+
+	it("appends the open cycle with status current", () => {
+		const september = Date.parse("2026-09-15T12:00:00-05:00");
+		const bars = buildCycleChartBars(
+			[
+				{
+					status: "compliant",
+					evaluatedAt: 2,
+					cycleStart: Date.parse("2026-08-15T12:00:00-05:00"),
+				},
+			],
+			{ cycleStart: september },
+		);
+		const current = bars.at(-1);
+		expect(bars).toHaveLength(12);
+		expect(bars.filter((bar) => bar.status === "empty")).toHaveLength(10);
+		expect(current?.status).toBe("current");
+		expect(current?.id).toBe(september);
+		expect(current?.cycleStart).toBe(september);
+		expect(current?.monthLabel).toBe("Setiembre");
+		expect(current?.heightPx).toBeGreaterThan(0);
+	});
+
+	it("omits the month when the closed cycle has no start date", () => {
+		const bars = buildCycleChartBars([{ status: "failed", evaluatedAt: 5, cycleStart: null }]);
+		expect(bars.at(-1)?.status).toBe("failed");
+		expect(bars.at(-1)?.cycleStart).toBeNull();
+		expect(bars.at(-1)?.monthLabel).toBeNull();
 	});
 });
 
@@ -55,6 +94,79 @@ describe("countConsecutiveWantsDiscipline", () => {
 				{ wantsWithinBudget: true, evaluatedAt: 3 },
 			]),
 		).toBe(2);
+	});
+});
+
+describe("countLoggingStreak", () => {
+	const now = Date.parse("2026-10-08T15:00:00-05:00");
+	const day = 86_400_000;
+
+	it("counts consecutive Lima days backward from today", () => {
+		expect(
+			countLoggingStreak(
+				[
+					Date.parse("2026-10-08T09:00:00-05:00"),
+					Date.parse("2026-10-07T09:00:00-05:00"),
+					Date.parse("2026-10-06T23:00:00-05:00"),
+				],
+				now,
+			),
+		).toBe(3);
+	});
+
+	it("starts at yesterday when today has no expense yet", () => {
+		expect(
+			countLoggingStreak(
+				[Date.parse("2026-10-07T09:00:00-05:00"), Date.parse("2026-10-06T09:00:00-05:00")],
+				now,
+			),
+		).toBe(2);
+	});
+
+	it("is zero when today and yesterday are both empty", () => {
+		expect(countLoggingStreak([Date.parse("2026-10-05T09:00:00-05:00")], now)).toBe(0);
+	});
+
+	it("counts a calendar day once and stops at the first gap", () => {
+		let reads = 0;
+		function* source() {
+			const values = [
+				Date.parse("2026-10-08T08:00:00-05:00"),
+				Date.parse("2026-10-08T21:00:00-05:00"),
+				Date.parse("2026-10-06T08:00:00-05:00"),
+				Date.parse("2026-10-05T08:00:00-05:00"),
+			];
+			for (const value of values) {
+				reads += 1;
+				yield value;
+			}
+		}
+		expect(countLoggingStreak(source(), now)).toBe(1);
+		expect(reads).toBe(3);
+	});
+
+	it("uses the Lima calendar instead of the UTC date", () => {
+		const limaEveningThatIsNextUtcDay = Date.parse("2026-10-08T02:00:00Z");
+		expect(
+			countLoggingStreak([Date.parse("2026-10-07T21:00:00-05:00")], limaEveningThatIsNextUtcDay),
+		).toBe(1);
+	});
+
+	it("crosses a month boundary", () => {
+		expect(
+			countLoggingStreak(
+				[Date.parse("2026-10-01T10:00:00-05:00"), Date.parse("2026-09-30T10:00:00-05:00")],
+				Date.parse("2026-10-01T18:00:00-05:00"),
+			),
+		).toBe(2);
+	});
+
+	it("counts a thousand consecutive days in one pass", () => {
+		const stamps = Array.from({ length: 1000 }, (_, index) => now - index * day);
+		const started = performance.now();
+		expect(countLoggingStreak(stamps, now)).toBe(1000);
+		const elapsed = performance.now() - started;
+		expect(elapsed).toBeLessThan(50);
 	});
 });
 

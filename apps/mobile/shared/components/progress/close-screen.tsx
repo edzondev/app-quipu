@@ -50,18 +50,17 @@ export function CloseScreen({ status, model, onBack }: Props) {
 						{model.subtitle}
 					</Text>
 
-					{model.segments.some((segment) => segment.percent > 0) ? (
+					{model.segments.length > 0 ? (
 						<View className="mt-7 h-2.5 flex-row gap-0.5 overflow-hidden rounded-[5px]">
-							{model.segments
-								.filter((segment) => segment.percent > 0)
-								.map((segment) => (
-									<View
-										key={segment.tone}
-										className={`h-full ${SEGMENT[segment.tone]}`}
-										// El tramo es un % de datos: Uniwind no tiene clase para ese ancho.
-										style={{ width: `${segment.percent}%` }}
-									/>
-								))}
+							{model.segments.map((segment) => (
+								<View
+									key={segment.tone}
+									accessibilityLabel={segment.label}
+									className={`h-full ${SEGMENT[segment.tone]}`}
+									// El tramo es un % de datos: Uniwind no tiene clase para ese ancho.
+									style={{ width: `${segment.percent}%` }}
+								/>
+							))}
 						</View>
 					) : null}
 

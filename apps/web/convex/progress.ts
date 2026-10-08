@@ -1,14 +1,20 @@
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
 	type AchievementId,
+	achievementIdValidator,
 	buildAchievements,
 	buildCycleChartBars,
 	canUseAccentPreset,
 	canUseTheme,
+	endOfLimaDayInclusive,
 	isRewardUnlocked,
+	observeLoggingStreakExpense,
+	progressChartBarValidator,
 	REWARD_THRESHOLDS,
+	startLoggingStreakScan,
 } from "./lib/gamificationMath";
 import {
 	computeEmergencyFundTargetCents,
@@ -16,6 +22,36 @@ import {
 	computeProgressPercent,
 	resolveEmergencyFundTargetCents,
 } from "./lib/savingsMath";
+
+async function countExpensesInCycle(
+	ctx: QueryCtx,
+	cycleId: Id<"financialCycles">,
+): Promise<number> {
+	const rows = await ctx.db
+		.query("expenses")
+		.withIndex("by_cycle_time", (q) => q.eq("cycleId", cycleId))
+		.collect();
+	return rows.length;
+}
+
+async function loadDaysWithoutSkipping(
+	ctx: QueryCtx,
+	profileId: Id<"profiles">,
+	now: number,
+): Promise<number> {
+	let scan = startLoggingStreakScan(now);
+	const expenses = ctx.db
+		.query("expenses")
+		.withIndex("by_profile_time", (q) =>
+			q.eq("profileId", profileId).lte("timestamp", endOfLimaDayInclusive(now)),
+		)
+		.order("desc");
+	for await (const expense of expenses) {
+		scan = observeLoggingStreakExpense(scan, expense.timestamp);
+		if (!scan.keepReading) break;
+	}
+	return scan.count;
+}
 
 const ACHIEVEMENT_TITLES: Record<AchievementId, string> = {
 	first_cycle_closed: "Primer ciclo cerrado",
@@ -71,12 +107,32 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 	const currentCents = emergencyFund?.currentAmount ?? 0;
 	const progressPercent = computeProgressPercent(currentCents, targetCents);
 
+	const now = Date.now();
 	const history = historyRows.map((row) => ({
 		status: row.status,
 		wantsWithinBudget: row.wantsWithinBudget,
 		allCommitmentsCovered: row.allCommitmentsCovered,
 		evaluatedAt: row.evaluatedAt,
 	}));
+	const currentCycle =
+		activeCycle !== null && !historyRows.some((row) => row.cycleId === activeCycle._id)
+			? { cycleStart: activeCycle.startDate }
+			: null;
+	const chartRows = [...historyRows].sort((a, b) => a.evaluatedAt - b.evaluatedAt).slice(-12);
+	const [chartHistory, registeredExpenseCount, daysWithoutSkipping] = await Promise.all([
+		Promise.all(
+			chartRows.map(async (row) => {
+				const cycle = await ctx.db.get("financialCycles", row.cycleId);
+				return {
+					status: row.status,
+					evaluatedAt: row.evaluatedAt,
+					cycleStart: cycle === null ? null : cycle.startDate,
+				};
+			}),
+		),
+		activeCycle === null ? Promise.resolve(0) : countExpensesInCycle(ctx, activeCycle._id),
+		loadDaysWithoutSkipping(ctx, profile._id, now),
+	]);
 
 	const currentStreak = streak?.currentStreak ?? 0;
 	const formatRemaining = (cents: number) =>
@@ -101,7 +157,9 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 		profile,
 		currentStreak,
 		longestStreak: streak?.longestStreak ?? 0,
-		chartBars: buildCycleChartBars(history),
+		chartBars: buildCycleChartBars(chartHistory, currentCycle),
+		registeredExpenseCount,
+		daysWithoutSkipping,
 		achievements,
 		achievementsDoneCount: achievements.filter((a) => a.state === "done").length,
 		achievementsTotal: achievements.length,
@@ -113,9 +171,31 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 	};
 }
 
+const progressAchievementValidator = v.object({
+	id: achievementIdValidator,
+	title: v.string(),
+	state: v.union(v.literal("done"), v.literal("locked")),
+	earnedAt: v.union(v.number(), v.null()),
+	lockedHint: v.union(v.string(), v.null()),
+});
+
+const progressOverviewValidator = v.nullable(
+	v.object({
+		currentStreak: v.number(),
+		longestStreak: v.number(),
+		chartBars: v.array(progressChartBarValidator),
+		achievements: v.array(progressAchievementValidator),
+		achievementsDoneCount: v.number(),
+		achievementsTotal: v.number(),
+		registeredExpenseCount: v.number(),
+		daysWithoutSkipping: v.number(),
+	}),
+);
+
 export const getOverview = query({
 	args: {},
-	handler: async (ctx) => {
+	returns: progressOverviewValidator,
+	handler: async (ctx): Promise<Infer<typeof progressOverviewValidator>> => {
 		const bundle = await getAuthenticatedProgressBundle(ctx);
 		if (!bundle) return null;
 
@@ -126,6 +206,8 @@ export const getOverview = query({
 			achievements: bundle.achievements,
 			achievementsDoneCount: bundle.achievementsDoneCount,
 			achievementsTotal: bundle.achievementsTotal,
+			registeredExpenseCount: bundle.registeredExpenseCount,
+			daysWithoutSkipping: bundle.daysWithoutSkipping,
 		};
 	},
 });

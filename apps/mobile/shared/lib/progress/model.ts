@@ -1,6 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
-import { limaMonthName } from "@/shared/lib/lima-date";
+import { LIMA_MONTHS, limaMonthName, limaStamp } from "@/shared/lib/lima-date";
 import { currencySymbol, formatCentsTrimmed } from "@/shared/lib/money";
 import type { SavingsOverview } from "@/shared/lib/savings/model";
 
@@ -23,6 +23,8 @@ export type BarTone = ChartBar["status"];
 export type ProgressBarView = {
 	key: string;
 	tone: Exclude<BarTone, "empty">;
+	/** Mes corto de Lima. Null si el ciclo no trae cycleStart. */
+	monthLabel: string | null;
 };
 
 export type AchievementRowView = {
@@ -40,8 +42,11 @@ export type CloseEntryView = {
 export type ProgressScreenModel = {
 	empty: boolean;
 	streakLabel: string;
+	sinceLabel: string | null;
 	bars: ProgressBarView[];
 	savedLabel: string | null;
+	registeredExpenseLabel: string | null;
+	daysWithoutSkippingLabel: string | null;
 	achievements: AchievementRowView[];
 	rewardText: string | null;
 	closeEntry: CloseEntryView | null;
@@ -52,6 +57,8 @@ export type CloseSegmentTone = SpendType | "surplus";
 export type CloseSegmentView = {
 	tone: CloseSegmentTone;
 	percent: number;
+	/** Misma etiqueta que la fila del sobre. El sobrante usa «Sobró». */
+	label: string;
 };
 
 export type CloseRowView = {
@@ -80,13 +87,16 @@ export function presentProgress(
 	const bars = overview == null ? [] : toBars(overview.chartBars);
 	const streak = overview == null ? 0 : overview.currentStreak;
 	const closeEntry = toCloseEntry(closeReport);
-	const empty = closeEntry == null && streak === 0 && bars.length === 0;
+	const empty = closeEntry == null && streak === 0 && bars.every((bar) => bar.tone === "current");
 
 	return {
 		empty,
 		streakLabel: String(streak),
+		sinceLabel: empty || overview == null ? null : sinceLabelFromBars(overview.chartBars),
 		bars,
 		savedLabel: savedLabel(savings),
+		registeredExpenseLabel: overview == null ? null : countLabel(overview.registeredExpenseCount),
+		daysWithoutSkippingLabel: overview == null ? null : countLabel(overview.daysWithoutSkipping),
 		achievements: overview == null ? [] : toAchievements(overview.achievements),
 		rewardText: nextRewardText(rewards),
 		closeEntry,
@@ -122,8 +132,29 @@ export function presentClose(
 
 function toBars(chartBars: Overview["chartBars"]): ProgressBarView[] {
 	return chartBars.flatMap((bar: ChartBar) =>
-		bar.status === "empty" ? [] : [{ key: String(bar.id), tone: bar.status }],
+		bar.status === "empty"
+			? []
+			: [{ key: String(bar.id), tone: bar.status, monthLabel: barMonthLabel(bar.cycleStart) }],
 	);
+}
+
+function barMonthLabel(cycleStart: ChartBar["cycleStart"]): string | null {
+	if (cycleStart === null) return null;
+	return LIMA_MONTHS[limaStamp(cycleStart).monthIndex] ?? null;
+}
+
+function sinceLabelFromBars(chartBars: Overview["chartBars"]): string | null {
+	for (const bar of chartBars) {
+		if (bar.cycleStart === null) continue;
+		return `DESDE ${limaMonthName(bar.cycleStart)}`;
+	}
+	return null;
+}
+
+function countLabel(
+	value: Overview["registeredExpenseCount"] | Overview["daysWithoutSkipping"],
+): string {
+	return String(value);
 }
 
 function savedLabel(savings: SavingsOverview): string | null {
@@ -185,9 +216,14 @@ function toSegments(
 	const segments: CloseSegmentView[] = report.spendByEnvelope.map((row: SpendRow) => ({
 		tone: row.type,
 		percent: barPercent(row.spentCents, whole),
+		label: row.label,
 	}));
 	if (surplusCents != null) {
-		segments.push({ tone: "surplus", percent: barPercent(surplusCents, whole) });
+		segments.push({
+			tone: "surplus",
+			percent: barPercent(surplusCents, whole),
+			label: "Sobró",
+		});
 	}
 	return segments.filter((segment) => segment.percent > 0);
 }
