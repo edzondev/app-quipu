@@ -141,6 +141,7 @@ export const appTables = {
 		unallocatedCents: v.optional(v.number()),
 		// Legacy cycles without incomeAllocationLines need user review (not silent invent).
 		needsReview: v.optional(v.boolean()),
+		closeSurplusMovedAt: v.optional(v.number()),
 	}).index("by_profile_status", ["profileId", "status"]),
 
 	// SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
