@@ -4,10 +4,9 @@ export type AuthNoticeCopy = {
 	actionLabel?: string;
 };
 
-const PASSKEY_CANCELLED = "Cancelaste Face ID. Puedes reintentar o usar tu respaldo.";
+const PASSKEY_CANCELLED = "Cancelaste la verificación. Puedes reintentar o usar tu respaldo.";
 const PASSKEY_UNAVAILABLE = "Este teléfono no admite Passkeys";
 const PASSKEY_FAILED = "No pudimos usar la Passkey. Entra con tu respaldo.";
-const ACCOUNT_EXISTS = "Ya existe una cuenta con este correo";
 const OTP_MISMATCH = "El código no coincide.";
 const OTP_EXPIRED = "El código expiró. Pide uno nuevo.";
 const OTP_TOO_MANY = "Demasiados intentos. Pide un código nuevo.";
@@ -60,19 +59,10 @@ export function mapPasskeySignInError(error: unknown): AuthNoticeCopy {
 	return { tone: "warning", message: PASSKEY_FAILED };
 }
 
-export function mapSignUpError(error: unknown): AuthNoticeCopy | null {
-	if (!/user[\s_]?already[\s_]?exists/i.test(blob(error))) return null;
-	return { tone: "info", message: ACCOUNT_EXISTS, actionLabel: "Entrar" };
-}
-
 export function isEmailNotVerified(error: unknown): boolean {
 	if (readString(error, "code") === "EMAIL_NOT_VERIFIED") return true;
 	const message = readString(error, "message")?.toLowerCase() ?? "";
 	return message.includes("not verified") || message.includes("verify your email");
-}
-
-export function credentialsMessage(): string {
-	return CREDENTIALS_MESSAGE;
 }
 
 export function mapOtpVerifyError(error: unknown): string {

@@ -71,7 +71,7 @@ describe("SignInScreen", () => {
 
 		expect(await view.findByText("Entra con tu respaldo.")).toBeTruthy();
 		expect(
-			view.getByText("Cancelaste Face ID. Puedes reintentar o usar tu respaldo."),
+			view.getByText("Cancelaste la verificación. Puedes reintentar o usar tu respaldo."),
 		).toBeTruthy();
 		expect(view.getByLabelText("Correo")).toBeTruthy();
 		expect(view.getByLabelText("Contraseña")).toBeTruthy();

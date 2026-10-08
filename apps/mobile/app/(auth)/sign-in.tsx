@@ -2,21 +2,22 @@ import { api } from "@quipu/convex-api";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useQuery } from "convex/react";
 import { Redirect, useRouter } from "expo-router";
-import { useState } from "react";
-import { Platform, Pressable, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AppShell from "@/shared/components/app-shell";
 import AuthButton from "@/shared/components/auth/auth-button";
+import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { AuthNotice } from "@/shared/components/auth/auth-notice";
-import { EmailCodeForm } from "@/shared/components/auth/email-code-form";
-import FieldError from "@/shared/components/auth/field-error";
+import { EmailVerifyStep } from "@/shared/components/auth/email-verify-step";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
+import { emailSchema } from "@/shared/lib/auth/email-schema";
 import {
 	type AuthNoticeCopy,
-	credentialsMessage,
+	CREDENTIALS_MESSAGE,
 	isEmailNotVerified,
 	mapOtpVerifyError,
 	mapPasskeySignInError,
@@ -28,12 +29,7 @@ import { HIT_SLOP } from "@/shared/lib/hit-slop";
 type SignInView = "welcome" | "backup" | "verify";
 
 const signInSchema = z.object({
-	email: z
-		.string()
-		.trim()
-		.toLowerCase()
-		.min(1, "El email es obligatorio")
-		.pipe(z.email("Email inválido")),
+	email: emailSchema,
 	password: z.string().min(1, "La contraseña es obligatoria"),
 });
 
@@ -50,6 +46,7 @@ function useSignInForm(
 			const email = value.email.trim().toLowerCase();
 			const { error } = await authClient.signIn.email({ email, password: value.password });
 			if (!error) {
+				formApi.setFieldValue("password", "");
 				onSignedIn();
 				return;
 			}
@@ -66,7 +63,7 @@ function useSignInForm(
 				onUnverified();
 				return;
 			}
-			onError(credentialsMessage());
+			onError(CREDENTIALS_MESSAGE);
 		},
 	});
 }
@@ -95,26 +92,37 @@ export default function SignInScreen() {
 	);
 	const email = useStore(form.store, (state) => state.values.email.trim().toLowerCase());
 	const password = useStore(form.store, (state) => state.values.password);
+	const formRef = useRef(form);
+	formRef.current = form;
+	useEffect(() => {
+		return () => {
+			formRef.current.setFieldValue("password", "");
+		};
+	}, []);
 
 	if (hasSession && profile === undefined) return null;
 	if (hasSession) {
 		return <Redirect href={profile?.onboardingComplete ? "/(tabs)" : "/(onboarding)/sistema"} />;
 	}
 
+	const showPasskeyBackup = (error: unknown) => {
+		setNotice(mapPasskeySignInError(error));
+		setView("backup");
+	};
+
 	const signInWithPasskey = async () => {
 		if (!passkeysOk) {
-			setNotice(mapPasskeySignInError({ code: "NotSupportedError" }));
-			setView("backup");
+			showPasskeyBackup({ code: "NotSupportedError" });
 			return;
 		}
 		setPasskeyLoading(true);
 		const { error } = await authClient.signIn.passkey();
 		setPasskeyLoading(false);
 		if (error) {
-			setNotice(mapPasskeySignInError(error));
-			setView("backup");
+			showPasskeyBackup(error);
 			return;
 		}
+		form.setFieldValue("password", "");
 		router.replace("/(tabs)");
 	};
 
@@ -127,10 +135,11 @@ export default function SignInScreen() {
 		}
 		const signedIn = await authClient.signIn.email({ email, password });
 		if (signedIn.error) {
-			setSubmitError(credentialsMessage());
+			setSubmitError(CREDENTIALS_MESSAGE);
 			setView("backup");
 			return;
 		}
+		form.setFieldValue("password", "");
 		router.replace("/(tabs)");
 	};
 
@@ -188,17 +197,9 @@ export default function SignInScreen() {
 									onCreate={() => router.push("/create-account")}
 								/>
 							) : (
-								<View className="flex-1 justify-center gap-6 pb-14">
-									<View className="gap-1">
-										<Text className="font-newsreader text-[28px] text-foreground">
-											Confirma tu correo.
-										</Text>
-										<Text className="font-hanken text-[14px] text-foreground/55">
-											Te enviamos un código de 6 dígitos a{" "}
-											<Text className="font-hanken-semibold text-foreground">{email}</Text>
-										</Text>
-									</View>
-									<EmailCodeForm
+								<View className="flex-1 justify-center pb-14">
+									<EmailVerifyStep
+										email={email}
 										errorMessage={otpError}
 										onVerify={verifyOtp}
 										onResend={resendOtp}
@@ -210,6 +211,17 @@ export default function SignInScreen() {
 				</View>
 			</KeyboardAvoidingView>
 		</AppShell>
+	);
+}
+
+function CreateAccountLink({ onPress }: { onPress: () => void }) {
+	return (
+		<View className="flex-row justify-center gap-1">
+			<Text className="font-hanken text-[13px] text-foreground/55">¿Nuevo en Quipu?</Text>
+			<Pressable onPress={onPress} accessibilityRole="button" className="active:opacity-60">
+				<Text className="font-hanken-semibold text-[13px] text-primary">Crear cuenta</Text>
+			</Pressable>
+		</View>
 	);
 }
 
@@ -246,12 +258,7 @@ function Welcome({
 				<View className="h-px flex-1 bg-line" />
 			</View>
 			<AuthButton label="Entrar con correo" variant="outline" onPress={onEmail} />
-			<View className="flex-row justify-center gap-1">
-				<Text className="font-hanken text-[13px] text-foreground/55">¿Nuevo en Quipu?</Text>
-				<Pressable onPress={onCreate} accessibilityRole="button" className="active:opacity-60">
-					<Text className="font-hanken-semibold text-[13px] text-primary">Crear cuenta</Text>
-				</Pressable>
-			</View>
+			<CreateAccountLink onPress={onCreate} />
 		</View>
 	);
 }
@@ -289,22 +296,13 @@ function Backup({
 					listeners={{ onChange: revalidateOnBlur }}
 				>
 					{(field) => (
-						<View className="gap-1">
-							<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
-								Correo
-							</Text>
-							<TextInput
-								value={field.state.value}
-								onChangeText={field.handleChange}
-								onBlur={field.handleBlur}
-								autoCapitalize="none"
-								autoComplete="email"
-								inputMode="email"
-								accessibilityLabel="Correo"
-								className="border-b border-line py-2.5 font-hanken text-[17px] text-foreground"
-							/>
-							<FieldError field={field} />
-						</View>
+						<AuthLabeledField
+							label="Correo"
+							field={field}
+							autoCapitalize="none"
+							autoComplete="email"
+							inputMode="email"
+						/>
 					)}
 				</form.Field>
 				<form.Field
@@ -313,21 +311,13 @@ function Backup({
 					listeners={{ onChange: revalidateOnBlur }}
 				>
 					{(field) => (
-						<View className="gap-1">
-							<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
-								Contraseña
-							</Text>
-							<TextInput
-								value={field.state.value}
-								onChangeText={field.handleChange}
-								onBlur={field.handleBlur}
-								autoComplete="current-password"
-								secureTextEntry
-								accessibilityLabel="Contraseña"
-								className="border-b border-foreground py-2.5 font-hanken text-[17px] text-foreground"
-							/>
-							<FieldError field={field} />
-						</View>
+						<AuthLabeledField
+							label="Contraseña"
+							field={field}
+							autoComplete="current-password"
+							secureTextEntry
+							className="border-b border-foreground py-2.5 font-hanken text-[17px] text-foreground"
+						/>
 					)}
 				</form.Field>
 			</View>
@@ -363,15 +353,7 @@ function Backup({
 					</Text>
 				</Pressable>
 			) : null}
-			<Pressable
-				onPress={onCreate}
-				accessibilityRole="button"
-				className="items-center active:opacity-60"
-			>
-				<Text className="font-hanken text-[13px] text-foreground/55">
-					¿Nuevo en Quipu? <Text className="font-hanken-semibold text-primary">Crear cuenta</Text>
-				</Text>
-			</Pressable>
+			<CreateAccountLink onPress={onCreate} />
 		</View>
 	);
 }

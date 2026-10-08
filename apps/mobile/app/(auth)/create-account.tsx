@@ -1,23 +1,20 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AppShell from "@/shared/components/app-shell";
 import AuthButton from "@/shared/components/auth/auth-button";
+import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { AuthNotice } from "@/shared/components/auth/auth-notice";
-import { EmailCodeForm } from "@/shared/components/auth/email-code-form";
+import { EmailVerifyStep } from "@/shared/components/auth/email-verify-step";
 import FieldError from "@/shared/components/auth/field-error";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { Check, ChevronLeft } from "@/shared/components/ui/reicon";
-import {
-	type AuthNoticeCopy,
-	mapOtpVerifyError,
-	mapPasskeySignInError,
-	mapSignUpError,
-} from "@/shared/lib/auth/errors";
+import { emailSchema } from "@/shared/lib/auth/email-schema";
+import { mapOtpVerifyError, mapPasskeySignInError } from "@/shared/lib/auth/errors";
 import { formErrorMessage, revalidateOnBlur, setFormError } from "@/shared/lib/form";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import { shouldSendOtp } from "@/shared/lib/signup-flow";
@@ -26,12 +23,7 @@ type Step = 1 | 2 | 3 | 4;
 
 const accountSchema = z.object({
 	name: z.string().trim().min(1, "Dinos cómo te llamas"),
-	email: z
-		.string()
-		.trim()
-		.toLowerCase()
-		.min(1, "El email es obligatorio")
-		.pipe(z.email("Email inválido")),
+	email: emailSchema,
 	password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
 });
 
@@ -60,7 +52,6 @@ function ProgressHeader({ label, filled }: { label: string; filled: number }) {
 export default function CreateAccountScreen() {
 	const router = useRouter();
 	const [step, setStep] = useState<Step>(1);
-	const [signUpNotice, setSignUpNotice] = useState<AuthNoticeCopy | null>(null);
 	const [otpError, setOtpError] = useState<string | null>(null);
 	const [passkeyDone, setPasskeyDone] = useState<boolean | null>(null);
 	const [passkeyLoading, setPasskeyLoading] = useState(false);
@@ -101,7 +92,6 @@ export default function CreateAccountScreen() {
 			onSubmit: accountSchema,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			setSignUpNotice(null);
 			const email = value.email.trim().toLowerCase();
 			const name = value.name.trim();
 			const { error } = await authClient.signUp.email({
@@ -110,11 +100,6 @@ export default function CreateAccountScreen() {
 				name,
 			});
 			if (error) {
-				const notice = mapSignUpError(error);
-				if (notice) {
-					setSignUpNotice(notice);
-					return;
-				}
 				setFormError(formApi, "No se pudo crear la cuenta");
 				return;
 			}
@@ -125,6 +110,13 @@ export default function CreateAccountScreen() {
 	});
 	const email = useStore(form.store, (state) => state.values.email.trim().toLowerCase());
 	const password = useStore(form.store, (state) => state.values.password);
+	const formRef = useRef(form);
+	formRef.current = form;
+	useEffect(() => {
+		return () => {
+			formRef.current.setFieldValue("password", "");
+		};
+	}, []);
 
 	const verifyOtp = async (code: string) => {
 		setOtpError(null);
@@ -136,16 +128,16 @@ export default function CreateAccountScreen() {
 		const signIn = await authClient.signIn.email({ email, password });
 		if (signIn.error) {
 			setOtpError("Correo verificado. Inicia sesión para continuar.");
-			router.replace("/sign-in");
 			return;
 		}
+		form.setFieldValue("password", "");
 		setStep(3);
 	};
 
 	const createPasskey = async () => {
 		setPasskeyLoading(true);
 		setPasskeyError(null);
-		const { error } = await authClient.passkey.addPasskey({ name: email });
+		const { error } = await authClient.passkey.addPasskey();
 		setPasskeyLoading(false);
 		if (error) {
 			setPasskeyError(mapPasskeySignInError(error).message);
@@ -218,28 +210,16 @@ export default function CreateAccountScreen() {
 								<form.Field
 									name="email"
 									validators={{ onBlur: accountSchema.shape.email }}
-									listeners={{
-										onChange: (ctx) => {
-											revalidateOnBlur(ctx);
-											setSignUpNotice(null);
-										},
-									}}
+									listeners={{ onChange: revalidateOnBlur }}
 								>
 									{(field) => (
-										<View className="gap-1">
-											<TextInput
-												value={field.state.value}
-												onChangeText={(value) => field.handleChange(value)}
-												onBlur={field.handleBlur}
-												autoCapitalize="none"
-												autoComplete="email"
-												inputMode="email"
-												accessibilityLabel="Correo"
-												placeholder="Correo"
-												className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
-											/>
-											<FieldError field={field} />
-										</View>
+										<AuthLabeledField
+											label="Correo"
+											field={field}
+											autoCapitalize="none"
+											autoComplete="email"
+											inputMode="email"
+										/>
 									)}
 								</form.Field>
 
@@ -249,19 +229,12 @@ export default function CreateAccountScreen() {
 									listeners={{ onChange: revalidateOnBlur }}
 								>
 									{(field) => (
-										<View className="gap-1">
-											<TextInput
-												value={field.state.value}
-												onChangeText={(value) => field.handleChange(value)}
-												onBlur={field.handleBlur}
-												autoComplete="new-password"
-												secureTextEntry
-												accessibilityLabel="Contraseña"
-												placeholder="Contraseña"
-												className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
-											/>
-											<FieldError field={field} />
-										</View>
+										<AuthLabeledField
+											label="Contraseña"
+											field={field}
+											autoComplete="new-password"
+											secureTextEntry
+										/>
 									)}
 								</form.Field>
 
@@ -279,9 +252,6 @@ export default function CreateAccountScreen() {
 									)}
 								</form.Subscribe>
 
-								{signUpNotice ? (
-									<AuthNotice {...signUpNotice} onAction={() => router.push("/sign-in")} />
-								) : null}
 								<form.Subscribe selector={(state) => state.errorMap.onSubmit}>
 									{(onSubmitError) => {
 										const message = formErrorMessage(onSubmitError);
@@ -296,28 +266,20 @@ export default function CreateAccountScreen() {
 						<View className="flex-1 justify-center gap-6 pb-14">
 							<ProgressHeader label="CREAR CUENTA · 02/03" filled={2} />
 
-							<View className="gap-1">
-								<Text className="font-newsreader text-[28px] text-foreground">
-									Confirma tu correo.
-								</Text>
-								<Text className="font-hanken text-[14px] text-foreground/55">
-									Te enviamos un código de 6 dígitos a{" "}
-									<Text className="font-hanken-semibold text-foreground">{email}</Text>
-								</Text>
-							</View>
-
-							<EmailCodeForm
+							<EmailVerifyStep
+								email={email}
 								errorMessage={otpError}
 								onVerify={verifyOtp}
 								onResend={() => sendOtp(email)}
+								footer={
+									<View className="rounded-xl border border-line bg-background px-4 py-3">
+										<Text className="font-hanken text-[13px] text-foreground/55">
+											También puedes abrir el enlace del correo desde este teléfono; Quipu continúa
+											solo.
+										</Text>
+									</View>
+								}
 							/>
-
-							<View className="rounded-xl border border-line bg-background px-4 py-3">
-								<Text className="font-hanken text-[13px] text-foreground/55">
-									También puedes abrir el enlace del correo desde este teléfono; Quipu continúa
-									solo.
-								</Text>
-							</View>
 						</View>
 					) : null}
 
