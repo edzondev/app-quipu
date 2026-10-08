@@ -1,5 +1,5 @@
 import { type Infer, v } from "convex/values";
-import { limaStartOfDay } from "../../shared/lib/date";
+import { limaDayKey, limaStartOfDay } from "../../shared/lib/date";
 import { buildCycleLabel } from "./cycleCloseReport";
 
 export const REWARD_THRESHOLDS = {
@@ -72,25 +72,6 @@ export function endOfLimaDayInclusive(now: number): number {
 	return limaStartOfDay(now) + MS_PER_DAY - 1;
 }
 
-const LIMA_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-US", {
-	timeZone: "America/Lima",
-	year: "numeric",
-	month: "2-digit",
-	day: "2-digit",
-});
-
-function limaDayKey(timestamp: number): string {
-	let year = "";
-	let month = "";
-	let day = "";
-	for (const part of LIMA_DAY_KEY_FORMATTER.formatToParts(new Date(timestamp))) {
-		if (part.type === "year") year = part.value;
-		else if (part.type === "month") month = part.value;
-		else if (part.type === "day") day = part.value;
-	}
-	return `${year}-${month}-${day}`;
-}
-
 function previousLimaDayKey(dayKey: string): string {
 	const year = Number(dayKey.slice(0, 4));
 	const month = Number(dayKey.slice(5, 7));
@@ -101,7 +82,7 @@ function previousLimaDayKey(dayKey: string): string {
 	return `${previous.getUTCFullYear()}-${monthText}-${dayText}`;
 }
 
-export type LoggingStreakScan = {
+type LoggingStreakScan = {
 	count: number;
 	lastKey: string | null;
 	todayKey: string;
@@ -110,7 +91,7 @@ export type LoggingStreakScan = {
 };
 
 /** Una sola pasada, de más nuevo a más viejo. today/yesterday se fijan una vez. */
-export function startLoggingStreakScan(now: number): LoggingStreakScan {
+function startLoggingStreakScan(now: number): LoggingStreakScan {
 	return {
 		count: 0,
 		lastKey: null,
@@ -120,11 +101,10 @@ export function startLoggingStreakScan(now: number): LoggingStreakScan {
 	};
 }
 
-export function observeLoggingStreakExpense(
+function observeLoggingStreakExpense(
 	scan: LoggingStreakScan,
 	timestamp: number,
 ): LoggingStreakScan {
-	if (!scan.keepReading) return scan;
 	const key = limaDayKey(timestamp);
 	if (scan.lastKey === null) {
 		if (key !== scan.todayKey && key !== scan.yesterdayKey) {
@@ -139,9 +119,26 @@ export function observeLoggingStreakExpense(
 	return { ...scan, keepReading: false };
 }
 
-export function countLoggingStreak(timestampsNewestFirst: Iterable<number>, now: number): number {
+function isAsyncIterable<T>(value: Iterable<T> | AsyncIterable<T>): value is AsyncIterable<T> {
+	return Symbol.asyncIterator in value;
+}
+
+function timestampsAsAsync(
+	timestampsNewestFirst: Iterable<number> | AsyncIterable<number>,
+): AsyncIterable<number> {
+	if (isAsyncIterable(timestampsNewestFirst)) return timestampsNewestFirst;
+	return (async function* () {
+		for (const timestamp of timestampsNewestFirst) yield timestamp;
+	})();
+}
+
+/** Una pasada de más nuevo a más viejo. Corta y deja de leer en el primer hueco. */
+export async function countLoggingStreak(
+	timestampsNewestFirst: Iterable<number> | AsyncIterable<number>,
+	now: number,
+): Promise<number> {
 	let scan = startLoggingStreakScan(now);
-	for (const timestamp of timestampsNewestFirst) {
+	for await (const timestamp of timestampsAsAsync(timestampsNewestFirst)) {
 		scan = observeLoggingStreakExpense(scan, timestamp);
 		if (!scan.keepReading) break;
 	}

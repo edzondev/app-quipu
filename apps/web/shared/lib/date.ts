@@ -133,10 +133,15 @@ export function isSameLimaDay(a: number, b: number): boolean {
 	return partsA.year === partsB.year && partsA.month === partsB.month && partsA.day === partsB.day;
 }
 
-/** Valor para `<input type="date">` en Lima (YYYY-MM-DD). */
-export function limaDateToInputValue(timestamp: number): string {
+/** Clave de día en Lima (`YYYY-MM-DD`). */
+export function limaDayKey(timestamp: number): string {
 	const { year, month, day } = getLimaDateParts(timestamp);
 	return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Valor para `<input type="date">` en Lima. Es la misma clave que `limaDayKey`. */
+export function limaDateToInputValue(timestamp: number): string {
+	return limaDayKey(timestamp);
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
