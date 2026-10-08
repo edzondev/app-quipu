@@ -42,6 +42,16 @@ function blob(error: unknown): string {
 		.join(" ");
 }
 
+export function isPasskeyCancelled(error: unknown): boolean {
+	const code = readString(error, "code") ?? "";
+	const message = readString(error, "message") ?? "";
+	return (
+		code === "ERROR_CEREMONY_ABORTED" ||
+		code === "AUTH_CANCELLED" ||
+		/ceremony_aborted|cancel/i.test(message)
+	);
+}
+
 export function mapPasskeySignInError(error: unknown): AuthNoticeCopy {
 	const code = readString(error, "code") ?? "";
 	const message = readString(error, "message") ?? "";
@@ -49,11 +59,7 @@ export function mapPasskeySignInError(error: unknown): AuthNoticeCopy {
 	if (/notsupported|not supported|no admite/i.test(text)) {
 		return { tone: "warning", message: PASSKEY_UNAVAILABLE };
 	}
-	if (
-		code === "ERROR_CEREMONY_ABORTED" ||
-		code === "AUTH_CANCELLED" ||
-		/ceremony_aborted|cancel/i.test(message)
-	) {
+	if (isPasskeyCancelled(error)) {
 		return { tone: "warning", message: PASSKEY_CANCELLED };
 	}
 	return { tone: "warning", message: PASSKEY_FAILED };

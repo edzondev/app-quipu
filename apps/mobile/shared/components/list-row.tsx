@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ChevronRight } from "@/shared/components/ui/reicon";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
@@ -5,9 +6,11 @@ import { HIT_SLOP } from "@/shared/lib/hit-slop";
 type Props = {
 	label: string;
 	value?: string | null;
+	valueClass?: string;
 	subtitle?: string | null;
 	subtitleClass?: string;
 	dotClass?: string;
+	trailing?: ReactNode;
 	onPress?: () => void;
 	isLast?: boolean;
 };
@@ -15,9 +18,11 @@ type Props = {
 export function ListRow({
 	label,
 	value,
+	valueClass = "text-foreground/45",
 	subtitle,
 	subtitleClass = "text-foreground/55",
 	dotClass,
+	trailing,
 	onPress,
 	isLast = false,
 }: Props) {
@@ -49,13 +54,14 @@ export function ListRow({
 			<View className="flex-row items-center gap-2.5">
 				{value ? (
 					<Text
-						className={`font-hanken text-foreground/45 tabular-nums ${
+						className={`font-hanken tabular-nums ${valueClass} ${
 							dotClass ? "text-[14px]" : "text-[13px]"
 						}`}
 					>
 						{value}
 					</Text>
 				) : null}
+				{trailing}
 				{onPress ? <ChevronRight size={16} colorClassName="text-foreground/45" /> : null}
 			</View>
 		</View>
