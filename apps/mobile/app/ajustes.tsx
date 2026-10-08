@@ -13,6 +13,7 @@ export default function AjustesPage() {
 				status={settings.status}
 				model={settings.model}
 				onClose={() => router.back()}
+				onOpenSecurity={() => router.push("/seguridad")}
 			/>
 		</AppShell>
 	);

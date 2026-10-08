@@ -9,9 +9,10 @@ type Props = {
 	status: "loading" | "empty" | "ready";
 	model: SettingsScreenModel | null;
 	onClose: () => void;
+	onOpenSecurity: () => void;
 };
 
-export function SettingsScreen({ status, model, onClose }: Props) {
+export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props) {
 	return (
 		<View className="flex-1">
 			<View className="flex-row items-center justify-between">
@@ -47,9 +48,11 @@ export function SettingsScreen({ status, model, onClose }: Props) {
 					<View className="mt-5">
 						<SectionLabel className="mb-1">CUENTA</SectionLabel>
 						<ListRow label="Perfil y datos" />
-						{model.passkeysLabel ? (
-							<ListRow label="Seguridad y Passkeys" value={model.passkeysLabel} />
-						) : null}
+						<ListRow
+							label="Seguridad y Passkeys"
+							value={model.passkeysLabel}
+							onPress={onOpenSecurity}
+						/>
 						<ListRow label="Plan y suscripción" value={model.planLabel} isLast />
 					</View>
 					<View className="mt-[18px] border-t border-line pt-4">

@@ -5,6 +5,7 @@ import { HIT_SLOP } from "@/shared/lib/hit-slop";
 type Props = {
 	label: string;
 	value?: string | null;
+	valueClass?: string;
 	subtitle?: string | null;
 	subtitleClass?: string;
 	dotClass?: string;
@@ -15,6 +16,7 @@ type Props = {
 export function ListRow({
 	label,
 	value,
+	valueClass = "text-foreground/45",
 	subtitle,
 	subtitleClass = "text-foreground/55",
 	dotClass,
@@ -49,7 +51,7 @@ export function ListRow({
 			<View className="flex-row items-center gap-2.5">
 				{value ? (
 					<Text
-						className={`font-hanken text-foreground/45 tabular-nums ${
+						className={`font-hanken tabular-nums ${valueClass} ${
 							dotClass ? "text-[14px]" : "text-[13px]"
 						}`}
 					>

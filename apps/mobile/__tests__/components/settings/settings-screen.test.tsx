@@ -1,9 +1,10 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { act, fireEvent, render } from "@testing-library/react-native";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 jest.mock("@/shared/components/ui/reicon", () => ({
 	X: () => null,
+	ChevronRight: () => null,
 }));
 
 const model: SettingsScreenModel = {
@@ -19,7 +20,15 @@ const model: SettingsScreenModel = {
 describe("SettingsScreen", () => {
 	it("muestra cuenta y sistema, y la X cierra", async () => {
 		const onClose = jest.fn();
-		const view = await render(<SettingsScreen status="ready" model={model} onClose={onClose} />);
+		const onOpenSecurity = jest.fn();
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={onClose}
+				onOpenSecurity={onOpenSecurity}
+			/>,
+		);
 		expect(view.getByText("Ajustes")).toBeTruthy();
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Edzon Perez")).toBeTruthy();
@@ -40,18 +49,32 @@ describe("SettingsScreen", () => {
 		expect(view.queryByText("Apariencia")).toBeNull();
 		expect(view.queryByRole("button", { name: "Perfil y datos" })).toBeNull();
 
-		fireEvent.press(view.getByRole("button", { name: "Cerrar" }));
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Cerrar" }));
+		});
 		expect(onClose).toHaveBeenCalledTimes(1);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Seguridad y Passkeys" }));
+		});
+		expect(onOpenSecurity).toHaveBeenCalledTimes(1);
+		await view.unmount();
 	});
 
-	it("oculta las llaves cuando no hay etiqueta", async () => {
+	it("sin conteo de llaves la fila sigue y abre seguridad", async () => {
+		const onOpenSecurity = jest.fn();
 		const view = await render(
 			<SettingsScreen
 				status="ready"
 				model={{ ...model, passkeysLabel: null }}
 				onClose={jest.fn()}
+				onOpenSecurity={onOpenSecurity}
 			/>,
 		);
-		expect(view.queryByText("Seguridad y Passkeys")).toBeNull();
+		expect(view.getByText("Seguridad y Passkeys")).toBeTruthy();
+		expect(view.queryByText("2 llaves")).toBeNull();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Seguridad y Passkeys" }));
+		});
+		expect(onOpenSecurity).toHaveBeenCalledTimes(1);
 	});
 });
