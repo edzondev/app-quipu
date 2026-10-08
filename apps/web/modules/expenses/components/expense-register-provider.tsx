@@ -5,10 +5,10 @@ import { ExpenseRegisterContextProvider } from "../hooks/use-expense-register-co
 import { ExpenseRegisterFlow } from "./expense-register-flow";
 
 export function ExpenseRegisterProvider({ children }: { children: ReactNode }) {
-  return (
-    <ExpenseRegisterContextProvider>
-      {children}
-      <ExpenseRegisterFlow />
-    </ExpenseRegisterContextProvider>
-  );
+	return (
+		<ExpenseRegisterContextProvider>
+			{children}
+			<ExpenseRegisterFlow />
+		</ExpenseRegisterContextProvider>
+	);
 }

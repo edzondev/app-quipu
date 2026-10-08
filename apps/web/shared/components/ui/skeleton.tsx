@@ -6,21 +6,21 @@ import { cn } from "@/shared/lib/utils";
  * en `line-muted`, delays escalonados (0 / 150 / 300ms) vía className.
  */
 function Skeleton({
-  className,
-  variant = "block",
-  ...props
+	className,
+	variant = "block",
+	...props
 }: React.ComponentProps<"div"> & { variant?: "block" | "line" }) {
-  return (
-    <div
-      data-slot="skeleton"
-      className={cn(
-        "animate-qpulse rounded-md",
-        variant === "line" ? "bg-line-muted" : "bg-line-soft",
-        className,
-      )}
-      {...props}
-    />
-  );
+	return (
+		<div
+			data-slot="skeleton"
+			className={cn(
+				"animate-qpulse rounded-md",
+				variant === "line" ? "bg-line-muted" : "bg-line-soft",
+				className,
+			)}
+			{...props}
+		/>
+	);
 }
 
 export { Skeleton };

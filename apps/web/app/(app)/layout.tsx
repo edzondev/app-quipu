@@ -7,5 +7,5 @@ export const metadata: Metadata = privateAreaMetadata;
 
 /** Auth gates live in each `page.tsx` via `requireOnboardedProfile` (QUIPU-MASTER §5.4). */
 export default function AppLayout({ children }: { children: ReactNode }) {
-  return <AppLayoutShell>{children}</AppLayoutShell>;
+	return <AppLayoutShell>{children}</AppLayoutShell>;
 }

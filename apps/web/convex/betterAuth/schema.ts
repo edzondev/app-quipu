@@ -15,15 +15,15 @@ import { tables } from "./generatedSchema";
  * in `../schema.ts` and are NOT included here.
  */
 const schema = defineSchema({
-  ...tables,
-  // Custom indexes survive regeneration of `generatedSchema.ts`.
-  //
-  // The passkey plugin looks up passkeys by `credentialID` (the WebAuthn
-  // credential id, base64url-encoded). Without an index that begins with
-  // `credentialID`, the adapter falls back to `db.get(id)` and crashes with
-  // `Invalid argument 'id' for 'db.get': Unable to decode ID: Invalid ID
-  // length 29` (the credentialID is a 29-char string, not a Convex _id).
-  passkey: tables.passkey.index("credentialID", ["credentialID"]),
+	...tables,
+	// Custom indexes survive regeneration of `generatedSchema.ts`.
+	//
+	// The passkey plugin looks up passkeys by `credentialID` (the WebAuthn
+	// credential id, base64url-encoded). Without an index that begins with
+	// `credentialID`, the adapter falls back to `db.get(id)` and crashes with
+	// `Invalid argument 'id' for 'db.get': Unable to decode ID: Invalid ID
+	// length 29` (the credentialID is a 29-char string, not a Convex _id).
+	passkey: tables.passkey.index("credentialID", ["credentialID"]),
 });
 
 export default schema;

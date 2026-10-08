@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 import { siteConfig } from "@/core/seo";
 
 export const metadata: Metadata = {
-  title: {
-    default: siteConfig.name,
-    template: `%s · ${siteConfig.name}`,
-  },
+	title: {
+		default: siteConfig.name,
+		template: `%s · ${siteConfig.name}`,
+	},
 };
 
 /**
@@ -15,5 +15,5 @@ export const metadata: Metadata = {
  * sign-up y estados van centrados con su propio gradiente radial.
  */
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return <div className="min-h-svh bg-canvas text-ink">{children}</div>;
+	return <div className="min-h-svh bg-canvas text-ink">{children}</div>;
 }

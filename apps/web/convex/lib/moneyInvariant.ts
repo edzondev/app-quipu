@@ -1,5 +1,5 @@
 export {
-  type AllocationBuckets,
-  assertAllocationBalances,
-  assertNonNegativeCents,
+	type AllocationBuckets,
+	assertAllocationBalances,
+	assertNonNegativeCents,
 } from "../../shared/lib/incomeAllocation";

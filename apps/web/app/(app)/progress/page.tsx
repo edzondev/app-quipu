@@ -3,12 +3,12 @@ import { pageMetadata } from "@/core/seo";
 import { ProgressView } from "@/modules/progress/components/progress-view";
 
 export const metadata = pageMetadata({
-  title: "Progreso",
-  path: "/progress",
+	title: "Progreso",
+	path: "/progress",
 });
 
 export default async function ProgressPage() {
-  await requireOnboardedProfile();
+	await requireOnboardedProfile();
 
-  return <ProgressView />;
+	return <ProgressView />;
 }

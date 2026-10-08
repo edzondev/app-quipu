@@ -5,15 +5,15 @@ import { defaultPageTitle, pageMetadata } from "@/core/seo";
 import { LandingView } from "@/modules/landing/components/landing-view";
 
 export const metadata: Metadata = pageMetadata({
-  title: defaultPageTitle,
-  path: "/",
-  index: true,
+	title: defaultPageTitle,
+	path: "/",
+	index: true,
 });
 
 export default async function HomePage() {
-  if (await isAuthenticated()) {
-    redirect("/dashboard");
-  }
+	if (await isAuthenticated()) {
+		redirect("/dashboard");
+	}
 
-  return <LandingView />;
+	return <LandingView />;
 }

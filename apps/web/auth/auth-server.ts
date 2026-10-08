@@ -5,22 +5,19 @@ import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { clientEnv } from "@/core/env.client";
 import { isAccountAccessAllowed } from "@/lib/account-status";
-import {
-  appendAuthReturnTo,
-  sanitizeAuthReturnTo,
-} from "@/modules/auth/lib/auth-return-to";
+import { appendAuthReturnTo, sanitizeAuthReturnTo } from "@/modules/auth/lib/auth-return-to";
 
 export const {
-  handler,
-  preloadAuthQuery,
-  isAuthenticated,
-  getToken,
-  fetchAuthQuery,
-  fetchAuthMutation,
-  fetchAuthAction,
+	handler,
+	preloadAuthQuery,
+	isAuthenticated,
+	getToken,
+	fetchAuthQuery,
+	fetchAuthMutation,
+	fetchAuthAction,
 } = convexBetterAuthNextJs({
-  convexUrl: clientEnv.NEXT_PUBLIC_CONVEX_URL,
-  convexSiteUrl: clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+	convexUrl: clientEnv.NEXT_PUBLIC_CONVEX_URL,
+	convexSiteUrl: clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
 });
 
 /**
@@ -31,23 +28,21 @@ export const {
  * - Si hay sesión sin profile → /onboarding (wizard de onboarding)
  * - Si no hay sesión → no hace nada
  */
-export const getMyProfileRsc = cache(async () =>
-  fetchAuthQuery(api.profiles.getMyProfile, {}),
-);
+export const getMyProfileRsc = cache(async () => fetchAuthQuery(api.profiles.getMyProfile, {}));
 
 export async function requireUnauthenticatedSession(returnTo?: string) {
-  const authed = await isAuthenticated();
-  if (!authed) return;
-  const safeReturnTo = sanitizeAuthReturnTo(returnTo);
-  if (safeReturnTo) {
-    redirect(safeReturnTo);
-  }
-  const profile = await getMyProfileRsc();
-  if (profile) {
-    redirect("/dashboard");
-  } else {
-    redirect("/onboarding");
-  }
+	const authed = await isAuthenticated();
+	if (!authed) return;
+	const safeReturnTo = sanitizeAuthReturnTo(returnTo);
+	if (safeReturnTo) {
+		redirect(safeReturnTo);
+	}
+	const profile = await getMyProfileRsc();
+	if (profile) {
+		redirect("/dashboard");
+	} else {
+		redirect("/onboarding");
+	}
 }
 
 /**
@@ -55,10 +50,10 @@ export async function requireUnauthenticatedSession(returnTo?: string) {
  * Usar como primera línea en page.tsx de rutas protegidas (NO en layout.tsx).
  */
 export async function requireAuthenticatedSession(returnTo?: string) {
-  const authed = await isAuthenticated();
-  if (!authed) {
-    redirect(appendAuthReturnTo("/sign-in", returnTo));
-  }
+	const authed = await isAuthenticated();
+	if (!authed) {
+		redirect(appendAuthReturnTo("/sign-in", returnTo));
+	}
 }
 
 /**
@@ -66,15 +61,15 @@ export async function requireAuthenticatedSession(returnTo?: string) {
  * Usar en rutas `/espacios/**`.
  */
 export async function requireAuthenticatedProfile(): Promise<Doc<"profiles">> {
-  await requireAuthenticatedSession();
-  const profile = await getMyProfileRsc();
-  if (!profile) {
-    redirect("/onboarding");
-  }
-  if (!isAccountAccessAllowed(profile.accountStatus)) {
-    redirect("/sign-in?reason=suspended");
-  }
-  return profile;
+	await requireAuthenticatedSession();
+	const profile = await getMyProfileRsc();
+	if (!profile) {
+		redirect("/onboarding");
+	}
+	if (!isAccountAccessAllowed(profile.accountStatus)) {
+		redirect("/sign-in?reason=suspended");
+	}
+	return profile;
 }
 
 /**
@@ -82,13 +77,13 @@ export async function requireAuthenticatedProfile(): Promise<Doc<"profiles">> {
  * Usar en page.tsx del grupo (app), no en layout.tsx (QUIPU-MASTER §5.4).
  */
 export async function requireOnboardedProfile(): Promise<Doc<"profiles">> {
-  await requireAuthenticatedSession();
-  const profile = await getMyProfileRsc();
-  if (!profile) {
-    redirect("/onboarding");
-  }
-  if (!isAccountAccessAllowed(profile.accountStatus)) {
-    redirect("/sign-in?reason=suspended");
-  }
-  return profile;
+	await requireAuthenticatedSession();
+	const profile = await getMyProfileRsc();
+	if (!profile) {
+		redirect("/onboarding");
+	}
+	if (!isAccountAccessAllowed(profile.accountStatus)) {
+		redirect("/sign-in?reason=suspended");
+	}
+	return profile;
 }

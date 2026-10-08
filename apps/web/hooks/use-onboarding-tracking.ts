@@ -19,59 +19,55 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import {
-  AnalyticsEvents,
-  type OnboardingStepProperties,
-  track,
-} from "@/core/analytics";
+import { AnalyticsEvents, type OnboardingStepProperties, track } from "@/core/analytics";
 
 export type OnboardingStep = 1 | 2 | 3 | "success";
 
 const STEP_ORDER: OnboardingStep[] = [1, 2, 3, "success"];
 
 export function useOnboardingTracking(step: OnboardingStep): {
-  markStepCompleted: (completed: OnboardingStep) => void;
+	markStepCompleted: (completed: OnboardingStep) => void;
 } {
-  const startedFiredRef = useRef<boolean>(false);
-  const completedRef = useRef<boolean>(false);
-  const highestStepRef = useRef<OnboardingStep>(step);
+	const startedFiredRef = useRef<boolean>(false);
+	const completedRef = useRef<boolean>(false);
+	const highestStepRef = useRef<OnboardingStep>(step);
 
-  useEffect(() => {
-    if (!startedFiredRef.current) {
-      track(AnalyticsEvents.ONBOARDING_STARTED, {});
-      startedFiredRef.current = true;
-    }
-  }, []);
+	useEffect(() => {
+		if (!startedFiredRef.current) {
+			track(AnalyticsEvents.ONBOARDING_STARTED, {});
+			startedFiredRef.current = true;
+		}
+	}, []);
 
-  useEffect(() => {
-    if (STEP_ORDER.indexOf(step) > STEP_ORDER.indexOf(highestStepRef.current)) {
-      highestStepRef.current = step;
-    }
+	useEffect(() => {
+		if (STEP_ORDER.indexOf(step) > STEP_ORDER.indexOf(highestStepRef.current)) {
+			highestStepRef.current = step;
+		}
 
-    const props: OnboardingStepProperties = { step };
-    track(AnalyticsEvents.ONBOARDING_STEP_VIEWED, props);
-  }, [step]);
+		const props: OnboardingStepProperties = { step };
+		track(AnalyticsEvents.ONBOARDING_STEP_VIEWED, props);
+	}, [step]);
 
-  useEffect(() => {
-    if (step === "success") {
-      completedRef.current = true;
-    }
-  }, [step]);
+	useEffect(() => {
+		if (step === "success") {
+			completedRef.current = true;
+		}
+	}, [step]);
 
-  useEffect(() => {
-    return () => {
-      if (completedRef.current) return;
-      if (highestStepRef.current === "success") return;
-      track(AnalyticsEvents.ONBOARDING_ABANDONED, {
-        last_step: highestStepRef.current,
-      });
-    };
-  }, []);
+	useEffect(() => {
+		return () => {
+			if (completedRef.current) return;
+			if (highestStepRef.current === "success") return;
+			track(AnalyticsEvents.ONBOARDING_ABANDONED, {
+				last_step: highestStepRef.current,
+			});
+		};
+	}, []);
 
-  return {
-    markStepCompleted: (completed: OnboardingStep) => {
-      const props: OnboardingStepProperties = { step: completed };
-      track(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, props);
-    },
-  };
+	return {
+		markStepCompleted: (completed: OnboardingStep) => {
+			const props: OnboardingStepProperties = { step: completed };
+			track(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, props);
+		},
+	};
 }

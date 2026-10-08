@@ -8,54 +8,46 @@
  */
 
 export type SpendableSnapshotInput = {
-  needsRemainingCents: number;
-  wantsRemainingCents: number;
-  savingsRemainingCents: number;
-  unallocatedCents: number;
-  activeReservedCents: number;
-  daysRemaining: number;
+	needsRemainingCents: number;
+	wantsRemainingCents: number;
+	savingsRemainingCents: number;
+	unallocatedCents: number;
+	activeReservedCents: number;
+	daysRemaining: number;
 };
 
 export type SpendableSnapshot = {
-  spendableCents: number;
-  reservedCents: number;
-  unallocatedCents: number;
-  savingsParkedInEnvelopeCents: number;
-  dailyAvailableCents: number;
+	spendableCents: number;
+	reservedCents: number;
+	unallocatedCents: number;
+	savingsParkedInEnvelopeCents: number;
+	dailyAvailableCents: number;
 };
 
 export function computeSpendableCents(input: {
-  needsRemainingCents: number;
-  wantsRemainingCents: number;
+	needsRemainingCents: number;
+	wantsRemainingCents: number;
 }): number {
-  return (
-    Math.max(0, input.needsRemainingCents) +
-    Math.max(0, input.wantsRemainingCents)
-  );
+	return Math.max(0, input.needsRemainingCents) + Math.max(0, input.wantsRemainingCents);
 }
 
 export function computeDailyAvailableFromSpendable(
-  spendableCents: number,
-  daysRemaining: number,
+	spendableCents: number,
+	daysRemaining: number,
 ): number {
-  return Math.floor(Math.max(0, spendableCents) / Math.max(daysRemaining, 1));
+	return Math.floor(Math.max(0, spendableCents) / Math.max(daysRemaining, 1));
 }
 
-export function computeSpendableSnapshot(
-  input: SpendableSnapshotInput,
-): SpendableSnapshot {
-  const spendableCents = computeSpendableCents({
-    needsRemainingCents: input.needsRemainingCents,
-    wantsRemainingCents: input.wantsRemainingCents,
-  });
-  return {
-    spendableCents,
-    reservedCents: Math.max(0, input.activeReservedCents),
-    unallocatedCents: Math.max(0, input.unallocatedCents),
-    savingsParkedInEnvelopeCents: Math.max(0, input.savingsRemainingCents),
-    dailyAvailableCents: computeDailyAvailableFromSpendable(
-      spendableCents,
-      input.daysRemaining,
-    ),
-  };
+export function computeSpendableSnapshot(input: SpendableSnapshotInput): SpendableSnapshot {
+	const spendableCents = computeSpendableCents({
+		needsRemainingCents: input.needsRemainingCents,
+		wantsRemainingCents: input.wantsRemainingCents,
+	});
+	return {
+		spendableCents,
+		reservedCents: Math.max(0, input.activeReservedCents),
+		unallocatedCents: Math.max(0, input.unallocatedCents),
+		savingsParkedInEnvelopeCents: Math.max(0, input.savingsRemainingCents),
+		dailyAvailableCents: computeDailyAvailableFromSpendable(spendableCents, input.daysRemaining),
+	};
 }

@@ -7,23 +7,23 @@ export type AutoApplyToggleDecision = "paywall" | "skip" | "mutate";
  * Evita doble envío mientras hay request en vuelo (sensación de “fallo”).
  */
 export function decideAutoApplyToggle(input: {
-  isPremium: boolean;
-  pending: boolean;
-  currentChecked: boolean;
-  nextChecked: boolean;
+	isPremium: boolean;
+	pending: boolean;
+	currentChecked: boolean;
+	nextChecked: boolean;
 }): AutoApplyToggleDecision {
-  if (!input.isPremium) return "paywall";
-  if (input.pending) return "skip";
-  if (input.currentChecked === input.nextChecked) return "skip";
-  return "mutate";
+	if (!input.isPremium) return "paywall";
+	if (input.pending) return "skip";
+	if (input.currentChecked === input.nextChecked) return "skip";
+	return "mutate";
 }
 
 export function patchAutoApply(
-  current: ExtraordinaryRulesAutoApply,
-  key: keyof ExtraordinaryRulesAutoApply,
-  checked: boolean,
+	current: ExtraordinaryRulesAutoApply,
+	key: keyof ExtraordinaryRulesAutoApply,
+	checked: boolean,
 ): ExtraordinaryRulesAutoApply {
-  return { ...current, [key]: checked };
+	return { ...current, [key]: checked };
 }
 
 /**
@@ -31,27 +31,25 @@ export function patchAutoApply(
  * sin useEffect para “limpiar” estado).
  */
 export function activeOptimisticAutoApply(
-  server: ExtraordinaryRulesAutoApply,
-  optimistic: Partial<ExtraordinaryRulesAutoApply> | null,
+	server: ExtraordinaryRulesAutoApply,
+	optimistic: Partial<ExtraordinaryRulesAutoApply> | null,
 ): Partial<ExtraordinaryRulesAutoApply> | null {
-  if (!optimistic) return null;
-  const active: Partial<ExtraordinaryRulesAutoApply> = {};
-  for (const key of Object.keys(optimistic) as Array<
-    keyof ExtraordinaryRulesAutoApply
-  >) {
-    const value = optimistic[key];
-    if (value !== undefined && value !== server[key]) {
-      active[key] = value;
-    }
-  }
-  return Object.keys(active).length > 0 ? active : null;
+	if (!optimistic) return null;
+	const active: Partial<ExtraordinaryRulesAutoApply> = {};
+	for (const key of Object.keys(optimistic) as Array<keyof ExtraordinaryRulesAutoApply>) {
+		const value = optimistic[key];
+		if (value !== undefined && value !== server[key]) {
+			active[key] = value;
+		}
+	}
+	return Object.keys(active).length > 0 ? active : null;
 }
 
 export function dropOptimisticKey(
-  optimistic: Partial<ExtraordinaryRulesAutoApply> | null,
-  key: keyof ExtraordinaryRulesAutoApply,
+	optimistic: Partial<ExtraordinaryRulesAutoApply> | null,
+	key: keyof ExtraordinaryRulesAutoApply,
 ): Partial<ExtraordinaryRulesAutoApply> | null {
-  if (!optimistic || !(key in optimistic)) return optimistic;
-  const { [key]: _removed, ...rest } = optimistic;
-  return Object.keys(rest).length > 0 ? rest : null;
+	if (!optimistic || !(key in optimistic)) return optimistic;
+	const { [key]: _removed, ...rest } = optimistic;
+	return Object.keys(rest).length > 0 ? rest : null;
 }

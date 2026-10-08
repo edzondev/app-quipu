@@ -20,22 +20,22 @@
  */
 
 export const FeatureFlags = {
-  // Onboarding
-  NEW_ONBOARDING_V2: "new_onboarding_v2",
+	// Onboarding
+	NEW_ONBOARDING_V2: "new_onboarding_v2",
 
-  // Coach
-  COACH_ENABLED: "coach_enabled",
-  CRISIS_COACH: "crisis_coach",
-  EXPERIMENTAL_INSIGHTS: "experimental_insights",
+	// Coach
+	COACH_ENABLED: "coach_enabled",
+	CRISIS_COACH: "crisis_coach",
+	EXPERIMENTAL_INSIGHTS: "experimental_insights",
 
-  // Ingresos
-  EXTRA_INCOME_ENABLED: "extra_income_enabled",
+	// Ingresos
+	EXTRA_INCOME_ENABLED: "extra_income_enabled",
 
-  // Ahorro
-  ADAPTIVE_SAVINGS_ENABLED: "adaptive_savings_enabled",
+	// Ahorro
+	ADAPTIVE_SAVINGS_ENABLED: "adaptive_savings_enabled",
 
-  // Dashboard
-  NEW_DASHBOARD: "new_dashboard",
+	// Dashboard
+	NEW_DASHBOARD: "new_dashboard",
 } as const;
 
 export type FeatureFlagKey = (typeof FeatureFlags)[keyof typeof FeatureFlags];
@@ -47,13 +47,13 @@ export type FeatureFlagKey = (typeof FeatureFlags)[keyof typeof FeatureFlags];
  * que el usuario no debería ver).
  */
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean> = {
-  [FeatureFlags.NEW_ONBOARDING_V2]: false,
-  [FeatureFlags.COACH_ENABLED]: true,
-  [FeatureFlags.CRISIS_COACH]: true,
-  [FeatureFlags.EXPERIMENTAL_INSIGHTS]: false,
-  [FeatureFlags.EXTRA_INCOME_ENABLED]: true,
-  [FeatureFlags.ADAPTIVE_SAVINGS_ENABLED]: false,
-  [FeatureFlags.NEW_DASHBOARD]: false,
+	[FeatureFlags.NEW_ONBOARDING_V2]: false,
+	[FeatureFlags.COACH_ENABLED]: true,
+	[FeatureFlags.CRISIS_COACH]: true,
+	[FeatureFlags.EXPERIMENTAL_INSIGHTS]: false,
+	[FeatureFlags.EXTRA_INCOME_ENABLED]: true,
+	[FeatureFlags.ADAPTIVE_SAVINGS_ENABLED]: false,
+	[FeatureFlags.NEW_DASHBOARD]: false,
 };
 
 /**
@@ -61,11 +61,11 @@ export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean> = {
  * siempre debe ser segura (equivale a la versión actual del feature).
  */
 export const FEATURE_FLAG_VARIANT_DEFAULTS: Record<FeatureFlagKey, string> = {
-  [FeatureFlags.NEW_ONBOARDING_V2]: "control",
-  [FeatureFlags.COACH_ENABLED]: "control",
-  [FeatureFlags.CRISIS_COACH]: "control",
-  [FeatureFlags.EXPERIMENTAL_INSIGHTS]: "control",
-  [FeatureFlags.EXTRA_INCOME_ENABLED]: "control",
-  [FeatureFlags.ADAPTIVE_SAVINGS_ENABLED]: "control",
-  [FeatureFlags.NEW_DASHBOARD]: "control",
+	[FeatureFlags.NEW_ONBOARDING_V2]: "control",
+	[FeatureFlags.COACH_ENABLED]: "control",
+	[FeatureFlags.CRISIS_COACH]: "control",
+	[FeatureFlags.EXPERIMENTAL_INSIGHTS]: "control",
+	[FeatureFlags.EXTRA_INCOME_ENABLED]: "control",
+	[FeatureFlags.ADAPTIVE_SAVINGS_ENABLED]: "control",
+	[FeatureFlags.NEW_DASHBOARD]: "control",
 };

@@ -2,243 +2,223 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useEffect } from "react";
 import { Text } from "react-native";
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
-import {
-  OnboardingProvider,
-  useOnboarding,
-} from "@/modules/onboarding/onboarding-provider";
+import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({
-    back: mockBack,
-    canGoBack: () => true,
-    replace: mockReplace,
-  }),
+	useRouter: () => ({
+		back: mockBack,
+		canGoBack: () => true,
+		replace: mockReplace,
+	}),
 }));
 
 jest.mock("@/shared/components/ui/reicon", () => {
-  const { View } = require("react-native");
-  return {
-    Check: () => <View testID="icon-check" />,
-    ChevronLeft: () => <View testID="icon-back" />,
-    X: () => <View testID="icon-x" />,
-  };
+	const { View } = require("react-native");
+	return {
+		Check: () => <View testID="icon-check" />,
+		ChevronLeft: () => <View testID="icon-back" />,
+		X: () => <View testID="icon-x" />,
+	};
 });
 
 function SeedState() {
-  const { dispatch } = useOnboarding();
-  useEffect(() => {
-    dispatch({ type: "SET_STEP", payload: 4 });
-  }, [dispatch]);
-  return null;
+	const { dispatch } = useOnboarding();
+	useEffect(() => {
+		dispatch({ type: "SET_STEP", payload: 4 });
+	}, [dispatch]);
+	return null;
 }
 
 function StateProbe() {
-  const { state } = useOnboarding();
-  return (
-    <>
-      <Text testID="probe-step">{String(state.step)}</Text>
-      <Text testID="probe-commitments">
-        {JSON.stringify(state.commitments)}
-      </Text>
-    </>
-  );
+	const { state } = useOnboarding();
+	return (
+		<>
+			<Text testID="probe-step">{String(state.step)}</Text>
+			<Text testID="probe-commitments">{JSON.stringify(state.commitments)}</Text>
+		</>
+	);
 }
 
 function getCommitments(): DraftCommitment[] {
-  return JSON.parse(
-    screen.getByTestId("probe-commitments").props.children,
-  ) as DraftCommitment[];
+	return JSON.parse(screen.getByTestId("probe-commitments").props.children) as DraftCommitment[];
 }
 
 async function renderStep4() {
-  return render(
-    <OnboardingProvider>
-      <SeedState />
-      <StateProbe />
-      <Step4Commitments />
-    </OnboardingProvider>,
-  );
+	return render(
+		<OnboardingProvider>
+			<SeedState />
+			<StateProbe />
+			<Step4Commitments />
+		</OnboardingProvider>,
+	);
 }
 
 async function pressChip(name: string) {
-  await act(async () => {
-    fireEvent.press(screen.getByTestId(`chip-${name.toLowerCase()}`));
-  });
+	await act(async () => {
+		fireEvent.press(screen.getByTestId(`chip-${name.toLowerCase()}`));
+	});
 }
 
 describe("Step4Commitments — compromisos", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
 
-  it("muestra el header del paso 04, los chips y el total", async () => {
-    await renderStep4();
-    expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
-    expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
-    expect(
-      screen.getByText(
-        "Los reservamos de Necesidades para que nunca aparezcan como sorpresa.",
-      ),
-    ).toBeTruthy();
-    expect(screen.getByTestId("chip-agua")).toBeTruthy();
-    expect(screen.getByTestId("chip-celular")).toBeTruthy();
-    expect(screen.getByTestId("chip-gimnasio")).toBeTruthy();
-    expect(screen.getByTestId("chip-streaming")).toBeTruthy();
-    expect(screen.getByTestId("chip-otro")).toBeTruthy();
-    expect(screen.getByText("Se reserva de Necesidades")).toBeTruthy();
-    expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
-  });
+	it("muestra el header del paso 04, los chips y el total", async () => {
+		await renderStep4();
+		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
+		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
+		expect(
+			screen.getByText("Los reservamos de Necesidades para que nunca aparezcan como sorpresa."),
+		).toBeTruthy();
+		expect(screen.getByTestId("chip-agua")).toBeTruthy();
+		expect(screen.getByTestId("chip-celular")).toBeTruthy();
+		expect(screen.getByTestId("chip-gimnasio")).toBeTruthy();
+		expect(screen.getByTestId("chip-streaming")).toBeTruthy();
+		expect(screen.getByTestId("chip-otro")).toBeTruthy();
+		expect(screen.getByText("Se reserva de Necesidades")).toBeTruthy();
+		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
+	});
 
-  it("tocar el chip '+ Agua' agrega una fila con nombre Agua vacía", async () => {
-    await renderStep4();
-    await pressChip("Agua");
-    expect(getCommitments()).toHaveLength(1);
-    expect(screen.getByTestId("commitment-name-0").props.value).toBe("Agua");
-    expect(screen.getByTestId("commitment-amount-0").props.value).toBe("");
-    expect(screen.getByTestId("commitment-day-0").props.value).toBe("");
-    expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
-  });
+	it("tocar el chip '+ Agua' agrega una fila con nombre Agua vacía", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		expect(getCommitments()).toHaveLength(1);
+		expect(screen.getByTestId("commitment-name-0").props.value).toBe("Agua");
+		expect(screen.getByTestId("commitment-amount-0").props.value).toBe("");
+		expect(screen.getByTestId("commitment-day-0").props.value).toBe("");
+		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
+	});
 
-  it("editar monto 1100 guarda amountCents 110000 y día 5 guarda dueDay 5", async () => {
-    await renderStep4();
-    await pressChip("Agua");
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
-    });
-    expect(getCommitments()[0].amountCents).toBe(110000);
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
-    });
-    expect(getCommitments()[0].dueDay).toBe(5);
-    expect(getCommitments()[0].name).toBe("Agua");
-    expect(screen.getByTestId("commitments-total").props.children).toBe(
-      "S/ 1,100",
-    );
-  });
+	it("editar monto 1100 guarda amountCents 110000 y día 5 guarda dueDay 5", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
+		});
+		expect(getCommitments()[0].amountCents).toBe(110000);
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
+		});
+		expect(getCommitments()[0].dueDay).toBe(5);
+		expect(getCommitments()[0].name).toBe("Agua");
+		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 1,100");
+	});
 
-  it("editar el nombre actualiza el compromiso en estado", async () => {
-    await renderStep4();
-    await pressChip("Otro");
-    await act(async () => {
-      fireEvent.changeText(
-        screen.getByTestId("commitment-name-0"),
-        "Seguro de vida",
-      );
-    });
-    expect(getCommitments()[0].name).toBe("Seguro de vida");
-  });
+	it("editar el nombre actualiza el compromiso en estado", async () => {
+		await renderStep4();
+		await pressChip("Otro");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-name-0"), "Seguro de vida");
+		});
+		expect(getCommitments()[0].name).toBe("Seguro de vida");
+	});
 
-  it("el icono X elimina la fila", async () => {
-    await renderStep4();
-    await pressChip("Agua");
-    await pressChip("Celular");
-    expect(getCommitments()).toHaveLength(2);
-    await act(async () => {
-      fireEvent.press(screen.getByTestId("remove-commitment-0"));
-    });
-    expect(getCommitments()).toHaveLength(1);
-    expect(getCommitments()[0].name).toBe("Celular");
-    expect(screen.queryByTestId("commitment-row-1")).toBeNull();
-  });
+	it("el icono X elimina la fila", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await pressChip("Celular");
+		expect(getCommitments()).toHaveLength(2);
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("remove-commitment-0"));
+		});
+		expect(getCommitments()).toHaveLength(1);
+		expect(getCommitments()[0].name).toBe("Celular");
+		expect(screen.queryByTestId("commitment-row-1")).toBeNull();
+	});
 
-  it("suma solo filas válidas: Se reserva de Necesidades S/ 1,265", async () => {
-    await renderStep4();
+	it("suma solo filas válidas: Se reserva de Necesidades S/ 1,265", async () => {
+		await renderStep4();
 
-    await pressChip("Agua");
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
-    });
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
-    });
+		await pressChip("Agua");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
+		});
 
-    await pressChip("Celular");
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-amount-1"), "96");
-    });
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-1"), "10");
-    });
+		await pressChip("Celular");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-1"), "96");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-1"), "10");
+		});
 
-    await pressChip("Streaming");
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-amount-2"), "69");
-    });
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-2"), "15");
-    });
+		await pressChip("Streaming");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-2"), "69");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-2"), "15");
+		});
 
-    expect(screen.getByTestId("commitments-total").props.children).toBe(
-      "S/ 1,265",
-    );
-  });
+		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 1,265");
+	});
 
-  it("filas inválidas se marcan con border-danger y bloquean Continuar", async () => {
-    await renderStep4();
-    await pressChip("Agua");
-    expect(screen.getByTestId("commitment-row-0").props.className).toContain(
-      "border-danger",
-    );
-    await act(async () => {
-      fireEvent.press(screen.getByText("Continuar"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("4");
+	it("filas inválidas se marcan con border-danger y bloquean Continuar", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		expect(screen.getByTestId("commitment-row-0").props.className).toContain("border-danger");
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "96");
-    });
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-0"), "40");
-    });
-    await act(async () => {
-      fireEvent.press(screen.getByText("Continuar"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "96");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "40");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-0"), "20");
-    });
-    expect(
-      screen.getByTestId("commitment-row-0").props.className,
-    ).not.toContain("border-danger");
-    await act(async () => {
-      fireEvent.press(screen.getByText("Continuar"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
-  });
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "20");
+		});
+		expect(screen.getByTestId("commitment-row-0").props.className).not.toContain("border-danger");
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+	});
 
-  it("'Después' avanza al paso confirm sin validación y mantiene el estado", async () => {
-    await renderStep4();
-    await pressChip("Agua");
-    await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
-    });
-    await act(async () => {
-      fireEvent.press(screen.getByTestId("commitments-skip"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
-    expect(getCommitments()).toHaveLength(1);
-    expect(getCommitments()[0].amountCents).toBe(110000);
-  });
+	it("'Después' avanza al paso confirm sin validación y mantiene el estado", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("commitments-skip"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+		expect(getCommitments()).toHaveLength(1);
+		expect(getCommitments()[0].amountCents).toBe(110000);
+	});
 
-  it("sin filas, Continuar avanza directo a confirm", async () => {
-    await renderStep4();
-    await act(async () => {
-      fireEvent.press(screen.getByText("Continuar"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
-  });
+	it("sin filas, Continuar avanza directo a confirm", async () => {
+		await renderStep4();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+	});
 
-  it("el back del paso 4 regresa al paso 3 (SET_STEP 3)", async () => {
-    await renderStep4();
-    await act(async () => {
-      fireEvent.press(screen.getByTestId("wizard-back"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("3");
-    expect(mockBack).not.toHaveBeenCalled();
-  });
+	it("el back del paso 4 regresa al paso 3 (SET_STEP 3)", async () => {
+		await renderStep4();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("wizard-back"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(mockBack).not.toHaveBeenCalled();
+	});
 });

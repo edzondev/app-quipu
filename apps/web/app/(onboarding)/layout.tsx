@@ -21,17 +21,15 @@ export const metadata: Metadata = privateAreaMetadata;
  * Si redirigiera acá, perderíamos la lógica de defensa en
  * `/onboarding/page.tsx` (caso 2 tabs simultáneos, ver spec §12).
  */
-export default async function OnboardingLayout({
-  children,
-}: PropsWithChildren) {
-  const isAuthed = await isAuthenticated();
-  if (!isAuthed) {
-    redirect("/sign-in");
-  }
+export default async function OnboardingLayout({ children }: PropsWithChildren) {
+	const isAuthed = await isAuthenticated();
+	if (!isAuthed) {
+		redirect("/sign-in");
+	}
 
-  return (
-    <div className="min-h-full flex-1 bg-background">
-      <div className="container mx-auto w-full">{children}</div>
-    </div>
-  );
+	return (
+		<div className="min-h-full flex-1 bg-background">
+			<div className="container mx-auto w-full">{children}</div>
+		</div>
+	);
 }

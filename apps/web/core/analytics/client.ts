@@ -31,16 +31,13 @@ import { clientEnv } from "@/core/env.client";
 let initialized = false;
 
 function hasPosthogEnv(): boolean {
-  return Boolean(
-    clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
-      clientEnv.NEXT_PUBLIC_POSTHOG_HOST,
-  );
+	return Boolean(clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && clientEnv.NEXT_PUBLIC_POSTHOG_HOST);
 }
 
 /** PostHog activo: env presente y no estamos en desarrollo local. */
 export function isPosthogConfigured(): boolean {
-  if (process.env.NODE_ENV === "development") return false;
-  return hasPosthogEnv();
+	if (process.env.NODE_ENV === "development") return false;
+	return hasPosthogEnv();
 }
 
 /**
@@ -50,49 +47,49 @@ export function isPosthogConfigured(): boolean {
  * es el único caller legítimo.
  */
 export function initPostHog(): void {
-  if (initialized) return;
-  if (!isPosthogConfigured()) return;
+	if (initialized) return;
+	if (!isPosthogConfigured()) return;
 
-  const config: Partial<PostHogConfig> = {
-    api_host: clientEnv.NEXT_PUBLIC_POSTHOG_HOST,
-    capture_exceptions: true,
-    debug: process.env.NODE_ENV === "development",
+	const config: Partial<PostHogConfig> = {
+		api_host: clientEnv.NEXT_PUBLIC_POSTHOG_HOST,
+		capture_exceptions: true,
+		debug: process.env.NODE_ENV === "development",
 
-    // Page views: los emitimos manualmente desde usePageView para
-    // tipar `dashboard_viewed` con el shape que queremos. Si esto
-    // quedara en `true`, PostHog dispara `$pageview` en cada navegación,
-    // duplicando señal.
-    capture_pageview: false,
-    capture_pageleave: true,
+		// Page views: los emitimos manualmente desde usePageView para
+		// tipar `dashboard_viewed` con el shape que queremos. Si esto
+		// quedara en `true`, PostHog dispara `$pageview` en cada navegación,
+		// duplicando señal.
+		capture_pageview: false,
+		capture_pageleave: true,
 
-    // Autocapture: rage/dead clicks, scroll depth, console logs,
-    // network requests, JS exceptions. Heatmaps habilitadas vía SDK.
-    autocapture: true,
+		// Autocapture: rage/dead clicks, scroll depth, console logs,
+		// network requests, JS exceptions. Heatmaps habilitadas vía SDK.
+		autocapture: true,
 
-    // Session Replay: enmascara inputs por defecto y cualquier
-    // nodo con `data-ph-mask` (áreas privadas). El shell de la app
-    // marcará el área sensible.
-    session_recording: {
-      maskAllInputs: true,
-      maskTextSelector: "[data-ph-mask]",
-      recordCrossOriginIframes: false,
-      inlineStylesheet: true,
-    },
+		// Session Replay: enmascara inputs por defecto y cualquier
+		// nodo con `data-ph-mask` (áreas privadas). El shell de la app
+		// marcará el área sensible.
+		session_recording: {
+			maskAllInputs: true,
+			maskTextSelector: "[data-ph-mask]",
+			recordCrossOriginIframes: false,
+			inlineStylesheet: true,
+		},
 
-    // API congelada a enero 2026.
-    defaults: "2026-01-30",
+		// API congelada a enero 2026.
+		defaults: "2026-01-30",
 
-    // Persistencia: usamos localStorage por defecto. Sin cookies
-    // de terceros (CSP estricta).
-    persistence: "localStorage",
+		// Persistencia: usamos localStorage por defecto. Sin cookies
+		// de terceros (CSP estricta).
+		persistence: "localStorage",
 
-    // No queremos bloqueos del LCP por el SDK.
-    disable_compression: false,
-    advanced_disable_decide: false,
-  };
+		// No queremos bloqueos del LCP por el SDK.
+		disable_compression: false,
+		advanced_disable_decide: false,
+	};
 
-  posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ?? "", config);
-  initialized = true;
+	posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ?? "", config);
+	initialized = true;
 }
 
 export { posthog };
