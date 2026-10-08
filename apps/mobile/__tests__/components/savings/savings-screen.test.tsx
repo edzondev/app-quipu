@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render } from "@testing-library/react-native";
+import { fixtureId } from "@/__fixtures__/convex-id";
 import { SavingsScreen } from "@/shared/components/savings/savings-screen";
 import {
 	type MoveSurplusContext,
@@ -11,7 +12,7 @@ type Fund = NonNullable<Overview["emergencyFund"]>;
 type Surplus = NonNullable<MoveSurplusContext>;
 
 const fund = {
-	id: "fund-1",
+	id: fixtureId("subEnvelopes", "fund-1"),
 	label: "Fondo de emergencia",
 	currentAmount: 185000,
 	targetAmount: 450000,
@@ -33,7 +34,7 @@ const filledOverview = {
 	emergencyFund: fund,
 	goals: [
 		{
-			id: "goal-secret",
+			id: fixtureId("subEnvelopes", "goal-secret"),
 			label: "Viaje",
 			currentAmount: 120000,
 			targetAmount: 200000,
@@ -52,7 +53,13 @@ const filled = presentAhorro(filledOverview, {
 		wants: { availableCents: 5000 },
 		extraordinary: { availableCents: 9600 },
 	},
-	destinations: [{ id: "fund-secret", label: "Fondo de emergencia", isSystemDefault: true }],
+	destinations: [
+		{
+			id: fixtureId("subEnvelopes", "fund-secret"),
+			label: "Fondo de emergencia",
+			isSystemDefault: true,
+		},
+	],
 } satisfies Surplus);
 
 const screenProps = {

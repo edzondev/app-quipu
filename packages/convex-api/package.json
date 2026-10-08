@@ -2,14 +2,14 @@
 	"name": "@quipu/convex-api",
 	"version": "0.0.0",
 	"private": true,
-	"description": "Convex API spec (functions + components) for non-web consumers (mobile, scripts, etc). Generated from apps/web/convex by `convex-helpers ts-api-spec`.",
+	"description": "Typed Convex API for non-web consumers (mobile, scripts). Derived from apps/web/convex/_generated without a deployment.",
 	"main": "./src/api.ts",
 	"types": "./src/api.ts",
 	"files": [
 		"src"
 	],
 	"scripts": {
-		"generate": "cd ../../apps/web && pnpm convex:export-api",
+		"generate": "node ../../scripts/ensure-convex-api.mjs",
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {

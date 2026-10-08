@@ -416,9 +416,6 @@ importers:
       babel-plugin-react-compiler:
         specifier: 1.0.0
         version: 1.0.0
-      convex-helpers:
-        specifier: ^0.1.123
-        version: 0.1.127(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.4))(hono@4.13.13)(react@19.2.4)(typescript@6.0.3)(zod@4.6.5)
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@2.4.0)

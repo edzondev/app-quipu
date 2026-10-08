@@ -1,3 +1,4 @@
+import { fixtureId } from "@/__fixtures__/convex-id";
 import {
 	ahorroPlanRow,
 	emptyAhorro,
@@ -14,7 +15,7 @@ type Fund = NonNullable<Overview["emergencyFund"]>;
 type Surplus = NonNullable<MoveSurplusContext>;
 
 const fund = {
-	id: "fund-1",
+	id: fixtureId("subEnvelopes", "fund-1"),
 	label: "Fondo de emergencia",
 	currentAmount: 185000,
 	targetAmount: 450000,
@@ -36,7 +37,7 @@ const overview = {
 	emergencyFund: fund,
 	goals: [
 		{
-			id: "goal-viaje",
+			id: fixtureId("subEnvelopes", "goal-viaje"),
 			label: "Viaje",
 			currentAmount: 120000,
 			targetAmount: 200000,
@@ -55,7 +56,13 @@ const extraIncome = {
 		wants: { availableCents: 5000 },
 		extraordinary: { availableCents: 9600 },
 	},
-	destinations: [{ id: "fund-1", label: "Fondo de emergencia", isSystemDefault: true }],
+	destinations: [
+		{
+			id: fixtureId("subEnvelopes", "fund-1"),
+			label: "Fondo de emergencia",
+			isSystemDefault: true,
+		},
+	],
 } satisfies Surplus;
 
 describe("savingsBarPercent", () => {
@@ -95,7 +102,7 @@ describe("presentAhorro", () => {
 
 		expect(model.goals).toEqual([
 			{
-				id: "goal-viaje",
+				id: fixtureId("subEnvelopes", "goal-viaje"),
 				name: "Viaje",
 				currentLabel: "S/ 1,200",
 				targetLabel: "de 2,000",
@@ -109,9 +116,10 @@ describe("presentAhorro", () => {
 			...overview,
 			goals: [
 				{
-					id: "goal-abierta",
+					id: fixtureId("subEnvelopes", "goal-abierta"),
 					label: "Laptop",
 					currentAmount: 0,
+					targetAmount: undefined,
 					progressPercent: 0,
 					isSystemDefault: false,
 				},
@@ -200,7 +208,7 @@ describe("ahorroPlanRow", () => {
 				goals: [
 					...overview.goals,
 					{
-						id: "g2",
+						id: fixtureId("subEnvelopes", "g2"),
 						label: "Casa",
 						currentAmount: 0,
 						targetAmount: 100,

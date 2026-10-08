@@ -9,6 +9,8 @@ export const ENVELOPE_CHOICES = [
 	{ type: "wants", label: "Gustos" },
 ] as const;
 
+type EnvelopeChoice = (typeof ENVELOPE_CHOICES)[number]["type"];
+
 const SELECTED_FRAME = {
 	needs: "border-needs bg-needs/15",
 	wants: "border-wants bg-wants/15",
@@ -29,7 +31,7 @@ export function EnvelopeChoices({
 	disabled = false,
 }: {
 	value: ExpenseEnvelopeChoice | null;
-	onChange: (type: ExpenseEnvelopeChoice) => void;
+	onChange: (type: EnvelopeChoice) => void;
 	disabled?: boolean;
 }) {
 	return (

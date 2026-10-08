@@ -1,4 +1,6 @@
 import { cleanup, fireEvent, render } from "@testing-library/react-native";
+import { fixtureId } from "@/__fixtures__/convex-id";
+import { savingsOverview } from "@/__fixtures__/savings-overview";
 import { CloseScreen } from "@/shared/components/progress/close-screen";
 import { ProgressScreen } from "@/shared/components/progress/progress-screen";
 import {
@@ -8,7 +10,6 @@ import {
 	presentClose,
 	presentProgress,
 } from "@/shared/lib/progress/model";
-import { savingsOverview } from "@/shared/lib/progress/savings-overview-fixture";
 
 type Overview = NonNullable<ProgressOverview>;
 type Rewards = NonNullable<ProgressRewards>;
@@ -54,7 +55,7 @@ const rewards = {
 const closeReport = {
 	justClosed: false,
 	report: {
-		closedCycleId: "cycle-secret",
+		closedCycleId: fixtureId("financialCycles", "cycle-secret"),
 		cycleLabel: "Julio",
 		totalIncomeCents: 10000,
 		spendByEnvelope: [{ type: "needs" as const, label: "Necesidades", spentCents: 10000 }],

@@ -1,25 +1,54 @@
+import { fixtureId } from "@/__fixtures__/convex-id";
+import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
 const YESTERDAY_MOVE = Date.UTC(2026, 7, 14, 15, 0, 0);
 
-function summary(overrides: Partial<Parameters<typeof mapDashboardHome>[0]> = {}) {
+type Summary = Parameters<typeof mapDashboardHome>[0];
+type ActiveSummary = Extract<Summary, { cycle: { startDate: number } }>;
+type Hero = NonNullable<ActiveSummary["hero"]>;
+const hero: Hero = {
+	dailyAvailableCents: 4230,
+	displayDailyCents: 4230,
+	bodyCopy: undefined,
+	validationCopy: undefined,
+	statusBadge: "stable",
+	spendableCents: 0,
+	reservedCents: 0,
+	unallocatedCents: 0,
+};
+
+function summary(
+	overrides: {
+		hero?: Hero;
+		envelopes?: ActiveSummary["envelopes"];
+		movements?: ActiveSummary["movements"];
+		commitments?: ActiveSummary["commitments"];
+	} = {},
+): ActiveSummary {
 	return {
-		profile: { name: "Edzon", currencyCode: "PEN" },
+		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
 		cycle: {
+			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
+			endDate: AUGUST_START,
+			needsReview: false,
+			unallocatedCents: 0,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
 			progressPercent: 50,
 		},
-		hero: {
-			displayDailyCents: 4230,
-			statusBadge: "stable" as const,
-			bodyCopy: undefined,
+		hero: overrides.hero ?? hero,
+		liquidity: {
+			spendableCents: 0,
+			reservedCents: 0,
+			unallocatedCents: 0,
+			savingsParkedInEnvelopeCents: 0,
 		},
-		envelopes: [
+		envelopes: overrides.envelopes ?? [
 			{
 				type: "needs" as const,
 				allocatedAmount: 175000,
@@ -39,9 +68,18 @@ function summary(overrides: Partial<Parameters<typeof mapDashboardHome>[0]> = {}
 				percentRemaining: 100,
 			},
 		],
-		coach: { message: "Vas bien." },
-		commitments: [],
-		movements: [
+		coach: {
+			kind: "tranquil",
+			message: "Vas bien.",
+			interactionId: undefined,
+			options: undefined,
+			crisisOptions: undefined,
+			crisisPlan: undefined,
+			rescueSuggestion: undefined,
+			awaitingRescueConfirmation: false,
+		},
+		commitments: overrides.commitments ?? [],
+		movements: overrides.movements ?? [
 			{
 				id: "e1",
 				kind: "expense" as const,
@@ -59,13 +97,13 @@ function summary(overrides: Partial<Parameters<typeof mapDashboardHome>[0]> = {}
 				envelopeLabel: "Necesidades",
 			},
 		],
-		...overrides,
+		isEarlyCycle: false,
 	};
 }
 
 describe("mapDashboardHome", () => {
 	it("devuelve null si no hay ciclo activo", () => {
-		expect(mapDashboardHome(summary({ cycle: null, hero: null }))).toBeNull();
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
 	});
 
 	it("mapea el héroe, el ciclo y el coach sin datos ficticios", () => {
@@ -92,10 +130,7 @@ describe("mapDashboardHome", () => {
 		expect(
 			mapDashboardHome(
 				summary({
-					hero: {
-						displayDailyCents: 0,
-						statusBadge: "risk",
-					},
+					hero: { ...hero, displayDailyCents: 0, statusBadge: "risk" },
 				}),
 			)?.badgeLabel,
 		).toBe("En riesgo");
@@ -103,6 +138,7 @@ describe("mapDashboardHome", () => {
 			mapDashboardHome(
 				summary({
 					hero: {
+						...hero,
 						displayDailyCents: 0,
 						statusBadge: "starting",
 						bodyCopy: "Registra tu primer gasto.",
@@ -207,6 +243,7 @@ describe("mapDashboardHome", () => {
 						label: "Sueldo",
 						amount: 350000,
 						timestamp: TODAY_MOVE,
+						envelopeLabel: undefined,
 					},
 				],
 			}),
@@ -220,38 +257,38 @@ describe("mapDashboardHome", () => {
 		const home = mapDashboardHome(
 			summary({
 				commitments: [
-					{
+					commitment({
 						id: "paid",
 						name: "Netflix",
 						amount: 3000,
 						nextDueAt: Date.UTC(2026, 7, 16, 17, 0, 0),
 						daysUntilDue: 1,
 						paymentStatus: "paid",
-					},
-					{
+					}),
+					commitment({
 						id: "rent",
 						name: "Alquiler",
 						amount: 110000,
 						nextDueAt: Date.UTC(2026, 7, 16, 17, 0, 0),
 						daysUntilDue: 1,
 						paymentStatus: "pending",
-					},
-					{
+					}),
+					commitment({
 						id: "light",
 						name: "Luz del Sur",
 						amount: 9600,
 						nextDueAt: Date.UTC(2026, 7, 22, 17, 0, 0),
 						daysUntilDue: 7,
 						paymentStatus: "pending",
-					},
-					{
+					}),
+					commitment({
 						id: "late",
 						name: "Agua",
 						amount: 4500,
 						nextDueAt: Date.UTC(2026, 7, 10, 17, 0, 0),
 						daysUntilDue: -5,
 						paymentStatus: "overdue",
-					},
+					}),
 				],
 			}),
 		);
