@@ -1,9 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import {
-	closedCycleSurplusDestinationValidator,
-	surplusFromEnvelopeValidator,
-} from "./lib/surplusValidators";
 
 /**
  * App-level schema.
@@ -140,6 +136,7 @@ export const appTables = {
 		unallocatedCents: v.optional(v.number()),
 		// Legacy cycles without incomeAllocationLines need user review (not silent invent).
 		needsReview: v.optional(v.boolean()),
+		closeSurplusMovedAt: v.optional(v.number()),
 	}).index("by_profile_status", ["profileId", "status"]),
 
 	// SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -306,7 +303,7 @@ export const appTables = {
 	surplusContributions: defineTable({
 		profileId: v.id("profiles"),
 		cycleId: v.id("financialCycles"),
-		fromEnvelope: surplusFromEnvelopeValidator,
+		fromEnvelope: v.union(v.literal("needs"), v.literal("wants"), v.literal("extraordinary")),
 		amount: v.number(),
 		subEnvelopeId: v.id("subEnvelopes"),
 		createdAt: v.number(),
@@ -561,16 +558,6 @@ export const appTables = {
 	})
 		.index("by_userId", ["userId"])
 		.index("by_profileId_createdAt", ["profileId", "createdAt"]),
-
-	// Destino elegido del sobrante al cerrar un ciclo. No mueve `remainingAmount`.
-	closedCycleSurplusDispositions: defineTable({
-		profileId: v.id("profiles"),
-		closedCycleId: v.id("financialCycles"),
-		fromEnvelope: surplusFromEnvelopeValidator,
-		amount: v.number(),
-		destination: closedCycleSurplusDestinationValidator,
-		createdAt: v.number(),
-	}).index("by_cycle", ["closedCycleId"]),
 };
 
 const schema = defineSchema(appTables);

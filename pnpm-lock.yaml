@@ -416,9 +416,6 @@ importers:
       babel-plugin-react-compiler:
         specifier: 1.0.0
         version: 1.0.0
-      convex-test:
-        specifier: ^0.0.60
-        version: 0.0.60(convex@1.46.0(react@19.2.4))
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@2.4.0)
@@ -4418,11 +4415,6 @@ packages:
         optional: true
       zod:
         optional: true
-
-  convex-test@0.0.60:
-    resolution: {integrity: sha512-qCAFx+CO6bmpXNc9s1jZvw8NJPS4yM074ib87PUY675FsiaRRW4ALotEB+RbVCYDRMYxh623KMnYZBlrMJIv1Q==}
-    peerDependencies:
-      convex: ^1.43.0
 
   convex@1.46.0:
     resolution: {integrity: sha512-dhBwDQTZDOhi5SUGAX17EWNehCdNq6/UFrSL0eLZuGfMkdsQbCVWVRZCzbZ5CF+/pgvoGxtApbEoTSipqL4JTw==}
@@ -12527,10 +12519,6 @@ snapshots:
       react: 19.2.4
       typescript: 6.0.3
       zod: 4.6.5
-
-  convex-test@0.0.60(convex@1.46.0(react@19.2.4)):
-    dependencies:
-      convex: 1.46.0(react@19.2.4)
 
   convex@1.46.0(react@19.2.3):
     dependencies:

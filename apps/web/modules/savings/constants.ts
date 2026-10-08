@@ -152,6 +152,7 @@ export const MOVE_SURPLUS_CYCLE_BANNER_REST =
 	"Tu distribución 50/30/20 sigue igual el próximo mes.";
 export const MOVE_SURPLUS_DESTINATION_FUND_HINT = "Recomendado · va primero";
 export const MOVE_SURPLUS_DESTINATION_GOAL_HINT = "Viaje, laptop, depa…";
+export const MOVE_SURPLUS_GRATIFICATION_LABEL = "De mi gratificación";
 export const MOVE_SURPLUS_WANTS_SURPLUS_PREFIX = "Sobrante de Gustos";
 export const MOVE_SURPLUS_CANCEL_CTA = "Cancelar";
 export const MOVE_SURPLUS_SUBMIT_CTA_PREFIX = "Mover";

@@ -20,6 +20,7 @@ import {
 	MOVE_SURPLUS_DESTINATION_FUND_HINT,
 	MOVE_SURPLUS_DESTINATION_GOAL_HINT,
 	MOVE_SURPLUS_DESTINATION_LABEL,
+	MOVE_SURPLUS_GRATIFICATION_LABEL,
 	MOVE_SURPLUS_SHORTCUT_ALL,
 	MOVE_SURPLUS_SOURCE_LABEL,
 	MOVE_SURPLUS_SUBMIT_CTA_PREFIX,
@@ -75,6 +76,9 @@ function sourceLabel(
 ): string {
 	if (source === "wants") {
 		return `${MOVE_SURPLUS_WANTS_SURPLUS_PREFIX} ${formatCents(availableCents, { currency: currencyCode })}`;
+	}
+	if (source === "extraordinary") {
+		return MOVE_SURPLUS_GRATIFICATION_LABEL;
 	}
 	return ENVELOPE_LABELS[source];
 }

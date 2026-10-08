@@ -373,7 +373,6 @@ export const exportMyData = query({
 					incomeAllocationLines,
 					internalTransfers,
 					commitmentReservations,
-					closedCycleSurplusDispositions,
 				] = await Promise.all([
 					ctx.db
 						.query("surplusContributions")
@@ -391,17 +390,12 @@ export const exportMyData = query({
 						.query("commitmentReservations")
 						.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
 						.collect(),
-					ctx.db
-						.query("closedCycleSurplusDispositions")
-						.withIndex("by_cycle", (q) => q.eq("closedCycleId", cycle._id))
-						.collect(),
 				]);
 				return {
 					surplusContributions,
 					incomeAllocationLines,
 					internalTransfers,
 					commitmentReservations,
-					closedCycleSurplusDispositions,
 				};
 			}),
 		);
@@ -409,9 +403,6 @@ export const exportMyData = query({
 		const incomeAllocationLines = docsByCycle.flatMap((row) => row.incomeAllocationLines);
 		const internalTransfers = docsByCycle.flatMap((row) => row.internalTransfers);
 		const commitmentReservations = docsByCycle.flatMap((row) => row.commitmentReservations);
-		const closedCycleSurplusDispositions = docsByCycle.flatMap(
-			(row) => row.closedCycleSurplusDispositions,
-		);
 
 		const [
 			envelopes,
@@ -510,7 +501,6 @@ export const exportMyData = query({
 			expenses,
 			incomeEvents,
 			surplusContributions,
-			closedCycleSurplusDispositions,
 			incomeAllocationLines,
 			internalTransfers,
 			commitmentReservations,
@@ -552,36 +542,25 @@ export const deleteAllDataForProfile = internalMutation({
 		// Tablas indexadas solo por ciclo (ledger post-2026-07-31).
 		const docsByCycle = await Promise.all(
 			cycles.map(async (cycle) => {
-				const [contributions, allocationLines, transfers, reservations, dispositions] =
-					await Promise.all([
-						ctx.db
-							.query("surplusContributions")
-							.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-							.collect(),
-						ctx.db
-							.query("incomeAllocationLines")
-							.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-							.collect(),
-						ctx.db
-							.query("internalTransfers")
-							.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-							.collect(),
-						ctx.db
-							.query("commitmentReservations")
-							.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-							.collect(),
-						ctx.db
-							.query("closedCycleSurplusDispositions")
-							.withIndex("by_cycle", (q) => q.eq("closedCycleId", cycle._id))
-							.collect(),
-					]);
-				return [
-					...contributions,
-					...allocationLines,
-					...transfers,
-					...reservations,
-					...dispositions,
-				];
+				const [contributions, allocationLines, transfers, reservations] = await Promise.all([
+					ctx.db
+						.query("surplusContributions")
+						.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+						.collect(),
+					ctx.db
+						.query("incomeAllocationLines")
+						.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+						.collect(),
+					ctx.db
+						.query("internalTransfers")
+						.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+						.collect(),
+					ctx.db
+						.query("commitmentReservations")
+						.withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+						.collect(),
+				]);
+				return [...contributions, ...allocationLines, ...transfers, ...reservations];
 			}),
 		);
 		await deleteDocs(docsByCycle.flat());
