@@ -13,6 +13,9 @@ import expo.modules.kotlin.modules.ModuleDefinition
 private const val TAG = "QuipuNotificationListener"
 
 class QuipuNotificationListenerModule : Module() {
+  @Volatile
+  private var boundStore: NotificationStore? = null
+
   override fun definition() = ModuleDefinition {
     Name("QuipuNotificationListener")
 
@@ -23,7 +26,8 @@ class QuipuNotificationListenerModule : Module() {
     }
 
     OnDestroy {
-      storeOrNull()?.setListener(null)
+      boundStore?.setListener(null)
+      boundStore = null
     }
 
     Function("isNotificationAccessEnabled") {
@@ -102,8 +106,10 @@ class QuipuNotificationListenerModule : Module() {
   }
 
   private fun bind(): NotificationStore? {
+    boundStore?.let { return it }
     val store = storeOrNull() ?: return null
     store.setListener { item -> sendEvent("onNotification", item.toPayload()) }
+    boundStore = store
     return store
   }
 
