@@ -1,5 +1,6 @@
 package expo.modules.quipunotificationlistener
 
+import android.util.Log
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class NotificationStore(
   private val file: File,
   private val io: Executor = defaultExecutor(),
+  private val onError: (phase: String, error: Exception) -> Unit = { _, _ -> },
 ) {
   private val lock = Any()
   private val readyLatch = CountDownLatch(1)
@@ -62,7 +64,8 @@ internal class NotificationStore(
     io.execute {
       try {
         loadAndMerge()
-      } catch (_: Throwable) {
+      } catch (e: Exception) {
+        onError("load", e)
         synchronized(lock) {
           ready = true
         }
@@ -190,7 +193,7 @@ internal class NotificationStore(
   }
 
   private fun loadAndMerge() {
-    val loaded = readSnapshot(file)
+    val loaded = readSnapshot(file, onError)
     val toEmit = ArrayList<PendingNotification>()
     var dirty = false
     synchronized(lock) {
@@ -304,7 +307,8 @@ internal class NotificationStore(
     val current = listener ?: return
     try {
       current(item)
-    } catch (_: Throwable) {
+    } catch (e: Exception) {
+      onError("deliver", e)
     }
   }
 
@@ -313,7 +317,7 @@ internal class NotificationStore(
     io.execute {
       saveQueued.set(false)
       val snapshot = synchronized(lock) { snapshot() }
-      writeAtomically(file, snapshot)
+      writeAtomically(file, snapshot, onError)
     }
   }
 
@@ -333,6 +337,7 @@ internal class NotificationStore(
     private const val READY_TIMEOUT_SECONDS = 5L
     private const val DIRECTORY = "quipu-notification-listener"
     private const val FILE_NAME = "state.bin"
+    private const val TAG = "QuipuNotificationListener"
 
     private val gate = Any()
 
@@ -346,7 +351,10 @@ internal class NotificationStore(
     fun shared(baseDir: File): NotificationStore {
       shared?.let { return it }
       return synchronized(gate) {
-        shared ?: NotificationStore(File(File(baseDir, DIRECTORY), FILE_NAME)).also { shared = it }
+        shared ?: NotificationStore(
+          File(File(baseDir, DIRECTORY), FILE_NAME),
+          onError = ::logFailure,
+        ).also { shared = it }
       }
     }
 
@@ -359,6 +367,11 @@ internal class NotificationStore(
     fun isValidPackageName(packageName: String): Boolean {
       if (packageName.length !in 3..200) return false
       return PACKAGE_NAME.matches(packageName)
+    }
+
+    /** Logs the phase and the exception class only. Never message text or notification content. */
+    private fun logFailure(phase: String, error: Exception) {
+      Log.w(TAG, "$phase failed: ${error.javaClass.simpleName}")
     }
 
     private val PACKAGE_NAME = Regex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$")
@@ -401,7 +414,7 @@ private const val MAX_STORED_SOURCES = NotificationStore.MAX_SOURCES
 private const val MAX_STORED_RECENT = NotificationStore.MAX_RECENT
 private const val MAX_STORED_QUEUE = NotificationStore.MAX_QUEUE
 
-private fun readSnapshot(file: File): Snapshot {
+private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): Snapshot {
   if (!file.isFile) return Snapshot.empty()
   return try {
     DataInputStream(BufferedInputStream(FileInputStream(file))).use { input ->
@@ -436,7 +449,8 @@ private fun readSnapshot(file: File): Snapshot {
       }
       Snapshot(sources, recentIds, queue)
     }
-  } catch (_: Throwable) {
+  } catch (e: Exception) {
+    onError("read", e)
     Snapshot.empty()
   }
 }
@@ -463,9 +477,16 @@ private fun readCount(input: DataInputStream, max: Int): Int {
   return count
 }
 
-private fun writeAtomically(file: File, snapshot: Snapshot) {
+private fun writeAtomically(
+  file: File,
+  snapshot: Snapshot,
+  onError: (String, Exception) -> Unit,
+) {
   val parent = file.parentFile ?: return
-  if (!parent.exists() && !parent.mkdirs()) return
+  if (!parent.exists() && !parent.mkdirs()) {
+    onError("write", IOException("cannot create state directory"))
+    return
+  }
   val tmp = File(parent, file.name + ".tmp")
   try {
     FileOutputStream(tmp).use { output ->
@@ -499,7 +520,8 @@ private fun writeAtomically(file: File, snapshot: Snapshot) {
         tmp.deleteOnExit()
       }
     }
-  } catch (_: Throwable) {
+  } catch (e: Exception) {
+    onError("write", e)
     if (tmp.exists() && !tmp.delete()) {
       tmp.deleteOnExit()
     }

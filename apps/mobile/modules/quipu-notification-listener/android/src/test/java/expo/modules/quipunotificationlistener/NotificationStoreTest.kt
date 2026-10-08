@@ -186,6 +186,37 @@ class NotificationStoreTest {
   }
 
   @Test
+  fun reportsATruncatedFileAndStartsEmpty() {
+    val file = File(Files.createTempDirectory("quipu-nl").toFile(), "state.bin")
+    DataOutputStream(FileOutputStream(file)).use { output ->
+      output.writeInt(0x51504E31)
+      output.writeInt(1)
+      output.writeInt(3)
+    }
+    val errors = mutableListOf<String>()
+    val store = NotificationStore(file, onError = { phase, _ -> errors.add(phase) })
+    store.start()
+    store.awaitReady()
+    assertEquals(listOf("read"), errors)
+    assertTrue(store.sources().isEmpty())
+    assertTrue(store.pending().isEmpty())
+  }
+
+  @Test
+  fun aFailingListenerIsReportedAndDoesNotBreakTheQueue() {
+    val errors = mutableListOf<String>()
+    val file = File(Files.createTempDirectory("quipu-nl").toFile(), "state.bin")
+    val store = NotificationStore(file, onError = { phase, _ -> errors.add(phase) })
+    store.start()
+    store.awaitReady()
+    store.addSource("com.bank.one")
+    store.setListener { error("js runtime is gone") }
+    store.offer(item("com.bank.one", "k", 1))
+    assertEquals(listOf("deliver"), errors)
+    assertEquals(listOf("k|1"), store.pending().map { it.id })
+  }
+
+  @Test
   fun buffersEventsUntilTheFileIsLoadedThenMerges() {
     val (file, store) = newStore()
     assertFalse(store.isReady())
