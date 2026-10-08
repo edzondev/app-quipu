@@ -328,7 +328,7 @@ export const revokeMySession = mutation({
 			found = await ctx.runQuery(components.betterAuth.adapter.findOne, {
 				model: "session",
 				where: [{ field: "_id", operator: "eq", value: args.sessionId }],
-				select: ["userId"],
+				select: ["userId", "token", "expiresAt"],
 			});
 		} catch (error) {
 			if (!isUndecodableDocumentId(error)) {

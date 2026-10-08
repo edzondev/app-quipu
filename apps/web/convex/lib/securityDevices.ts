@@ -101,8 +101,15 @@ export function readAdapterPage(result: unknown): unknown[] {
 	return Array.isArray(result.page) ? result.page : [];
 }
 
+/**
+ * `db.get` no filtra por tabla. Solo la sesión tiene `token` y `expiresAt`;
+ * se leen para reconocerla y no se devuelven.
+ */
 export function readSessionOwnerId(session: unknown): string | null {
 	if (!isRecord(session)) return null;
+	const token = readString(session, "token");
+	if (token === null || token.length === 0 || readNumber(session, "expiresAt") === null)
+		return null;
 	return nonBlank(readString(session, "userId"));
 }
 
