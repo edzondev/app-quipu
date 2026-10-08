@@ -1,4 +1,4 @@
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
@@ -7,25 +7,22 @@ import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AppShell from "@/shared/components/app-shell";
 import AuthButton from "@/shared/components/auth/auth-button";
+import { AuthNotice } from "@/shared/components/auth/auth-notice";
+import { EmailCodeForm } from "@/shared/components/auth/email-code-form";
 import FieldError from "@/shared/components/auth/field-error";
+import { ErrorText } from "@/shared/components/forms/field-error";
 import { Check, ChevronLeft } from "@/shared/components/ui/reicon";
-import { useCountdown } from "@/shared/hooks/use-countdown";
-import { revalidateOnBlur, setFormError } from "@/shared/lib/form";
 import {
-	isUserAlreadyExistsError,
+	type AuthNoticeCopy,
 	mapOtpVerifyError,
-	parseOtpInput,
-	shouldAutoVerifyOtp,
-	shouldSendOtp,
-} from "@/shared/lib/signup-flow";
+	mapPasskeySignInError,
+	mapSignUpError,
+} from "@/shared/lib/auth/errors";
+import { formErrorMessage, revalidateOnBlur, setFormError } from "@/shared/lib/form";
+import { HIT_SLOP } from "@/shared/lib/hit-slop";
+import { shouldSendOtp } from "@/shared/lib/signup-flow";
 
 type Step = 1 | 2 | 3 | 4;
-
-type Account = {
-	name: string;
-	email: string;
-	password: string;
-};
 
 const accountSchema = z.object({
 	name: z.string().trim().min(1, "Dinos cómo te llamas"),
@@ -36,10 +33,6 @@ const accountSchema = z.object({
 		.min(1, "El email es obligatorio")
 		.pipe(z.email("Email inválido")),
 	password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
-});
-
-const otpSchema = z.object({
-	otp: z.string().regex(/^\d{6}$/, "Ingresa los 6 dígitos"),
 });
 
 function ProgressHeader({ label, filled }: { label: string; filled: number }) {
@@ -67,37 +60,31 @@ function ProgressHeader({ label, filled }: { label: string; filled: number }) {
 export default function CreateAccountScreen() {
 	const router = useRouter();
 	const [step, setStep] = useState<Step>(1);
-	const [account, setAccount] = useState<Account | null>(null);
-	const [otp, setOtp] = useState("");
+	const [signUpNotice, setSignUpNotice] = useState<AuthNoticeCopy | null>(null);
 	const [otpError, setOtpError] = useState<string | null>(null);
-	const [otpLoading, setOtpLoading] = useState(false);
 	const [passkeyDone, setPasskeyDone] = useState<boolean | null>(null);
 	const [passkeyLoading, setPasskeyLoading] = useState(false);
 	const [passkeyError, setPasskeyError] = useState<string | null>(null);
-	const { seconds: resendIn, reset: resetResend } = useCountdown(60);
 	const otpRequestedForRef = useRef<string | null>(null);
 
-	const sendOtp = async (email: string) => {
-		setOtpLoading(true);
+	const sendOtp = async (target: string) => {
 		const { error } = await authClient.emailOtp.sendVerificationOtp({
-			email,
+			email: target,
 			type: "email-verification",
 		});
-		setOtpLoading(false);
 		if (error) {
-			setOtpError(error.message ?? "No se pudo enviar el código");
-			return;
+			setOtpError("No se pudo enviar el código");
+			return false;
 		}
-		resetResend();
+		setOtpError(null);
+		return true;
 	};
 
-	const continueToOtp = (value: Account) => {
-		setAccount(value);
+	const continueToOtp = (email: string) => {
 		setStep(2);
-		if (shouldSendOtp(otpRequestedForRef.current, value.email)) {
-			otpRequestedForRef.current = value.email;
-			resetResend();
-			void sendOtp(value.email);
+		if (shouldSendOtp(otpRequestedForRef.current, email)) {
+			otpRequestedForRef.current = email;
+			void sendOtp(email);
 		}
 	};
 
@@ -114,69 +101,54 @@ export default function CreateAccountScreen() {
 			onSubmit: accountSchema,
 		},
 		onSubmit: async ({ value, formApi }) => {
+			setSignUpNotice(null);
+			const email = value.email.trim().toLowerCase();
+			const name = value.name.trim();
 			const { error } = await authClient.signUp.email({
-				email: value.email,
+				email,
 				password: value.password,
-				name: value.name,
+				name,
 			});
 			if (error) {
-				// Wizard idempotente: si la cuenta ya existe seguimos al paso 2;
-				// el OTP prueba la propiedad del email (sin la contraseña correcta
-				// no hay sesión en el paso 3).
-				if (isUserAlreadyExistsError(error)) {
-					continueToOtp(value);
+				const notice = mapSignUpError(error);
+				if (notice) {
+					setSignUpNotice(notice);
 					return;
 				}
-				setFormError(formApi, error.message ?? "No se pudo crear la cuenta");
+				setFormError(formApi, "No se pudo crear la cuenta");
 				return;
 			}
-			continueToOtp(value);
+			formApi.setFieldValue("email", email);
+			formApi.setFieldValue("name", name);
+			continueToOtp(email);
 		},
 	});
+	const email = useStore(form.store, (state) => state.values.email.trim().toLowerCase());
+	const password = useStore(form.store, (state) => state.values.password);
 
 	const verifyOtp = async (code: string) => {
-		if (!account || otpLoading) return;
-		const parsed = otpSchema.safeParse({ otp: code });
-		if (!parsed.success) return;
-		setOtpLoading(true);
 		setOtpError(null);
-		try {
-			const { error } = await authClient.emailOtp.verifyEmail({
-				email: account.email,
-				otp: code,
-			});
-			if (error) {
-				setOtpError(mapOtpVerifyError(error));
-				return;
-			}
-			// Sesión transparente con las credenciales en memoria
-			const signIn = await authClient.signIn.email({
-				email: account.email,
-				password: account.password,
-			});
-			if (signIn.error) {
-				setOtpError("Correo verificado. Inicia sesión para continuar.");
-				router.replace("/sign-in");
-				return;
-			}
-			setStep(3);
-		} finally {
-			setOtpLoading(false);
+		const { error } = await authClient.emailOtp.verifyEmail({ email, otp: code });
+		if (error) {
+			setOtpError(mapOtpVerifyError(error));
+			return;
 		}
+		const signIn = await authClient.signIn.email({ email, password });
+		if (signIn.error) {
+			setOtpError("Correo verificado. Inicia sesión para continuar.");
+			router.replace("/sign-in");
+			return;
+		}
+		setStep(3);
 	};
 
 	const createPasskey = async () => {
 		setPasskeyLoading(true);
 		setPasskeyError(null);
-		const { error } = await authClient.passkey.addPasskey({
-			name: account?.email,
-		});
+		const { error } = await authClient.passkey.addPasskey({ name: email });
 		setPasskeyLoading(false);
 		if (error) {
-			// No silenciar: quedarse en el paso 3 con el motivo visible.
-			// El módulo nativo también loguea "Passkey registration error" en Metro.
-			console.log("[passkey] addPasskey error:", error);
-			setPasskeyError(error.message ?? "No se pudo crear la passkey");
+			setPasskeyError(mapPasskeySignInError(error).message);
 			return;
 		}
 		setPasskeyDone(true);
@@ -197,7 +169,13 @@ export default function CreateAccountScreen() {
 				<View className="flex-1 bg-background">
 					{step !== 4 ? (
 						<View className="h-14 flex-row items-center">
-							<Pressable onPress={goBack} hitSlop={12} className="-ml-1 px-1 py-2">
+							<Pressable
+								onPress={goBack}
+								hitSlop={HIT_SLOP}
+								accessibilityRole="button"
+								accessibilityLabel="Volver"
+								className="-ml-1 px-1 py-2 active:opacity-60"
+							>
 								<ChevronLeft size={22} colorClassName="accent-foreground" />
 							</Pressable>
 						</View>
@@ -228,6 +206,7 @@ export default function CreateAccountScreen() {
 												onBlur={field.handleBlur}
 												autoCapitalize="words"
 												autoComplete="name"
+												accessibilityLabel="Nombre"
 												placeholder="Nombre"
 												className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
 											/>
@@ -239,7 +218,12 @@ export default function CreateAccountScreen() {
 								<form.Field
 									name="email"
 									validators={{ onBlur: accountSchema.shape.email }}
-									listeners={{ onChange: revalidateOnBlur }}
+									listeners={{
+										onChange: (ctx) => {
+											revalidateOnBlur(ctx);
+											setSignUpNotice(null);
+										},
+									}}
 								>
 									{(field) => (
 										<View className="gap-1">
@@ -250,7 +234,8 @@ export default function CreateAccountScreen() {
 												autoCapitalize="none"
 												autoComplete="email"
 												inputMode="email"
-												placeholder="Email"
+												accessibilityLabel="Correo"
+												placeholder="Correo"
 												className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
 											/>
 											<FieldError field={field} />
@@ -271,6 +256,7 @@ export default function CreateAccountScreen() {
 												onBlur={field.handleBlur}
 												autoComplete="new-password"
 												secureTextEntry
+												accessibilityLabel="Contraseña"
 												placeholder="Contraseña"
 												className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
 											/>
@@ -293,13 +279,13 @@ export default function CreateAccountScreen() {
 									)}
 								</form.Subscribe>
 
+								{signUpNotice ? (
+									<AuthNotice {...signUpNotice} onAction={() => router.push("/sign-in")} />
+								) : null}
 								<form.Subscribe selector={(state) => state.errorMap.onSubmit}>
 									{(onSubmitError) => {
-										const formError = onSubmitError as { form?: string } | undefined;
-										const message = formError?.form;
-										return message ? (
-											<Text className="font-hanken text-[13px] text-danger">{message}</Text>
-										) : null;
+										const message = formErrorMessage(onSubmitError);
+										return message ? <ErrorText message={message} /> : null;
 									}}
 								</form.Subscribe>
 							</View>
@@ -316,96 +302,14 @@ export default function CreateAccountScreen() {
 								</Text>
 								<Text className="font-hanken text-[14px] text-foreground/55">
 									Te enviamos un código de 6 dígitos a{" "}
-									<Text className="font-hanken-semibold text-foreground">{account?.email}</Text>
+									<Text className="font-hanken-semibold text-foreground">{email}</Text>
 								</Text>
 							</View>
 
-							<View className="items-center">
-								<View className="relative">
-									<View className="flex-row gap-3">
-										{[0, 1, 2, 3, 4, 5].map((index) => (
-											<View
-												key={index}
-												className={
-													index === otp.length && otp.length < 6
-														? "h-14 w-12 items-center justify-center rounded-lg border border-foreground"
-														: "h-14 w-12 items-center justify-center rounded-lg border border-line"
-												}
-											>
-												<Text className="font-hanken-semibold text-[22px] text-foreground">
-													{otp[index] ?? ""}
-												</Text>
-											</View>
-										))}
-									</View>
-									{/* Input real invisible: opacity/position inline (RN core);
-                    NO usar utilities de uniwind aquí — si la clase no se
-                    aplica, el texto del input se pinta sobre las cajas. */}
-									<TextInput
-										value={otp}
-										onChangeText={(value) => {
-											const next = parseOtpInput(value);
-											setOtp(next);
-											setOtpError(null);
-											// Autoverificación al completar los 6 dígitos
-											// (WCAG 3.3.8: menos carga cognitiva; el botón
-											// "Verificar" queda como alternativa manual).
-											if (shouldAutoVerifyOtp(next)) void verifyOtp(next);
-										}}
-										keyboardType="numeric"
-										maxLength={6}
-										textAlign="center"
-										caretHidden
-										autoFocus
-										accessibilityLabel="Código de verificación de 6 dígitos"
-										style={{
-											position: "absolute",
-											top: 0,
-											left: 0,
-											right: 0,
-											bottom: 0,
-											opacity: 0,
-										}}
-									/>
-								</View>
-							</View>
-
-							<View className="flex-row items-center justify-center gap-2">
-								<Text className="font-hanken text-[13px] text-foreground/55">¿No te llegó?</Text>
-								{resendIn > 0 ? (
-									<Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-										Reenviar en 0:{String(resendIn).padStart(2, "0")}
-									</Text>
-								) : (
-									<Pressable
-										onPress={() => {
-											if (account) void sendOtp(account.email);
-										}}
-										disabled={otpLoading}
-										hitSlop={8}
-									>
-										<Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground uppercase">
-											Reenviar
-										</Text>
-									</Pressable>
-								)}
-							</View>
-
-							{otpError ? (
-								<Text
-									accessibilityRole="alert"
-									accessibilityLiveRegion="polite"
-									className="text-center font-hanken text-[13px] text-danger"
-								>
-									{otpError}
-								</Text>
-							) : null}
-
-							<AuthButton
-								label="Verificar"
-								onPress={() => void verifyOtp(otp)}
-								loading={otpLoading}
-								disabled={otp.length < 6}
+							<EmailCodeForm
+								errorMessage={otpError}
+								onVerify={verifyOtp}
+								onResend={() => sendOtp(email)}
 							/>
 
 							<View className="rounded-xl border border-line bg-background px-4 py-3">
@@ -441,15 +345,7 @@ export default function CreateAccountScreen() {
 							</View>
 
 							<View className="gap-4">
-								{passkeyError ? (
-									<Text
-										accessibilityRole="alert"
-										accessibilityLiveRegion="polite"
-										className="text-center font-hanken text-[13px] text-danger"
-									>
-										{passkeyError}
-									</Text>
-								) : null}
+								{passkeyError ? <AuthNotice tone="warning" message={passkeyError} /> : null}
 
 								<AuthButton
 									label="Crear mi Passkey"

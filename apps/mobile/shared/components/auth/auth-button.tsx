@@ -20,6 +20,8 @@ export default function AuthButton({
 		<Pressable
 			onPress={onPress}
 			disabled={disabled || loading}
+			accessibilityRole="button"
+			accessibilityLabel={label}
 			className={
 				variant === "solid"
 					? "items-center rounded-xl bg-foreground px-5 py-3.5"
