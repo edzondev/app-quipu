@@ -5,8 +5,8 @@ import type {
 	CommitmentStatusTone,
 	CommitmentsScreenModel,
 } from "@/shared/lib/commitments/model";
+import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
-const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 const SUBTITLE = "Quipu los reserva de Necesidades antes de calcular tu disponible.";
 
 const STATUS_TEXT: Record<CommitmentStatusTone, string> = {
@@ -66,6 +66,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 						</Text>
 						<Pressable
 							accessibilityRole="button"
+							accessibilityLabel="Agregar compromiso"
 							onPress={onAdd}
 							className="mt-[22px] self-start rounded-xl bg-foreground px-[22px] py-3.5 active:opacity-80"
 						>
@@ -88,6 +89,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 			{model && model.rows.length > 0 ? (
 				<Pressable
 					accessibilityRole="button"
+					accessibilityLabel="Agregar compromiso"
 					onPress={onAdd}
 					className="mt-4 items-center rounded-xl border border-[#DAD7CE] py-[15px] active:opacity-60"
 				>

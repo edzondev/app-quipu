@@ -1,15 +1,14 @@
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { EnvelopeChoices } from "@/shared/components/expenses/envelope-choices";
 import {
-	type CommitmentField,
 	type CommitmentFormValues,
 	type CreateCommitmentArgs,
 	toCreateCommitment,
 } from "@/shared/lib/commitments/model";
+import { readActionError } from "@/shared/lib/expenses/errors";
+import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
-const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 const QUICK_NAMES = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"] as const;
 
 const DEFAULT_VALUES: CommitmentFormValues = {
@@ -20,28 +19,41 @@ const DEFAULT_VALUES: CommitmentFormValues = {
 };
 
 type Props = {
-	isSubmitting?: boolean;
-	formError?: string | null;
-	onSubmit: (args: CreateCommitmentArgs) => void;
+	onSubmit: (args: CreateCommitmentArgs) => Promise<void>;
 	onCancel: () => void;
 };
 
-export function CommitmentForm({ isSubmitting = false, formError, onSubmit, onCancel }: Props) {
-	const [fieldError, setFieldError] = useState<{
-		field: CommitmentField;
-		message: string;
-	} | null>(null);
+export function CommitmentForm({ onSubmit, onCancel }: Props) {
 	const form = useForm({
 		defaultValues: DEFAULT_VALUES,
-		onSubmit: ({ value }) => {
-			const draft = toCreateCommitment(value);
-			if (!draft.ok) {
-				setFieldError({ field: draft.field, message: draft.message });
-				return;
-			}
-			setFieldError(null);
-			onSubmit(draft.args);
+		validators: {
+			onSubmit: ({ value }) => {
+				const draft = toCreateCommitment(value);
+				if (!draft.ok) return { fields: draft.fields };
+			},
 		},
+		onSubmit: async ({ value, formApi }) => {
+			const draft = toCreateCommitment(value);
+			if (!draft.ok) return;
+			try {
+				await onSubmit(draft.args);
+			} catch (error) {
+				formApi.setErrorMap({
+					onSubmit: {
+						form: readActionError(error, "No se pudo guardar el compromiso."),
+						fields: {},
+					},
+				});
+			}
+		},
+	});
+	const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
+	const formError = useStore(form.store, (state) => {
+		const error = state.errorMap.onSubmit;
+		if (error && typeof error === "object" && "form" in error && typeof error.form === "string") {
+			return error.form;
+		}
+		return null;
 	});
 
 	return (
@@ -63,19 +75,21 @@ export function CommitmentForm({ isSubmitting = false, formError, onSubmit, onCa
 
 			<form.Field name="name">
 				{(field) => (
-					<TextInput
-						value={field.state.value}
-						onChangeText={field.handleChange}
-						onBlur={field.handleBlur}
-						placeholder="Nombre"
-						placeholderTextColor="#8C8880"
-						maxLength={80}
-						accessibilityLabel="Nombre"
-						className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
-					/>
+					<View>
+						<TextInput
+							value={field.state.value}
+							onChangeText={field.handleChange}
+							onBlur={field.handleBlur}
+							placeholder="Nombre"
+							placeholderTextColor="#8C8880"
+							maxLength={80}
+							accessibilityLabel="Nombre"
+							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
+						/>
+						<FieldError error={field.state.meta.errors[0]} />
+					</View>
 				)}
 			</form.Field>
-			{fieldError?.field === "name" ? <ErrorText message={fieldError.message} /> : null}
 
 			<View className="mt-4 flex-row flex-wrap gap-2">
 				{QUICK_NAMES.map((name) => (
@@ -94,36 +108,40 @@ export function CommitmentForm({ isSubmitting = false, formError, onSubmit, onCa
 
 			<form.Field name="amountRaw">
 				{(field) => (
-					<TextInput
-						value={field.state.value}
-						onChangeText={field.handleChange}
-						onBlur={field.handleBlur}
-						placeholder="Monto"
-						placeholderTextColor="#8C8880"
-						keyboardType="decimal-pad"
-						accessibilityLabel="Monto"
-						className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
-					/>
+					<View>
+						<TextInput
+							value={field.state.value}
+							onChangeText={field.handleChange}
+							onBlur={field.handleBlur}
+							placeholder="Monto"
+							placeholderTextColor="#8C8880"
+							keyboardType="decimal-pad"
+							accessibilityLabel="Monto"
+							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
+						/>
+						<FieldError error={field.state.meta.errors[0]} />
+					</View>
 				)}
 			</form.Field>
-			{fieldError?.field === "amount" ? <ErrorText message={fieldError.message} /> : null}
 
 			<form.Field name="dueDay">
 				{(field) => (
-					<TextInput
-						value={field.state.value}
-						onChangeText={field.handleChange}
-						onBlur={field.handleBlur}
-						placeholder="Día de vencimiento"
-						placeholderTextColor="#8C8880"
-						keyboardType="number-pad"
-						maxLength={2}
-						accessibilityLabel="Día de vencimiento"
-						className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
-					/>
+					<View>
+						<TextInput
+							value={field.state.value}
+							onChangeText={field.handleChange}
+							onBlur={field.handleBlur}
+							placeholder="Día de vencimiento"
+							placeholderTextColor="#8C8880"
+							keyboardType="number-pad"
+							maxLength={2}
+							accessibilityLabel="Día de vencimiento"
+							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
+						/>
+						<FieldError error={field.state.meta.errors[0]} />
+					</View>
 				)}
 			</form.Field>
-			{fieldError?.field === "dueDay" ? <ErrorText message={fieldError.message} /> : null}
 
 			<Text className="mt-6 font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
 				SOBRE
@@ -134,11 +152,7 @@ export function CommitmentForm({ isSubmitting = false, formError, onSubmit, onCa
 						<EnvelopeChoices
 							value={field.state.value}
 							disabled={isSubmitting}
-							onChange={(type) => {
-								if (type === "needs" || type === "wants") {
-									field.handleChange(type);
-								}
-							}}
+							onChange={field.handleChange}
 						/>
 					</View>
 				)}
@@ -147,6 +161,8 @@ export function CommitmentForm({ isSubmitting = false, formError, onSubmit, onCa
 			{formError ? <ErrorText message={formError} /> : null}
 			<Pressable
 				accessibilityRole="button"
+				accessibilityLabel="Agregar compromiso"
+				accessibilityState={{ disabled: isSubmitting }}
 				disabled={isSubmitting}
 				onPress={() => void form.handleSubmit()}
 				className={`mt-8 items-center rounded-[13px] bg-foreground py-4 active:opacity-80 ${
@@ -159,6 +175,11 @@ export function CommitmentForm({ isSubmitting = false, formError, onSubmit, onCa
 			</Pressable>
 		</View>
 	);
+}
+
+function FieldError({ error }: { error: unknown }) {
+	if (typeof error !== "string" || !error) return null;
+	return <ErrorText message={error} />;
 }
 
 function ErrorText({ message }: { message: string }) {

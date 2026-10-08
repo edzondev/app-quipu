@@ -7,7 +7,6 @@ import { CommitmentSheet } from "@/shared/components/commitments/commitment-shee
 import { CommitmentsScreen } from "@/shared/components/commitments/commitments-screen";
 import { useCommitments } from "@/shared/hooks/use-commitments";
 import type { CreateCommitmentArgs } from "@/shared/lib/commitments/model";
-import { readActionError } from "@/shared/lib/expenses/errors";
 
 export default function CompromisosPage() {
 	const router = useRouter();
@@ -15,26 +14,15 @@ export default function CompromisosPage() {
 	const createCommitment = useMutation(api.fixedCommitments.createFixedCommitment);
 	const [isPresented, setPresented] = useState(false);
 	const [session, setSession] = useState(0);
-	const [isSubmitting, setSubmitting] = useState(false);
-	const [formError, setFormError] = useState<string | null>(null);
 
 	function openAdd() {
-		setFormError(null);
 		setSession((current) => current + 1);
 		setPresented(true);
 	}
 
 	async function submit(args: CreateCommitmentArgs) {
-		setFormError(null);
-		setSubmitting(true);
-		try {
-			await createCommitment(args);
-			setPresented(false);
-		} catch (error) {
-			setFormError(readActionError(error, "No se pudo guardar el compromiso."));
-		} finally {
-			setSubmitting(false);
-		}
+		await createCommitment(args);
+		setPresented(false);
 	}
 
 	return (
@@ -48,12 +36,8 @@ export default function CompromisosPage() {
 			<CommitmentSheet
 				isPresented={isPresented}
 				session={session}
-				isSubmitting={isSubmitting}
-				formError={formError}
 				onDismiss={() => setPresented(false)}
-				onSubmit={(args) => {
-					void submit(args);
-				}}
+				onSubmit={submit}
 			/>
 		</AppShell>
 	);

@@ -1,4 +1,5 @@
 import {
+	type CoverageRow,
 	emptyCommitments,
 	presentCommitments,
 	toCreateCommitment,
@@ -9,19 +10,7 @@ const AUG_22 = Date.UTC(2026, 7, 22, 17, 0, 0);
 const AUG_6 = Date.UTC(2026, 7, 6, 17, 0, 0);
 const AUG_3 = Date.UTC(2026, 7, 3, 17, 0, 0);
 
-function row(
-	overrides: Partial<{
-		id: string;
-		name: string;
-		amount: number;
-		dueDay: number;
-		nextDueAt: number;
-		daysUntilDue: number;
-		coverageStatus: "covered" | "partial" | "uncovered";
-		paymentStatus: "paid" | "pending" | "overdue";
-		paidAtForCycle: number | undefined;
-	}> = {},
-) {
+function row(overrides: Partial<CoverageRow> = {}) {
 	return {
 		id: "c1",
 		name: "Alquiler",
@@ -175,13 +164,15 @@ describe("toCreateCommitment", () => {
 			ok: true,
 			args: { name: "Alquiler", amount: 110_000, dueDay: 5, envelope: "needs" },
 		});
-		expect(
-			toCreateCommitment({
-				name: "Cine",
-				amountRaw: "40",
-				dueDay: "32",
-				envelope: "wants",
-			}).ok,
-		).toBe(false);
+		const invalidAmount = toCreateCommitment({
+			name: "Cine",
+			amountRaw: "",
+			dueDay: "5",
+			envelope: "wants",
+		});
+		expect(invalidAmount.ok).toBe(false);
+		if (!invalidAmount.ok) {
+			expect(invalidAmount.fields.amountRaw).toBe("El monto debe ser mayor a cero.");
+		}
 	});
 });

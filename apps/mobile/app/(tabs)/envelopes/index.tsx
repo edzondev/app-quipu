@@ -5,8 +5,7 @@ import AppShell from "@/shared/components/app-shell";
 import { SobresScreen } from "@/shared/components/envelopes/sobres-screen";
 import { useRegistrar } from "@/shared/components/navigation/registrar-context";
 import { useSobresScreen } from "@/shared/hooks/use-dashboard";
-
-const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
+import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
 export default function EnvelopesPage() {
 	const sobres = useSobresScreen();

@@ -15,7 +15,7 @@ describe("CommitmentForm", () => {
 		await fireEvent.changeText(view.getByLabelText("Monto"), "96");
 		await fireEvent.changeText(view.getByLabelText("Día de vencimiento"), "22");
 		await fireEvent.press(view.getByText("Gustos"));
-		await fireEvent.press(view.getByText("Agregar compromiso"));
+		await fireEvent.press(view.getByLabelText("Agregar compromiso"));
 
 		expect(onSubmit).toHaveBeenCalledWith({
 			name: "Agua",
@@ -25,6 +25,19 @@ describe("CommitmentForm", () => {
 		});
 	});
 
+	it("muestra el error de monto y no envía", async () => {
+		const onSubmit = jest.fn();
+		const view = await render(<CommitmentForm onSubmit={onSubmit} onCancel={jest.fn()} />);
+
+		await fireEvent.changeText(view.getByLabelText("Nombre"), "Luz");
+		await fireEvent.changeText(view.getByLabelText("Monto"), "0");
+		await fireEvent.changeText(view.getByLabelText("Día de vencimiento"), "5");
+		await fireEvent.press(view.getByLabelText("Agregar compromiso"));
+
+		expect(onSubmit).not.toHaveBeenCalled();
+		expect(view.getByText("El monto debe ser mayor a cero.")).toBeTruthy();
+	});
+
 	it("no llama al submit si el día no existe", async () => {
 		const onSubmit = jest.fn();
 		const view = await render(<CommitmentForm onSubmit={onSubmit} onCancel={jest.fn()} />);
@@ -32,7 +45,7 @@ describe("CommitmentForm", () => {
 		await fireEvent.changeText(view.getByLabelText("Nombre"), "Luz");
 		await fireEvent.changeText(view.getByLabelText("Monto"), "10");
 		await fireEvent.changeText(view.getByLabelText("Día de vencimiento"), "32");
-		await fireEvent.press(view.getByText("Agregar compromiso"));
+		await fireEvent.press(view.getByLabelText("Agregar compromiso"));
 
 		expect(onSubmit).not.toHaveBeenCalled();
 		expect(view.getByText("El día de vencimiento va del 1 al 31.")).toBeTruthy();

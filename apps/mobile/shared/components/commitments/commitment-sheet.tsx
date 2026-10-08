@@ -5,20 +5,11 @@ import { CommitmentForm } from "./commitment-form";
 type Props = {
 	isPresented: boolean;
 	session: number;
-	isSubmitting?: boolean;
-	formError?: string | null;
 	onDismiss: () => void;
-	onSubmit: (args: CreateCommitmentArgs) => void;
+	onSubmit: (args: CreateCommitmentArgs) => Promise<void>;
 };
 
-export function CommitmentSheet({
-	isPresented,
-	session,
-	isSubmitting,
-	formError,
-	onDismiss,
-	onSubmit,
-}: Props) {
+export function CommitmentSheet({ isPresented, session, onDismiss, onSubmit }: Props) {
 	return (
 		<BottomSheet
 			isPresented={isPresented}
@@ -28,13 +19,7 @@ export function CommitmentSheet({
 			containerColor="#FBFAF7"
 		>
 			<RNHostView>
-				<CommitmentForm
-					key={session}
-					isSubmitting={isSubmitting}
-					formError={formError}
-					onCancel={onDismiss}
-					onSubmit={onSubmit}
-				/>
+				<CommitmentForm key={session} onCancel={onDismiss} onSubmit={onSubmit} />
 			</RNHostView>
 		</BottomSheet>
 	);

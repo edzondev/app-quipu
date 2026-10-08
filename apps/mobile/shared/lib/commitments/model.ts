@@ -1,6 +1,7 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { parseAmountToCents } from "@/shared/lib/expenses/amount";
+import { limaDayLabel } from "@/shared/lib/lima-date";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
@@ -10,7 +11,7 @@ export type CommitmentCoverage = FunctionReturnType<
 
 export type CreateCommitmentArgs = FunctionArgs<typeof api.fixedCommitments.createFixedCommitment>;
 
-type CoverageRow = NonNullable<CommitmentCoverage>["commitments"][number];
+export type CoverageRow = NonNullable<CommitmentCoverage>["commitments"][number];
 
 export type CommitmentStatusTone = "calm" | "fast" | "muted";
 
@@ -37,30 +38,14 @@ export type CommitmentFormValues = {
 	name: string;
 	amountRaw: string;
 	dueDay: string;
-	envelope: "needs" | "wants";
+	envelope: CreateCommitmentArgs["envelope"];
 };
 
-export type CommitmentField = "name" | "amount" | "dueDay";
+export type CommitmentField = keyof CommitmentFormValues;
 
 export type CommitmentDraftResult =
 	| { ok: true; args: CreateCommitmentArgs }
-	| { ok: false; field: CommitmentField; message: string };
-
-const LIMA = "America/Lima";
-const MONTHS = [
-	"ENE",
-	"FEB",
-	"MAR",
-	"ABR",
-	"MAY",
-	"JUN",
-	"JUL",
-	"AGO",
-	"SEP",
-	"OCT",
-	"NOV",
-	"DIC",
-] as const;
+	| { ok: false; fields: Partial<Record<CommitmentField, string>> };
 
 export function emptyCommitments(symbol = "S/"): CommitmentsScreenModel {
 	return {
@@ -76,21 +61,18 @@ export function presentCommitments(
 	coverage: NonNullable<CommitmentCoverage>,
 ): CommitmentsScreenModel {
 	const symbol = marketFromCurrencyCode(coverage.currencyCode)?.currencySymbol ?? "S/";
-	const ordered = [...coverage.commitments].sort((a: CoverageRow, b: CoverageRow) => {
+	const ordered = [...coverage.commitments].sort((a, b) => {
 		const aPaid = a.paymentStatus === "paid";
 		const bPaid = b.paymentStatus === "paid";
 		if (aPaid !== bPaid) return aPaid ? 1 : -1;
 		return a.daysUntilDue - b.daysUntilDue;
 	});
-	const paidCents = coverage.commitments.reduce(
-		(sum: number, row: CoverageRow) => sum + (row.paymentStatus === "paid" ? row.amount : 0),
-		0,
-	);
-	const pendingCents = coverage.commitments.reduce(
-		(sum: number, row: CoverageRow) => sum + (row.paymentStatus === "paid" ? 0 : row.amount),
-		0,
-	);
+	let paidCents = 0;
+	for (const row of coverage.commitments) {
+		if (row.paymentStatus === "paid") paidCents += row.amount;
+	}
 	const totalCents = coverage.totalCents;
+	const pendingCents = totalCents - paidCents;
 	const paidPercent = totalCents > 0 ? clampPercent((paidCents / totalCents) * 100) : 0;
 
 	return {
@@ -98,46 +80,24 @@ export function presentCommitments(
 		paidLabel: `PAGADO ${formatCentsTrimmed(paidCents, symbol)}`,
 		pendingLabel: `PENDIENTE ${formatCentsTrimmed(pendingCents, symbol)}`,
 		paidPercent,
-		rows: ordered.map((row: CoverageRow) => toRow(row, symbol)),
+		rows: ordered.map((row) => toRow(row, symbol)),
 	};
 }
 
 export function toCreateCommitment(values: CommitmentFormValues): CommitmentDraftResult {
 	const name = values.name.trim();
 	if (!name) {
-		return {
-			ok: false,
-			field: "name",
-			message: "El nombre del compromiso es obligatorio.",
-		};
+		return { ok: false, fields: { name: "El nombre del compromiso es obligatorio." } };
 	}
 	const amount = parseAmountToCents(values.amountRaw);
 	if (amount == null || amount <= 0) {
-		return {
-			ok: false,
-			field: "amount",
-			message: "El monto debe ser mayor a cero.",
-		};
+		return { ok: false, fields: { amountRaw: "El monto debe ser mayor a cero." } };
 	}
 	const dueDay = Number(values.dueDay.trim());
 	if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
-		return {
-			ok: false,
-			field: "dueDay",
-			message: "El día de vencimiento va del 1 al 31.",
-		};
+		return { ok: false, fields: { dueDay: "El día de vencimiento va del 1 al 31." } };
 	}
-	if (values.envelope !== "needs" && values.envelope !== "wants") {
-		return {
-			ok: false,
-			field: "name",
-			message: "El compromiso sale de Necesidades o Gustos.",
-		};
-	}
-	return {
-		ok: true,
-		args: { name, amount, dueDay, envelope: values.envelope },
-	};
+	return { ok: true, args: { name, amount, dueDay, envelope: values.envelope } };
 }
 
 function toRow(row: CoverageRow, symbol: string): CommitmentRowView {
@@ -162,24 +122,17 @@ function rowStatus(row: CoverageRow): {
 } {
 	if (row.paymentStatus === "paid") return { label: "Pagado", tone: "muted" };
 	if (row.paymentStatus === "overdue") return { label: "Vencido", tone: "fast" };
-	switch (row.coverageStatus) {
-		case "covered":
-			return { label: "Cubierto", tone: "calm" };
-		case "partial":
-			return { label: "Parcial", tone: "fast" };
-		case "uncovered":
-			return { label: "Sin cubrir", tone: "muted" };
-		default:
-			return { label: "Sin cubrir", tone: "muted" };
-	}
+	if (row.coverageStatus === "covered") return { label: "Cubierto", tone: "calm" };
+	if (row.coverageStatus === "partial") return { label: "Parcial", tone: "fast" };
+	return { label: "Sin cubrir", tone: "muted" };
 }
 
 function rowMeta(row: CoverageRow): { label: string; tone: "soon" | "muted" } {
 	if (row.paymentStatus === "paid") {
-		const when = row.paidAtForCycle == null ? "" : ` ${limaStamp(row.paidAtForCycle)}`;
+		const when = row.paidAtForCycle == null ? "" : ` ${limaDayLabel(row.paidAtForCycle)}`;
 		return { label: `PAGADO${when}`, tone: "muted" };
 	}
-	const stamp = limaStamp(row.nextDueAt);
+	const stamp = limaDayLabel(row.nextDueAt);
 	if (row.daysUntilDue < 0) return { label: `VENCIDO · ${stamp}`, tone: "soon" };
 	if (row.daysUntilDue === 0) {
 		return { label: `VENCE HOY · ${stamp}`, tone: "soon" };
@@ -188,17 +141,6 @@ function rowMeta(row: CoverageRow): { label: string; tone: "soon" | "muted" } {
 		return { label: `VENCE MAÑANA · ${stamp}`, tone: "soon" };
 	}
 	return { label: `${stamp} · MENSUAL`, tone: "muted" };
-}
-
-function limaStamp(timestamp: number): string {
-	const parts = new Intl.DateTimeFormat("en-US", {
-		timeZone: LIMA,
-		day: "numeric",
-		month: "numeric",
-	}).formatToParts(new Date(timestamp));
-	const day = Number(parts.find((part) => part.type === "day")?.value ?? "0");
-	const monthIndex = Number(parts.find((part) => part.type === "month")?.value ?? "1") - 1;
-	return `${day} ${MONTHS[monthIndex] ?? ""}`.trim();
 }
 
 function clampPercent(value: number): number {
