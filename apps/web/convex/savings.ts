@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { creditSubEnvelopeFromSurplus } from "./lib/creditSurplusContribution";
 import {
 	buildCycleSavingsContextLabel,
 	computeCycleSavingsBreakdown,
@@ -23,6 +24,7 @@ import {
 	MAX_SAVINGS_GOALS,
 	resolveEmergencyFundTargetCents,
 } from "./lib/savingsMath";
+import { surplusFromEnvelopeValidator } from "./lib/surplusValidators";
 
 function mapGoal(subEnvelope: Doc<"subEnvelopes">) {
 	const targetAmount = subEnvelope.targetAmount ?? 0;
@@ -658,12 +660,6 @@ export const createSavingsGoal = mutation({
 	},
 });
 
-const surplusFromEnvelopeValidator = v.union(
-	v.literal("needs"),
-	v.literal("wants"),
-	v.literal("extraordinary"),
-);
-
 const moveSurplusSourceValidator = v.object({
 	availableCents: v.number(),
 });
@@ -972,17 +968,13 @@ export const moveSurplusToSavings = mutation({
 				data: { field: "fromEnvelope" },
 			});
 		}
-		await ctx.db.patch(subEnvelope._id, {
-			currentAmount: subEnvelope.currentAmount + args.amount,
-		});
-		await ctx.db.insert("surplusContributions", {
+		await creditSubEnvelopeFromSurplus(ctx, {
 			profileId: profile._id,
 			cycleId: activeCycle._id,
 			fromEnvelope: args.fromEnvelope,
 			amount: args.amount,
 			subEnvelopeId: subEnvelope._id,
 			createdAt: Date.now(),
-			contributionKind: "additional",
 		});
 
 		const [incomeEvents, surplusContributions, envelopesAfter, allocationLines] = await Promise.all(

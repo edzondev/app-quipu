@@ -1,5 +1,9 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+	closedCycleSurplusDestinationValidator,
+	surplusFromEnvelopeValidator,
+} from "./lib/surplusValidators";
 
 /**
  * App-level schema.
@@ -557,6 +561,16 @@ export const appTables = {
 	})
 		.index("by_userId", ["userId"])
 		.index("by_profileId_createdAt", ["profileId", "createdAt"]),
+
+	// Destino elegido del sobrante al cerrar un ciclo. No mueve `remainingAmount`.
+	closedCycleSurplusDispositions: defineTable({
+		profileId: v.id("profiles"),
+		closedCycleId: v.id("financialCycles"),
+		fromEnvelope: surplusFromEnvelopeValidator,
+		amount: v.number(),
+		destination: closedCycleSurplusDestinationValidator,
+		createdAt: v.number(),
+	}).index("by_cycle", ["closedCycleId"]),
 };
 
 const schema = defineSchema(appTables);
