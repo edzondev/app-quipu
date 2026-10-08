@@ -8,6 +8,25 @@ import { loadPolarSubscriptionForUser } from "./billing";
 import { buildBillingOverview } from "./lib/billingSync";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 import {
+	AUTH_RECORD_LIMIT,
+	CREDENTIAL_PROVIDER_ID,
+	type PasskeyList,
+	passkeyListValidator,
+	publicPasskeyValidator,
+	type RevokeSessionResult,
+	readAdapterPage,
+	readSessionId,
+	readSessionOwnerId,
+	revokeSessionResultValidator,
+	type SecurityBackup,
+	type SessionList,
+	securityBackup,
+	sessionListValidator,
+	sessionRevokeBlock,
+	toPublicPasskeys,
+	toPublicSessions,
+} from "./lib/securityDevices";
+import {
 	buildCycleScheduleCopy,
 	formatActiveCycleRangeCopy,
 	incomeModelLabel,
@@ -17,103 +36,152 @@ import {
 } from "./lib/settingsCopy";
 import { polarProductIds } from "./polar";
 
-type PasskeyRecord = {
-	id: string;
-	name: string | null;
-	deviceType: string;
-	backedUp: boolean;
-	createdAt: number | null;
-};
-
-type SessionSummary = {
-	id: string;
-	createdAt: number;
-	userAgent: string | null;
-};
+const sessionListFields = ["_id", "expiresAt", "createdAt", "updatedAt", "userAgent"];
+const passkeyListFields = ["_id", "name", "deviceType", "backedUp", "createdAt", "aaguid"];
 
 async function loadSessionsForUser(
 	ctx: QueryCtx,
 	userId: string,
-): Promise<{ sessions: SessionSummary[]; apiReady: boolean }> {
+	currentSessionId: string | null,
+): Promise<SessionList> {
 	try {
-		const result = await ctx.runQuery(components.betterAuth.adapter.findMany, {
+		const result: unknown = await ctx.runQuery(components.betterAuth.adapter.findMany, {
 			model: "session",
 			where: [{ field: "userId", operator: "eq", value: userId }],
-			paginationOpts: { numItems: 50, cursor: null },
+			select: sessionListFields,
+			paginationOpts: { numItems: AUTH_RECORD_LIMIT, cursor: null },
 		});
-
-		const page = (result as { page?: unknown[] }).page ?? [];
-		const now = Date.now();
-		const sessions = page
-			.map((row) => {
-				const doc = row as {
-					_id?: string;
-					id?: string;
-					expiresAt?: number;
-					createdAt?: number;
-					userAgent?: string | null;
-				};
-				const id = doc._id ?? doc.id;
-				if (!id || (doc.expiresAt ?? 0) <= now) return null;
-				return {
-					id: String(id),
-					createdAt: doc.createdAt ?? 0,
-					userAgent: doc.userAgent ?? null,
-				};
-			})
-			.filter((row): row is SessionSummary => row !== null);
-
-		return { sessions, apiReady: true };
+		return {
+			sessions: toPublicSessions(readAdapterPage(result), currentSessionId, Date.now()),
+			apiReady: true,
+		};
 	} catch {
 		return { sessions: [], apiReady: false };
 	}
 }
 
-async function loadPasskeysForUser(
-	ctx: QueryCtx,
-	userId: string,
-): Promise<{
-	passkeys: PasskeyRecord[];
-	passkeysSource: "better_auth" | "unavailable";
-}> {
+async function loadPasskeysForUser(ctx: QueryCtx, userId: string): Promise<PasskeyList> {
 	try {
-		const result = await ctx.runQuery(components.betterAuth.adapter.findMany, {
+		const result: unknown = await ctx.runQuery(components.betterAuth.adapter.findMany, {
 			model: "passkey",
 			where: [{ field: "userId", operator: "eq", value: userId }],
-			paginationOpts: { numItems: 50, cursor: null },
+			select: passkeyListFields,
+			paginationOpts: { numItems: AUTH_RECORD_LIMIT, cursor: null },
 		});
-
-		const page = (result as { page?: unknown[] }).page ?? [];
-		const passkeys = page
-			.map((row) => {
-				const doc = row as {
-					_id?: string;
-					id?: string;
-					name?: string | null;
-					deviceType?: string;
-					backedUp?: boolean;
-					createdAt?: number | null;
-				};
-				const id = doc._id ?? doc.id;
-				if (!id) return null;
-				return {
-					id: String(id),
-					name: doc.name ?? null,
-					deviceType: doc.deviceType ?? "unknown",
-					backedUp: doc.backedUp ?? false,
-					createdAt: doc.createdAt ?? null,
-				};
-			})
-			.filter((row): row is PasskeyRecord => row !== null);
-
-		return { passkeys, passkeysSource: "better_auth" };
+		return {
+			passkeys: toPublicPasskeys(readAdapterPage(result)),
+			passkeysSource: "better_auth",
+		};
 	} catch {
 		return { passkeys: [], passkeysSource: "unavailable" };
 	}
 }
 
+async function loadSecurityBackup(ctx: QueryCtx, userId: string): Promise<SecurityBackup> {
+	try {
+		const [account, user]: [unknown, unknown] = await Promise.all([
+			ctx.runQuery(components.betterAuth.adapter.findOne, {
+				model: "account",
+				where: [
+					{ field: "providerId", operator: "eq", value: CREDENTIAL_PROVIDER_ID },
+					{ field: "userId", operator: "eq", value: userId },
+				],
+				select: ["providerId"],
+			}),
+			ctx.runQuery(components.betterAuth.adapter.findOne, {
+				model: "user",
+				where: [{ field: "_id", operator: "eq", value: userId }],
+				select: ["emailVerified"],
+			}),
+		]);
+		return securityBackup(account, user);
+	} catch {
+		return { hasPassword: false, emailVerified: false };
+	}
+}
+
+const settingsOverviewValidator = v.union(
+	v.null(),
+	v.object({
+		account: v.object({
+			name: v.string(),
+			email: v.union(v.string(), v.null()),
+			country: v.string(),
+			currencyCode: v.string(),
+			currencySymbol: v.string(),
+			incomeModel: v.object({
+				value: v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
+				label: v.string(),
+			}),
+			tags: v.array(v.string()),
+			plan: v.object({
+				tier: v.union(v.literal("free"), v.literal("premium")),
+				label: v.string(),
+				priceCopy: v.union(v.string(), v.null()),
+				statusCopy: v.string(),
+			}),
+		}),
+		billing: v.object({
+			renewalSummary: v.union(v.string(), v.null()),
+			subscriptionStatus: v.union(
+				v.literal("free"),
+				v.literal("active"),
+				v.literal("canceled_at_period_end"),
+			),
+			cancelAtPeriodEnd: v.boolean(),
+			checkoutAvailable: v.boolean(),
+			premiumProductId: v.union(v.string(), v.null()),
+			plusProductIds: v.object({
+				monthly: v.union(v.string(), v.null()),
+				yearly: v.union(v.string(), v.null()),
+			}),
+			monthlyPriceLabel: v.string(),
+		}),
+		allocations: v.object({
+			needs: v.number(),
+			wants: v.number(),
+			savings: v.number(),
+		}),
+		cycle: v.object({
+			typeLabel: v.string(),
+			scheduleCopy: v.string(),
+			cycleDays: v.union(v.number(), v.null()),
+			activeRangeCopy: v.union(v.string(), v.null()),
+		}),
+		commitments: v.object({
+			items: v.array(
+				v.object({
+					id: v.id("fixedCommitments"),
+					name: v.string(),
+					amount: v.number(),
+					envelope: v.union(v.literal("needs"), v.literal("wants")),
+					dueDay: v.number(),
+				}),
+			),
+			totalCents: v.number(),
+		}),
+		preferences: v.object({
+			dailySummaryEnabled: v.boolean(),
+			cycleAlertsEnabled: v.boolean(),
+			currencyReadOnly: v.string(),
+			localeReadOnly: v.string(),
+		}),
+		security: v.object({
+			passkeys: v.array(publicPasskeyValidator),
+			passkeysSource: v.union(v.literal("better_auth"), v.literal("unavailable")),
+			sessions: v.object({
+				count: v.number(),
+				apiReady: v.boolean(),
+			}),
+			hasPassword: v.boolean(),
+			emailVerified: v.boolean(),
+		}),
+	}),
+);
+
 export const getSettingsOverview = query({
 	args: {},
+	returns: settingsOverviewValidator,
 	handler: async (ctx) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
@@ -124,7 +192,8 @@ export const getSettingsOverview = query({
 			.unique();
 		if (!profile) return null;
 
-		const [commitments, activeCycle, security, sessionsInfo] = await Promise.all([
+		const currentSessionId = readSessionId(identity.sessionId);
+		const [commitments, activeCycle, security, sessionsInfo, backup] = await Promise.all([
 			ctx.db
 				.query("fixedCommitments")
 				.withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
@@ -136,7 +205,8 @@ export const getSettingsOverview = query({
 				)
 				.unique(),
 			loadPasskeysForUser(ctx, identity.subject),
-			loadSessionsForUser(ctx, identity.subject),
+			loadSessionsForUser(ctx, identity.subject, currentSessionId),
+			loadSecurityBackup(ctx, identity.subject),
 		]);
 
 		const cycleSchedule = buildCycleScheduleCopy(profile);
@@ -215,11 +285,14 @@ export const getSettingsOverview = query({
 				localeReadOnly: "Español",
 			},
 			security: {
-				...security,
+				passkeys: security.passkeys,
+				passkeysSource: security.passkeysSource,
 				sessions: {
 					count: sessionsInfo.sessions.length,
 					apiReady: sessionsInfo.apiReady,
 				},
+				hasPassword: backup.hasPassword,
+				emailVerified: backup.emailVerified,
 			},
 		};
 	},
@@ -227,7 +300,8 @@ export const getSettingsOverview = query({
 
 export const listMyPasskeys = query({
 	args: {},
-	handler: async (ctx) => {
+	returns: v.union(v.null(), passkeyListValidator),
+	handler: async (ctx): Promise<PasskeyList | null> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
 		return loadPasskeysForUser(ctx, identity.subject);
@@ -236,10 +310,85 @@ export const listMyPasskeys = query({
 
 export const listMySessions = query({
 	args: {},
-	handler: async (ctx) => {
+	returns: v.union(v.null(), sessionListValidator),
+	handler: async (ctx): Promise<SessionList | null> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
-		return loadSessionsForUser(ctx, identity.subject);
+		return loadSessionsForUser(ctx, identity.subject, readSessionId(identity.sessionId));
+	},
+});
+
+export const revokeMySession = mutation({
+	args: { sessionId: v.string() },
+	returns: revokeSessionResultValidator,
+	handler: async (ctx, args): Promise<RevokeSessionResult> => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new ConvexError({
+				code: "UNAUTHORIZED",
+				message: "Debes iniciar sesión con tu Passkey o credencial.",
+			});
+		}
+
+		const currentSessionId = readSessionId(identity.sessionId);
+		let found: unknown;
+		try {
+			found = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+				model: "session",
+				where: [{ field: "_id", operator: "eq", value: args.sessionId }],
+				select: ["userId"],
+			});
+		} catch {
+			throw new ConvexError({
+				code: "INTERNAL_ERROR",
+				message: "No pudimos cerrar la sesión. Intenta de nuevo.",
+			});
+		}
+
+		const block = sessionRevokeBlock({
+			callerUserId: identity.subject,
+			currentSessionId,
+			sessionId: args.sessionId,
+			sessionUserId: readSessionOwnerId(found),
+		});
+		if (block === "NOT_FOUND") {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Sesión no encontrada.",
+			});
+		}
+		if (block === "CURRENT_SESSION") {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Para cerrar este dispositivo usa cerrar sesión.",
+			});
+		}
+
+		let deleted: unknown;
+		try {
+			deleted = await ctx.runMutation(components.betterAuth.adapter.deleteOne, {
+				input: {
+					model: "session",
+					where: [
+						{ field: "_id", operator: "eq", value: args.sessionId },
+						{ field: "userId", operator: "eq", value: identity.subject },
+					],
+				},
+			});
+		} catch {
+			throw new ConvexError({
+				code: "INTERNAL_ERROR",
+				message: "No pudimos cerrar la sesión. Intenta de nuevo.",
+			});
+		}
+		if (typeof deleted !== "object" || deleted === null) {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Sesión no encontrada.",
+			});
+		}
+
+		return { success: true };
 	},
 });
 
