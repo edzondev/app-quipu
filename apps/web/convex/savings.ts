@@ -7,7 +7,11 @@ import {
 	computeCycleSavingsBreakdown,
 } from "./lib/cycleSavingsBreakdown";
 import { computeAvailableExtraordinarySavingsForMove } from "./lib/extraordinarySavingsSurplus";
-import { buildSavingsAssignPlan, validateSavingsAssignLines } from "./lib/savingsAssignPlan";
+import {
+	buildSavingsAssignPlan,
+	SAVINGS_ASSIGN_RATIONALES,
+	validateSavingsAssignLines,
+} from "./lib/savingsAssignPlan";
 import {
 	buildMonthsCoveredCopy,
 	computeCyclesToComplete,
@@ -387,8 +391,68 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
 	};
 }
 
+const savingsProfileValidator = v.object({
+	name: v.string(),
+	currencyCode: v.string(),
+});
+
+const savingsGoalValidator = v.object({
+	id: v.id("subEnvelopes"),
+	label: v.string(),
+	currentAmount: v.number(),
+	targetAmount: v.optional(v.number()),
+	progressPercent: v.number(),
+	isSystemDefault: v.boolean(),
+});
+
+const emergencyFundValidator = v.object({
+	id: v.id("subEnvelopes"),
+	label: v.string(),
+	currentAmount: v.number(),
+	targetAmount: v.number(),
+	monthlyEssentialsCents: v.number(),
+	monthsCovered: v.number(),
+	monthsCoveredCopy: v.string(),
+	progressPercent: v.number(),
+	cycleContributionCents: v.number(),
+	cyclesToComplete: v.nullable(v.number()),
+	contributionStreak: v.number(),
+	availableToContributeCents: v.number(),
+});
+
+const savingsAssignPlanValidator = v.object({
+	lines: v.array(
+		v.object({
+			subEnvelopeId: v.string(),
+			label: v.string(),
+			suggestedCents: v.number(),
+			remainingToTargetCents: v.number(),
+		}),
+	),
+	totalCents: v.number(),
+	rationale: v.union(...SAVINGS_ASSIGN_RATIONALES.map((rationale) => v.literal(rationale))),
+});
+
+const savingsOverviewValidator = v.object({
+	profile: savingsProfileValidator,
+	hasActiveCycle: v.boolean(),
+	totalSavedCents: v.number(),
+	cycleContributionCents: v.number(),
+	emergencyFund: v.nullable(emergencyFundValidator),
+	goals: v.array(savingsGoalValidator),
+	canCreateGoal: v.boolean(),
+	assignPlan: v.nullable(savingsAssignPlanValidator),
+});
+
+const emergencyFundDetailValidator = v.object({
+	profile: savingsProfileValidator,
+	hasActiveCycle: v.boolean(),
+	emergencyFund: emergencyFundValidator,
+});
+
 export const getOverview = query({
 	args: {},
+	returns: v.nullable(savingsOverviewValidator),
 	handler: async (ctx) => buildSavingsOverview(ctx),
 });
 
@@ -400,6 +464,7 @@ export const getCycleSavingsBreakdown = query({
 
 export const getEmergencyFundDetail = query({
 	args: {},
+	returns: v.nullable(emergencyFundDetailValidator),
 	handler: async (ctx) => {
 		const overview = await buildSavingsOverview(ctx);
 		if (!overview?.emergencyFund) return null;
