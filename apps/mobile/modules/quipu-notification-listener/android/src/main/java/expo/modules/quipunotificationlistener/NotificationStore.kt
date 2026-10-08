@@ -64,11 +64,10 @@ internal class NotificationStore(
         loadAndMerge()
       } catch (_: Throwable) {
         synchronized(lock) {
-          if (!ready) {
-            ready = true
-            readyLatch.countDown()
-          }
+          ready = true
         }
+      } finally {
+        readyLatch.countDown()
       }
     }
   }
@@ -222,11 +221,12 @@ internal class NotificationStore(
         }
       }
       ready = true
-      readyLatch.countDown()
     }
     for (item in toEmit) {
       deliver(item)
     }
+    // Queue the snapshot before waking waiters. Otherwise flush() can run
+    // before this save is even scheduled and a reload sees a missing file.
     if (dirty) scheduleSave()
   }
 
