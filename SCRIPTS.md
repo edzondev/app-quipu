@@ -9,7 +9,7 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 |---|---|
 | Levantar Convex en watch (regenera `_generated/` + push al dev deployment) | `pnpm --filter @quipu/web convex:dev` |
 | Solo regenerar el tipado de web, sin watch | `pnpm --filter @quipu/web exec convex codegen` |
-| Regenerar el spec que consume el móvil (`packages/convex-api/src/api.ts`) | `pnpm --filter @quipu/web convex:export-api` |
+| Regenerar el spec que consume el móvil (`packages/convex-api/src/api.ts`), sin deployment | `pnpm --filter @quipu/web convex:export-api` |
 | Deploy a producción | `pnpm --filter @quipu/web exec convex deploy` |
 
 > Importante: todos estos comandos se ejecutan desde `apps/web/` porque ahí
@@ -50,7 +50,7 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 
 | Qué hace | Comando |
 |---|---|
-| Regenerar el spec (atajo al script de web) | `pnpm --filter @quipu/convex-api generate` |
+| Regenerar el spec desde `convex/_generated` (sin deployment) | `pnpm --filter @quipu/convex-api generate` |
 | Typecheck del paquete | `pnpm --filter @quipu/convex-api typecheck` |
 
 ## Raíz (toda la casa)
@@ -91,7 +91,8 @@ pnpm --filter @quipu/web dev
 # 3b. Solo móvil (en otra terminal)
 pnpm --filter @quipu/mobile start
 
-# 4. Cuando cambias funciones de Convex y el móvil necesita el tipado nuevo
+# 4. Cuando cambias funciones de Convex y el móvil necesita el tipado nuevo.
+#    No hace falta un deployment: el script lee convex/_generated + el fuente.
 pnpm --filter @quipu/web convex:export-api
 
 # 5. Antes de commitear

@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "next dev",
 		"convex:dev": "convex dev",
-		"convex:export-api": "convex-helpers ts-api-spec --output-file ../../packages/convex-api/src/api.ts",
+		"convex:export-api": "node ../../scripts/ensure-convex-api.mjs",
 		"build": "next build",
 		"start": "next start",
 		"typecheck": "convex codegen && next typegen && tsc --noEmit",
