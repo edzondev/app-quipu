@@ -7,11 +7,22 @@ import type {
 	ProgressScreenModel,
 } from "@/shared/lib/progress/model";
 
-const BAR: Record<ProgressBarView["tone"], string> = {
+const SOLID_BAR: Record<Exclude<ProgressBarView["tone"], "current">, string> = {
 	compliant: "bg-savings",
 	warning: "bg-warning",
 	failed: "bg-foreground/30",
 };
+
+const CURRENT_STRIPES = [
+	"bg-line",
+	"bg-background",
+	"bg-line",
+	"bg-background",
+	"bg-line",
+	"bg-background",
+	"bg-line",
+	"bg-background",
+] as const;
 
 type Props = {
 	status: "loading" | "ready";
@@ -28,7 +39,14 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 				contentContainerClassName="grow pb-8"
 				showsVerticalScrollIndicator={false}
 			>
-				<Text className="font-newsreader text-[27px] leading-8 text-foreground">Progreso</Text>
+				<View className="flex-row items-baseline justify-between">
+					<Text className="font-newsreader text-[27px] leading-8 text-foreground">Progreso</Text>
+					{model?.sinceLabel ? (
+						<Text className="font-geist-mono text-[11px] tracking-[0.12em] text-[#8C8880]">
+							{model.sinceLabel}
+						</Text>
+					) : null}
+				</View>
 
 				{status === "loading" ? (
 					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
@@ -41,7 +59,7 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 						onPress={onOpenClose}
 						className={`mt-6 flex-row items-center justify-between rounded-2xl px-4 py-4 active:opacity-70 ${
 							model.closeEntry.highlighted
-								? "border border-[#5E8C79] bg-savings/10"
+								? "border border-savings bg-savings/10"
 								: "border border-line"
 						}`}
 					>
@@ -97,17 +115,20 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			{model.bars.length > 0 ? (
 				<View className="mt-5 flex-row gap-[7px]">
 					{model.bars.map((bar) => (
-						<View key={bar.key} className={`h-[34px] flex-1 rounded-[5px] ${BAR[bar.tone]}`} />
+						<CycleBar key={bar.key} bar={bar} />
 					))}
 				</View>
 			) : null}
 
-			{model.savedLabel ? (
-				<View className="mt-7 border-y border-[#E8E6DF] py-[18px]">
-					<Text className="font-geist-mono text-[12px] text-[#8C8880]">AHORRADO TOTAL</Text>
-					<Text className="mt-[9px] font-newsreader text-[24px] text-foreground tabular-nums">
-						{model.savedLabel}
-					</Text>
+			{model.savedLabel || model.registeredExpenseLabel || model.daysWithoutSkippingLabel ? (
+				<View className="mt-7 flex-row justify-between gap-3 border-y border-[#E8E6DF] py-[18px]">
+					{model.savedLabel ? <Stat label="AHORRADO TOTAL" value={model.savedLabel} /> : null}
+					{model.registeredExpenseLabel ? (
+						<Stat label="GASTOS REGISTRADOS" value={model.registeredExpenseLabel} />
+					) : null}
+					{model.daysWithoutSkippingLabel ? (
+						<Stat label="DÍAS SIN SALTAR" value={model.daysWithoutSkippingLabel} />
+					) : null}
 				</View>
 			) : null}
 
@@ -136,6 +157,41 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 					</Text>
 				</View>
 			) : null}
+		</View>
+	);
+}
+
+function CycleBar({ bar }: { bar: ProgressBarView }) {
+	const monthClass =
+		bar.tone === "current"
+			? "mt-[7px] text-center font-geist-mono text-[10px] text-[#B6B2A8]"
+			: "mt-[7px] text-center font-geist-mono text-[10px] text-[#8C8880]";
+	return (
+		<View className="flex-1">
+			{bar.tone === "current" ? (
+				<View
+					accessibilityLabel="Ciclo en curso"
+					className="h-[34px] flex-row overflow-hidden rounded-[5px]"
+				>
+					{CURRENT_STRIPES.map((tone, index) => (
+						<View key={`${tone}-${String(index)}`} className={`h-full flex-1 ${tone}`} />
+					))}
+				</View>
+			) : (
+				<View className={`h-[34px] rounded-[5px] ${SOLID_BAR[bar.tone]}`} />
+			)}
+			{bar.monthLabel ? <Text className={monthClass}>{bar.monthLabel}</Text> : null}
+		</View>
+	);
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+	return (
+		<View className="min-w-0 flex-1">
+			<Text className="font-geist-mono text-[12px] text-[#8C8880]">{label}</Text>
+			<Text className="mt-[9px] font-newsreader text-[24px] text-foreground tabular-nums">
+				{value}
+			</Text>
 		</View>
 	);
 }

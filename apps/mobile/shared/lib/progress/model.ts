@@ -1,6 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
-import { limaMonthName } from "@/shared/lib/lima-date";
+import { LIMA_MONTHS, limaMonthName, limaStamp } from "@/shared/lib/lima-date";
 import { currencySymbol, formatCentsTrimmed } from "@/shared/lib/money";
 import type { SavingsOverview } from "@/shared/lib/savings/model";
 
@@ -23,6 +23,8 @@ export type BarTone = ChartBar["status"];
 export type ProgressBarView = {
 	key: string;
 	tone: Exclude<BarTone, "empty">;
+	/** Mes corto del diseño (MAY). Null si Convex manda monthLabel null. */
+	monthLabel: string | null;
 };
 
 export type AchievementRowView = {
@@ -40,8 +42,11 @@ export type CloseEntryView = {
 export type ProgressScreenModel = {
 	empty: boolean;
 	streakLabel: string;
+	sinceLabel: string | null;
 	bars: ProgressBarView[];
 	savedLabel: string | null;
+	registeredExpenseLabel: string | null;
+	daysWithoutSkippingLabel: string | null;
 	achievements: AchievementRowView[];
 	rewardText: string | null;
 	closeEntry: CloseEntryView | null;
@@ -85,8 +90,11 @@ export function presentProgress(
 	return {
 		empty,
 		streakLabel: String(streak),
+		sinceLabel: overview == null ? null : sinceLabelFromBars(overview.chartBars),
 		bars,
 		savedLabel: savedLabel(savings),
+		registeredExpenseLabel: overview == null ? null : countLabel(overview.registeredExpenseCount),
+		daysWithoutSkippingLabel: overview == null ? null : countLabel(overview.daysWithoutSkipping),
 		achievements: overview == null ? [] : toAchievements(overview.achievements),
 		rewardText: nextRewardText(rewards),
 		closeEntry,
@@ -120,10 +128,52 @@ export function presentClose(
 	};
 }
 
+const LONG_MONTH_INDEX: Record<string, number> = {
+	enero: 0,
+	febrero: 1,
+	marzo: 2,
+	abril: 3,
+	mayo: 4,
+	junio: 5,
+	julio: 6,
+	agosto: 7,
+	setiembre: 8,
+	septiembre: 8,
+	octubre: 9,
+	noviembre: 10,
+	diciembre: 11,
+};
+
 function toBars(chartBars: Overview["chartBars"]): ProgressBarView[] {
 	return chartBars.flatMap((bar: ChartBar) =>
-		bar.status === "empty" ? [] : [{ key: String(bar.id), tone: bar.status }],
+		bar.status === "empty"
+			? []
+			: [{ key: String(bar.id), tone: bar.status, monthLabel: barMonthLabel(bar) }],
 	);
+}
+
+function barMonthLabel(bar: ChartBar): string | null {
+	if (typeof bar.monthLabel !== "string" || bar.monthLabel.length === 0) return null;
+	const fromName = LONG_MONTH_INDEX[bar.monthLabel.toLocaleLowerCase("es-PE")];
+	if (fromName != null) return LIMA_MONTHS[fromName] ?? null;
+	if (typeof bar.cycleStart === "number") {
+		return LIMA_MONTHS[limaStamp(bar.cycleStart).monthIndex] ?? null;
+	}
+	return bar.monthLabel.toLocaleUpperCase("es-PE");
+}
+
+function sinceLabelFromBars(chartBars: Overview["chartBars"]): string | null {
+	for (const bar of chartBars) {
+		if (typeof bar.cycleStart === "number") return `DESDE ${limaMonthName(bar.cycleStart)}`;
+		if (typeof bar.monthLabel === "string" && bar.monthLabel.length > 0) {
+			return `DESDE ${bar.monthLabel.toLocaleUpperCase("es-PE")}`;
+		}
+	}
+	return null;
+}
+
+function countLabel(value: number | null | undefined): string | null {
+	return typeof value === "number" ? String(value) : null;
 }
 
 function savedLabel(savings: SavingsOverview): string | null {
