@@ -16,19 +16,15 @@ import {
 	sendOtpEmail,
 } from "./lib/email/authMail";
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
+import { androidApkKeyHashOrigins } from "./lib/passkeyOrigins";
 import { resolvePasskeyRegistrationUser } from "./lib/passkeyRegistration";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
-// Orígenes válidos para verificar credenciales passkey. Android Credential
-// Manager firma clientDataJSON con "android:apk-key-hash:<sha256-base64>"
-// del certificado de firma (debug y Play signing tienen hashes distintos),
-// así que se suman por env separados por coma.
-const androidApkKeyHashes = (process.env.PASSKEY_ANDROID_APK_KEY_HASHES ?? "")
-	.split(",")
-	.map((hash) => hash.trim())
-	.filter(Boolean)
-	.map((hash) => `android:apk-key-hash:${hash}`);
+// WebAuthn expectedOrigin. Android Credential Manager firma clientDataJSON
+// con "android:apk-key-hash:<base64url>" (debug y Play signing difieren).
+// El env trae solo el base64url, separado por coma; el prefijo lo agrega el helper.
+const androidApkKeyHashes = androidApkKeyHashOrigins(process.env.PASSKEY_ANDROID_APK_KEY_HASHES);
 const passkeyOrigins = [siteUrl, ...androidApkKeyHashes];
 const rpName = process.env.PASSKEY_RP_NAME || "quipu";
 
@@ -71,9 +67,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
 		baseURL: siteUrl,
-		// Origen del app móvil: el plugin server expo() copia el header
-		// "expo-origin" (que envía expoClient) a "Origin" para el check CSRF.
-		trustedOrigins: [siteUrl, "quipu://"],
+		// CSRF: SITE_URL, android:apk-key-hash:* (mismo env que expectedOrigin)
+		// y quipu://. expo() copia el header "expo-origin" a Origin.
+		trustedOrigins: [...passkeyOrigins, "quipu://"],
 		database: authComponent.adapter(ctx),
 		rateLimit: {
 			enabled: true,

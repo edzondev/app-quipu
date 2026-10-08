@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
 	return {
 		rules: {
 			userAgent: "*",
-			allow: [...publicRoutes],
+			allow: [...publicRoutes, "/.well-known/"],
 			disallow: [...privateRoutePrefixes],
 		},
 		sitemap: `${origin}/sitemap.xml`,
