@@ -12,25 +12,10 @@ import {
 import { creditSubEnvelopeFromSurplus } from "./lib/creditSurplusContribution";
 import {
 	closedCycleSurplusDestinationValidator,
+	closedCycleSurplusEnvelopeValidator,
+	surplusAssignmentDestinationValidator,
 	surplusFromEnvelopeValidator,
 } from "./lib/surplusValidators";
-
-const surplusAssignmentDestinationValidator = v.union(
-	v.object({
-		kind: v.literal("subEnvelope"),
-		subEnvelopeId: v.id("subEnvelopes"),
-		name: v.union(v.string(), v.null()),
-	}),
-	v.object({
-		kind: v.literal("leave"),
-	}),
-);
-
-const closedCycleSurplusEnvelopeValidator = v.object({
-	fromEnvelope: surplusFromEnvelopeValidator,
-	total: v.number(),
-	available: v.number(),
-});
 
 const savingsSubEnvelopeChoiceValidator = v.object({
 	id: v.id("subEnvelopes"),
@@ -66,6 +51,19 @@ function compareSavingsSubEnvelopes(
 		return a.isSystemDefault ? -1 : 1;
 	}
 	return a.label.localeCompare(b.label, "es");
+}
+
+async function findLatestClosedCycle(
+	ctx: QueryCtx | MutationCtx,
+	profileId: Id<"profiles">,
+): Promise<Doc<"financialCycles"> | null> {
+	// by_profile_status empata por _creationTime. El ciclo se inserta al abrirse
+	// y pasa a closed al abrir el siguiente, así que el cerrado más nuevo es el último.
+	return await ctx.db
+		.query("financialCycles")
+		.withIndex("by_profile_status", (q) => q.eq("profileId", profileId).eq("status", "closed"))
+		.order("desc")
+		.first();
 }
 
 async function loadClosedCycleSurplus(
@@ -140,13 +138,7 @@ export const getClosedCycleSurplus = query({
 			.unique();
 		if (!profile) return null;
 
-		// by_profile_status empata por _creationTime. El ciclo se inserta al abrirse
-		// y pasa a closed al abrir el siguiente, así que el cerrado más nuevo es el último.
-		const closedCycle = await ctx.db
-			.query("financialCycles")
-			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "closed"))
-			.order("desc")
-			.first();
+		const closedCycle = await findLatestClosedCycle(ctx, profile._id);
 		if (closedCycle === null) return null;
 
 		const [{ totals, dispositions }, subEnvelopes] = await Promise.all([
@@ -190,6 +182,7 @@ export const getClosedCycleSurplus = query({
 					kind: "subEnvelope",
 					subEnvelopeId: row.destination.subEnvelopeId,
 					name: subEnvelope === undefined ? null : subEnvelope.label,
+					isSystemDefault: subEnvelope === undefined ? false : subEnvelope.isSystemDefault,
 				},
 				amount: row.amount,
 			});
@@ -249,6 +242,13 @@ export const assignClosedCycleSurplus = mutation({
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
 				message: "Solo puedes asignar el sobrante de un ciclo cerrado.",
+			});
+		}
+		const latestClosed = await findLatestClosedCycle(ctx, profile._id);
+		if (latestClosed === null || latestClosed._id !== cycle._id) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Solo puedes asignar el sobrante del último ciclo cerrado.",
 			});
 		}
 

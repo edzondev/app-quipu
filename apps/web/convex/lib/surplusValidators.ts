@@ -9,14 +9,33 @@ export const surplusFromEnvelopeValidator = v.union(
 
 export type SurplusFromEnvelope = Infer<typeof surplusFromEnvelopeValidator>;
 
+const closedCycleSurplusSubEnvelopeFields = {
+	kind: v.literal("subEnvelope"),
+	subEnvelopeId: v.id("subEnvelopes"),
+};
+
+const closedCycleSurplusLeaveFields = {
+	kind: v.literal("leave"),
+};
+
 export const closedCycleSurplusDestinationValidator = v.union(
-	v.object({
-		kind: v.literal("subEnvelope"),
-		subEnvelopeId: v.id("subEnvelopes"),
-	}),
-	v.object({
-		kind: v.literal("leave"),
-	}),
+	v.object(closedCycleSurplusSubEnvelopeFields),
+	v.object(closedCycleSurplusLeaveFields),
 );
 
 export type ClosedCycleSurplusDestination = Infer<typeof closedCycleSurplusDestinationValidator>;
+
+export const surplusAssignmentDestinationValidator = v.union(
+	v.object({
+		...closedCycleSurplusSubEnvelopeFields,
+		name: v.union(v.string(), v.null()),
+		isSystemDefault: v.boolean(),
+	}),
+	v.object(closedCycleSurplusLeaveFields),
+);
+
+export const closedCycleSurplusEnvelopeValidator = v.object({
+	fromEnvelope: surplusFromEnvelopeValidator,
+	total: v.number(),
+	available: v.number(),
+});

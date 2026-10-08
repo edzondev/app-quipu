@@ -1,9 +1,14 @@
+import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
 	computeAvailableExtraordinarySavingsForMove,
 	type ExtraordinarySavingsIncomeSlice,
 } from "./extraordinarySavingsSurplus";
-import type { SurplusFromEnvelope } from "./surplusValidators";
+import {
+	type ClosedCycleSurplusDestination,
+	closedCycleSurplusEnvelopeValidator,
+	type SurplusFromEnvelope,
+} from "./surplusValidators";
 
 export type ClosedCycleSurplusTotals = Record<
 	SurplusFromEnvelope,
@@ -13,7 +18,7 @@ export type ClosedCycleSurplusTotals = Record<
 export type ClosedCycleDispositionSlice = {
 	fromEnvelope: SurplusFromEnvelope;
 	amount: number;
-	destinationKind: "subEnvelope" | "leave";
+	destinationKind: ClosedCycleSurplusDestination["kind"];
 };
 
 const SURPLUS_SOURCE_ORDER: ReadonlyArray<SurplusFromEnvelope> = [
@@ -92,8 +97,8 @@ export function computeClosedCycleSurplusTotals(input: {
 
 export function listEnvelopesWithSurplus(
 	totals: ClosedCycleSurplusTotals,
-): Array<{ fromEnvelope: SurplusFromEnvelope; total: number; available: number }> {
-	const rows: Array<{ fromEnvelope: SurplusFromEnvelope; total: number; available: number }> = [];
+): Array<Infer<typeof closedCycleSurplusEnvelopeValidator>> {
+	const rows: Array<Infer<typeof closedCycleSurplusEnvelopeValidator>> = [];
 	for (const fromEnvelope of SURPLUS_SOURCE_ORDER) {
 		const entry = totals[fromEnvelope];
 		if (entry.total > 0) {

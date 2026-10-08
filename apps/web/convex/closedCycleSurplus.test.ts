@@ -184,6 +184,7 @@ describe("assignClosedCycleSurplus", () => {
 						kind: "subEnvelope",
 						subEnvelopeId: seed.fundId,
 						name: "Fondo de emergencia",
+						isSystemDefault: true,
 					},
 				},
 			],
@@ -229,12 +230,18 @@ describe("assignClosedCycleSurplus", () => {
 					kind: "subEnvelope",
 					subEnvelopeId: seed.fundId,
 					name: "Fondo de emergencia",
+					isSystemDefault: true,
 				},
 			},
 			{
 				fromEnvelope: "needs",
 				amount: 3_000,
-				destination: { kind: "subEnvelope", subEnvelopeId: seed.tripId, name: "Aaa viaje" },
+				destination: {
+					kind: "subEnvelope",
+					subEnvelopeId: seed.tripId,
+					name: "Aaa viaje",
+					isSystemDefault: false,
+				},
 			},
 			{ fromEnvelope: "needs", amount: 2_000, destination: { kind: "leave" } },
 		]);
@@ -551,6 +558,48 @@ describe("assignClosedCycleSurplus", () => {
 		expect(report?.envelopes).toEqual([{ fromEnvelope: "needs", total: 2_000, available: 2_000 }]);
 	});
 
+	it("rechaza asignar el sobrante de un ciclo cerrado que no es el último", async () => {
+		const t = testBackend();
+		const older = await seedClosedCycle(t, {
+			userId: "user-old-cycle",
+			needsRemaining: 4_000,
+			endDate: 9_000,
+		});
+		await t.run(async (ctx) => {
+			const olderCycle = await ctx.db.get("financialCycles", older.cycleId);
+			if (!olderCycle) throw new Error("Ciclo de prueba ausente.");
+			const cycleId = await ctx.db.insert("financialCycles", {
+				profileId: olderCycle.profileId,
+				startDate: 1,
+				endDate: 10,
+				status: "closed",
+				totalIncomeReceived: 0,
+			});
+			await ctx.db.insert("envelopes", {
+				profileId: olderCycle.profileId,
+				cycleId,
+				type: "needs",
+				allocatedAmount: 2_000,
+				remainingAmount: 2_000,
+			});
+		});
+
+		const asUser = t.withIdentity({ subject: older.userId });
+		await expect(
+			asUser.mutation(api.closedCycleSurplus.assignClosedCycleSurplus, {
+				closedCycleId: older.cycleId,
+				fromEnvelope: "needs",
+				allocations: [{ destination: { kind: "leave" }, amount: 1_000 }],
+			}),
+		).rejects.toThrow("Solo puedes asignar el sobrante del último ciclo cerrado.");
+
+		const ledger = await readLedger(t, older);
+		expect(ledger.dispositionCount).toBe(0);
+		expect(ledger.contributionCount).toBe(0);
+		expect(ledger.fundAmount).toBe(0);
+		expect(ledger.needsRemaining).toBe(4_000);
+	});
+
 	it("devuelve name null si el sub-sobre de la asignación ya no existe", async () => {
 		const t = testBackend();
 		const seed = await seedClosedCycle(t, { userId: "user-deleted", needsRemaining: 1_000 });
@@ -567,11 +616,17 @@ describe("assignClosedCycleSurplus", () => {
 		});
 
 		const report = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
+		// Sin el documento no hay isSystemDefault real: false no afirma que no fuera el Fondo.
 		expect(report?.assignments).toEqual([
 			{
 				fromEnvelope: "needs",
 				amount: 1_000,
-				destination: { kind: "subEnvelope", subEnvelopeId: seed.fundId, name: null },
+				destination: {
+					kind: "subEnvelope",
+					subEnvelopeId: seed.fundId,
+					name: null,
+					isSystemDefault: false,
+				},
 			},
 		]);
 		expect(report?.savingsSubEnvelopes.map((row) => row.id)).not.toContain(seed.fundId);
