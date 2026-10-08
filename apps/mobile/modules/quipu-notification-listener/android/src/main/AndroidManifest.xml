@@ -1,0 +1,20 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!--
+      Official NotificationListenerService declaration. exported=false matches the
+      current platform sample: the system binds this component explicitly, and
+      BIND_NOTIFICATION_LISTENER_SERVICE is a signature permission so other apps
+      cannot bind it. No default_filter_types meta-data — bank alerts are often
+      silent, and a filter would drop them.
+    -->
+    <service
+      android:name="expo.modules.quipunotificationlistener.QuipuNotificationListenerService"
+      android:exported="false"
+      android:label="@string/quipu_notification_listener_label"
+      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService" />
+      </intent-filter>
+    </service>
+  </application>
+</manifest>
