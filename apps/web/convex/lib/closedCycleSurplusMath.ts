@@ -1,3 +1,4 @@
+import type { Doc, Id } from "../_generated/dataModel";
 import {
 	computeAvailableExtraordinarySavingsForMove,
 	type ExtraordinarySavingsIncomeSlice,
@@ -21,13 +22,12 @@ const SURPLUS_SOURCE_ORDER: ReadonlyArray<SurplusFromEnvelope> = [
 	"extraordinary",
 ];
 
-export function isOwnedSavingsSubEnvelope(
-	subEnvelope: { profileId: string; parentEnvelopeType: string } | null,
-	profileId: string,
+export function isOwnedSubEnvelope(
+	subEnvelope: Doc<"subEnvelopes"> | null,
+	profileId: Id<"profiles">,
 ): boolean {
 	if (subEnvelope === null) return false;
-	if (subEnvelope.profileId !== profileId) return false;
-	return subEnvelope.parentEnvelopeType === "savings";
+	return subEnvelope.profileId === profileId;
 }
 
 /**

@@ -7,6 +7,7 @@ import schema from "./schema";
 const modules = {
 	"./_generated/api.js": () => import("./_generated/api.js"),
 	"./closedCycleSurplus.js": () => import("./closedCycleSurplus.js"),
+	"./savings.js": () => import("./savings.js"),
 };
 
 function testBackend() {
@@ -507,5 +508,127 @@ describe("assignClosedCycleSurplus", () => {
 			{ fromEnvelope: "needs", total: 5_000, available: 0 },
 			{ fromEnvelope: "extraordinary", total: 7_000, available: 0 },
 		]);
+	});
+
+	it("elige el ciclo cerrado insertado más tarde, no el de mayor endDate", async () => {
+		const t = testBackend();
+		const older = await seedClosedCycle(t, {
+			userId: "user-latest",
+			needsRemaining: 1_000,
+			endDate: 9_000,
+		});
+		const newerId = await t.run(async (ctx) => {
+			const olderCycle = await ctx.db.get("financialCycles", older.cycleId);
+			if (!olderCycle) throw new Error("Ciclo de prueba ausente.");
+			const cycleId = await ctx.db.insert("financialCycles", {
+				profileId: olderCycle.profileId,
+				startDate: 1,
+				endDate: 10,
+				status: "closed",
+				totalIncomeReceived: 0,
+			});
+			await ctx.db.insert("financialCycles", {
+				profileId: olderCycle.profileId,
+				startDate: 20,
+				endDate: 50_000,
+				status: "active",
+				totalIncomeReceived: 0,
+			});
+			await ctx.db.insert("envelopes", {
+				profileId: olderCycle.profileId,
+				cycleId,
+				type: "needs",
+				allocatedAmount: 2_000,
+				remainingAmount: 2_000,
+			});
+			return cycleId;
+		});
+
+		const report = await t
+			.withIdentity({ subject: older.userId })
+			.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
+		expect(report?.closedCycleId).toBe(newerId);
+		expect(report?.envelopes).toEqual([{ fromEnvelope: "needs", total: 2_000, available: 2_000 }]);
+	});
+
+	it("devuelve name null si el sub-sobre de la asignación ya no existe", async () => {
+		const t = testBackend();
+		const seed = await seedClosedCycle(t, { userId: "user-deleted", needsRemaining: 1_000 });
+		const asUser = t.withIdentity({ subject: seed.userId });
+		await asUser.mutation(api.closedCycleSurplus.assignClosedCycleSurplus, {
+			closedCycleId: seed.cycleId,
+			fromEnvelope: "needs",
+			allocations: [
+				{ destination: { kind: "subEnvelope", subEnvelopeId: seed.fundId }, amount: 1_000 },
+			],
+		});
+		await t.run(async (ctx) => {
+			await ctx.db.delete(seed.fundId);
+		});
+
+		const report = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
+		expect(report?.assignments).toEqual([
+			{
+				fromEnvelope: "needs",
+				amount: 1_000,
+				destination: { kind: "subEnvelope", subEnvelopeId: seed.fundId, name: null },
+			},
+		]);
+		expect(report?.savingsSubEnvelopes.map((row) => row.id)).not.toContain(seed.fundId);
+	});
+
+	it("no cuenta dos veces un moveSurplusToSavings que ya bajó el remaining", async () => {
+		const t = testBackend();
+		const seed = await seedClosedCycle(t, {
+			userId: "user-once",
+			status: "active",
+			needsRemaining: 10_000,
+			wantsRemaining: 8_000,
+			savingsRemaining: 20_000,
+		});
+		await t.run(async (ctx) => {
+			const cycle = await ctx.db.get("financialCycles", seed.cycleId);
+			if (!cycle) throw new Error("Ciclo de prueba ausente.");
+			await ctx.db.insert("incomeEvents", {
+				profileId: cycle.profileId,
+				cycleId: seed.cycleId,
+				amount: 10_000,
+				source: "other",
+				description: "CTS",
+				occurredAt: 1,
+				incomeKind: "extraordinary",
+				distributionApplied: { needs: 0, wants: 0, savings: 10_000 },
+			});
+		});
+
+		const asUser = t.withIdentity({ subject: seed.userId });
+		await asUser.mutation(api.savings.moveSurplusToSavings, {
+			fromEnvelope: "needs",
+			amount: 3_000,
+			toSubEnvelopeId: seed.fundId,
+		});
+		await asUser.mutation(api.savings.moveSurplusToSavings, {
+			fromEnvelope: "wants",
+			amount: 2_000,
+			toSubEnvelopeId: seed.fundId,
+		});
+		await asUser.mutation(api.savings.moveSurplusToSavings, {
+			fromEnvelope: "extraordinary",
+			amount: 4_000,
+			toSubEnvelopeId: seed.fundId,
+		});
+		await t.run(async (ctx) => {
+			await ctx.db.patch(seed.cycleId, { status: "closed" });
+		});
+
+		const report = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
+		expect(report?.envelopes).toEqual([
+			{ fromEnvelope: "needs", total: 7_000, available: 7_000 },
+			{ fromEnvelope: "wants", total: 6_000, available: 6_000 },
+			{ fromEnvelope: "extraordinary", total: 6_000, available: 6_000 },
+		]);
+		const ledger = await readLedger(t, seed);
+		expect(ledger.needsRemaining).toBe(7_000);
+		expect(ledger.savingsRemaining).toBe(16_000);
 	});
 });

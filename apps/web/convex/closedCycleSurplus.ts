@@ -5,14 +5,13 @@ import { mutation, query } from "./_generated/server";
 import {
 	type ClosedCycleSurplusTotals,
 	computeClosedCycleSurplusTotals,
-	isOwnedSavingsSubEnvelope,
+	isOwnedSubEnvelope,
 	isSurplusDecided,
 	listEnvelopesWithSurplus,
 } from "./lib/closedCycleSurplusMath";
 import { creditSubEnvelopeFromSurplus } from "./lib/creditSurplusContribution";
 import {
 	closedCycleSurplusDestinationValidator,
-	type SurplusFromEnvelope,
 	surplusFromEnvelopeValidator,
 } from "./lib/surplusValidators";
 
@@ -20,7 +19,7 @@ const surplusAssignmentDestinationValidator = v.union(
 	v.object({
 		kind: v.literal("subEnvelope"),
 		subEnvelopeId: v.id("subEnvelopes"),
-		name: v.string(),
+		name: v.union(v.string(), v.null()),
 	}),
 	v.object({
 		kind: v.literal("leave"),
@@ -67,28 +66,6 @@ function compareSavingsSubEnvelopes(
 		return a.isSystemDefault ? -1 : 1;
 	}
 	return a.label.localeCompare(b.label, "es");
-}
-
-function pickLatestClosedCycle(
-	cycles: ReadonlyArray<Doc<"financialCycles">>,
-): Doc<"financialCycles"> | null {
-	let latest: Doc<"financialCycles"> | null = null;
-	for (const cycle of cycles) {
-		if (latest === null) {
-			latest = cycle;
-			continue;
-		}
-		if (cycle.endDate !== latest.endDate) {
-			if (cycle.endDate > latest.endDate) latest = cycle;
-			continue;
-		}
-		if (cycle.startDate !== latest.startDate) {
-			if (cycle.startDate > latest.startDate) latest = cycle;
-			continue;
-		}
-		if (cycle._creationTime > latest._creationTime) latest = cycle;
-	}
-	return latest;
 }
 
 async function loadClosedCycleSurplus(
@@ -163,12 +140,14 @@ export const getClosedCycleSurplus = query({
 			.unique();
 		if (!profile) return null;
 
-		const closedCycles = await ctx.db
+		// by_profile_status empata por _creationTime. El ciclo se inserta al abrirse
+		// y pasa a closed al abrir el siguiente, así que el cerrado más nuevo es el último.
+		const closedCycle = await ctx.db
 			.query("financialCycles")
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "closed"))
-			.collect();
-		const closedCycle = pickLatestClosedCycle(closedCycles);
-		if (!closedCycle) return null;
+			.order("desc")
+			.first();
+		if (closedCycle === null) return null;
 
 		const [{ totals, dispositions }, subEnvelopes] = await Promise.all([
 			loadClosedCycleSurplus(ctx, closedCycle._id),
@@ -179,10 +158,7 @@ export const getClosedCycleSurplus = query({
 		]);
 
 		const savingsSubEnvelopes = subEnvelopes
-			.filter((subEnvelope) => {
-				const parentType: string = subEnvelope.parentEnvelopeType;
-				return parentType === "savings";
-			})
+			.slice()
 			.sort(compareSavingsSubEnvelopes)
 			.map((subEnvelope) => ({
 				id: subEnvelope._id,
@@ -207,17 +183,13 @@ export const getClosedCycleSurplus = query({
 				});
 				continue;
 			}
-			const cached = subById.get(row.destination.subEnvelopeId);
-			const subEnvelope =
-				cached !== undefined
-					? cached
-					: await ctx.db.get("subEnvelopes", row.destination.subEnvelopeId);
+			const subEnvelope = subById.get(row.destination.subEnvelopeId);
 			assignments.push({
 				fromEnvelope: row.fromEnvelope,
 				destination: {
 					kind: "subEnvelope",
 					subEnvelopeId: row.destination.subEnvelopeId,
-					name: subEnvelope ? subEnvelope.label : "",
+					name: subEnvelope === undefined ? null : subEnvelope.label,
 				},
 				amount: row.amount,
 			});
@@ -323,7 +295,7 @@ export const assignClosedCycleSurplus = mutation({
 			subEnvelopeIds.map((subEnvelopeId) => ctx.db.get("subEnvelopes", subEnvelopeId)),
 		);
 		for (const subEnvelope of subEnvelopeDocs) {
-			if (!isOwnedSavingsSubEnvelope(subEnvelope, profile._id)) {
+			if (!isOwnedSubEnvelope(subEnvelope, profile._id)) {
 				throw new ConvexError({
 					code: "NOT_FOUND",
 					message: "Esa meta no es un sub-sobre de ahorro tuyo.",
@@ -331,14 +303,13 @@ export const assignClosedCycleSurplus = mutation({
 			}
 		}
 
-		const fromEnvelope: SurplusFromEnvelope = args.fromEnvelope;
 		const now = Date.now();
 		for (const allocation of args.allocations) {
 			if (allocation.destination.kind === "subEnvelope") {
 				await creditSubEnvelopeFromSurplus(ctx, {
 					profileId: profile._id,
 					cycleId: cycle._id,
-					fromEnvelope,
+					fromEnvelope: args.fromEnvelope,
 					amount: allocation.amount,
 					subEnvelopeId: allocation.destination.subEnvelopeId,
 					createdAt: now,
@@ -347,7 +318,7 @@ export const assignClosedCycleSurplus = mutation({
 			await ctx.db.insert("closedCycleSurplusDispositions", {
 				profileId: profile._id,
 				closedCycleId: cycle._id,
-				fromEnvelope,
+				fromEnvelope: args.fromEnvelope,
 				amount: allocation.amount,
 				destination: allocation.destination,
 				createdAt: now,
