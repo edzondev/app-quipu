@@ -40,36 +40,6 @@ export function computeExtraordinarySavingsPoolCents(
 	return Math.max(0, allocated - moved);
 }
 
-function movableCents(amount: number): number | null {
-	if (!Number.isInteger(amount) || amount <= 0) return null;
-	return amount;
-}
-
-/**
- * Args de `savings.moveSurplusToSavings` salvo `toSubEnvelopeId` (lo agrega la query
- * si hay Fondo). Solo cuando un único origen tiene céntimos enteros positivos.
- * Varios orígenes no tienen un `fromEnvelope` único en el schema.
- */
-export function resolveSurplusMove(input: {
-	needsRemainingCents: number;
-	wantsRemainingCents: number;
-	extraordinaryAvailableCents: number;
-}) {
-	const available: Array<{ fromEnvelope: SurplusFromEnvelope; amount: number }> = [];
-	const needs = movableCents(input.needsRemainingCents);
-	const wants = movableCents(input.wantsRemainingCents);
-	const extraordinary = movableCents(input.extraordinaryAvailableCents);
-	if (needs !== null) available.push({ fromEnvelope: "needs", amount: needs });
-	if (wants !== null) available.push({ fromEnvelope: "wants", amount: wants });
-	if (extraordinary !== null) {
-		available.push({ fromEnvelope: "extraordinary", amount: extraordinary });
-	}
-	if (available.length !== 1) return null;
-	const only = available[0];
-	if (only === undefined) return null;
-	return { fromEnvelope: only.fromEnvelope, amount: only.amount };
-}
-
 /** Amount the user can move when source is "extraordinary" (pool capped by savings envelope remaining). */
 export function computeAvailableExtraordinarySavingsForMove(input: {
 	incomeEvents: ReadonlyArray<ExtraordinarySavingsIncomeSlice>;
