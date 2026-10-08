@@ -92,6 +92,5 @@ export const closeReport = {
 		streak: 3,
 		status: "compliant" as const,
 		hasExtraordinaryIncome: false,
-		expenseCount: 7,
 	},
 } satisfies NonNullable<CloseReportResult>;
