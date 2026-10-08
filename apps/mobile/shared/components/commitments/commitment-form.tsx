@@ -1,6 +1,7 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { EnvelopeChoices } from "@/shared/components/expenses/envelope-choices";
+import { ErrorText, FieldError } from "@/shared/components/forms/field-error";
 import {
 	type CommitmentFormValues,
 	type CreateCommitmentArgs,
@@ -175,13 +176,4 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 			</Pressable>
 		</View>
 	);
-}
-
-function FieldError({ error }: { error: unknown }) {
-	if (typeof error !== "string" || !error) return null;
-	return <ErrorText message={error} />;
-}
-
-function ErrorText({ message }: { message: string }) {
-	return <Text className="mt-2 font-hanken text-[13px] text-danger">{message}</Text>;
 }

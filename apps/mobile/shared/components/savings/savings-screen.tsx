@@ -1,33 +1,11 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { Lock } from "reicon-react-native/icons/Lock";
+import { ErrorText } from "@/shared/components/forms/field-error";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { AhorroScreenModel, FundView, GoalView } from "@/shared/lib/savings/model";
 
-const DASHES = [
-	"a",
-	"b",
-	"c",
-	"d",
-	"e",
-	"f",
-	"g",
-	"h",
-	"i",
-	"j",
-	"k",
-	"l",
-	"m",
-	"n",
-	"o",
-	"p",
-	"q",
-	"r",
-	"s",
-	"t",
-	"u",
-	"v",
-] as const;
+const DASHES = Array.from({ length: 60 }, (_, index) => `dash-${index}`);
 
 type Props = {
 	status: "loading" | "ready";
@@ -246,7 +224,7 @@ function SurplusBanner({
 					<Text className="font-hanken-semibold text-[13px] text-[#8C8880]">Ahora no</Text>
 				</Pressable>
 			</View>
-			{error ? <Text className="mt-2 font-hanken text-[13px] text-danger">{error}</Text> : null}
+			{error ? <ErrorText message={error} /> : null}
 		</View>
 	);
 }

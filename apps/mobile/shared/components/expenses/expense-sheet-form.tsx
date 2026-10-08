@@ -1,6 +1,7 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Camera } from "reicon-react-native/icons/Camera";
+import { ErrorText } from "@/shared/components/forms/field-error";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
 import { formatKeypadAmount, keypadFigures } from "@/shared/lib/expenses/keypad";
 import { remainingAfterExpense, sheetRemainingLabel } from "@/shared/lib/expenses/present";
@@ -151,8 +152,4 @@ export function ExpenseSheetForm({
 			</Pressable>
 		</View>
 	);
-}
-
-function ErrorText({ message }: { message: string }) {
-	return <Text className="mt-2 font-hanken text-[13px] text-danger">{message}</Text>;
 }
