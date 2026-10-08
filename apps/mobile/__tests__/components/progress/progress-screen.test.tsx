@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render } from "@testing-library/react-native";
+import type { GenericId as Id } from "convex/values";
 import { CloseScreen } from "@/shared/components/progress/close-screen";
 import { ProgressScreen } from "@/shared/components/progress/progress-screen";
 import {
@@ -9,6 +10,14 @@ import {
 	presentProgress,
 } from "@/shared/lib/progress/model";
 import { savingsOverview } from "@/shared/lib/progress/savings-overview-fixture";
+
+function financialCycleId(id: string): Id<"financialCycles"> {
+	return fixtureId("financialCycles", id);
+}
+
+function fixtureId<const Table extends string>(table: Table, id: string): Id<Table> {
+	return Object.assign(id, { __tableName: table });
+}
 
 type Overview = NonNullable<ProgressOverview>;
 type Rewards = NonNullable<ProgressRewards>;
@@ -54,7 +63,7 @@ const rewards = {
 const closeReport = {
 	justClosed: false,
 	report: {
-		closedCycleId: "cycle-secret",
+		closedCycleId: financialCycleId("cycle-secret"),
 		cycleLabel: "Julio",
 		totalIncomeCents: 10000,
 		spendByEnvelope: [{ type: "needs" as const, label: "Necesidades", spentCents: 10000 }],
