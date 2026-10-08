@@ -86,8 +86,29 @@ jobs:
       - name: Ensure Android SDK 36
         if: steps.changes.outputs.run == 'true'
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"
+          set -euo pipefail
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "Android SDK: $SDK"
+          SM=""
+          while IFS= read -r candidate; do
+            SM="$candidate"
+            break
+          done < <(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort)
+          if [ -z "$SM" ]; then
+            echo "sdkmanager was not found under $SDK/cmdline-tools" >&2
+            exit 1
+          fi
+          echo "sdkmanager: $SM"
+          # `yes` exits with SIGPIPE once sdkmanager closes stdin.
+          set +o pipefail
+          yes | "$SM" --sdk_root="$SDK" --licenses >/dev/null || true
+          set -o pipefail
+          # Platform 36 and build-tools 36 are on the runner image. RN 0.86
+          # pins NDK 27.1.12297006, which that image does not ship.
+          "$SM" --sdk_root="$SDK" \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;27.1.12297006"
 
       - name: Prebuild Android
         if: steps.changes.outputs.run == 'true'
