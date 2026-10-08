@@ -9,11 +9,7 @@ import {
 import {
 	deviceLabelFromUserAgent,
 	limaActivityLabel,
-	passkeyCreatedCopy,
-	passkeyDeleteWarning,
-	passkeyName,
 	presentSecurity,
-	remainingPasskeysCopy,
 	sessionActivityCopy,
 } from "@/shared/lib/settings/security-model";
 
@@ -27,41 +23,30 @@ describe("security-model", () => {
 		expect(deviceLabelFromUserAgent("Mozilla/5.0 (Linux; Android 14; Pixel 8)")).toBe("Android");
 		expect(deviceLabelFromUserAgent(null)).toBe("Dispositivo");
 		expect(deviceLabelFromUserAgent("   ")).toBe("Dispositivo");
-		expect(deviceLabelFromUserAgent("okhttp/4.12.0")).toBe("Dispositivo");
+		expect(deviceLabelFromUserAgent("okhttp/4.12.0")).toBe("Android");
 	});
 
-	it("formatea fechas de Lima y el texto de passkeys que quedan", () => {
-		expect(passkeyName(null)).toBe("Passkey");
-		expect(passkeyName("  ")).toBe("Passkey");
-		expect(passkeyName(" Llave ")).toBe("Llave");
-		expect(passkeyCreatedCopy(null)).toBeNull();
-		expect(passkeyCreatedCopy(PASSKEY_CREATED_AT)).toBe("CREADA 3 JUN");
+	it("formatea fechas de Lima", () => {
 		expect(limaActivityLabel(SECURITY_NOW, SECURITY_NOW)).toBe("HOY");
 		expect(limaActivityLabel(Date.UTC(2026, 7, 15, 17, 0, 0), SECURITY_NOW)).toBe("AYER");
 		expect(limaActivityLabel(Date.UTC(2026, 7, 13, 17, 0, 0), SECURITY_NOW)).toBe("HACE 3 DÍAS");
 		expect(limaActivityLabel(PASSKEY_CREATED_AT, SECURITY_NOW)).toBe("3 JUN");
 		expect(sessionActivityCopy(true, SECURITY_NOW, SECURITY_NOW)).toBe("ESTE DISPOSITIVO · HOY");
-		expect(remainingPasskeysCopy(1)).toBe("Te quedará 1 Passkey");
-		expect(remainingPasskeysCopy(2)).toBe("Te quedarán 2 Passkeys");
-		expect(passkeyDeleteWarning(2)).toBeNull();
-		expect(passkeyDeleteWarning(1)).toBe(
-			"Te quedará 1 Passkey. Si la pierdes, entrarás con tu contraseña de respaldo.",
-		);
-		expect(passkeyDeleteWarning(0)).toBe(
-			"Esta es tu última Passkey. Si la borras, entrarás con tu contraseña de respaldo.",
-		);
 	});
 
 	it("arma la pantalla sin ciudad, sin último uso y sin el userAgent crudo", () => {
 		const model = presentSecurity({
-			passkeys: passkeyList({
-				passkeys: [
-					securityPasskey({ label: null, name: "nombre-interno" }),
-					securityPasskey({ id: "pk-mac", label: "MacBook", createdAt: null }),
-				],
-			}),
+			security: {
+				...passkeyList({
+					passkeys: [
+						securityPasskey({ label: null, name: "nombre-interno" }),
+						securityPasskey({ id: "pk-mac", label: "MacBook", createdAt: null }),
+					],
+				}),
+				hasPassword: true,
+				emailVerified: false,
+			},
 			sessions: sessionList(),
-			backup: { hasPassword: true, emailVerified: false },
 			now: SECURITY_NOW,
 		});
 		expect(model.passkeys).toEqual([
@@ -92,9 +77,12 @@ describe("security-model", () => {
 
 	it("oculta passkeys y sesiones cuando la API no está lista", () => {
 		const model = presentSecurity({
-			passkeys: passkeyList({ source: "unavailable", passkeys: [securityPasskey()] }),
+			security: {
+				...passkeyList({ source: "unavailable", passkeys: [securityPasskey()] }),
+				hasPassword: false,
+				emailVerified: true,
+			},
 			sessions: sessionList({ apiReady: false, sessions: [] }),
-			backup: { hasPassword: false, emailVerified: true },
 			now: SECURITY_NOW,
 		});
 		expect(model.passkeys).toBeNull();

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ChevronRight } from "@/shared/components/ui/reicon";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
@@ -9,6 +10,7 @@ type Props = {
 	subtitle?: string | null;
 	subtitleClass?: string;
 	dotClass?: string;
+	trailing?: ReactNode;
 	onPress?: () => void;
 	isLast?: boolean;
 };
@@ -20,6 +22,7 @@ export function ListRow({
 	subtitle,
 	subtitleClass = "text-foreground/55",
 	dotClass,
+	trailing,
 	onPress,
 	isLast = false,
 }: Props) {
@@ -58,6 +61,7 @@ export function ListRow({
 						{value}
 					</Text>
 				) : null}
+				{trailing}
 				{onPress ? <ChevronRight size={16} colorClassName="text-foreground/45" /> : null}
 			</View>
 		</View>

@@ -8,13 +8,31 @@ import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import {
-	passkeyDeleteWarning,
+	SECURITY_ERROR,
 	type SecurityPasskeyRow,
 	type SecurityScreenModel,
 	type SecuritySessionRow,
 } from "@/shared/lib/settings/security-model";
 
 const INTRO = "Cada dispositivo tiene su propia llave. Puedes quitar la que ya no uses.";
+const UNAVAILABLE = "No disponible";
+
+const SHEET = {
+	passkey: {
+		eyebrow: "ELIMINAR PASSKEY",
+		title: (name: string) => `Vas a quitar la llave de ${name}.`,
+		body: "Ese dispositivo dejará de entrar con esta Passkey. Podrás volver a crearla cuando quieras.",
+		confirm: "Eliminar Passkey",
+		error: SECURITY_ERROR.remove,
+	},
+	all: {
+		eyebrow: "CERRAR SESIONES",
+		title: (_name: string) => "Vas a cerrar todas las sesiones.",
+		body: "Se cerrará la sesión en todos los dispositivos, incluido este.",
+		confirm: "Cerrar todas",
+		error: SECURITY_ERROR.revokeAll,
+	},
+} as const;
 
 type Props = {
 	status: "loading" | "empty" | "ready";
@@ -26,15 +44,7 @@ type Props = {
 	onRevokeAll: () => Promise<unknown>;
 };
 
-type Confirm =
-	| {
-			kind: "passkey";
-			id: string;
-			name: string;
-			createdLabel: string | null;
-			remaining: number;
-	  }
-	| { kind: "sessions" };
+type Confirm = { kind: "passkey"; passkey: SecurityPasskeyRow } | { kind: "all" };
 
 export function SecurityScreen({
 	status,
@@ -49,6 +59,11 @@ export function SecurityScreen({
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
 
+	function dismissConfirm() {
+		setError(null);
+		setConfirm(null);
+	}
+
 	async function run(action: () => Promise<unknown>, fallback: string) {
 		setPending(true);
 		setError(null);
@@ -61,20 +76,6 @@ export function SecurityScreen({
 			setPending(false);
 		}
 	}
-
-	function openPasskey(passkey: SecurityPasskeyRow) {
-		const count = model?.passkeys?.length ?? 0;
-		setError(null);
-		setConfirm({
-			kind: "passkey",
-			id: passkey.id,
-			name: passkey.name,
-			createdLabel: passkey.createdLabel,
-			remaining: Math.max(0, count - 1),
-		});
-	}
-
-	const warning = confirm?.kind === "passkey" ? passkeyDeleteWarning(confirm.remaining) : null;
 
 	return (
 		<View className="flex-1">
@@ -118,8 +119,11 @@ export function SecurityScreen({
 					<PasskeySection
 						passkeys={model.passkeys}
 						pending={pending}
-						onOpen={openPasskey}
-						onAdd={() => void run(onAddPasskey, "No pudimos agregar la Passkey. Intenta de nuevo.")}
+						onOpen={(passkey) => {
+							setError(null);
+							setConfirm({ kind: "passkey", passkey });
+						}}
+						onAdd={() => void run(onAddPasskey, SECURITY_ERROR.add)}
 					/>
 					{error && confirm == null ? <ErrorText message={error} /> : null}
 					<View className="mt-4 border-t border-line pt-4">
@@ -134,38 +138,34 @@ export function SecurityScreen({
 					</View>
 					<SessionSection
 						sessions={model.sessions}
+						pending={pending}
 						onClose={(sessionId) =>
-							void run(
-								() => onRevokeSession(sessionId),
-								"No pudimos cerrar la sesión. Intenta de nuevo.",
-							)
+							void run(() => onRevokeSession(sessionId), SECURITY_ERROR.revoke)
 						}
 						onCloseAll={() => {
 							setError(null);
-							setConfirm({ kind: "sessions" });
+							setConfirm({ kind: "all" });
 						}}
 					/>
 				</ScrollView>
 			) : null}
 
-			<BottomSheet isPresented={confirm != null} onDismiss={() => setConfirm(null)}>
+			<BottomSheet isPresented={confirm != null} onDismiss={dismissConfirm} contentPadding={0}>
 				<RNHostView>
 					{confirm ? (
 						<ConfirmSheet
 							confirm={confirm}
-							warning={warning}
+							passkeyCount={model?.passkeys?.length ?? 0}
 							error={error}
 							pending={pending}
-							onDismiss={() => setConfirm(null)}
+							onDismiss={dismissConfirm}
 							onConfirm={() => {
+								const copy = SHEET[confirm.kind];
 								if (confirm.kind === "passkey") {
-									void run(
-										() => onDeletePasskey(confirm.id),
-										"No pudimos eliminar la Passkey. Intenta de nuevo.",
-									);
+									void run(() => onDeletePasskey(confirm.passkey.id), copy.error);
 									return;
 								}
-								void run(onRevokeAll, "No pudimos cerrar las sesiones. Intenta de nuevo.");
+								void run(onRevokeAll, copy.error);
 							}}
 						/>
 					) : (
@@ -189,7 +189,7 @@ function PasskeySection({
 	onAdd: () => void;
 }) {
 	if (!passkeys) {
-		return <Text className="mt-4 font-hanken text-[15px] text-foreground/55">No disponible</Text>;
+		return <Text className="mt-4 font-hanken text-[15px] text-foreground/55">{UNAVAILABLE}</Text>;
 	}
 	return (
 		<View className="mt-[22px] border-t border-line">
@@ -225,10 +225,12 @@ function PasskeySection({
 
 function SessionSection({
 	sessions,
+	pending,
 	onClose,
 	onCloseAll,
 }: {
 	sessions: SecuritySessionRow[] | null;
+	pending: boolean;
 	onClose: (sessionId: string) => void;
 	onCloseAll: () => void;
 }) {
@@ -236,7 +238,7 @@ function SessionSection({
 		return (
 			<View className="mt-4 border-t border-line pt-4">
 				<SectionLabel>SESIONES ACTIVAS</SectionLabel>
-				<Text className="mt-3 font-hanken text-[15px] text-foreground/55">No disponible</Text>
+				<Text className="mt-3 font-hanken text-[15px] text-foreground/55">{UNAVAILABLE}</Text>
 			</View>
 		);
 	}
@@ -252,17 +254,35 @@ function SessionSection({
 				</Text>
 			) : (
 				sessions.map((session, index) => (
-					<SessionRow
+					<ListRow
 						key={session.id}
-						session={session}
+						label={session.device}
+						subtitle={session.activity}
+						subtitleClass={session.isCurrent ? "text-primary" : "text-foreground/45"}
 						isLast={index === sessions.length - 1}
-						onClose={session.isCurrent ? null : () => onClose(session.id)}
+						trailing={
+							session.isCurrent ? null : (
+								<Pressable
+									accessibilityRole="button"
+									accessibilityLabel={`Cerrar sesión de ${session.device}`}
+									accessibilityState={{ disabled: pending }}
+									disabled={pending}
+									hitSlop={HIT_SLOP}
+									onPress={() => onClose(session.id)}
+									className="active:opacity-60"
+								>
+									<Text className="font-hanken-semibold text-[13.5px] text-danger">Cerrar</Text>
+								</Pressable>
+							)
+						}
 					/>
 				))
 			)}
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Cerrar todas las sesiones"
+				accessibilityState={{ disabled: pending }}
+				disabled={pending}
 				hitSlop={HIT_SLOP}
 				onPress={onCloseAll}
 				className="mb-2 mt-auto items-center py-4 active:opacity-60"
@@ -275,79 +295,44 @@ function SessionSection({
 	);
 }
 
-function SessionRow({
-	session,
-	isLast,
-	onClose,
-}: {
-	session: SecuritySessionRow;
-	isLast: boolean;
-	onClose: (() => void) | null;
-}) {
-	return (
-		<View
-			className={`flex-row items-center justify-between py-3.5 ${
-				isLast ? "" : "border-b border-foreground/10"
-			}`}
-		>
-			<View className="min-w-0 flex-1 pr-3">
-				<Text className="font-hanken-semibold text-[14.5px] text-foreground">{session.device}</Text>
-				<Text
-					className={`mt-1.5 font-geist-mono text-[11.5px] ${
-						session.isCurrent ? "text-primary" : "text-foreground/45"
-					}`}
-				>
-					{session.activity}
-				</Text>
-			</View>
-			{onClose ? (
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel={`Cerrar sesión de ${session.device}`}
-					hitSlop={HIT_SLOP}
-					onPress={onClose}
-					className="active:opacity-60"
-				>
-					<Text className="font-hanken-semibold text-[13.5px] text-danger">Cerrar</Text>
-				</Pressable>
-			) : null}
-		</View>
-	);
+function deleteWarning(remaining: number): string | null {
+	if (remaining > 1) return null;
+	if (remaining === 1) {
+		return "Te quedará 1 Passkey. Si la pierdes, entrarás con tu contraseña de respaldo.";
+	}
+	return "Esta es tu última Passkey. Si la borras, entrarás con tu contraseña de respaldo.";
 }
 
 function ConfirmSheet({
 	confirm,
-	warning,
+	passkeyCount,
 	error,
 	pending,
 	onDismiss,
 	onConfirm,
 }: {
 	confirm: Confirm;
-	warning: string | null;
+	passkeyCount: number;
 	error: string | null;
 	pending: boolean;
 	onDismiss: () => void;
 	onConfirm: () => void;
 }) {
-	const passkey = confirm.kind === "passkey" ? confirm : null;
-	const confirmLabel = passkey ? "Eliminar Passkey" : "Cerrar todas";
+	const copy = SHEET[confirm.kind];
+	const passkey = confirm.kind === "passkey" ? confirm.passkey : null;
+	const warning = passkey ? deleteWarning(Math.max(0, passkeyCount - 1)) : null;
 	return (
 		<View className="bg-background px-5.5 pb-8 pt-3">
 			<View className="border-l-2 border-danger pl-3.5">
 				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-danger">
-					{passkey ? "ELIMINAR PASSKEY" : "CERRAR SESIONES"}
+					{copy.eyebrow}
 				</Text>
 				<Text className="mt-3 font-newsreader text-[23px] leading-8 text-foreground">
-					{passkey
-						? `Vas a quitar la llave de ${passkey.name}.`
-						: "Vas a cerrar todas las sesiones."}
+					{copy.title(passkey?.name ?? "")}
 				</Text>
 			</View>
 			<Text className="mt-3.5 font-hanken text-[14.5px] leading-6 text-foreground/55">
-				{passkey
-					? "Ese dispositivo dejará de entrar con esta Passkey. Podrás volver a crearla cuando quieras."
-					: "Se cerrará la sesión en todos los dispositivos, incluido este."}
+				{copy.body}
 			</Text>
 			{passkey ? (
 				<View className="mt-5 rounded-xl bg-line px-[18px] py-4">
@@ -367,13 +352,13 @@ function ConfirmSheet({
 			{error ? <ErrorText message={error} /> : null}
 			<Pressable
 				accessibilityRole="button"
-				accessibilityLabel={confirmLabel}
+				accessibilityLabel={copy.confirm}
 				accessibilityState={{ disabled: pending }}
 				disabled={pending}
 				onPress={onConfirm}
 				className="mt-[22px] items-center rounded-xl bg-danger py-4 active:opacity-80"
 			>
-				<Text className="font-hanken-semibold text-[15px] text-background">{confirmLabel}</Text>
+				<Text className="font-hanken-semibold text-[15px] text-background">{copy.confirm}</Text>
 			</Pressable>
 			<Pressable
 				accessibilityRole="button"

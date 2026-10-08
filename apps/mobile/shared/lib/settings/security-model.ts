@@ -2,11 +2,13 @@ import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
 import { limaDayLabel, limaStamp } from "@/shared/lib/lima-date";
 
-type PasskeyList = NonNullable<FunctionReturnType<typeof api.settings.listMyPasskeys>>;
 type SessionList = NonNullable<FunctionReturnType<typeof api.settings.listMySessions>>;
 type SettingsOverview = NonNullable<FunctionReturnType<typeof api.settings.getSettingsOverview>>;
 
-export type SecurityBackup = Pick<SettingsOverview["security"], "hasPassword" | "emailVerified">;
+export type SecuritySection = Pick<
+	SettingsOverview["security"],
+	"passkeys" | "passkeysSource" | "hasPassword" | "emailVerified"
+>;
 
 export type SecurityPasskeyRow = {
 	id: string;
@@ -29,9 +31,15 @@ export type SecurityScreenModel = {
 	emailVerified: boolean;
 };
 
+export const SECURITY_ERROR = {
+	add: "No pudimos agregar la Passkey. Intenta de nuevo.",
+	remove: "No pudimos eliminar la Passkey. Intenta de nuevo.",
+	revoke: "No pudimos cerrar la sesión. Intenta de nuevo.",
+	revokeAll: "No pudimos cerrar las sesiones. Intenta de nuevo.",
+} as const;
+
 const DAY_MS = 86_400_000;
 const GENERIC_DEVICE = "Dispositivo";
-const GENERIC_PASSKEY = "Passkey";
 
 export function deviceLabelFromUserAgent(userAgent: string | null): string {
 	const ua = userAgent?.trim() ?? "";
@@ -45,17 +53,8 @@ export function deviceLabelFromUserAgent(userAgent: string | null): string {
 	if (/Safari\//i.test(ua)) return "Safari";
 	if (/Macintosh|Mac OS X/i.test(ua)) return "Mac";
 	if (/Windows/i.test(ua)) return "Windows";
+	if (/okhttp/i.test(ua)) return "Android";
 	return GENERIC_DEVICE;
-}
-
-export function passkeyName(label: string | null): string {
-	const trimmed = label?.trim() ?? "";
-	return trimmed.length > 0 ? trimmed : GENERIC_PASSKEY;
-}
-
-export function passkeyCreatedCopy(createdAt: number | null): string | null {
-	if (createdAt == null) return null;
-	return `CREADA ${limaDayLabel(createdAt)}`;
 }
 
 /** Días de calendario en Lima entre `at` y `now`. */
@@ -79,40 +78,18 @@ export function sessionActivityCopy(isCurrent: boolean, updatedAt: number, now: 
 	return `ESTE DISPOSITIVO · ${activity}`;
 }
 
-export function remainingPasskeysCopy(remaining: number): string {
-	if (remaining === 1) return "Te quedará 1 Passkey";
-	return `Te quedarán ${remaining} Passkeys`;
-}
-
-/** Aviso de respaldo al dejar 1 o 0 llaves. `null` si todavía quedan varias. */
-export function passkeyDeleteWarning(remaining: number): string | null {
-	if (remaining > 1) return null;
-	if (remaining === 1) {
-		return `${remainingPasskeysCopy(remaining)}. Si la pierdes, entrarás con tu contraseña de respaldo.`;
-	}
-	return "Esta es tu última Passkey. Si la borras, entrarás con tu contraseña de respaldo.";
-}
-
-export function passwordBackupLabel(hasPassword: boolean): string {
-	return hasPassword ? "Definida" : "Sin definir";
-}
-
-export function emailBackupLabel(emailVerified: boolean): string {
-	return emailVerified ? "Verificado" : "Sin verificar";
-}
-
 export function presentSecurity(input: {
-	passkeys: PasskeyList;
+	security: SecuritySection;
 	sessions: SessionList;
-	backup: SecurityBackup;
 	now: number;
 }): SecurityScreenModel {
 	const passkeys =
-		input.passkeys.passkeysSource === "better_auth"
-			? input.passkeys.passkeys.map((passkey) => ({
+		input.security.passkeysSource === "better_auth"
+			? input.security.passkeys.map((passkey) => ({
 					id: passkey.id,
-					name: passkeyName(passkey.label),
-					createdLabel: passkeyCreatedCopy(passkey.createdAt),
+					name: passkey.label ?? "Passkey",
+					createdLabel:
+						passkey.createdAt == null ? null : `CREADA ${limaDayLabel(passkey.createdAt)}`,
 				}))
 			: null;
 	const sessions = input.sessions.apiReady
@@ -126,8 +103,8 @@ export function presentSecurity(input: {
 	return {
 		passkeys,
 		sessions,
-		passwordLabel: passwordBackupLabel(input.backup.hasPassword),
-		emailLabel: emailBackupLabel(input.backup.emailVerified),
-		emailVerified: input.backup.emailVerified,
+		passwordLabel: input.security.hasPassword ? "Definida" : "Sin definir",
+		emailLabel: input.security.emailVerified ? "Verificado" : "Sin verificar",
+		emailVerified: input.security.emailVerified,
 	};
 }

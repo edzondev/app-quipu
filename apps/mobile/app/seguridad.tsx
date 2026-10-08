@@ -16,10 +16,7 @@ export default function SeguridadPage() {
 				onAddPasskey={() => security.addPasskey()}
 				onDeletePasskey={(id) => security.deletePasskey(id)}
 				onRevokeSession={(sessionId) => security.revokeSession(sessionId)}
-				onRevokeAll={async () => {
-					await security.revokeAllAndSignOut();
-					router.replace("/sign-in");
-				}}
+				onRevokeAll={() => security.revokeAllAndSignOut(() => router.replace("/sign-in"))}
 			/>
 		</AppShell>
 	);

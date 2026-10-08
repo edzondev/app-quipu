@@ -50,11 +50,16 @@ describe("useSecurity", () => {
 			if (args === "skip") return undefined;
 			const name = queryName(query);
 			if (name === "profiles:getMyProfile") return { name: "Edzon" };
-			if (name === "settings:listMyPasskeys")
-				return { passkeys: [], passkeysSource: "better_auth" };
 			if (name === "settings:listMySessions") return { sessions: [], apiReady: true };
 			if (name === "settings:getSettingsOverview") {
-				return { security: { hasPassword: true, emailVerified: true } };
+				return {
+					security: {
+						passkeys: [],
+						passkeysSource: "better_auth",
+						hasPassword: true,
+						emailVerified: true,
+					},
+				};
 			}
 			return null;
 		});
@@ -74,6 +79,9 @@ describe("useSecurity", () => {
 
 	it("cerrar todas llama a revokeAllSessions y después a signOut", async () => {
 		const order: string[] = [];
+		const goToSignIn = jest.fn(() => {
+			order.push("sign-in");
+		});
 		revokeAllMock.mockImplementation(async () => {
 			order.push("revoke");
 			return { success: true };
@@ -83,17 +91,28 @@ describe("useSecurity", () => {
 			return { error: null };
 		});
 		await act(async () => {
-			await security?.revokeAllAndSignOut();
+			await security?.revokeAllAndSignOut(goToSignIn);
 		});
 		expect(revokeAllMock).toHaveBeenCalledWith({});
 		expect(mockSignOut).toHaveBeenCalledTimes(1);
-		expect(order).toEqual(["revoke", "signOut"]);
+		expect(goToSignIn).toHaveBeenCalledTimes(1);
+		expect(order).toEqual(["revoke", "signOut", "sign-in"]);
+	});
+
+	it("si signOut falla, igual navega a /sign-in", async () => {
+		mockSignOut.mockRejectedValue(new Error("falló el cierre"));
+		const goToSignIn = jest.fn();
+		await expect(security?.revokeAllAndSignOut(goToSignIn)).rejects.toThrow("falló el cierre");
+		expect(revokeAllMock).toHaveBeenCalledTimes(1);
+		expect(goToSignIn).toHaveBeenCalledTimes(1);
 	});
 
 	it("no hace signOut si revokeAllSessions falla", async () => {
 		revokeAllMock.mockRejectedValue(new Error("red"));
-		await expect(security?.revokeAllAndSignOut()).rejects.toThrow("red");
+		const goToSignIn = jest.fn();
+		await expect(security?.revokeAllAndSignOut(goToSignIn)).rejects.toThrow("red");
 		expect(mockSignOut).not.toHaveBeenCalled();
+		expect(goToSignIn).not.toHaveBeenCalled();
 	});
 
 	it("agrega sin name y borra por id, sin propagar el error de auth", async () => {
@@ -110,5 +129,8 @@ describe("useSecurity", () => {
 			"No pudimos agregar la Passkey. Intenta de nuevo.",
 		);
 		await expect(security?.addPasskey()).rejects.not.toThrow(/token|sesión/);
+
+		mockAddPasskey.mockResolvedValue({ error: { code: "ERROR_CEREMONY_ABORTED" } });
+		await expect(security?.addPasskey()).resolves.toBeUndefined();
 	});
 });
