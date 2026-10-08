@@ -6,9 +6,9 @@ import { repartoLabel, type SettingsOverview } from "@/shared/lib/settings/model
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
 type SummaryCommitment = DashboardSummary["commitments"][number];
-type EnvelopeType = "needs" | "wants" | "savings";
+type EnvelopeType = DashboardSummary["envelopes"][number]["type"];
 
-const ENVELOPE_TYPES = ["needs", "wants", "savings"] as const;
+const ENVELOPE_TYPES: readonly EnvelopeType[] = ["needs", "wants", "savings"];
 
 export type PlanSegment = { tone: EnvelopeType; percent: number };
 export type CommitmentSubtitleTone = "plain" | "warning" | "muted";
@@ -52,16 +52,10 @@ function remainingCents(summary: DashboardSummary, tone: EnvelopeType): number {
 
 function sharePercents(cents: number[]): PlanSegment[] {
 	const total = cents.reduce((sum, value) => sum + value, 0);
-	const percents = cents.map((value) => (total > 0 ? Math.round((value / total) * 100) : 0));
-	const drift = total > 0 ? 100 - percents.reduce((sum, value) => sum + value, 0) : 0;
-	if (drift !== 0) {
-		let index = 0;
-		for (let cursor = 1; cursor < cents.length; cursor++) {
-			if ((cents[cursor] ?? 0) > (cents[index] ?? 0)) index = cursor;
-		}
-		percents[index] = (percents[index] ?? 0) + drift;
-	}
-	return ENVELOPE_TYPES.map((tone, index) => ({ tone, percent: percents[index] ?? 0 }));
+	return ENVELOPE_TYPES.map((tone, index) => ({
+		tone,
+		percent: total > 0 ? Math.round(((cents[index] ?? 0) / total) * 100) : 0,
+	}));
 }
 
 function presentCommitments(rows: SummaryCommitment[]): {

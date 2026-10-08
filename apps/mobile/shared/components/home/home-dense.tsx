@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import SignOutButton from "@/shared/components/auth/sign-out-button";
+import { SectionLabel } from "@/shared/components/section-label";
 import type { BadgeTone, HomeModel, HomeTone } from "@/shared/lib/dashboard/home-model";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
@@ -28,14 +28,6 @@ const STATUS_TEXT: Record<BadgeTone, string> = {
 const VISIBLE_COMMITMENTS = 3;
 const TRACK = "bg-[#EDEBE4]";
 const ROW_RULE = "border-[#F0EEE8]";
-
-function SectionLabel({ children }: { children: ReactNode }) {
-	return (
-		<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
-			{children}
-		</Text>
-	);
-}
 
 function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 	const negative = cents < 0;

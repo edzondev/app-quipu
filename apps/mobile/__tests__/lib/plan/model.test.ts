@@ -36,6 +36,18 @@ describe("presentPlanHub", () => {
 			{ tone: "savings", percent: 38 },
 		]);
 		expect(clamped.repartoSubtitle).toBeNull();
+
+		const thirds = presentPlanHub(
+			summaryWithCycle({
+				envelopes: [envelope("needs", 1), envelope("wants", 1), envelope("savings", 1)],
+			}),
+			null,
+		);
+		expect(thirds.segments).toEqual([
+			{ tone: "needs", percent: 33 },
+			{ tone: "wants", percent: 33 },
+			{ tone: "savings", percent: 33 },
+		]);
 	});
 
 	it("describe las seis variantes del próximo compromiso", () => {

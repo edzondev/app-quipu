@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { ListRow } from "@/shared/components/list-row";
+import { SectionLabel } from "@/shared/components/section-label";
 import { X } from "@/shared/components/ui/reicon";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
@@ -44,49 +45,20 @@ export function SettingsScreen({ status, model, onClose }: Props) {
 						</View>
 					</View>
 					<View className="mt-5">
-						<SectionLabel>CUENTA</SectionLabel>
-						<InfoRow label="Perfil y datos" />
+						<SectionLabel className="mb-1">CUENTA</SectionLabel>
+						<ListRow label="Perfil y datos" />
 						{model.passkeysLabel ? (
-							<InfoRow label="Seguridad y Passkeys" value={model.passkeysLabel} />
+							<ListRow label="Seguridad y Passkeys" value={model.passkeysLabel} />
 						) : null}
-						<InfoRow label="Plan y suscripción" value={model.planLabel} isLast />
+						<ListRow label="Plan y suscripción" value={model.planLabel} isLast />
 					</View>
 					<View className="mt-[18px] border-t border-line pt-4">
-						<SectionLabel>TU SISTEMA</SectionLabel>
-						<InfoRow label="Reparto" value={model.repartoLabel} />
-						<InfoRow label="Ciclo e ingresos" value={model.scheduleCopy} isLast />
+						<SectionLabel className="mb-1">TU SISTEMA</SectionLabel>
+						<ListRow label="Reparto" value={model.repartoLabel} />
+						<ListRow label="Ciclo e ingresos" value={model.scheduleCopy} isLast />
 					</View>
 				</ScrollView>
 			) : null}
-		</View>
-	);
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-	return (
-		<Text className="mb-1 font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
-			{children}
-		</Text>
-	);
-}
-
-function InfoRow({
-	label,
-	value,
-	isLast = false,
-}: {
-	label: string;
-	value?: string;
-	isLast?: boolean;
-}) {
-	return (
-		<View
-			className={`flex-row items-center justify-between py-3.5 ${
-				isLast ? "" : "border-b border-foreground/10"
-			}`}
-		>
-			<Text className="font-hanken text-[15px] text-foreground">{label}</Text>
-			{value ? <Text className="font-hanken text-[13px] text-foreground/45">{value}</Text> : null}
 		</View>
 	);
 }
