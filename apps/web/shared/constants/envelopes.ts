@@ -2,6 +2,7 @@ export const ENVELOPE_LABELS = {
 	needs: "Necesidades",
 	wants: "Gustos",
 	savings: "Ahorro",
+	extraordinary: "Ingresos extra",
 } as const;
 
 export type EnvelopeKey = "allocationNeeds" | "allocationWants" | "allocationSavings";

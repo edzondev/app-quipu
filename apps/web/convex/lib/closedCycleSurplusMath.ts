@@ -1,4 +1,5 @@
 import type { Infer } from "convex/values";
+import { ENVELOPE_LABELS } from "../../shared/constants/envelopes";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
 	computeAvailableExtraordinarySavingsForMove,
@@ -104,6 +105,7 @@ export function listEnvelopesWithSurplus(
 		if (entry.total > 0) {
 			rows.push({
 				fromEnvelope,
+				label: ENVELOPE_LABELS[fromEnvelope],
 				total: entry.total,
 				available: entry.available,
 			});

@@ -175,7 +175,7 @@ describe("assignClosedCycleSurplus", () => {
 		expect(report).toMatchObject({
 			closedCycleId: seed.cycleId,
 			decided: true,
-			envelopes: [{ fromEnvelope: "needs", total: 10_000, available: 0 }],
+			envelopes: [{ fromEnvelope: "needs", label: "Necesidades", total: 10_000, available: 0 }],
 			assignments: [
 				{
 					fromEnvelope: "needs",
@@ -221,7 +221,9 @@ describe("assignClosedCycleSurplus", () => {
 
 		const report = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
 		expect(report?.decided).toBe(true);
-		expect(report?.envelopes).toEqual([{ fromEnvelope: "needs", total: 10_000, available: 0 }]);
+		expect(report?.envelopes).toEqual([
+			{ fromEnvelope: "needs", label: "Necesidades", total: 10_000, available: 0 },
+		]);
 		expect(report?.assignments).toEqual([
 			{
 				fromEnvelope: "needs",
@@ -271,8 +273,8 @@ describe("assignClosedCycleSurplus", () => {
 		const pending = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
 		expect(pending?.decided).toBe(false);
 		expect(pending?.envelopes).toEqual([
-			{ fromEnvelope: "needs", total: 10_000, available: 6_000 },
-			{ fromEnvelope: "wants", total: 4_000, available: 4_000 },
+			{ fromEnvelope: "needs", label: "Necesidades", total: 10_000, available: 6_000 },
+			{ fromEnvelope: "wants", label: "Gustos", total: 4_000, available: 4_000 },
 		]);
 
 		await asUser.mutation(api.closedCycleSurplus.assignClosedCycleSurplus, {
@@ -285,6 +287,7 @@ describe("assignClosedCycleSurplus", () => {
 		expect(partial?.decided).toBe(false);
 		expect(partial?.envelopes.find((row) => row.fromEnvelope === "needs")).toEqual({
 			fromEnvelope: "needs",
+			label: "Necesidades",
 			total: 10_000,
 			available: 0,
 		});
@@ -488,8 +491,8 @@ describe("assignClosedCycleSurplus", () => {
 		const asUser = t.withIdentity({ subject: seed.userId });
 		const before = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
 		expect(before?.envelopes).toEqual([
-			{ fromEnvelope: "needs", total: 5_000, available: 5_000 },
-			{ fromEnvelope: "extraordinary", total: 7_000, available: 7_000 },
+			{ fromEnvelope: "needs", label: "Necesidades", total: 5_000, available: 5_000 },
+			{ fromEnvelope: "extraordinary", label: "Ingresos extra", total: 7_000, available: 7_000 },
 		]);
 
 		await asUser.mutation(api.closedCycleSurplus.assignClosedCycleSurplus, {
@@ -512,8 +515,8 @@ describe("assignClosedCycleSurplus", () => {
 		const after = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
 		expect(after?.decided).toBe(true);
 		expect(after?.envelopes).toEqual([
-			{ fromEnvelope: "needs", total: 5_000, available: 0 },
-			{ fromEnvelope: "extraordinary", total: 7_000, available: 0 },
+			{ fromEnvelope: "needs", label: "Necesidades", total: 5_000, available: 0 },
+			{ fromEnvelope: "extraordinary", label: "Ingresos extra", total: 7_000, available: 0 },
 		]);
 	});
 
@@ -555,7 +558,9 @@ describe("assignClosedCycleSurplus", () => {
 			.withIdentity({ subject: older.userId })
 			.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
 		expect(report?.closedCycleId).toBe(newerId);
-		expect(report?.envelopes).toEqual([{ fromEnvelope: "needs", total: 2_000, available: 2_000 }]);
+		expect(report?.envelopes).toEqual([
+			{ fromEnvelope: "needs", label: "Necesidades", total: 2_000, available: 2_000 },
+		]);
 	});
 
 	it("rechaza asignar el sobrante de un ciclo cerrado que no es el último", async () => {
@@ -678,9 +683,9 @@ describe("assignClosedCycleSurplus", () => {
 
 		const report = await asUser.query(api.closedCycleSurplus.getClosedCycleSurplus, {});
 		expect(report?.envelopes).toEqual([
-			{ fromEnvelope: "needs", total: 7_000, available: 7_000 },
-			{ fromEnvelope: "wants", total: 6_000, available: 6_000 },
-			{ fromEnvelope: "extraordinary", total: 6_000, available: 6_000 },
+			{ fromEnvelope: "needs", label: "Necesidades", total: 7_000, available: 7_000 },
+			{ fromEnvelope: "wants", label: "Gustos", total: 6_000, available: 6_000 },
+			{ fromEnvelope: "extraordinary", label: "Ingresos extra", total: 6_000, available: 6_000 },
 		]);
 		const ledger = await readLedger(t, seed);
 		expect(ledger.needsRemaining).toBe(7_000);

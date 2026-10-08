@@ -36,6 +36,7 @@ export const surplusAssignmentDestinationValidator = v.union(
 
 export const closedCycleSurplusEnvelopeValidator = v.object({
 	fromEnvelope: surplusFromEnvelopeValidator,
+	label: v.string(),
 	total: v.number(),
 	available: v.number(),
 });
