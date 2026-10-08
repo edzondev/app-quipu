@@ -10,6 +10,7 @@ import {
 	listEnvelopesWithSurplus,
 } from "./lib/closedCycleSurplusMath";
 import { creditSubEnvelopeFromSurplus } from "./lib/creditSurplusContribution";
+import { compareSavingsSubEnvelopes, MAX_SAVINGS_GOALS } from "./lib/savingsMath";
 import {
 	closedCycleSurplusDestinationValidator,
 	closedCycleSurplusEnvelopeValidator,
@@ -42,16 +43,6 @@ const closedCycleSurplusResultValidator = v.union(
 );
 
 const assignClosedCycleSurplusResultValidator = v.null();
-
-function compareSavingsSubEnvelopes(
-	a: { isSystemDefault: boolean; label: string },
-	b: { isSystemDefault: boolean; label: string },
-): number {
-	if (a.isSystemDefault !== b.isSystemDefault) {
-		return a.isSystemDefault ? -1 : 1;
-	}
-	return a.label.localeCompare(b.label, "es");
-}
 
 async function findLatestClosedCycle(
 	ctx: QueryCtx | MutationCtx,
@@ -256,6 +247,12 @@ export const assignClosedCycleSurplus = mutation({
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
 				message: "Indica al menos un destino para el sobrante.",
+			});
+		}
+		if (args.allocations.length > MAX_SAVINGS_GOALS + 1) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Hay demasiados destinos para este sobrante.",
 			});
 		}
 

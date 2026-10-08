@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { MAX_SAVINGS_GOALS } from "./lib/savingsMath";
 import schema from "./schema";
 
 const modules = {
@@ -422,6 +423,30 @@ describe("assignClosedCycleSurplus", () => {
 		const ledger = await readLedger(t, seed);
 		expect(ledger.dispositionCount).toBe(0);
 		expect(ledger.contributionCount).toBe(0);
+	});
+
+	it("rechaza más destinos que las metas más dejarlo en el sobre, sin escribir", async () => {
+		const t = testBackend();
+		const seed = await seedClosedCycle(t, { userId: "user-too-many", needsRemaining: 10_000 });
+		const asUser = t.withIdentity({ subject: seed.userId });
+		const allocations: Array<{ destination: { kind: "leave" }; amount: number }> = [];
+		for (let index = 0; index < MAX_SAVINGS_GOALS + 2; index += 1) {
+			allocations.push({ destination: { kind: "leave" }, amount: 1 });
+		}
+
+		await expect(
+			asUser.mutation(api.closedCycleSurplus.assignClosedCycleSurplus, {
+				closedCycleId: seed.cycleId,
+				fromEnvelope: "needs",
+				allocations,
+			}),
+		).rejects.toThrow("Hay demasiados destinos para este sobrante.");
+
+		const ledger = await readLedger(t, seed);
+		expect(ledger.dispositionCount).toBe(0);
+		expect(ledger.contributionCount).toBe(0);
+		expect(ledger.fundAmount).toBe(0);
+		expect(ledger.needsRemaining).toBe(10_000);
 	});
 
 	it("muestra vacío sin ciclo cerrado y decidido cuando no hay sobrante", async () => {

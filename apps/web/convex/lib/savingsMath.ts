@@ -1,6 +1,16 @@
 export const EMERGENCY_FUND_TARGET_MONTHS = 3;
 export const MAX_SAVINGS_GOALS = 6;
 
+export function compareSavingsSubEnvelopes(
+	a: { isSystemDefault: boolean; label: string },
+	b: { isSystemDefault: boolean; label: string },
+): number {
+	if (a.isSystemDefault !== b.isSystemDefault) {
+		return a.isSystemDefault ? -1 : 1;
+	}
+	return a.label.localeCompare(b.label, "es");
+}
+
 export function computeMonthlyEssentialsCents(
 	needsCommitments: ReadonlyArray<{ amount: number }>,
 	fallbackMonthlyCents: number,

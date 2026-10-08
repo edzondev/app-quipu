@@ -15,6 +15,7 @@ import {
 } from "./lib/savingsAssignPlan";
 import {
 	buildMonthsCoveredCopy,
+	compareSavingsSubEnvelopes,
 	computeCyclesToComplete,
 	computeEmergencyFundTargetCents,
 	computeMonthlyEssentialsCents,
@@ -773,12 +774,7 @@ export const getMoveSurplusContext = query({
 
 		const destinations = subEnvelopes
 			.slice()
-			.sort((a, b) => {
-				if (a.isSystemDefault !== b.isSystemDefault) {
-					return a.isSystemDefault ? -1 : 1;
-				}
-				return a.label.localeCompare(b.label, "es");
-			})
+			.sort(compareSavingsSubEnvelopes)
 			.map((subEnvelope) => ({
 				id: subEnvelope._id,
 				label: subEnvelope.label,

@@ -1,6 +1,4 @@
-export const SURPLUS_FROM_ENVELOPE_VALUES = ["needs", "wants", "extraordinary"] as const;
-
-export type SurplusFromEnvelope = (typeof SURPLUS_FROM_ENVELOPE_VALUES)[number];
+import type { SurplusFromEnvelope } from "./surplusValidators";
 
 export type ExtraordinarySavingsIncomeSlice = {
 	incomeKind?: "habitual" | "extraordinary";
