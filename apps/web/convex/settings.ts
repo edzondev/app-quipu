@@ -10,9 +10,9 @@ import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 import {
 	AUTH_RECORD_LIMIT,
 	CREDENTIAL_PROVIDER_ID,
+	isUndecodableDocumentId,
 	type PasskeyList,
 	passkeyListValidator,
-	publicPasskeyValidator,
 	type RevokeSessionResult,
 	readAdapterPage,
 	readSessionId,
@@ -21,6 +21,7 @@ import {
 	type SecurityBackup,
 	type SessionList,
 	securityBackup,
+	securitySectionValidator,
 	sessionListValidator,
 	sessionRevokeBlock,
 	toPublicPasskeys,
@@ -166,16 +167,7 @@ const settingsOverviewValidator = v.union(
 			currencyReadOnly: v.string(),
 			localeReadOnly: v.string(),
 		}),
-		security: v.object({
-			passkeys: v.array(publicPasskeyValidator),
-			passkeysSource: v.union(v.literal("better_auth"), v.literal("unavailable")),
-			sessions: v.object({
-				count: v.number(),
-				apiReady: v.boolean(),
-			}),
-			hasPassword: v.boolean(),
-			emailVerified: v.boolean(),
-		}),
+		security: securitySectionValidator,
 	}),
 );
 
@@ -338,11 +330,14 @@ export const revokeMySession = mutation({
 				where: [{ field: "_id", operator: "eq", value: args.sessionId }],
 				select: ["userId"],
 			});
-		} catch {
-			throw new ConvexError({
-				code: "INTERNAL_ERROR",
-				message: "No pudimos cerrar la sesión. Intenta de nuevo.",
-			});
+		} catch (error) {
+			if (!isUndecodableDocumentId(error)) {
+				throw new ConvexError({
+					code: "INTERNAL_ERROR",
+					message: "No pudimos cerrar la sesión. Intenta de nuevo.",
+				});
+			}
+			found = null;
 		}
 
 		const block = sessionRevokeBlock({
@@ -375,11 +370,18 @@ export const revokeMySession = mutation({
 					],
 				},
 			});
-		} catch {
-			throw new ConvexError({
-				code: "INTERNAL_ERROR",
-				message: "No pudimos cerrar la sesión. Intenta de nuevo.",
-			});
+		} catch (error) {
+			throw new ConvexError(
+				isUndecodableDocumentId(error)
+					? {
+							code: "NOT_FOUND",
+							message: "Sesión no encontrada.",
+						}
+					: {
+							code: "INTERNAL_ERROR",
+							message: "No pudimos cerrar la sesión. Intenta de nuevo.",
+						},
+			);
 		}
 		if (typeof deleted !== "object" || deleted === null) {
 			throw new ConvexError({

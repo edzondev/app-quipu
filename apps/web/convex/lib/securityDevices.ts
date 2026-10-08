@@ -41,10 +41,24 @@ export const passkeyListValidator = v.object({
 
 export type PasskeyList = Infer<typeof passkeyListValidator>;
 
-export type SecurityBackup = {
-	hasPassword: boolean;
-	emailVerified: boolean;
-};
+export const securityBackupValidator = v.object({
+	hasPassword: v.boolean(),
+	emailVerified: v.boolean(),
+});
+
+export type SecurityBackup = Infer<typeof securityBackupValidator>;
+
+export const sessionSummaryValidator = v.object({
+	count: v.number(),
+	apiReady: sessionListValidator.fields.apiReady,
+});
+
+export const securitySectionValidator = v
+	.object({
+		sessions: sessionSummaryValidator,
+	})
+	.extend(passkeyListValidator.fields)
+	.extend(securityBackupValidator.fields);
 
 export const revokeSessionResultValidator = v.object({
 	success: v.literal(true),
@@ -90,6 +104,12 @@ export function readAdapterPage(result: unknown): unknown[] {
 export function readSessionOwnerId(session: unknown): string | null {
 	if (!isRecord(session)) return null;
 	return nonBlank(readString(session, "userId"));
+}
+
+/** `db.get` lanza esto si el `_id` no se puede decodificar. Un id válido ausente devuelve null. */
+export function isUndecodableDocumentId(error: unknown): boolean {
+	if (!isRecord(error)) return false;
+	return typeof error.message === "string" && error.message.includes("Unable to decode ID");
 }
 
 export function toPublicSession(

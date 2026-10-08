@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	hasCredentialProvider,
+	isUndecodableDocumentId,
 	passkeyLabel,
 	readEmailVerified,
 	readSessionId,
@@ -83,6 +84,23 @@ describe("sessionRevokeBlock", () => {
 				currentSessionId: "sess-current",
 				sessionId: "sess-ajena",
 				sessionUserId: "user-b",
+			}),
+		).toBe("NOT_FOUND");
+	});
+
+	it("responde NOT_FOUND si el id no se puede decodificar", () => {
+		const malformed = new Error(
+			"Invalid argument 'id' for 'db.get': Unable to decode ID: Invalid ID length 4",
+		);
+		expect(isUndecodableDocumentId(malformed)).toBe(true);
+		expect(isUndecodableDocumentId(new Error("componente no disponible"))).toBe(false);
+		expect(isUndecodableDocumentId(null)).toBe(false);
+		expect(
+			sessionRevokeBlock({
+				callerUserId: "user-a",
+				currentSessionId: "sess-current",
+				sessionId: "no-es-un-id",
+				sessionUserId: null,
 			}),
 		).toBe("NOT_FOUND");
 	});
