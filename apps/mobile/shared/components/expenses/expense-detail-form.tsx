@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Camera } from "reicon-react-native/icons/Camera";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
+import { ErrorText } from "@/shared/components/forms/field-error";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
 import type { FrequentExpense } from "@/shared/lib/expenses/expense-record";
 import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
@@ -245,8 +246,4 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
 			{children}
 		</View>
 	);
-}
-
-function ErrorText({ message }: { message: string }) {
-	return <Text className="mt-2 font-hanken text-[13px] text-danger">{message}</Text>;
 }
