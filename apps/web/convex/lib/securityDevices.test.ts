@@ -105,6 +105,40 @@ describe("sessionRevokeBlock", () => {
 		).toBe("NOT_FOUND");
 	});
 
+	it("responde NOT_FOUND si el id es de otra tabla", () => {
+		const passkey = {
+			_id: "pk-1",
+			userId: "user-a",
+			publicKey: "clave-publica",
+			credentialID: "cred-secreto",
+		};
+		const account = {
+			_id: "acc-1",
+			userId: "user-a",
+			providerId: "credential",
+			accessToken: "access-secreto",
+		};
+		expect(readSessionOwnerId(passkey)).toBeNull();
+		expect(readSessionOwnerId(account)).toBeNull();
+		expect(
+			sessionRevokeBlock({
+				callerUserId: "user-a",
+				currentSessionId: "sess-current",
+				sessionId: "pk-1",
+				sessionUserId: readSessionOwnerId(passkey),
+			}),
+		).toBe("NOT_FOUND");
+
+		const ownerId = readSessionOwnerId({
+			_id: "sess-otra",
+			userId: "user-a",
+			token: "token-secreto",
+			expiresAt: FUTURE,
+		});
+		expect(ownerId).toBe("user-a");
+		expect(ownerId).not.toContain("token-secreto");
+	});
+
 	it("responde NOT_FOUND si la sesión no existe", () => {
 		expect(readSessionOwnerId(null)).toBeNull();
 		expect(readSessionOwnerId({ token: "secreto" })).toBeNull();
