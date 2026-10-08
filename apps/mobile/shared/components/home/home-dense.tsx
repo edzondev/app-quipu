@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import SignOutButton from "@/shared/components/auth/sign-out-button";
+import { SectionLabel } from "@/shared/components/section-label";
 import type { BadgeTone, HomeModel, HomeTone } from "@/shared/lib/dashboard/home-model";
+import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 
 const TONE_FILL: Record<"needs" | "wants" | "savings", string> = {
@@ -28,14 +29,6 @@ const VISIBLE_COMMITMENTS = 3;
 const TRACK = "bg-[#EDEBE4]";
 const ROW_RULE = "border-[#F0EEE8]";
 
-function SectionLabel({ children }: { children: ReactNode }) {
-	return (
-		<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
-			{children}
-		</Text>
-	);
-}
-
 function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 	const negative = cents < 0;
 	const [intPart, decPart] = (Math.abs(cents) / 100).toFixed(2).split(".");
@@ -56,9 +49,13 @@ function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 
 export function HomeDense({
 	home,
+	profileInitial,
+	onOpenSettings,
 	onViewAllMovements,
 }: {
 	home: HomeModel;
+	profileInitial: string;
+	onOpenSettings: () => void;
 	onViewAllMovements: () => void;
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
@@ -71,6 +68,17 @@ export function HomeDense({
 			contentContainerClassName="pb-8"
 			showsVerticalScrollIndicator={false}
 		>
+			<View className="mb-2 flex-row justify-end">
+				<Pressable
+					accessibilityRole="button"
+					accessibilityLabel="Ajustes"
+					hitSlop={HIT_SLOP}
+					onPress={onOpenSettings}
+					className="size-8 items-center justify-center rounded-full bg-line active:opacity-60"
+				>
+					<Text className="font-newsreader text-[16px] text-primary">{profileInitial}</Text>
+				</Pressable>
+			</View>
 			<View className="border-b border-line pb-6 pt-1">
 				<Text className="font-newsreader text-[22px] leading-[28px] tracking-tight text-foreground">
 					Hoy puedes gastar
