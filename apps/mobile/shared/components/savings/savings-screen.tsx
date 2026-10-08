@@ -4,30 +4,7 @@ import { Lock } from "reicon-react-native/icons/Lock";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { AhorroScreenModel, FundView, GoalView } from "@/shared/lib/savings/model";
 
-const DASHES = [
-	"a",
-	"b",
-	"c",
-	"d",
-	"e",
-	"f",
-	"g",
-	"h",
-	"i",
-	"j",
-	"k",
-	"l",
-	"m",
-	"n",
-	"o",
-	"p",
-	"q",
-	"r",
-	"s",
-	"t",
-	"u",
-	"v",
-] as const;
+const DASHES = Array.from({ length: 60 }, (_, index) => `dash-${index}`);
 
 type Props = {
 	status: "loading" | "ready";

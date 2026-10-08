@@ -245,17 +245,21 @@ function surplusBanner(context: MoveSurplusContext, symbol: string): SurplusBann
 	const availableCents = context.sources.extraordinary.availableCents;
 	if (availableCents <= 0) return null;
 	const fromEnvelope: MoveSurplusArgs["fromEnvelope"] = "extraordinary";
-	const fund = context.destinations.find(
-		(destination: NonNullable<MoveSurplusContext>["destinations"][number]) =>
-			destination.isSystemDefault,
-	);
-	const args: MoveSurplusArgs = fund
-		? { fromEnvelope, amount: availableCents, toSubEnvelopeId: fund.id }
+	const fundId = systemFundId(context.destinations);
+	const args: MoveSurplusArgs = fundId
+		? { fromEnvelope, amount: availableCents, toSubEnvelopeId: fundId }
 		: { fromEnvelope, amount: availableCents };
 	return {
 		amountLabel: formatCentsTrimmed(availableCents, symbol),
 		args,
 	};
+}
+
+function systemFundId(destinations: NonNullable<MoveSurplusContext>["destinations"]) {
+	for (const destination of destinations) {
+		if (destination.isSystemDefault) return destination.id;
+	}
+	return undefined;
 }
 
 function formatMonthCount(value: number): string | null {
