@@ -8,14 +8,24 @@ type AuthLabeledFieldProps = {
 	label: string;
 	field: AnyFieldApi;
 	error?: ReactNode;
+	labelTrailing?: ReactNode;
 } & Omit<TextInputProps, "value" | "onChangeText" | "onBlur">;
 
-export function AuthLabeledField({ label, field, error, ...input }: AuthLabeledFieldProps) {
+export function AuthLabeledField({
+	label,
+	field,
+	error,
+	labelTrailing,
+	...input
+}: AuthLabeledFieldProps) {
 	return (
 		<View className="gap-1">
-			<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
-				{label}
-			</Text>
+			<View className="flex-row items-center justify-between">
+				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55 uppercase">
+					{label}
+				</Text>
+				{labelTrailing}
+			</View>
 			<TextInput
 				value={field.state.value}
 				onChangeText={field.handleChange}

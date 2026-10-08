@@ -194,6 +194,11 @@ export default function SignInScreen() {
 									passkeysOk={passkeysOk}
 									passkeyLoading={passkeyLoading}
 									onPasskey={() => void signInWithPasskey()}
+									onForgot={() =>
+										router.push(
+											email ? `/recuperar?email=${encodeURIComponent(email)}` : "/recuperar",
+										)
+									}
 									onCreate={() => router.push("/create-account")}
 								/>
 							) : (
@@ -270,6 +275,7 @@ function Backup({
 	passkeysOk,
 	passkeyLoading,
 	onPasskey,
+	onForgot,
 	onCreate,
 }: {
 	form: SignInForm;
@@ -278,6 +284,7 @@ function Backup({
 	passkeysOk: boolean;
 	passkeyLoading: boolean;
 	onPasskey: () => void;
+	onForgot: () => void;
 	onCreate: () => void;
 }) {
 	return (
@@ -317,6 +324,18 @@ function Backup({
 							autoComplete="current-password"
 							secureTextEntry
 							className="border-b border-foreground py-2.5 font-hanken text-[17px] text-foreground"
+							labelTrailing={
+								<Pressable
+									onPress={onForgot}
+									hitSlop={HIT_SLOP}
+									accessibilityRole="button"
+									className="active:opacity-60"
+								>
+									<Text className="font-hanken-semibold text-[12.5px] text-primary">
+										Olvidé la mía
+									</Text>
+								</Pressable>
+							}
 						/>
 					)}
 				</form.Field>
