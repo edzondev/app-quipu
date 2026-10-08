@@ -2,6 +2,10 @@ import { act, cleanup, fireEvent, render } from "@testing-library/react-native";
 import { SobresScreen } from "@/shared/components/envelopes/sobres-screen";
 import type { SobresScreenModel } from "@/shared/lib/dashboard/sobres-model";
 
+jest.mock("@/shared/components/ui/reicon", () => ({
+	ChevronLeft: () => null,
+}));
+
 const screen: SobresScreenModel = {
 	dayLabel: "DÍA 15 / 30",
 	envelopes: [
@@ -68,6 +72,7 @@ describe("SobresScreen", () => {
 			<SobresScreen
 				status="ready"
 				screen={screen}
+				onBack={jest.fn()}
 				onMoveMoney={onMoveMoney}
 				onRegisterExpense={onRegisterExpense}
 			/>,
@@ -105,6 +110,7 @@ describe("SobresScreen", () => {
 			<SobresScreen
 				status="loading"
 				screen={null}
+				onBack={jest.fn()}
 				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
@@ -117,6 +123,7 @@ describe("SobresScreen", () => {
 			<SobresScreen
 				status="empty"
 				screen={null}
+				onBack={jest.fn()}
 				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
@@ -124,5 +131,20 @@ describe("SobresScreen", () => {
 		expect(empty.getByText("Todavía no hay sobres en el ciclo activo.")).toBeTruthy();
 		expect(empty.queryByText("Registrar gasto")).toBeNull();
 		expect(empty.queryByText("Necesidades")).toBeNull();
+	});
+
+	it("vuelve atrás con ChevronLeft", async () => {
+		const onBack = jest.fn();
+		const view = await render(
+			<SobresScreen
+				status="ready"
+				screen={screen}
+				onBack={onBack}
+				onMoveMoney={jest.fn()}
+				onRegisterExpense={jest.fn()}
+			/>,
+		);
+		await press(view.getByLabelText("Volver"));
+		expect(onBack).toHaveBeenCalledTimes(1);
 	});
 });

@@ -1,10 +1,12 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { ChevronLeft } from "@/shared/components/ui/reicon";
 import type {
 	SobresEnvelopeView,
 	SobresScreenModel,
 	SobresStatusTone,
 	SobresTone,
 } from "@/shared/lib/dashboard/sobres-model";
+import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
 const SUBTITLE = "Tu sueldo ya está dividido. Esto es lo que queda.";
 const EMPTY = "Todavía no hay sobres en el ciclo activo.";
@@ -23,11 +25,12 @@ const STATUS: Record<SobresStatusTone, string> = {
 type Props = {
 	status: "loading" | "empty" | "ready";
 	screen: SobresScreenModel | null;
+	onBack: () => void;
 	onMoveMoney: () => void;
 	onRegisterExpense: () => void;
 };
 
-export function SobresScreen({ status, screen, onMoveMoney, onRegisterExpense }: Props) {
+export function SobresScreen({ status, screen, onBack, onMoveMoney, onRegisterExpense }: Props) {
 	return (
 		<View className="flex-1">
 			<ScrollView
@@ -35,6 +38,15 @@ export function SobresScreen({ status, screen, onMoveMoney, onRegisterExpense }:
 				contentContainerClassName="grow"
 				showsVerticalScrollIndicator={false}
 			>
+				<Pressable
+					accessibilityRole="button"
+					accessibilityLabel="Volver"
+					hitSlop={HIT_SLOP}
+					onPress={onBack}
+					className="mb-3 self-start active:opacity-60"
+				>
+					<ChevronLeft size={22} colorClassName="accent-foreground" />
+				</Pressable>
 				<View className="flex-row items-baseline justify-between">
 					<Text className="font-newsreader text-[27px] leading-8 text-foreground">Sobres</Text>
 					{screen ? (

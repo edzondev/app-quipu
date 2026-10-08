@@ -1,7 +1,16 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import HomePage from "@/app/(tabs)";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty } from "@/shared/components/home/home-empty";
 import type { HomeModel } from "@/shared/lib/dashboard/home-model";
+
+jest.mock("@/shared/components/app-shell", () => {
+	const { View } = require("react-native");
+	return {
+		__esModule: true,
+		default: ({ children }: { children?: unknown }) => <View>{children}</View>,
+	};
+});
 
 jest.mock("@/lib/auth-client", () => ({
 	authClient: {
@@ -9,7 +18,7 @@ jest.mock("@/lib/auth-client", () => ({
 	},
 }));
 
-const home: HomeModel = {
+const mockHome: HomeModel = {
 	cycleLabel: "Ciclo agosto",
 	cycleDay: 15,
 	cycleTotal: 30,
@@ -78,6 +87,16 @@ const home: HomeModel = {
 	],
 };
 
+const mockPush = jest.fn();
+
+jest.mock("expo-router", () => ({
+	useRouter: () => ({ push: mockPush }),
+}));
+
+jest.mock("@/shared/hooks/use-dashboard", () => ({
+	useHomeModel: () => ({ status: "ready", profileInitial: "E", home: mockHome }),
+}));
+
 describe("Home 1d", () => {
 	it("centra el vacío cuando no hay ciclo y no pinta filas con raya", async () => {
 		const view = await render(<HomeEmpty />);
@@ -91,7 +110,14 @@ describe("Home 1d", () => {
 
 	it("muestra el ciclo denso con datos vivos y sin placeholders", async () => {
 		const onViewAllMovements = jest.fn();
-		const view = await render(<HomeDense home={home} onViewAllMovements={onViewAllMovements} />);
+		const view = await render(
+			<HomeDense
+				home={mockHome}
+				profileInitial="E"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={onViewAllMovements}
+			/>,
+		);
 
 		expect(view.getByText("Hoy puedes gastar")).toBeTruthy();
 		expect(view.getByText("Sin tocar tus compromisos ni tu ahorro.")).toBeTruthy();
@@ -121,12 +147,23 @@ describe("Home 1d", () => {
 	it("no inventa filas cuando el ciclo no tiene compromisos ni movimientos", async () => {
 		const view = await render(
 			<HomeDense
-				home={{ ...home, commitments: [], recentMovements: [] }}
+				home={{ ...mockHome, commitments: [], recentMovements: [] }}
+				profileInitial="E"
+				onOpenSettings={jest.fn()}
 				onViewAllMovements={jest.fn()}
 			/>,
 		);
 		expect(view.getByText("Sin compromisos próximos.")).toBeTruthy();
 		expect(view.getByText("Sin movimientos en este ciclo.")).toBeTruthy();
 		expect(view.queryByText("—")).toBeNull();
+	});
+
+	it("el avatar muestra la inicial y abre Ajustes", async () => {
+		mockPush.mockClear();
+		const view = await render(<HomePage />);
+		expect(view.getByText("E")).toBeTruthy();
+		expect(view.getByText("Salir")).toBeTruthy();
+		fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
+		expect(mockPush).toHaveBeenCalledWith("/ajustes");
 	});
 });

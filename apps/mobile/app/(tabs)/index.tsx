@@ -13,7 +13,12 @@ export default function HomePage() {
 			{model.status === "loading" ? <HomeLoading /> : null}
 			{model.status === "empty" ? <HomeEmpty /> : null}
 			{model.status === "ready" ? (
-				<HomeDense home={model.home} onViewAllMovements={() => router.push("/(tabs)/movements")} />
+				<HomeDense
+					home={model.home}
+					profileInitial={model.profileInitial}
+					onOpenSettings={() => router.push("/ajustes")}
+					onViewAllMovements={() => router.push("/(tabs)/movements")}
+				/>
 			) : null}
 		</AppShell>
 	);
