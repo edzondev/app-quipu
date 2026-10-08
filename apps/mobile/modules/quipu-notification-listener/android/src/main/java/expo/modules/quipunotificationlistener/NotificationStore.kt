@@ -339,10 +339,14 @@ internal class NotificationStore(
     @Volatile
     private var shared: NotificationStore? = null
 
-    fun shared(filesDir: File): NotificationStore {
+    /**
+     * [baseDir] must be `Context.noBackupFilesDir`: the file holds notification text and
+     * must stay out of Auto Backup and device-to-device transfer.
+     */
+    fun shared(baseDir: File): NotificationStore {
       shared?.let { return it }
       return synchronized(gate) {
-        shared ?: NotificationStore(File(File(filesDir, DIRECTORY), FILE_NAME)).also { shared = it }
+        shared ?: NotificationStore(File(File(baseDir, DIRECTORY), FILE_NAME)).also { shared = it }
       }
     }
 

@@ -60,8 +60,7 @@ class QuipuNotificationListenerService : NotificationListenerService() {
   }
 
   private fun currentStore(): NotificationStore {
-    val filesDir = applicationContext.filesDir
-    return NotificationStore.shared(filesDir).also { it.start() }
+    return NotificationStore.shared(applicationContext.noBackupFilesDir).also { it.start() }
   }
 
   private fun readRaw(sbn: StatusBarNotification): RawNotification {
