@@ -88,17 +88,16 @@ describe("CreateAccountScreen", () => {
 		expect(view.queryByText(/intentos/)).toBeNull();
 	});
 
-	it("si la cuenta ya existe ofrece Entrar y no sigue al código", async () => {
+	it("un error de registro no dice si el correo ya existe", async () => {
 		mockSignUp.mockResolvedValue({
 			error: { code: "USER_ALREADY_EXISTS", message: "User already exists. Use another email." },
 		});
 		const view = await render(<CreateAccountScreen />);
 		await fillAccount(view);
 
-		expect(await view.findByText("Ya existe una cuenta con este correo")).toBeTruthy();
+		expect(await view.findByText("No se pudo crear la cuenta")).toBeTruthy();
+		expect(view.queryByText(/ya existe/i)).toBeNull();
 		expect(view.queryByText("Confirma tu correo.")).toBeNull();
-		await fireEvent.press(view.getByText("Entrar"));
-		expect(mockPush).toHaveBeenCalledWith("/sign-in");
 		expect(mockSendOtp).not.toHaveBeenCalled();
 	});
 });

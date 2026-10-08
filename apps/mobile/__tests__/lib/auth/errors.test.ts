@@ -1,8 +1,7 @@
 import {
-	credentialsMessage,
+	CREDENTIALS_MESSAGE,
 	mapOtpVerifyError,
 	mapPasskeySignInError,
-	mapSignUpError,
 	passwordResetRedirectTo,
 	shouldShowPasswordResetSent,
 } from "@/shared/lib/auth/errors";
@@ -11,7 +10,7 @@ describe("mapPasskeySignInError", () => {
 	it("traduce la cancelación de la ceremonia", () => {
 		expect(mapPasskeySignInError({ code: "ERROR_CEREMONY_ABORTED" })).toEqual({
 			tone: "warning",
-			message: "Cancelaste Face ID. Puedes reintentar o usar tu respaldo.",
+			message: "Cancelaste la verificación. Puedes reintentar o usar tu respaldo.",
 		});
 	});
 
@@ -34,26 +33,6 @@ describe("mapPasskeySignInError", () => {
 		});
 		expect(notice.message).not.toMatch(/clientDataJSON/);
 		expect(notice.tone).toBe("warning");
-	});
-});
-
-describe("mapSignUpError", () => {
-	it("avisa cuenta existente con acción Entrar", () => {
-		expect(mapSignUpError({ code: "USER_ALREADY_EXISTS" })).toEqual({
-			tone: "info",
-			message: "Ya existe una cuenta con este correo",
-			actionLabel: "Entrar",
-		});
-	});
-
-	it("reconoce el code con underscores de Better Auth", () => {
-		expect(mapSignUpError({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" })?.actionLabel).toBe(
-			"Entrar",
-		);
-	});
-
-	it("no confunde otros errores con una cuenta existente", () => {
-		expect(mapSignUpError({ message: "Invalid email" })).toBeNull();
 	});
 });
 
@@ -87,9 +66,9 @@ describe("mapOtpVerifyError", () => {
 	});
 });
 
-describe("credentialsMessage", () => {
+describe("CREDENTIALS_MESSAGE", () => {
 	it("no revela si el correo existe", () => {
-		expect(credentialsMessage()).toBe("Email o contraseña incorrectos");
+		expect(CREDENTIALS_MESSAGE).toBe("Email o contraseña incorrectos");
 	});
 });
 
