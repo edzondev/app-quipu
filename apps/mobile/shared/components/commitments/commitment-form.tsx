@@ -1,10 +1,13 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { EnvelopeChoices } from "@/shared/components/expenses/envelope-choices";
-import { ErrorText, FieldError } from "@/shared/components/forms/field-error";
+import { ErrorText } from "@/shared/components/forms/field-error";
 import {
 	type CommitmentFormValues,
 	type CreateCommitmentArgs,
+	DUE_DAY_ERROR,
+	dueDayHint,
+	parseDueDay,
 	toCreateCommitment,
 } from "@/shared/lib/commitments/model";
 import { readActionError } from "@/shared/lib/expenses/errors";
@@ -87,7 +90,7 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 							accessibilityLabel="Nombre"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
 						/>
-						<FieldError error={field.state.meta.errors[0]} />
+						<FieldNote error={field.state.meta.errors[0]} />
 					</View>
 				)}
 			</form.Field>
@@ -120,12 +123,18 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 							accessibilityLabel="Monto"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
 						/>
-						<FieldError error={field.state.meta.errors[0]} />
+						<FieldNote error={field.state.meta.errors[0]} />
 					</View>
 				)}
 			</form.Field>
 
-			<form.Field name="dueDay">
+			<form.Field
+				name="dueDay"
+				validators={{
+					onChange: ({ value }) =>
+						value && parseDueDay(value) == null ? DUE_DAY_ERROR : undefined,
+				}}
+			>
 				{(field) => (
 					<View>
 						<TextInput
@@ -139,7 +148,10 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 							accessibilityLabel="Día de vencimiento"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
 						/>
-						<FieldError error={field.state.meta.errors[0]} />
+						<FieldNote
+							error={field.state.meta.errors[0]}
+							hint={dueDayHint(field.state.value, Date.now())}
+						/>
 					</View>
 				)}
 			</form.Field>
@@ -176,4 +188,10 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 			</Pressable>
 		</View>
 	);
+}
+
+function FieldNote({ error, hint }: { error: unknown; hint?: string }) {
+	if (typeof error === "string" && error) return <ErrorText message={error} />;
+	if (!hint) return null;
+	return <Text className="mt-2 font-hanken text-[13px] text-foreground/45">{hint}</Text>;
 }

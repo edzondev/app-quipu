@@ -1,7 +1,7 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { parseAmountToCents } from "@/shared/lib/expenses/amount";
-import { limaDayLabel } from "@/shared/lib/lima-date";
+import { LIMA_MONTHS, limaDayLabel, limaStamp } from "@/shared/lib/lima-date";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
@@ -93,11 +93,36 @@ export function toCreateCommitment(values: CommitmentFormValues): CommitmentDraf
 	if (amount == null || amount <= 0) {
 		return { ok: false, fields: { amountRaw: "El monto debe ser mayor a cero." } };
 	}
-	const dueDay = Number(values.dueDay.trim());
-	if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
-		return { ok: false, fields: { dueDay: "El día de vencimiento va del 1 al 31." } };
+	const dueDay = parseDueDay(values.dueDay);
+	if (dueDay == null) {
+		return { ok: false, fields: { dueDay: DUE_DAY_ERROR } };
 	}
 	return { ok: true, args: { name, amount, dueDay, envelope: values.envelope } };
+}
+
+export const DUE_DAY_ERROR = "El día de vencimiento va del 1 al 31.";
+
+/** Día del mes válido (1–31) o null. El servidor lleva el 29–31 al último día de los meses cortos. */
+export function parseDueDay(raw: string): number | null {
+	const day = Number(raw.trim());
+	return Number.isInteger(day) && day >= 1 && day <= 31 ? day : null;
+}
+
+/** Aviso bajo el campo de día: mismo cálculo que el servidor para el próximo vencimiento. */
+export function dueDayHint(raw: string, now: number): string {
+	const base = "Se repite cada mes.";
+	const day = parseDueDay(raw);
+	if (day == null) return base;
+	const short = day > 28 ? " En meses cortos vence el último día." : "";
+	return `${base} Próximo: ${nextDueLabel(day, now)}.${short}`;
+}
+
+function nextDueLabel(dueDay: number, now: number): string {
+	const today = limaStamp(now);
+	const year = Number(today.key.slice(0, 4));
+	const monthIndex = today.monthIndex + (dueDay >= today.day ? 0 : 1);
+	const lastDay = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+	return `${Math.min(dueDay, lastDay)} ${LIMA_MONTHS[monthIndex % 12]}`;
 }
 
 function toRow(row: CoverageRow, symbol: string): CommitmentRowView {

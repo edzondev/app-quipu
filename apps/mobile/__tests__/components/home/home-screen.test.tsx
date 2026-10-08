@@ -94,9 +94,10 @@ describe("Home 1d", () => {
 		const view = await render(<HomeDense home={home} onViewAllMovements={onViewAllMovements} />);
 
 		expect(view.getByText("Hoy puedes gastar")).toBeTruthy();
-		expect(view.getByText("Día 15/30")).toBeTruthy();
+		expect(view.getByText("Sin tocar tus compromisos ni tu ahorro.")).toBeTruthy();
+		expect(view.getByText(/Día 15\/30/)).toBeTruthy();
 		expect(view.getByText("Ciclo estable")).toBeTruthy();
-		expect(view.getByText("Sobra S/ 1,543")).toBeTruthy();
+		expect(view.getByText(/Sobra S\/ 1,543/)).toBeTruthy();
 		expect(view.getByText("42")).toBeTruthy();
 		expect(view.getByText(".30")).toBeTruthy();
 		expect(view.getByText("Sobres · queda")).toBeTruthy();

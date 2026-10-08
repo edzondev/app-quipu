@@ -51,6 +51,20 @@ describe("CommitmentForm", () => {
 		expect(view.getByText("El día de vencimiento va del 1 al 31.")).toBeTruthy();
 	});
 
+	it("avisa al escribir si el día no existe y muestra el próximo vencimiento", async () => {
+		const view = await render(<CommitmentForm onSubmit={jest.fn()} onCancel={jest.fn()} />);
+		const dayInput = view.getByLabelText("Día de vencimiento");
+
+		expect(view.getByText("Se repite cada mes.")).toBeTruthy();
+
+		await fireEvent.changeText(dayInput, "64");
+		expect(view.getByText("El día de vencimiento va del 1 al 31.")).toBeTruthy();
+
+		await fireEvent.changeText(dayInput, "21");
+		expect(view.queryByText("El día de vencimiento va del 1 al 31.")).toBeNull();
+		expect(view.getByText(/^Se repite cada mes\. Próximo: 21 [A-Z]{3}\.$/)).toBeTruthy();
+	});
+
 	it("cancela", async () => {
 		const onCancel = jest.fn();
 		const view = await render(<CommitmentForm onSubmit={jest.fn()} onCancel={onCancel} />);

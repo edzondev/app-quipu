@@ -2,7 +2,9 @@ import { fixtureId } from "@/__fixtures__/convex-id";
 import {
 	type CommitmentCoverage,
 	type CoverageRow,
+	dueDayHint,
 	emptyCommitments,
+	parseDueDay,
 	presentCommitments,
 	toCreateCommitment,
 } from "@/shared/lib/commitments/model";
@@ -185,5 +187,53 @@ describe("toCreateCommitment", () => {
 		if (!invalidAmount.ok) {
 			expect(invalidAmount.fields.amountRaw).toBe("El monto debe ser mayor a cero.");
 		}
+	});
+
+	it("rechaza un día fuera del 1 al 31", () => {
+		const result = toCreateCommitment({
+			name: "Luz",
+			amountRaw: "10",
+			dueDay: "64",
+			envelope: "needs",
+		});
+		expect(result).toEqual({
+			ok: false,
+			fields: { dueDay: "El día de vencimiento va del 1 al 31." },
+		});
+	});
+});
+
+describe("parseDueDay", () => {
+	it("acepta del 1 al 31 y rechaza el resto", () => {
+		expect(parseDueDay("1")).toBe(1);
+		expect(parseDueDay(" 31 ")).toBe(31);
+		expect(parseDueDay("05")).toBe(5);
+		for (const raw of ["", "0", "32", "64", "2a", "1.5"]) {
+			expect(parseDueDay(raw)).toBeNull();
+		}
+	});
+});
+
+describe("dueDayHint", () => {
+	const at = (day: string) => Date.parse(`${day}T12:00:00-05:00`);
+	const SHORT = " En meses cortos vence el último día.";
+
+	it("anuncia este mes si el día no pasó y el siguiente si ya pasó", () => {
+		expect(dueDayHint("21", at("2026-10-07"))).toBe("Se repite cada mes. Próximo: 21 OCT.");
+		expect(dueDayHint("5", at("2026-10-07"))).toBe("Se repite cada mes. Próximo: 5 NOV.");
+		expect(dueDayHint("5", at("2026-12-30"))).toBe("Se repite cada mes. Próximo: 5 ENE.");
+	});
+
+	it("lleva los días 29 a 31 al último día de los meses cortos", () => {
+		expect(dueDayHint("31", at("2026-02-10"))).toBe(`Se repite cada mes. Próximo: 28 FEB.${SHORT}`);
+		expect(dueDayHint("31", at("2028-02-10"))).toBe(`Se repite cada mes. Próximo: 29 FEB.${SHORT}`);
+		expect(dueDayHint("31", at("2026-04-10"))).toBe(`Se repite cada mes. Próximo: 30 ABR.${SHORT}`);
+		expect(dueDayHint("30", at("2026-01-31"))).toBe(`Se repite cada mes. Próximo: 28 FEB.${SHORT}`);
+		expect(dueDayHint("31", at("2026-03-10"))).toBe(`Se repite cada mes. Próximo: 31 MAR.${SHORT}`);
+	});
+
+	it("no promete fecha mientras el día no sea válido", () => {
+		expect(dueDayHint("", at("2026-10-07"))).toBe("Se repite cada mes.");
+		expect(dueDayHint("64", at("2026-10-07"))).toBe("Se repite cada mes.");
 	});
 });

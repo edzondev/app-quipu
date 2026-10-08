@@ -42,14 +42,14 @@ function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 	const grouped = (intPart ?? "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	return (
 		<Text className="font-newsreader text-foreground" selectable>
-			<Text className="font-newsreader text-[17px] text-foreground/55">
+			<Text className="font-newsreader text-[18px] text-foreground/55">
 				{negative ? "-" : ""}
 				{symbol}{" "}
 			</Text>
-			<Text className="font-newsreader text-[44px] leading-[48px] tracking-tight text-foreground">
+			<Text className="font-newsreader text-[52px] leading-[54px] tracking-tight text-foreground">
 				{grouped}
 			</Text>
-			<Text className="font-newsreader text-[21px] text-foreground/45">.{decPart}</Text>
+			<Text className="font-newsreader text-[24px] text-foreground/45">.{decPart}</Text>
 		</Text>
 	);
 }
@@ -71,30 +71,30 @@ export function HomeDense({
 			contentContainerClassName="pb-8"
 			showsVerticalScrollIndicator={false}
 		>
-			<View className="flex-row items-start justify-between border-b border-line pb-[18px]">
-				<View className="flex-1 pr-3">
-					<SectionLabel>Hoy puedes gastar</SectionLabel>
-					<View className="mt-2.5">
-						<HeroAmount cents={home.dailyCents} symbol={home.currencySymbol} />
-					</View>
+			<View className="border-b border-line pb-6 pt-1">
+				<Text className="font-newsreader text-[22px] leading-[28px] tracking-tight text-foreground">
+					Hoy puedes gastar
+				</Text>
+				<View className="mt-2">
+					<HeroAmount cents={home.dailyCents} symbol={home.currencySymbol} />
 				</View>
-				<View className="items-end pt-0.5">
-					<Text className="font-geist-mono text-[11px] uppercase text-foreground/45">
-						Día {home.cycleDay}/{home.cycleTotal}
+				{home.heroSubtitle ? (
+					<Text className="mt-2.5 font-hanken text-[14px] leading-[20px] text-foreground/55">
+						{home.heroSubtitle}
 					</Text>
-					<Text className={`mt-2 font-hanken-semibold text-[12.5px] ${statusClass}`}>
+				) : null}
+				<Text className="mt-2.5 font-hanken text-[13px] leading-[18px] text-foreground/45">
+					Día {home.cycleDay}/{home.cycleTotal}
+					{" · "}
+					<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
 						{home.cycleStatusLabel}
 					</Text>
-					<Text className="mt-2 font-hanken text-[12.5px] text-foreground/45">
-						Sobra {formatCentsTrimmed(home.surplusCents, home.currencySymbol)}
-					</Text>
-					<View className="mt-2">
-						<SignOutButton />
-					</View>
-				</View>
+					{" · Sobra "}
+					{formatCentsTrimmed(home.surplusCents, home.currencySymbol)}
+				</Text>
 			</View>
 
-			<View className="border-b border-line py-4">
+			<View className="border-b border-line pb-4 pt-5">
 				<SectionLabel>Sobres · queda</SectionLabel>
 				<View className="mt-3.5 gap-3">
 					{home.envelopes.map((envelope) => (
@@ -102,7 +102,7 @@ export function HomeDense({
 							<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
 								{envelope.shortLabel}
 							</Text>
-							<View className={`h-1.5 flex-1 overflow-hidden rounded-full ${TRACK}`}>
+							<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
 								<View
 									className={`h-full rounded-full ${TONE_FILL[envelope.tone]}`}
 									style={{ width: `${envelope.remainingPercent}%` }}
@@ -198,6 +198,10 @@ export function HomeDense({
 						);
 					})
 				)}
+			</View>
+
+			<View className="mt-6 items-start">
+				<SignOutButton />
 			</View>
 		</ScrollView>
 	);
