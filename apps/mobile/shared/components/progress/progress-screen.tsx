@@ -114,7 +114,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			) : null}
 
 			{model.savedLabel || model.registeredExpenseLabel || model.daysWithoutSkippingLabel ? (
-				<View className="mt-7 flex-row justify-between border-y border-[#E8E6DF] py-[18px]">
+				<View className="mt-7 flex-row justify-between border-y border-line py-[18px]">
 					{model.savedLabel ? <Stat label="AHORRADO TOTAL" value={model.savedLabel} /> : null}
 					{model.registeredExpenseLabel ? (
 						<Stat label="GASTOS REGISTRADOS" value={model.registeredExpenseLabel} />
@@ -181,7 +181,7 @@ function CycleBar({ bar }: { bar: ProgressBarView }) {
 function Stat({ label, value }: { label: string; value: string }) {
 	return (
 		<View>
-			<Text className="font-geist-mono text-[12px] text-[#8C8880]">{label}</Text>
+			<Text className="font-geist-mono text-[12px] text-foreground/50">{label}</Text>
 			<Text className="mt-[9px] font-newsreader text-[24px] text-foreground tabular-nums">
 				{value}
 			</Text>
