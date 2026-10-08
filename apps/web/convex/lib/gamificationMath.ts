@@ -1,3 +1,7 @@
+import { type Infer, v } from "convex/values";
+import { limaDateToInputValue, limaStartOfDay } from "../../shared/lib/date";
+import { buildCycleLabel } from "./cycleCloseReport";
+
 export const REWARD_THRESHOLDS = {
 	tintaTheme: 3,
 	clayAccent: 6,
@@ -30,12 +34,6 @@ export type AchievementView = {
 	lockedHint: string | null;
 };
 
-export type CycleChartBar = {
-	id: number;
-	status: "compliant" | "warning" | "failed" | "empty";
-	heightPx: number;
-};
-
 export function computeNextStreak(
 	currentStreak: number,
 	longestStreak: number,
@@ -48,25 +46,98 @@ export function computeNextStreak(
 	return { currentStreak: next, longestStreak: Math.max(longestStreak, next) };
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const CURRENT_CYCLE_BAR_HEIGHT_PX = 26;
+
+export const progressChartBarValidator = v.object({
+	id: v.number(),
+	status: v.union(
+		v.literal("compliant"),
+		v.literal("warning"),
+		v.literal("failed"),
+		v.literal("empty"),
+		v.literal("current"),
+	),
+	heightPx: v.number(),
+	cycleStart: v.union(v.number(), v.null()),
+	monthLabel: v.union(v.string(), v.null()),
+});
+
+type ProgressChartBar = Infer<typeof progressChartBarValidator>;
+
+export function endOfLimaDayInclusive(now: number): number {
+	return limaStartOfDay(now) + MS_PER_DAY - 1;
+}
+
+/**
+ * Días seguidos con al menos un gasto, en America/Lima.
+ * Si hoy ya tiene un gasto, la racha termina hoy. Si no, termina ayer.
+ * Hoy vacío y ayer vacío vale 0. No es `streaks.currentStreak` (eso cuenta ciclos cerrados).
+ */
+export function countDaysWithoutSkipping(
+	expenseTimestamps: readonly number[],
+	now: number,
+): number {
+	const days = new Set(expenseTimestamps.map((timestamp) => limaDateToInputValue(timestamp)));
+	const todayStart = limaStartOfDay(now);
+	const yesterdayStart = todayStart - MS_PER_DAY;
+	const todayKey = limaDateToInputValue(todayStart);
+	const yesterdayKey = limaDateToInputValue(yesterdayStart);
+	const anchor = days.has(todayKey) ? todayStart : days.has(yesterdayKey) ? yesterdayStart : null;
+	if (anchor === null) return 0;
+
+	let count = 0;
+	let cursor = anchor;
+	while (days.has(limaDateToInputValue(cursor))) {
+		count += 1;
+		const previous = limaStartOfDay(cursor) - MS_PER_DAY;
+		if (previous >= cursor) break;
+		cursor = previous;
+	}
+	return count;
+}
+
 export function buildCycleChartBars(
-	history: ReadonlyArray<Pick<CycleHistoryFact, "status" | "evaluatedAt">>,
+	history: ReadonlyArray<{
+		status: "compliant" | "warning" | "failed";
+		evaluatedAt: number;
+		cycleStart: number | null;
+	}>,
+	currentCycle: { cycleStart: number } | null = null,
 	limit = 12,
-): CycleChartBar[] {
+): ProgressChartBar[] {
 	const sorted = [...history].sort((a, b) => a.evaluatedAt - b.evaluatedAt);
 	const recent = sorted.slice(-limit);
-	const bars: CycleChartBar[] = recent.map((entry, index) => {
+	const bars: ProgressChartBar[] = recent.map((entry, index) => {
 		const base = entry.status === "compliant" ? 26 : entry.status === "warning" ? 22 : 18;
 		const wobble = (index % 3) * 4;
 		return {
 			id: entry.evaluatedAt,
 			status: entry.status,
 			heightPx: base + wobble,
+			cycleStart: entry.cycleStart,
+			monthLabel: entry.cycleStart === null ? null : buildCycleLabel(entry.cycleStart),
 		};
 	});
 	let emptySlot = 0;
 	while (bars.length < limit) {
-		bars.unshift({ id: -(emptySlot + 1), status: "empty", heightPx: 0 });
+		bars.unshift({
+			id: -(emptySlot + 1),
+			status: "empty",
+			heightPx: 0,
+			cycleStart: null,
+			monthLabel: null,
+		});
 		emptySlot += 1;
+	}
+	if (currentCycle !== null) {
+		bars.push({
+			id: currentCycle.cycleStart,
+			status: "current",
+			heightPx: CURRENT_CYCLE_BAR_HEIGHT_PX,
+			cycleStart: currentCycle.cycleStart,
+			monthLabel: buildCycleLabel(currentCycle.cycleStart),
+		});
 	}
 	return bars;
 }

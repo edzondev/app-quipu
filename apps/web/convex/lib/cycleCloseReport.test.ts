@@ -17,9 +17,11 @@ describe("buildCycleCloseReport", () => {
 			envelopes: [],
 			cycleHistory: { status: "compliant" },
 			streak: 0,
+			expenseCount: 0,
 		});
 
 		expect(result.totalIncomeCents).toBe(0);
+		expect(result.expenseCount).toBe(0);
 		expect(result.savingsCents).toBe(0);
 		expect(result.streak).toBe(0);
 		expect(result.hasExtraordinaryIncome).toBe(false);
@@ -56,6 +58,7 @@ describe("buildCycleCloseReport", () => {
 			],
 			cycleHistory: { status: "warning" },
 			streak: 2,
+			expenseCount: 4,
 		});
 
 		expect(result.totalIncomeCents).toBe(3_500_00);
@@ -66,6 +69,7 @@ describe("buildCycleCloseReport", () => {
 		]);
 		expect(result.savingsCents).toBe(500_00);
 		expect(result.streak).toBe(2);
+		expect(result.expenseCount).toBe(4);
 		expect(result.status).toBe("warning");
 		expect(result.hasExtraordinaryIncome).toBe(false);
 	});
@@ -96,6 +100,7 @@ describe("buildCycleCloseReport", () => {
 			],
 			cycleHistory: { status: "compliant" },
 			streak: 4,
+			expenseCount: 1,
 		});
 
 		expect(result.hasExtraordinaryIncome).toBe(true);

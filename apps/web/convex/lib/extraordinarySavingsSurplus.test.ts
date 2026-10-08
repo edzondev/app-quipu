@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	computeAvailableExtraordinarySavingsForMove,
 	computeExtraordinarySavingsPoolCents,
+	resolveSurplusMove,
 	sumExtraordinarySavingsAllocated,
 	sumMovedFromExtraordinarySurplus,
 } from "./extraordinarySavingsSurplus";
@@ -84,7 +85,69 @@ describe("computeAvailableExtraordinarySavingsForMove", () => {
 			}),
 		).toBe(300_00);
 	});
+});
 
+describe("resolveSurplusMove", () => {
+	it("returns the only positive envelope as moveSurplusToSavings args", () => {
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: 0,
+				wantsRemainingCents: 21_000,
+				extraordinaryAvailableCents: 0,
+			}),
+		).toEqual({ fromEnvelope: "wants", amount: 21_000 });
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: 4_000,
+				wantsRemainingCents: 0,
+				extraordinaryAvailableCents: 0,
+			}),
+		).toEqual({ fromEnvelope: "needs", amount: 4_000 });
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: 0,
+				wantsRemainingCents: 0,
+				extraordinaryAvailableCents: 9_600,
+			}),
+		).toEqual({ fromEnvelope: "extraordinary", amount: 9_600 });
+	});
+
+	it("returns null when no source or more than one source has surplus", () => {
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: 0,
+				wantsRemainingCents: 0,
+				extraordinaryAvailableCents: 0,
+			}),
+		).toBeNull();
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: 100,
+				wantsRemainingCents: 200,
+				extraordinaryAvailableCents: 0,
+			}),
+		).toBeNull();
+	});
+
+	it("ignores non-integer or negative amounts", () => {
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: 1.5,
+				wantsRemainingCents: 0,
+				extraordinaryAvailableCents: 0,
+			}),
+		).toBeNull();
+		expect(
+			resolveSurplusMove({
+				needsRemainingCents: -50,
+				wantsRemainingCents: 0,
+				extraordinaryAvailableCents: 80,
+			}),
+		).toEqual({ fromEnvelope: "extraordinary", amount: 80 });
+	});
+});
+
+describe("computeAvailableExtraordinarySavingsForMove cap", () => {
 	it("uses pool when envelope has more remaining than pool", () => {
 		expect(
 			computeAvailableExtraordinarySavingsForMove({
