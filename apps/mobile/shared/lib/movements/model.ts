@@ -1,4 +1,5 @@
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
+import { LIMA_MONTHS, type LimaStamp, limaStamp } from "@/shared/lib/lima-date";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
@@ -54,22 +55,6 @@ export const MOVEMENT_FILTERS = [
 	{ id: "savings", label: "Ahorro" },
 ] as const;
 
-const LIMA = "America/Lima";
-const MONTHS = [
-	"ENE",
-	"FEB",
-	"MAR",
-	"ABR",
-	"MAY",
-	"JUN",
-	"JUL",
-	"AGO",
-	"SEP",
-	"OCT",
-	"NOV",
-	"DIC",
-] as const;
-
 const TONE_BY_LABEL: Record<string, MovementTone> = {
 	Necesidades: "needs",
 	Gustos: "wants",
@@ -88,13 +73,6 @@ type BuiltRow = {
 	timestamp: number;
 	meta: string | null;
 	metaTone: MovementMetaTone | null;
-};
-
-type LimaStamp = {
-	key: string;
-	day: number;
-	monthIndex: number;
-	time: string;
 };
 
 export function presentMovementList(
@@ -334,8 +312,8 @@ function formatCycleLine(
 function cycleRange(startDate: number, endDate: number): string {
 	const start = limaStamp(startDate);
 	const end = limaStamp(endDate - 1);
-	const startMonth = MONTHS[start.monthIndex] ?? "";
-	const endMonth = MONTHS[end.monthIndex] ?? "";
+	const startMonth = LIMA_MONTHS[start.monthIndex] ?? "";
+	const endMonth = LIMA_MONTHS[end.monthIndex] ?? "";
 	if (start.monthIndex === end.monthIndex) {
 		return `${start.day} – ${end.day} ${endMonth}`;
 	}
@@ -358,32 +336,11 @@ function readSymbol(data: CycleMovementsResult | null): string {
 }
 
 function dayTitle(stamp: LimaStamp, todayKey: string, yesterdayKey: string): string {
-	const month = MONTHS[stamp.monthIndex] ?? "";
+	const month = LIMA_MONTHS[stamp.monthIndex] ?? "";
 	const date = `${stamp.day} ${month}`;
 	if (stamp.key === todayKey) return `HOY · ${date}`;
 	if (stamp.key === yesterdayKey) return `AYER · ${date}`;
 	return date;
-}
-
-function limaStamp(ms: number): LimaStamp {
-	const parts = new Intl.DateTimeFormat("en-US", {
-		timeZone: LIMA,
-		year: "numeric",
-		month: "2-digit",
-		day: "2-digit",
-		hour: "2-digit",
-		minute: "2-digit",
-		hourCycle: "h23",
-	}).formatToParts(new Date(ms));
-	const read = (type: Intl.DateTimeFormatPartTypes) =>
-		parts.find((part) => part.type === type)?.value ?? "";
-	const month = Number(read("month"));
-	return {
-		key: `${read("year")}-${read("month")}-${read("day")}`,
-		day: Number(read("day")),
-		monthIndex: Number.isFinite(month) ? month - 1 : 0,
-		time: `${read("hour").padStart(2, "0")}:${read("minute").padStart(2, "0")}`,
-	};
 }
 
 function previousDayKey(key: string): string {
