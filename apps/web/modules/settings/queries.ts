@@ -6,25 +6,25 @@ import { api } from "@/convex/_generated/api";
 
 /** Convex query refs for settings module (single import boundary for UI). */
 export const settingsQueries = {
-  getSettingsOverview: api.settings.getSettingsOverview,
-  getSummary: api.dashboard.getSummary,
-  listMyCommitments: api.fixedCommitments.listMyCommitments,
+	getSettingsOverview: api.settings.getSettingsOverview,
+	getSummary: api.dashboard.getSummary,
+	listMyCommitments: api.fixedCommitments.listMyCommitments,
 } as const;
 
 export type SettingsOverviewQueryResult = FunctionReturnType<
-  typeof settingsQueries.getSettingsOverview
+	typeof settingsQueries.getSettingsOverview
 >;
 
 export function useSettingsOverview() {
-  return useQuery(settingsQueries.getSettingsOverview, {});
+	return useQuery(settingsQueries.getSettingsOverview, {});
 }
 
 export function useSettingsDashboardSummary() {
-  return useQuery(settingsQueries.getSummary, {});
+	return useQuery(settingsQueries.getSummary, {});
 }
 
 export function useSettingsCommitments() {
-  return useQuery(settingsQueries.listMyCommitments, {});
+	return useQuery(settingsQueries.listMyCommitments, {});
 }
 
 /**
@@ -32,6 +32,6 @@ export function useSettingsCommitments() {
  * dispara la query una sola vez al hacer click en "Descargar mis datos".
  */
 export function useExportMyData() {
-  const convex = useConvex();
-  return () => convex.query(api.profiles.exportMyData, {});
+	const convex = useConvex();
+	return () => convex.query(api.profiles.exportMyData, {});
 }

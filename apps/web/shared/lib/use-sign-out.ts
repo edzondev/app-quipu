@@ -4,14 +4,14 @@ import { AnalyticsEvents, track } from "@/core/analytics";
 
 /** Cierra sesión, trackea el evento y redirige al login. */
 export function useSignOut() {
-  const router = useRouter();
+	const router = useRouter();
 
-  return () => {
-    void (async () => {
-      track(AnalyticsEvents.USER_LOGGED_OUT, {});
-      await authClient.signOut();
-      router.push("/sign-in");
-      router.refresh();
-    })();
-  };
+	return () => {
+		void (async () => {
+			track(AnalyticsEvents.USER_LOGGED_OUT, {});
+			await authClient.signOut();
+			router.push("/sign-in");
+			router.refresh();
+		})();
+	};
 }

@@ -15,11 +15,7 @@
 
 import { z } from "zod";
 import { isPosthogConfigured, posthog } from "./client";
-import {
-  type AnalyticsEvent,
-  type AnalyticsEventPayloads,
-  AnalyticsEvents,
-} from "./events";
+import { type AnalyticsEvent, type AnalyticsEventPayloads, AnalyticsEvents } from "./events";
 
 /**
  * Emite un evento a PostHog con sus props tipadas.
@@ -30,26 +26,26 @@ import {
  * pero NO lanza excepción: un bug de tracking no debe romper la app.
  */
 export function track<E extends AnalyticsEvent>(
-  event: E,
-  properties: AnalyticsEventPayloads[E],
+	event: E,
+	properties: AnalyticsEventPayloads[E],
 ): void {
-  if (process.env.NODE_ENV === "development") {
-    const schema = payloadSchemaFor(event);
-    if (schema) {
-      const result = schema.safeParse(properties);
-      if (!result.success) {
-        // eslint-disable-next-line no-console -- intencional: feedback en dev
-        console.warn(
-          `[analytics] Invalid properties for "${event}":`,
-          z.prettifyError(result.error),
-        );
-      }
-    }
-  }
+	if (process.env.NODE_ENV === "development") {
+		const schema = payloadSchemaFor(event);
+		if (schema) {
+			const result = schema.safeParse(properties);
+			if (!result.success) {
+				// eslint-disable-next-line no-console -- intencional: feedback en dev
+				console.warn(
+					`[analytics] Invalid properties for "${event}":`,
+					z.prettifyError(result.error),
+				);
+			}
+		}
+	}
 
-  if (!isPosthogConfigured()) return;
+	if (!isPosthogConfigured()) return;
 
-  posthog.capture(event, properties as Record<string, unknown>);
+	posthog.capture(event, properties as Record<string, unknown>);
 }
 
 /**
@@ -57,11 +53,11 @@ export function track<E extends AnalyticsEvent>(
  * de Convex cuando `authClient.useSession()` cambia. No usar desde otro lugar.
  */
 export function identify(
-  distinctId: string,
-  personProperties: { email?: string; name?: string },
+	distinctId: string,
+	personProperties: { email?: string; name?: string },
 ): void {
-  if (!isPosthogConfigured()) return;
-  posthog.identify(distinctId, personProperties);
+	if (!isPosthogConfigured()) return;
+	posthog.identify(distinctId, personProperties);
 }
 
 /**
@@ -69,8 +65,8 @@ export function identify(
  * sesión expira. `PostHogIdentity` se encarga.
  */
 export function reset(): void {
-  if (!isPosthogConfigured()) return;
-  posthog.reset();
+	if (!isPosthogConfigured()) return;
+	posthog.reset();
 }
 
 /**
@@ -78,10 +74,10 @@ export function reset(): void {
  * No reemplaza `identify`; solo setea props adicionales.
  */
 export function setPersonProperties(
-  properties: Record<string, string | number | boolean | null>,
+	properties: Record<string, string | number | boolean | null>,
 ): void {
-  if (!isPosthogConfigured()) return;
-  posthog.setPersonProperties(properties);
+	if (!isPosthogConfigured()) return;
+	posthog.setPersonProperties(properties);
 }
 
 /**
@@ -89,21 +85,18 @@ export function setPersonProperties(
  * PostHog ya captura errores no manejados via `capture_exceptions: true`,
  * pero este wrapper permite agregar contexto extra.
  */
-export function captureException(
-  error: Error,
-  context?: Record<string, unknown>,
-): void {
-  if (!isPosthogConfigured()) {
-    // En dev, sin PostHog, logueamos para que el developer lo vea.
-    // eslint-disable-next-line no-console -- intencional
-    console.error("[analytics:exception]", error, context);
-    return;
-  }
-  if (context) {
-    posthog.captureException(error, context);
-  } else {
-    posthog.captureException(error);
-  }
+export function captureException(error: Error, context?: Record<string, unknown>): void {
+	if (!isPosthogConfigured()) {
+		// En dev, sin PostHog, logueamos para que el developer lo vea.
+		// eslint-disable-next-line no-console -- intencional
+		console.error("[analytics:exception]", error, context);
+		return;
+	}
+	if (context) {
+		posthog.captureException(error, context);
+	} else {
+		posthog.captureException(error);
+	}
 }
 
 // ─── Schema lookup para validación en dev ─────────────────────────────────
@@ -116,7 +109,7 @@ type AnyZod = z.ZodTypeAny;
 const PAYLOAD_SCHEMAS: Partial<Record<AnalyticsEvent, AnyZod>> = {};
 
 function payloadSchemaFor(event: AnalyticsEvent): AnyZod | undefined {
-  return PAYLOAD_SCHEMAS[event];
+	return PAYLOAD_SCHEMAS[event];
 }
 
 export { AnalyticsEvents };

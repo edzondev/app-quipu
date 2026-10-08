@@ -7,27 +7,27 @@ type Origin = { x: number; y: number };
  * aplica el cambio directo sin animación.
  */
 export function themeChangeTransition(apply: () => void, origin?: Origin) {
-  const supported =
-    typeof document !== "undefined" &&
-    typeof document.startViewTransition === "function" &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	const supported =
+		typeof document !== "undefined" &&
+		typeof document.startViewTransition === "function" &&
+		!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (!supported) {
-    apply();
-    return;
-  }
+	if (!supported) {
+		apply();
+		return;
+	}
 
-  const root = document.documentElement;
-  if (origin) {
-    root.style.setProperty("--vt-x", `${origin.x}px`);
-    root.style.setProperty("--vt-y", `${origin.y}px`);
-  }
+	const root = document.documentElement;
+	if (origin) {
+		root.style.setProperty("--vt-x", `${origin.x}px`);
+		root.style.setProperty("--vt-y", `${origin.y}px`);
+	}
 
-  const transition = document.startViewTransition(apply);
-  void transition.finished.finally(() => {
-    if (origin) {
-      root.style.removeProperty("--vt-x");
-      root.style.removeProperty("--vt-y");
-    }
-  });
+	const transition = document.startViewTransition(apply);
+	void transition.finished.finally(() => {
+		if (origin) {
+			root.style.removeProperty("--vt-x");
+			root.style.removeProperty("--vt-y");
+		}
+	});
 }

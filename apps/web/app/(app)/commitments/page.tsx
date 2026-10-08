@@ -5,16 +5,16 @@ import { pageMetadata } from "@/core/seo";
 import { CommitmentsView } from "@/modules/commitments/components/commitments-view";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Compromisos",
-  path: "/commitments",
+	title: "Compromisos",
+	path: "/commitments",
 });
 
 export default async function CommitmentsPage() {
-  await requireOnboardedProfile();
+	await requireOnboardedProfile();
 
-  return (
-    <Suspense>
-      <CommitmentsView />
-    </Suspense>
-  );
+	return (
+		<Suspense>
+			<CommitmentsView />
+		</Suspense>
+	);
 }

@@ -5,20 +5,20 @@ import { useRegistrar } from "@/shared/components/navigation/registrar-context";
 import { useMovements } from "@/shared/hooks/use-movements";
 
 export default function MovementsPage() {
-  const list = useMovements();
-  const router = useRouter();
-  const { openCreate } = useRegistrar();
+	const list = useMovements();
+	const router = useRouter();
+	const { openCreate } = useRegistrar();
 
-  return (
-    <AppShell>
-      <MovementsList
-        status={list.status}
-        data={list.status === "ready" ? list.data : null}
-        onOpenExpense={(id) => {
-          router.push(`/expense/${id}`);
-        }}
-        onCreate={openCreate}
-      />
-    </AppShell>
-  );
+	return (
+		<AppShell>
+			<MovementsList
+				status={list.status}
+				data={list.status === "ready" ? list.data : null}
+				onOpenExpense={(id) => {
+					router.push(`/expense/${id}`);
+				}}
+				onCreate={openCreate}
+			/>
+		</AppShell>
+	);
 }

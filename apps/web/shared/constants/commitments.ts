@@ -17,7 +17,7 @@ export const COMMITMENT_COVERAGE_LABEL = "Cobertura";
 export const COMMITMENT_PAYMENT_LABEL = "Pago";
 
 export function formatDueInDays(daysUntilDue: number): string {
-  if (daysUntilDue === 0) return "hoy";
-  if (daysUntilDue === 1) return "en 1 día";
-  return `en ${daysUntilDue} días`;
+	if (daysUntilDue === 0) return "hoy";
+	if (daysUntilDue === 1) return "en 1 día";
+	return `en ${daysUntilDue} días`;
 }

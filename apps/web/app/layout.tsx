@@ -12,48 +12,48 @@ import { cn } from "@/shared/lib/utils";
 
 // Product UI: Geist only. font-serif / font-mono utilities alias to the same family.
 const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-sans",
+	subsets: ["latin"],
+	variable: "--font-sans",
 });
 
 export const metadata: Metadata = rootMetadata;
 
 export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#2a2926" },
-  ],
+	width: "device-width",
+	initialScale: 1,
+	themeColor: [
+		{ media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+		{ media: "(prefers-color-scheme: dark)", color: "#2a2926" },
+	],
 };
 
 export default async function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  const initialToken = await getToken();
-  return (
-    <html
-      lang={siteConfig.language}
-      suppressHydrationWarning
-      className={cn("h-full", "antialiased", geist.variable, "font-sans")}
-    >
-      <body className="flex min-h-full flex-col">
-        <SiteJsonLd />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ConvexClientProvider initialToken={initialToken}>
-            <AppearanceSync />
-            {children}
-            <AppToaster />
-          </ConvexClientProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+	const initialToken = await getToken();
+	return (
+		<html
+			lang={siteConfig.language}
+			suppressHydrationWarning
+			className={cn("h-full", "antialiased", geist.variable, "font-sans")}
+		>
+			<body className="flex min-h-full flex-col">
+				<SiteJsonLd />
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="light"
+					enableSystem
+					disableTransitionOnChange
+				>
+					<ConvexClientProvider initialToken={initialToken}>
+						<AppearanceSync />
+						{children}
+						<AppToaster />
+					</ConvexClientProvider>
+				</ThemeProvider>
+			</body>
+		</html>
+	);
 }

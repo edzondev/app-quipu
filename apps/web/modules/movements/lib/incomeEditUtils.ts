@@ -10,21 +10,15 @@ import type { IncomeSource } from "@/modules/income/types";
  * So: if the stored description equals the source label, the concept was empty.
  * Otherwise, the description IS the concept.
  */
-export function extractConcept(
-  description: string,
-  source: IncomeSource,
-): string {
-  const sourceLabel = getIncomeSourceLabel(source);
-  return description === sourceLabel ? "" : description;
+export function extractConcept(description: string, source: IncomeSource): string {
+	const sourceLabel = getIncomeSourceLabel(source);
+	return description === sourceLabel ? "" : description;
 }
 
 /**
  * Determines if a stored income description came from a user-typed concept
  * (as opposed to just the default source label).
  */
-export function hasCustomConcept(
-  description: string,
-  source: IncomeSource,
-): boolean {
-  return extractConcept(description, source) !== "";
+export function hasCustomConcept(description: string, source: IncomeSource): boolean {
+	return extractConcept(description, source) !== "";
 }

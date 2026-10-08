@@ -9,9 +9,6 @@ import { dirname } from "node:path";
 const apiPath = "packages/convex-api/src/api.ts";
 
 if (!existsSync(apiPath)) {
-  mkdirSync(dirname(apiPath), { recursive: true });
-  writeFileSync(
-    apiPath,
-    'import { anyApi } from "convex/server";\n\nexport const api = anyApi;\n',
-  );
+	mkdirSync(dirname(apiPath), { recursive: true });
+	writeFileSync(apiPath, 'import { anyApi } from "convex/server";\n\nexport const api = anyApi;\n');
 }

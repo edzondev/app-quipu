@@ -5,7 +5,7 @@
 export const authLabelClass = "text-[12.5px] font-medium text-body";
 
 export const authPrimaryButtonClass =
-  "h-[46px] w-full rounded-[11px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90";
+	"h-[46px] w-full rounded-[11px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90";
 
 export const authSecondaryButtonClass =
-  "h-[46px] w-full rounded-[11px] border-line bg-surface text-[15px] font-semibold text-ink hover:bg-surface-warm";
+	"h-[46px] w-full rounded-[11px] border-line bg-surface text-[15px] font-semibold text-ink hover:bg-surface-warm";

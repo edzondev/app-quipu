@@ -2,45 +2,45 @@
 @import "uniwind";
 
 @theme {
-  --font-geist-mono: "GeistMono-Medium";
-  --font-hanken: "HankenGrotesk-Regular";
-  --font-hanken-semibold: "HankenGrotesk-SemiBold";
-  --font-newsreader: "Newsreader-Regular";
+	--font-geist-mono: "GeistMono-Medium";
+	--font-hanken: "HankenGrotesk-Regular";
+	--font-hanken-semibold: "HankenGrotesk-SemiBold";
+	--font-newsreader: "Newsreader-Regular";
 }
 
 @layer theme {
-  :root {
-    @variant dark {
-      --color-line: oklch(0.925 0.0088 90);
-      --color-background: oklch(0.1893 0.0077 248.23);
-      --color-foreground: oklch(0.9659 0.0025 228.78);
-      --color-primary: oklch(0.5423 0.0712 176.41);
-      --color-secondary: oklch(0.4934 0.0735 251.4);
-      --color-warning: oklch(0.7164 0.1241 81.96);
-      --color-danger: oklch(0.6004 0.1019 31.23);
+	:root {
+		@variant dark {
+			--color-line: oklch(0.925 0.0088 90);
+			--color-background: oklch(0.1893 0.0077 248.23);
+			--color-foreground: oklch(0.9659 0.0025 228.78);
+			--color-primary: oklch(0.5423 0.0712 176.41);
+			--color-secondary: oklch(0.4934 0.0735 251.4);
+			--color-warning: oklch(0.7164 0.1241 81.96);
+			--color-danger: oklch(0.6004 0.1019 31.23);
 
-      /* Finance */
-      --color-needs: oklch(0.6018 0.0511 263.5);
-      --color-wants: oklch(0.657 0.052 58.56);
-      --color-savings: oklch(0.6071 0.0584 170.1);
-      --color-stable: oklch(0.62 0.0635 180.69);
-    }
+			/* Finance */
+			--color-needs: oklch(0.6018 0.0511 263.5);
+			--color-wants: oklch(0.657 0.052 58.56);
+			--color-savings: oklch(0.6071 0.0584 170.1);
+			--color-stable: oklch(0.62 0.0635 180.69);
+		}
 
-    @variant light {
-      /* UI */
-      --color-line: oklch(0.925 0.0088 90);
-      --color-background: oklch(0.985 0.0041 91.45);
-      --color-foreground: oklch(0.2178 0 0);
-      --color-primary: oklch(0.5423 0.0712 176.41);
-      --color-secondary: oklch(0.4934 0.0735 251.4);
-      --color-warning: oklch(0.7164 0.1241 81.96);
-      --color-danger: oklch(0.6004 0.1019 31.23);
+		@variant light {
+			/* UI */
+			--color-line: oklch(0.925 0.0088 90);
+			--color-background: oklch(0.985 0.0041 91.45);
+			--color-foreground: oklch(0.2178 0 0);
+			--color-primary: oklch(0.5423 0.0712 176.41);
+			--color-secondary: oklch(0.4934 0.0735 251.4);
+			--color-warning: oklch(0.7164 0.1241 81.96);
+			--color-danger: oklch(0.6004 0.1019 31.23);
 
-      /* Finance */
-      --color-needs: oklch(0.6018 0.0511 263.5);
-      --color-wants: oklch(0.657 0.052 58.56);
-      --color-savings: oklch(0.6071 0.0584 170.1);
-      --color-stable: oklch(0.62 0.0635 180.69);
-    }
-  }
+			/* Finance */
+			--color-needs: oklch(0.6018 0.0511 263.5);
+			--color-wants: oklch(0.657 0.052 58.56);
+			--color-savings: oklch(0.6071 0.0584 170.1);
+			--color-stable: oklch(0.62 0.0635 180.69);
+		}
+	}
 }

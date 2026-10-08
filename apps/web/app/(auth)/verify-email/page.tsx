@@ -4,12 +4,12 @@ import { pageMetadata } from "@/core/seo";
 import { VerifyEmailView } from "@/modules/auth/components/verify-email-view";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Verificar correo",
-  path: "/verify-email",
-  index: false,
+	title: "Verificar correo",
+	path: "/verify-email",
+	index: false,
 });
 
 export default async function VerifyEmailPage() {
-  await requireUnauthenticatedSession();
-  return <VerifyEmailView />;
+	await requireUnauthenticatedSession();
+	return <VerifyEmailView />;
 }

@@ -4,14 +4,14 @@ import { pageMetadata } from "@/core/seo";
 import { OnboardingWizard } from "@/modules/onboarding/components/onboarding-wizard";
 
 export const metadata = pageMetadata({
-  title: "Configuración inicial",
-  path: "/onboarding",
+	title: "Configuración inicial",
+	path: "/onboarding",
 });
 
 export default async function OnboardingPage() {
-  const profile = await getMyProfileRsc();
-  if (profile) {
-    redirect("/dashboard");
-  }
-  return <OnboardingWizard />;
+	const profile = await getMyProfileRsc();
+	if (profile) {
+		redirect("/dashboard");
+	}
+	return <OnboardingWizard />;
 }

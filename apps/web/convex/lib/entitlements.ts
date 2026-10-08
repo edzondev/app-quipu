@@ -7,49 +7,44 @@ import type { QueryCtx } from "../_generated/server";
  * `under_review` remains usable (soft flag); only `suspended` blocks.
  */
 export function assertAccountActive(profile: Doc<"profiles">): void {
-  if (profile.accountStatus === "suspended") {
-    throw new ConvexError({
-      code: "ACCOUNT_SUSPENDED",
-      message:
-        "Tu cuenta está suspendida. Contacta a soporte si crees que es un error.",
-    });
-  }
+	if (profile.accountStatus === "suspended") {
+		throw new ConvexError({
+			code: "ACCOUNT_SUSPENDED",
+			message: "Tu cuenta está suspendida. Contacta a soporte si crees que es un error.",
+		});
+	}
 }
 
 /**
  * I6 — puerta canónica: autenticado + perfil + cuenta no suspendida.
  */
-export async function requireActiveAccount(
-  ctx: QueryCtx,
-): Promise<Doc<"profiles">> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "Debes iniciar sesión.",
-    });
-  }
+export async function requireActiveAccount(ctx: QueryCtx): Promise<Doc<"profiles">> {
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) {
+		throw new ConvexError({
+			code: "UNAUTHORIZED",
+			message: "Debes iniciar sesión.",
+		});
+	}
 
-  const profile = await ctx.db
-    .query("profiles")
-    .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-    .unique();
-  if (!profile) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "Perfil no encontrado.",
-    });
-  }
+	const profile = await ctx.db
+		.query("profiles")
+		.withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+		.unique();
+	if (!profile) {
+		throw new ConvexError({
+			code: "NOT_FOUND",
+			message: "Perfil no encontrado.",
+		});
+	}
 
-  assertAccountActive(profile);
-  return profile;
+	assertAccountActive(profile);
+	return profile;
 }
 
 /** @deprecated Prefer `requireActiveAccount` (I6). */
-export async function requireAuthenticatedProfile(
-  ctx: QueryCtx,
-): Promise<Doc<"profiles">> {
-  return requireActiveAccount(ctx);
+export async function requireAuthenticatedProfile(ctx: QueryCtx): Promise<Doc<"profiles">> {
+	return requireActiveAccount(ctx);
 }
 
 /**
@@ -64,17 +59,15 @@ export async function requireAuthenticatedProfile(
  * Funciona también desde mutations (`MutationCtx` es compatible con
  * `QueryCtx` para lectura).
  */
-export async function requirePremiumProfile(
-  ctx: QueryCtx,
-): Promise<Doc<"profiles">> {
-  const profile = await requireActiveAccount(ctx);
+export async function requirePremiumProfile(ctx: QueryCtx): Promise<Doc<"profiles">> {
+	const profile = await requireActiveAccount(ctx);
 
-  if (profile.plan !== "premium") {
-    throw new ConvexError({
-      code: "PLAN_REQUIRED",
-      message: "Esta función es parte de Quipu Plus.",
-    });
-  }
+	if (profile.plan !== "premium") {
+		throw new ConvexError({
+			code: "PLAN_REQUIRED",
+			message: "Esta función es parte de Quipu Plus.",
+		});
+	}
 
-  return profile;
+	return profile;
 }

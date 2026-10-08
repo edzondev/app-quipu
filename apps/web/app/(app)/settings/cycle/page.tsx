@@ -3,12 +3,12 @@ import { pageMetadata } from "@/core/seo";
 import { CycleChangeWizard } from "@/modules/settings/components/cycle-change-wizard";
 
 export const metadata = pageMetadata({
-  title: "Ciclo de ingresos",
-  path: "/settings/cycle",
+	title: "Ciclo de ingresos",
+	path: "/settings/cycle",
 });
 
 export default async function SettingsCyclePage() {
-  await requireOnboardedProfile();
+	await requireOnboardedProfile();
 
-  return <CycleChangeWizard />;
+	return <CycleChangeWizard />;
 }

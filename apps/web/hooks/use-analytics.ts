@@ -20,15 +20,15 @@ import { isPosthogConfigured, posthog } from "@/core/analytics";
  * en `initPostHog` para no duplicar eventos de producto con pageviews genéricos.
  */
 export function usePostHogPageview(): void {
-  const pathname = usePathname();
+	const pathname = usePathname();
 
-  useEffect(() => {
-    if (!pathname || !isPosthogConfigured()) return;
-    if (typeof window === "undefined") return;
+	useEffect(() => {
+		if (!pathname || !isPosthogConfigured()) return;
+		if (typeof window === "undefined") return;
 
-    posthog.capture("$pageview", {
-      $current_url: window.location.href,
-      pathname,
-    });
-  }, [pathname]);
+		posthog.capture("$pageview", {
+			$current_url: window.location.href,
+			pathname,
+		});
+	}, [pathname]);
 }

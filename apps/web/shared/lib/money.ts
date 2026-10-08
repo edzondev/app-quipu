@@ -12,22 +12,22 @@ import { DEFAULT_CURRENCY, localeForCurrency } from "@/core/constants";
 const CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
 
 function getCentsFormatter(options: {
-  currency: string;
-  locale: string;
-  showSymbol: boolean;
-  minimumFractionDigits: number;
+	currency: string;
+	locale: string;
+	showSymbol: boolean;
+	minimumFractionDigits: number;
 }): Intl.NumberFormat {
-  const key = `${options.locale}:${options.currency}:${options.showSymbol}:${options.minimumFractionDigits}`;
-  const cached = CENTS_FORMATTER_CACHE.get(key);
-  if (cached) return cached;
-  const formatter = new Intl.NumberFormat(options.locale, {
-    style: options.showSymbol ? "currency" : "decimal",
-    currency: options.currency,
-    minimumFractionDigits: options.minimumFractionDigits,
-    maximumFractionDigits: 2,
-  });
-  CENTS_FORMATTER_CACHE.set(key, formatter);
-  return formatter;
+	const key = `${options.locale}:${options.currency}:${options.showSymbol}:${options.minimumFractionDigits}`;
+	const cached = CENTS_FORMATTER_CACHE.get(key);
+	if (cached) return cached;
+	const formatter = new Intl.NumberFormat(options.locale, {
+		style: options.showSymbol ? "currency" : "decimal",
+		currency: options.currency,
+		minimumFractionDigits: options.minimumFractionDigits,
+		maximumFractionDigits: 2,
+	});
+	CENTS_FORMATTER_CACHE.set(key, formatter);
+	return formatter;
 }
 
 /**
@@ -43,29 +43,29 @@ export type Cents = number;
  * formatCents(0, { currency: "EUR" }) // "0,00 €" (locale es-ES)
  */
 export function formatCents(
-  cents: Cents,
-  options?: {
-    currency?: string;
-    locale?: string;
-    showSymbol?: boolean;
-    minimumFractionDigits?: number;
-  },
+	cents: Cents,
+	options?: {
+		currency?: string;
+		locale?: string;
+		showSymbol?: boolean;
+		minimumFractionDigits?: number;
+	},
 ): string {
-  const currency = options?.currency ?? DEFAULT_CURRENCY.code;
-  const {
-    locale = localeForCurrency(currency),
-    showSymbol = true,
-    minimumFractionDigits = 2,
-  } = options ?? {};
+	const currency = options?.currency ?? DEFAULT_CURRENCY.code;
+	const {
+		locale = localeForCurrency(currency),
+		showSymbol = true,
+		minimumFractionDigits = 2,
+	} = options ?? {};
 
-  const formatter = getCentsFormatter({
-    currency,
-    locale,
-    showSymbol,
-    minimumFractionDigits,
-  });
+	const formatter = getCentsFormatter({
+		currency,
+		locale,
+		showSymbol,
+		minimumFractionDigits,
+	});
 
-  return formatter.format(cents / 100);
+	return formatter.format(cents / 100);
 }
 
 /**
@@ -82,42 +82,42 @@ export function formatCents(
  * Retorna null si el string no es parseable.
  */
 export function parseToCents(input: string): Cents | null {
-  if (typeof input !== "string") return null;
-  const trimmed = input.trim();
-  if (!trimmed) return null;
+	if (typeof input !== "string") return null;
+	const trimmed = input.trim();
+	if (!trimmed) return null;
 
-  // Quitar símbolo de moneda y espacios.
-  const cleaned = trimmed.replace(/[S$/€£¥₹]/g, "").trim();
-  if (!cleaned) return null;
+	// Quitar símbolo de moneda y espacios.
+	const cleaned = trimmed.replace(/[S$/€£¥₹]/g, "").trim();
+	if (!cleaned) return null;
 
-  // Detectar formato: si tiene "," y ".", el último es el decimal.
-  // Si solo tiene ",", puede ser decimal (es-PE) o miles (en-US).
-  // Asumimos decimal si hay exactamente una coma y ≤ 2 dígitos después.
-  const hasComma = cleaned.includes(",");
-  const hasDot = cleaned.includes(".");
+	// Detectar formato: si tiene "," y ".", el último es el decimal.
+	// Si solo tiene ",", puede ser decimal (es-PE) o miles (en-US).
+	// Asumimos decimal si hay exactamente una coma y ≤ 2 dígitos después.
+	const hasComma = cleaned.includes(",");
+	const hasDot = cleaned.includes(".");
 
-  let normalized: string;
-  if (hasComma && hasDot) {
-    const lastComma = cleaned.lastIndexOf(",");
-    const lastDot = cleaned.lastIndexOf(".");
-    const decimalSep = lastComma > lastDot ? "," : ".";
-    const thousandSep = decimalSep === "," ? "." : ",";
-    normalized = cleaned.split(thousandSep).join("").replace(decimalSep, ".");
-  } else if (hasComma) {
-    const parts = cleaned.split(",");
-    if (parts.length === 2 && parts[1] !== undefined && parts[1].length <= 2) {
-      // Decimal
-      normalized = `${parts[0]}.${parts[1]}`;
-    } else {
-      // Miles
-      normalized = parts.join("");
-    }
-  } else {
-    normalized = cleaned;
-  }
+	let normalized: string;
+	if (hasComma && hasDot) {
+		const lastComma = cleaned.lastIndexOf(",");
+		const lastDot = cleaned.lastIndexOf(".");
+		const decimalSep = lastComma > lastDot ? "," : ".";
+		const thousandSep = decimalSep === "," ? "." : ",";
+		normalized = cleaned.split(thousandSep).join("").replace(decimalSep, ".");
+	} else if (hasComma) {
+		const parts = cleaned.split(",");
+		if (parts.length === 2 && parts[1] !== undefined && parts[1].length <= 2) {
+			// Decimal
+			normalized = `${parts[0]}.${parts[1]}`;
+		} else {
+			// Miles
+			normalized = parts.join("");
+		}
+	} else {
+		normalized = cleaned;
+	}
 
-  const num = Number(normalized);
-  if (!Number.isFinite(num) || num < 0) return null;
+	const num = Number(normalized);
+	if (!Number.isFinite(num) || num < 0) return null;
 
-  return Math.round(num * 100);
+	return Math.round(num * 100);
 }

@@ -6,21 +6,17 @@ import { track } from "./track";
  * abre un ciclo nuevo y había un ciclo activo previo.
  */
 export function trackFinancialCycleTransition(
-  activeCycleId: string | undefined,
-  response: { cycleId: string; isNewCycle: boolean },
+	activeCycleId: string | undefined,
+	response: { cycleId: string; isNewCycle: boolean },
 ): void {
-  if (
-    response.isNewCycle &&
-    activeCycleId &&
-    activeCycleId !== response.cycleId
-  ) {
-    track(AnalyticsEvents.FINANCIAL_CYCLE_CLOSED, {
-      cycle_id: activeCycleId,
-    });
-  }
-  if (response.isNewCycle) {
-    track(AnalyticsEvents.FINANCIAL_CYCLE_STARTED, {
-      cycle_id: response.cycleId,
-    });
-  }
+	if (response.isNewCycle && activeCycleId && activeCycleId !== response.cycleId) {
+		track(AnalyticsEvents.FINANCIAL_CYCLE_CLOSED, {
+			cycle_id: activeCycleId,
+		});
+	}
+	if (response.isNewCycle) {
+		track(AnalyticsEvents.FINANCIAL_CYCLE_STARTED, {
+			cycle_id: response.cycleId,
+		});
+	}
 }

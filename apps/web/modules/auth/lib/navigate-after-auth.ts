@@ -6,5 +6,5 @@
  * gates (`requireOnboardedProfile`) without a session.
  */
 export function navigateAfterAuth(href: string): void {
-  window.location.assign(href);
+	window.location.assign(href);
 }

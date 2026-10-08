@@ -1,69 +1,65 @@
 import type { EnvelopeKey, OnboardingState } from "./types";
 
 type Allocation = Pick<
-  OnboardingState,
-  "allocationNeeds" | "allocationWants" | "allocationSavings"
+	OnboardingState,
+	"allocationNeeds" | "allocationWants" | "allocationSavings"
 >;
 
-const KEYS = [
-  "allocationNeeds",
-  "allocationWants",
-  "allocationSavings",
-] as const;
+const KEYS = ["allocationNeeds", "allocationWants", "allocationSavings"] as const;
 type AllocationKey = (typeof KEYS)[number];
 
 export function distributeEnvelope(
-  state: Allocation,
-  key: AllocationKey,
-  newValue: number,
+	state: Allocation,
+	key: AllocationKey,
+	newValue: number,
 ): Allocation {
-  const clamped = Math.max(0, Math.min(100, newValue));
-  if (clamped === state[key]) return state;
-  const others = KEYS.filter((k) => k !== key);
-  const first = others[0];
-  const second = others[1];
-  if (first === undefined || second === undefined) return state;
-  const o1 = state[first];
-  const o2 = state[second];
-  const diff = clamped - state[key];
-  let n1: number;
-  let n2: number;
-  if (o1 > 0 && o2 > 0) {
-    const ratio = o1 / (o1 + o2);
-    const adj1 = Math.round(diff * ratio);
-    n1 = Math.max(0, o1 - adj1);
-    n2 = Math.max(0, o2 - (diff - adj1));
-  } else if (o1 > 0) {
-    n1 = Math.max(0, o1 - diff);
-    n2 = o2;
-  } else {
-    n1 = o1;
-    n2 = Math.max(0, o2 - diff);
-  }
-  return { ...state, [key]: clamped, [first]: n1, [second]: n2 };
+	const clamped = Math.max(0, Math.min(100, newValue));
+	if (clamped === state[key]) return state;
+	const others = KEYS.filter((k) => k !== key);
+	const first = others[0];
+	const second = others[1];
+	if (first === undefined || second === undefined) return state;
+	const o1 = state[first];
+	const o2 = state[second];
+	const diff = clamped - state[key];
+	let n1: number;
+	let n2: number;
+	if (o1 > 0 && o2 > 0) {
+		const ratio = o1 / (o1 + o2);
+		const adj1 = Math.round(diff * ratio);
+		n1 = Math.max(0, o1 - adj1);
+		n2 = Math.max(0, o2 - (diff - adj1));
+	} else if (o1 > 0) {
+		n1 = Math.max(0, o1 - diff);
+		n2 = o2;
+	} else {
+		n1 = o1;
+		n2 = Math.max(0, o2 - diff);
+	}
+	return { ...state, [key]: clamped, [first]: n1, [second]: n2 };
 }
 
 export const ALLOCATION_DEFAULTS: Allocation = {
-  allocationNeeds: 50,
-  allocationWants: 30,
-  allocationSavings: 20,
+	allocationNeeds: 50,
+	allocationWants: 30,
+	allocationSavings: 20,
 };
 
 export const ENVELOPES: EnvelopeKey[] = ["needs", "wants", "savings"];
 
 const STATE_KEY_BY_ENVELOPE: Record<EnvelopeKey, AllocationKey> = {
-  needs: "allocationNeeds",
-  wants: "allocationWants",
-  savings: "allocationSavings",
+	needs: "allocationNeeds",
+	wants: "allocationWants",
+	savings: "allocationSavings",
 };
 
 /** Redistribuye los otros dos sobres al mover uno (paso 3). */
 export function setEnvelopeAllocation(
-  state: Allocation,
-  envelope: EnvelopeKey,
-  value: number,
+	state: Allocation,
+	envelope: EnvelopeKey,
+	value: number,
 ): Allocation {
-  return distributeEnvelope(state, STATE_KEY_BY_ENVELOPE[envelope], value);
+	return distributeEnvelope(state, STATE_KEY_BY_ENVELOPE[envelope], value);
 }
 
 export type { Allocation, AllocationKey };
