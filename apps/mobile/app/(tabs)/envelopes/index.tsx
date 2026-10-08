@@ -4,17 +4,36 @@ import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
 import AppShell from "@/shared/components/app-shell";
 import { SobresScreen } from "@/shared/components/envelopes/sobres-screen";
 import { useRegistrar } from "@/shared/components/navigation/registrar-context";
+import { useAhorroPlanSubtitle } from "@/shared/hooks/use-ahorro";
 import { useSobresScreen } from "@/shared/hooks/use-dashboard";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
 export default function EnvelopesPage() {
 	const sobres = useSobresScreen();
+	const ahorroSubtitle = useAhorroPlanSubtitle();
 	const { openCreate } = useRegistrar();
 	const router = useRouter();
 
 	return (
 		<AppShell>
 			<View className="flex-1">
+				<Pressable
+					accessibilityRole="button"
+					accessibilityLabel="Ahorro y metas"
+					hitSlop={HIT_SLOP}
+					onPress={() => router.push("/(tabs)/envelopes/ahorro")}
+					className="mb-4 flex-row items-center justify-between active:opacity-60"
+				>
+					<View className="min-w-0 flex-1 pr-3">
+						<Text className="font-hanken-semibold text-[15px] text-foreground">Ahorro y metas</Text>
+						{ahorroSubtitle ? (
+							<Text className="mt-1 font-hanken text-[13px] text-foreground/55">
+								{ahorroSubtitle}
+							</Text>
+						) : null}
+					</View>
+					<ChevronRight size={16} color="#9A968C" />
+				</Pressable>
 				<Pressable
 					accessibilityRole="button"
 					accessibilityLabel="Compromisos"

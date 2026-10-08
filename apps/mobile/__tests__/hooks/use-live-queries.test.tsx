@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react-native";
 import { getFunctionName } from "convex/server";
+import { useAhorro } from "@/shared/hooks/use-ahorro";
 import { useDashboardSummary } from "@/shared/hooks/use-dashboard";
 import { useRecentExpenses } from "@/shared/hooks/use-expenses";
 import { useMovements } from "@/shared/hooks/use-movements";
-import { useSavingsOverview } from "@/shared/hooks/use-savings";
 
 const mockUseQuery = jest.fn();
 const mockUseConvexAuth = jest.fn();
@@ -23,7 +23,7 @@ jest.mock("@/lib/auth-client", () => ({
 function Host() {
 	useDashboardSummary();
 	useMovements();
-	useSavingsOverview();
+	useAhorro();
 	useRecentExpenses();
 	return null;
 }
@@ -70,6 +70,8 @@ describe("consultas en vivo", () => {
 				"expenses:getRecentExpenses",
 				"movements:listForActiveCycle",
 				"profiles:getMyProfile",
+				"savings:getEmergencyFundDetail",
+				"savings:getMoveSurplusContext",
 				"savings:getOverview",
 			].sort(),
 		);
