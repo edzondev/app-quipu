@@ -1,5 +1,10 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+	accentPresetValidator,
+	appearanceThemeValidator,
+	appIconVariantValidator,
+} from "./lib/appearanceValidators";
 
 /**
  * App-level schema.
@@ -99,9 +104,9 @@ export const appTables = {
 		// Legacy (I3): rescate ya no usa upsell; campos opcionales sin escritura nueva.
 		coachRescueUpsellAt: v.optional(v.number()),
 		coachRescueUpsellDismissedAt: v.optional(v.number()),
-		appearanceTheme: v.optional(v.union(v.literal("light"), v.literal("tinta"))),
-		accentPreset: v.optional(v.union(v.literal("moss"), v.literal("steel"), v.literal("clay"))),
-		appIconVariant: v.optional(v.union(v.literal("light"), v.literal("dark"))),
+		appearanceTheme: v.optional(appearanceThemeValidator),
+		accentPreset: v.optional(accentPresetValidator),
+		appIconVariant: v.optional(appIconVariantValidator),
 		// Bloque 9 — preferencias de notificaciones (undefined = defaults en lectura).
 		dailySummaryEnabled: v.optional(v.boolean()),
 		cycleAlertsEnabled: v.optional(v.boolean()),

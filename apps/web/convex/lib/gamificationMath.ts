@@ -119,26 +119,13 @@ function observeLoggingStreakExpense(
 	return { ...scan, keepReading: false };
 }
 
-function isAsyncIterable<T>(value: Iterable<T> | AsyncIterable<T>): value is AsyncIterable<T> {
-	return Symbol.asyncIterator in value;
-}
-
-function timestampsAsAsync(
-	timestampsNewestFirst: Iterable<number> | AsyncIterable<number>,
-): AsyncIterable<number> {
-	if (isAsyncIterable(timestampsNewestFirst)) return timestampsNewestFirst;
-	return (async function* () {
-		for (const timestamp of timestampsNewestFirst) yield timestamp;
-	})();
-}
-
 /** Una pasada de más nuevo a más viejo. Corta y deja de leer en el primer hueco. */
 export async function countLoggingStreak(
 	timestampsNewestFirst: Iterable<number> | AsyncIterable<number>,
 	now: number,
 ): Promise<number> {
 	let scan = startLoggingStreakScan(now);
-	for await (const timestamp of timestampsAsAsync(timestampsNewestFirst)) {
+	for await (const timestamp of timestampsNewestFirst) {
 		scan = observeLoggingStreakExpense(scan, timestamp);
 		if (!scan.keepReading) break;
 	}

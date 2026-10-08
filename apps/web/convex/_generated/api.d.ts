@@ -26,6 +26,7 @@ import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
 import type * as lib_adminAuth from "../lib/adminAuth.js";
 import type * as lib_appDataTables from "../lib/appDataTables.js";
+import type * as lib_appearanceValidators from "../lib/appearanceValidators.js";
 import type * as lib_applyIncomeAllocation from "../lib/applyIncomeAllocation.js";
 import type * as lib_authRateLimit from "../lib/authRateLimit.js";
 import type * as lib_billingSync from "../lib/billingSync.js";
@@ -131,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   incomeEvents: typeof incomeEvents;
   "lib/adminAuth": typeof lib_adminAuth;
   "lib/appDataTables": typeof lib_appDataTables;
+  "lib/appearanceValidators": typeof lib_appearanceValidators;
   "lib/applyIncomeAllocation": typeof lib_applyIncomeAllocation;
   "lib/authRateLimit": typeof lib_authRateLimit;
   "lib/billingSync": typeof lib_billingSync;

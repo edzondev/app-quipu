@@ -3,6 +3,11 @@ import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
+	accentPresetValidator,
+	appearanceThemeValidator,
+	appIconVariantValidator,
+} from "./lib/appearanceValidators";
+import {
 	type AchievementId,
 	achievementIdValidator,
 	buildAchievements,
@@ -167,11 +172,7 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 		achievements,
 		achievementsDoneCount: achievements.filter((a) => a.state === "done").length,
 		achievementsTotal: achievements.length,
-		appearance: {
-			theme: profile.appearanceTheme ?? "light",
-			accent: "moss" as const,
-			appIcon: "light" as const,
-		},
+		appearance: progressAppearance(profile.appearanceTheme),
 	};
 }
 
@@ -216,9 +217,21 @@ export const getOverview = query({
 	},
 });
 
-const appearanceThemeValidator = v.union(v.literal("light"), v.literal("tinta"));
-const accentPresetValidator = v.union(v.literal("moss"), v.literal("steel"), v.literal("clay"));
-const appIconVariantValidator = v.union(v.literal("light"), v.literal("dark"));
+const progressAppearanceValidator = v.object({
+	theme: appearanceThemeValidator,
+	accent: v.literal("moss"),
+	appIcon: v.literal("light"),
+});
+
+function progressAppearance(
+	theme: Infer<typeof appearanceThemeValidator> | undefined,
+): Infer<typeof progressAppearanceValidator> {
+	return {
+		theme: theme ?? "light",
+		accent: "moss",
+		appIcon: "light",
+	};
+}
 
 const progressRewardFields = {
 	title: v.string(),
@@ -241,11 +254,7 @@ const progressRewardValidator = v.union(
 const progressRewardsValidator = v.nullable(
 	v.object({
 		currentStreak: v.number(),
-		appearance: v.object({
-			theme: appearanceThemeValidator,
-			accent: v.literal("moss"),
-			appIcon: v.literal("light"),
-		}),
+		appearance: progressAppearanceValidator,
 		rewards: v.array(progressRewardValidator),
 		accents: v.array(
 			v.object({
@@ -359,28 +368,15 @@ export const updateAppearance = mutation({
 
 		// Dark mode is available from Preferencias without a streak gate.
 		// Accent and app icon are no longer user-selectable; keep moss + ignore icons.
-		const updates: {
-			appearanceTheme?: "light" | "tinta";
-			accentPreset?: "moss";
-		} = {};
-
-		if (args.appearanceTheme !== undefined) {
-			updates.appearanceTheme = args.appearanceTheme;
-		}
-		if (args.accentPreset !== undefined) {
-			updates.accentPreset = "moss";
-		}
-
-		if (Object.keys(updates).length > 0) {
-			await ctx.db.patch(profile._id, updates);
+		if (args.appearanceTheme !== undefined || args.accentPreset !== undefined) {
+			await ctx.db.patch(profile._id, {
+				...(args.appearanceTheme !== undefined ? { appearanceTheme: args.appearanceTheme } : {}),
+				...(args.accentPreset !== undefined ? { accentPreset: "moss" } : {}),
+			});
 		}
 
 		return {
-			appearance: {
-				theme: updates.appearanceTheme ?? profile.appearanceTheme ?? "light",
-				accent: "moss" as const,
-				appIcon: "light" as const,
-			},
+			appearance: progressAppearance(args.appearanceTheme ?? profile.appearanceTheme),
 		};
 	},
 });
@@ -397,10 +393,6 @@ export const getAppearance = query({
 			.unique();
 		if (!profile) return null;
 
-		return {
-			theme: profile.appearanceTheme ?? "light",
-			accent: "moss" as const,
-			appIcon: "light" as const,
-		};
+		return progressAppearance(profile.appearanceTheme);
 	},
 });
