@@ -70,7 +70,6 @@ describe("consultas en vivo", () => {
 				"expenses:getRecentExpenses",
 				"movements:listForActiveCycle",
 				"profiles:getMyProfile",
-				"savings:getEmergencyFundDetail",
 				"savings:getMoveSurplusContext",
 				"savings:getOverview",
 			].sort(),

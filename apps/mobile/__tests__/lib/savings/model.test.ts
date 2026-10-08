@@ -1,24 +1,35 @@
 import {
-	ahorroPlanSubtitle,
+	ahorroPlanRow,
 	emptyAhorro,
 	GOAL_WITHOUT_AUTO_CONTRIBUTION,
+	type MoveSurplusContext,
 	presentAhorro,
+	type SavingsOverview,
 	savingsBarPercent,
 	toCreateSavingsGoal,
 } from "@/shared/lib/savings/model";
 
+type Overview = NonNullable<SavingsOverview>;
+type Fund = NonNullable<Overview["emergencyFund"]>;
+type Surplus = NonNullable<MoveSurplusContext>;
+
 const fund = {
+	id: "fund-1",
 	label: "Fondo de emergencia",
 	currentAmount: 185000,
 	targetAmount: 450000,
 	monthlyEssentialsCents: 150000,
 	monthsCovered: 1.233,
 	monthsCoveredCopy: "1.2 de 3 meses cubiertos · vas seguro",
+	progressPercent: 41,
 	cycleContributionCents: 50000,
-};
+	cyclesToComplete: 6,
+	contributionStreak: 0,
+	availableToContributeCents: 0,
+} satisfies Fund;
 
 const overview = {
-	profile: { currencyCode: "PEN" },
+	profile: { name: "Ana", currencyCode: "PEN" },
 	hasActiveCycle: true,
 	totalSavedCents: 305000,
 	cycleContributionCents: 70000,
@@ -29,11 +40,23 @@ const overview = {
 			label: "Viaje",
 			currentAmount: 120000,
 			targetAmount: 200000,
+			progressPercent: 60,
 			isSystemDefault: false,
 		},
 	],
 	canCreateGoal: true,
-};
+	assignPlan: null,
+} satisfies Overview;
+
+const extraIncome = {
+	currencyCode: "PEN",
+	sources: {
+		needs: { availableCents: 1000 },
+		wants: { availableCents: 5000 },
+		extraordinary: { availableCents: 9600 },
+	},
+	destinations: [{ id: "fund-1", label: "Fondo de emergencia", isSystemDefault: true }],
+} satisfies Surplus;
 
 describe("savingsBarPercent", () => {
 	it("va de 0 a la meta y no pasa de 100", () => {
@@ -50,35 +73,51 @@ describe("savingsBarPercent", () => {
 
 describe("presentAhorro", () => {
 	it("arma el fondo, el total y el subtítulo con lo que devuelve Convex", () => {
-		const model = presentAhorro(overview, { emergencyFund: fund }, null);
+		const model = presentAhorro(overview, null);
 
 		expect(model.totalLabel).toBe("S/ 3,050");
+		expect(model.totalMuted).toBe(false);
 		expect(model.cycleSubtitle).toBe("Guardas S/ 700 cada ciclo. Con calma, se nota.");
 		expect(model.fund).toMatchObject({
+			pending: false,
 			label: "Fondo de emergencia",
-			amountLabel: "S/ 1,850",
+			symbol: "S/",
+			amountBody: "1,850",
 			targetLine: "de S/ 4,500 · meta de 3 meses de gastos",
 			monthsLine: "1.2 DE 3 MESES CUBIERTOS",
 			cycleLine: "+S/ 500 / CICLO",
 			percent: 41,
 		});
-		expect(model.empty).toBe(false);
 	});
 
-	it("deja la meta sin aporte automático y sin ACTIVAR", () => {
-		const model = presentAhorro(overview, null, null);
+	it("deja la meta sin aporte automático y sin barra si no hay meta", () => {
+		const model = presentAhorro(overview, null);
 
 		expect(model.goals).toEqual([
 			{
 				id: "goal-viaje",
 				name: "Viaje",
-				amountLine: "S/ 1,200 de 2,000",
+				currentLabel: "S/ 1,200",
+				targetLabel: "de 2,000",
 				percent: 60,
 				footer: GOAL_WITHOUT_AUTO_CONTRIBUTION,
 			},
 		]);
 		expect(JSON.stringify(model.goals)).not.toContain("ACTIVAR");
-		expect(JSON.stringify(model.goals)).not.toContain("LISTA EN");
+
+		const openGoal = {
+			...overview,
+			goals: [
+				{
+					id: "goal-abierta",
+					label: "Laptop",
+					currentAmount: 0,
+					progressPercent: 0,
+					isSystemDefault: false,
+				},
+			],
+		} satisfies Overview;
+		expect(presentAhorro(openGoal, null).goals[0]?.percent).toBeNull();
 	});
 
 	it("usa el texto de meses de Convex cuando no hay gasto mensual", () => {
@@ -92,27 +131,18 @@ describe("presentAhorro", () => {
 					monthsCoveredCopy: "0 de 3 meses cubiertos · empieza con calma",
 					cycleContributionCents: 0,
 				},
-			},
-			null,
+			} satisfies Overview,
 			null,
 		);
 
-		expect(model.fund?.targetLine).toBe("de S/ 4,500");
-		expect(model.fund?.monthsLine).toBe("0 de 3 meses cubiertos · empieza con calma");
-		expect(model.fund?.cycleLine).toBeNull();
-		expect(model.fund?.percent).toBe(41);
+		expect(model.fund.targetLine).toBe("de S/ 4,500");
+		expect(model.fund.monthsLine).toBe("0 de 3 meses cubiertos · empieza con calma");
+		expect(model.fund.cycleLine).toBeNull();
+		expect(model.fund.percent).toBe(41);
 	});
 
 	it("muestra el banner solo con el ingreso extra", () => {
-		const model = presentAhorro(overview, null, {
-			currencyCode: "PEN",
-			sources: {
-				needs: { availableCents: 1000 },
-				wants: { availableCents: 5000 },
-				extraordinary: { availableCents: 9600 },
-			},
-			destinations: [{ id: "fund-1", label: "Fondo de emergencia", isSystemDefault: true }],
-		});
+		const model = presentAhorro(overview, extraIncome);
 
 		expect(model.surplus).toEqual({
 			amountLabel: "S/ 96",
@@ -121,54 +151,81 @@ describe("presentAhorro", () => {
 	});
 
 	it("oculta el banner si el ingreso extra es 0 aunque needs y wants tengan saldo", () => {
-		expect(presentAhorro(overview, null, null).surplus).toBeNull();
-		expect(
-			presentAhorro(overview, null, {
-				sources: {
-					needs: { availableCents: 2500 },
-					wants: { availableCents: 9600 },
-					extraordinary: { availableCents: 0 },
-				},
-				destinations: [],
-			}).surplus,
-		).toBeNull();
+		const withoutExtra = {
+			...extraIncome,
+			sources: {
+				needs: { availableCents: 2500 },
+				wants: { availableCents: 9600 },
+				extraordinary: { availableCents: 0 },
+			},
+		} satisfies Surplus;
+
+		expect(presentAhorro(overview, null).surplus).toBeNull();
+		expect(presentAhorro(overview, withoutExtra).surplus).toBeNull();
 	});
 
-	it("queda vacío sin fondo ni metas", () => {
-		expect(presentAhorro(null, null, null)).toEqual(emptyAhorro());
-		const model = presentAhorro(
-			{
-				profile: { currencyCode: "PEN" },
-				totalSavedCents: 0,
-				cycleContributionCents: 0,
-				emergencyFund: null,
-				goals: [],
-				canCreateGoal: false,
-			},
-			null,
-			null,
+	it("deja el fondo pendiente cuando todavía no hay meta de meses", () => {
+		expect(presentAhorro(null, null)).toEqual(emptyAhorro());
+
+		const pending = {
+			...overview,
+			totalSavedCents: 0,
+			cycleContributionCents: 0,
+			emergencyFund: { ...fund, targetAmount: 0, currentAmount: 0 },
+			goals: [],
+			canCreateGoal: false,
+		} satisfies Overview;
+		const model = presentAhorro(pending, null);
+
+		expect(model.totalMuted).toBe(true);
+		expect(model.cycleSubtitle).toBe("Tu 20% empieza a acumularse con el primer ingreso.");
+		expect(model.fund.pending).toBe(true);
+		expect(model.fund.amountBody).toBe("0");
+		expect(model.fund.targetLine).toBe(
+			"Tu primera meta es cubrir 3 meses de gastos. Quipu la calcula cuando conozca tu ciclo.",
 		);
-		expect(model.empty).toBe(true);
-		expect(model.cycleSubtitle).toBe("Con calma, se nota.");
-		expect(model.canCreateGoal).toBe(false);
+		expect(model.goals).toEqual([]);
 	});
 });
 
-describe("ahorroPlanSubtitle", () => {
-	it("cuenta el fondo y las metas activas", () => {
-		expect(ahorroPlanSubtitle(overview)).toBe("Fondo + 1 meta activa");
+describe("ahorroPlanRow", () => {
+	it("pone el total a la derecha y no dice 0 metas activas", () => {
+		expect(ahorroPlanRow(overview)).toEqual({
+			subtitle: "Fondo + 1 meta activa",
+			totalLabel: "S/ 3,050",
+		});
 		expect(
-			ahorroPlanSubtitle({
+			ahorroPlanRow({
 				...overview,
-				goals: [...overview.goals, { id: "g2", label: "Casa" }],
-			}),
-		).toBe("Fondo + 2 metas activas");
-		expect(ahorroPlanSubtitle(null)).toBeNull();
+				goals: [
+					...overview.goals,
+					{
+						id: "g2",
+						label: "Casa",
+						currentAmount: 0,
+						targetAmount: 100,
+						progressPercent: 0,
+						isSystemDefault: false,
+					},
+				],
+			} satisfies Overview),
+		).toEqual({
+			subtitle: "Fondo + 2 metas activas",
+			totalLabel: "S/ 3,050",
+		});
+		expect(ahorroPlanRow(null)).toBeNull();
 		expect(
-			ahorroPlanSubtitle({
+			ahorroPlanRow({
+				...overview,
+				goals: [],
+			} satisfies Overview)?.subtitle,
+		).toBe("Fondo de emergencia");
+		expect(
+			ahorroPlanRow({
+				...overview,
 				emergencyFund: null,
 				goals: [],
-			}),
+			} satisfies Overview)?.subtitle,
 		).toBeNull();
 	});
 });

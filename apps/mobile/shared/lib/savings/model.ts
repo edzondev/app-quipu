@@ -6,13 +6,15 @@ import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
 export type SavingsOverview = FunctionReturnType<typeof api.savings.getOverview>;
 
-export type EmergencyFundDetail = FunctionReturnType<typeof api.savings.getEmergencyFundDetail>;
-
 export type MoveSurplusContext = FunctionReturnType<typeof api.savings.getMoveSurplusContext>;
 
 export type CreateSavingsGoalArgs = FunctionArgs<typeof api.savings.createSavingsGoal>;
 
 export type MoveSurplusArgs = FunctionArgs<typeof api.savings.moveSurplusToSavings>;
+
+type Overview = NonNullable<SavingsOverview>;
+type Fund = NonNullable<Overview["emergencyFund"]>;
+type Goal = Overview["goals"][number];
 
 export type GoalFormValues = {
 	label: string;
@@ -26,9 +28,11 @@ export type GoalDraftResult =
 	| { ok: false; fields: Partial<Record<GoalField, string>> };
 
 export type FundView = {
+	pending: boolean;
 	label: string;
-	amountLabel: string;
-	targetLine: string;
+	symbol: string;
+	amountBody: string;
+	targetLine: string | null;
 	monthsLine: string;
 	cycleLine: string | null;
 	percent: number;
@@ -37,8 +41,9 @@ export type FundView = {
 export type GoalView = {
 	id: string;
 	name: string;
-	amountLine: string;
-	percent: number;
+	currentLabel: string;
+	targetLabel: string | null;
+	percent: number | null;
 	footer: string;
 };
 
@@ -49,15 +54,23 @@ export type SurplusBannerView = {
 
 export type AhorroScreenModel = {
 	totalLabel: string;
+	totalMuted: boolean;
 	cycleSubtitle: string;
-	fund: FundView | null;
+	fund: FundView;
 	goals: GoalView[];
 	canCreateGoal: boolean;
 	surplus: SurplusBannerView | null;
-	empty: boolean;
+};
+
+export type AhorroPlanRow = {
+	subtitle: string | null;
+	totalLabel: string;
 };
 
 const GOAL_LABEL_MAX = 40;
+const PENDING_SUBTITLE = "Tu 20% empieza a acumularse con el primer ingreso.";
+const PENDING_FUND_COPY =
+	"Tu primera meta es cubrir 3 meses de gastos. Quipu la calcula cuando conozca tu ciclo.";
 
 /** Convex no trae aporte automático por meta ni mutación para activarlo. */
 export const GOAL_WITHOUT_AUTO_CONTRIBUTION = "SIN APORTE AUTOMÁTICO";
@@ -74,47 +87,45 @@ export function savingsBarPercent(currentCents: number, targetCents: number): nu
 export function emptyAhorro(symbol = "S/"): AhorroScreenModel {
 	return {
 		totalLabel: formatCentsTrimmed(0, symbol),
-		cycleSubtitle: "Con calma, se nota.",
-		fund: null,
+		totalMuted: true,
+		cycleSubtitle: PENDING_SUBTITLE,
+		fund: pendingFund(symbol, "Fondo de emergencia"),
 		goals: [],
 		canCreateGoal: false,
 		surplus: null,
-		empty: true,
 	};
 }
 
 export function presentAhorro(
 	overview: SavingsOverview,
-	fundDetail: EmergencyFundDetail,
 	surplus: MoveSurplusContext,
 ): AhorroScreenModel {
 	if (overview == null) return emptyAhorro();
 
-	const symbol = marketFromCurrencyCode(overview.profile?.currencyCode)?.currencySymbol ?? "S/";
-	const totalSavedCents = readCents(overview.totalSavedCents);
-	const cycleContributionCents = readCents(overview.cycleContributionCents);
-	const fund = toFundView(readFund(fundDetail, overview), symbol);
-	const goals = toGoalViews(overview.goals, symbol);
-	const canCreateGoal = overview.canCreateGoal === true;
+	const symbol = marketFromCurrencyCode(overview.profile.currencyCode)?.currencySymbol ?? "S/";
+	const cycleContributionCents = overview.cycleContributionCents;
 
 	return {
-		totalLabel: formatCentsTrimmed(totalSavedCents, symbol),
-		cycleSubtitle: cycleSubtitle(cycleContributionCents, symbol),
-		fund,
-		goals,
-		canCreateGoal,
+		totalLabel: formatCentsTrimmed(overview.totalSavedCents, symbol),
+		totalMuted: overview.totalSavedCents === 0,
+		cycleSubtitle:
+			cycleContributionCents > 0
+				? `Guardas ${formatCentsTrimmed(cycleContributionCents, symbol)} cada ciclo. Con calma, se nota.`
+				: PENDING_SUBTITLE,
+		fund: toFundView(overview.emergencyFund, symbol),
+		goals: toGoalViews(overview.goals, symbol),
+		canCreateGoal: overview.canCreateGoal,
 		surplus: surplusBanner(surplus, symbol),
-		empty: fund == null && goals.length === 0,
 	};
 }
 
-export function ahorroPlanSubtitle(overview: SavingsOverview): string | null {
+export function ahorroPlanRow(overview: SavingsOverview): AhorroPlanRow | null {
 	if (overview == null) return null;
-	const goals = Array.isArray(overview.goals) ? overview.goals.length : 0;
-	const meta = goals === 1 ? "1 meta activa" : `${goals} metas activas`;
-	if (overview.emergencyFund != null) return `Fondo + ${meta}`;
-	if (goals > 0) return meta;
-	return null;
+	const symbol = marketFromCurrencyCode(overview.profile.currencyCode)?.currencySymbol ?? "S/";
+	return {
+		subtitle: planSubtitle(overview),
+		totalLabel: formatCentsTrimmed(overview.totalSavedCents, symbol),
+	};
 }
 
 export function toCreateSavingsGoal(values: GoalFormValues): GoalDraftResult {
@@ -139,59 +150,64 @@ export function toCreateSavingsGoal(values: GoalFormValues): GoalDraftResult {
 	return { ok: true, args: { label, targetAmount } };
 }
 
-function cycleSubtitle(cents: number, symbol: string): string {
-	if (cents > 0) {
-		return `Guardas ${formatCentsTrimmed(cents, symbol)} cada ciclo. Con calma, se nota.`;
+function planSubtitle(overview: Overview): string | null {
+	const goals = overview.goals.length;
+	const fund = overview.emergencyFund;
+	if (fund != null) {
+		if (goals === 0) return fund.label;
+		if (goals === 1) return "Fondo + 1 meta activa";
+		return `Fondo + ${goals} metas activas`;
 	}
-	return "Con calma, se nota.";
-}
-
-function readFund(fundDetail: EmergencyFundDetail, overview: SavingsOverview) {
-	if (fundDetail != null && fundDetail.emergencyFund != null) return fundDetail.emergencyFund;
-	if (overview != null && overview.emergencyFund != null) return overview.emergencyFund;
+	if (goals === 1) return "1 meta activa";
+	if (goals > 1) return `${goals} metas activas`;
 	return null;
 }
 
-function toFundView(fund: ReturnType<typeof readFund>, symbol: string): FundView | null {
-	if (fund == null) return null;
-	const currentAmount = readCents(fund.currentAmount);
-	const targetAmount = readCents(fund.targetAmount);
-	const essentials = readCents(fund.monthlyEssentialsCents);
-	const cycleContributionCents = readCents(fund.cycleContributionCents);
-	const targetMonths = essentials > 0 ? targetAmount / essentials : null;
-	const monthsLine = fundMonthsLine(fund.monthsCovered, fund.monthsCoveredCopy, targetMonths);
+function toFundView(fund: Fund | null, symbol: string): FundView {
+	if (fund == null || fund.targetAmount <= 0) {
+		return pendingFund(symbol, fund == null ? "Fondo de emergencia" : fund.label);
+	}
+
+	const essentials = fund.monthlyEssentialsCents;
+	const targetMonths = essentials > 0 ? fund.targetAmount / essentials : null;
 
 	return {
-		label: readName(fund.label, "Fondo de emergencia"),
-		amountLabel: formatCentsTrimmed(currentAmount, symbol),
-		targetLine: fundTargetLine(targetAmount, targetMonths, symbol),
-		monthsLine,
+		pending: false,
+		label: fund.label,
+		symbol,
+		amountBody: solesBody(fund.currentAmount),
+		targetLine: fundTargetLine(fund.targetAmount, targetMonths, symbol),
+		monthsLine: fundMonthsLine(fund, targetMonths),
 		cycleLine:
-			cycleContributionCents > 0
-				? `+${formatCentsTrimmed(cycleContributionCents, symbol)} / CICLO`
+			fund.cycleContributionCents > 0
+				? `+${formatCentsTrimmed(fund.cycleContributionCents, symbol)} / CICLO`
 				: null,
-		percent: savingsBarPercent(currentAmount, targetAmount),
+		percent: savingsBarPercent(fund.currentAmount, fund.targetAmount),
 	};
 }
 
-function fundMonthsLine(
-	monthsCovered: unknown,
-	monthsCoveredCopy: unknown,
-	targetMonths: number | null,
-): string {
-	const covered =
-		typeof monthsCovered === "number" && Number.isFinite(monthsCovered) ? monthsCovered : null;
-	if (covered != null && targetMonths != null && Number.isFinite(targetMonths)) {
-		const coveredLabel = formatMonthCount(covered);
+function pendingFund(symbol: string, label: string): FundView {
+	return {
+		pending: true,
+		label,
+		symbol,
+		amountBody: "0",
+		targetLine: PENDING_FUND_COPY,
+		monthsLine: "",
+		cycleLine: null,
+		percent: 0,
+	};
+}
+
+function fundMonthsLine(fund: Fund, targetMonths: number | null): string {
+	if (targetMonths != null && Number.isFinite(targetMonths)) {
+		const coveredLabel = formatMonthCount(fund.monthsCovered);
 		const targetLabel = formatMonthCount(targetMonths);
 		if (coveredLabel && targetLabel) {
 			return `${coveredLabel} DE ${targetLabel} MESES CUBIERTOS`;
 		}
 	}
-	if (typeof monthsCoveredCopy === "string" && monthsCoveredCopy.trim()) {
-		return monthsCoveredCopy;
-	}
-	return "";
+	return fund.monthsCoveredCopy;
 }
 
 function fundTargetLine(targetAmount: number, targetMonths: number | null, symbol: string): string {
@@ -203,53 +219,43 @@ function fundTargetLine(targetAmount: number, targetMonths: number | null, symbo
 	return `${money} · meta de ${label} ${noun} de gastos`;
 }
 
-function toGoalViews(goals: unknown, symbol: string): GoalView[] {
-	if (!Array.isArray(goals)) return [];
+function toGoalViews(goals: Overview["goals"], symbol: string): GoalView[] {
 	const views: GoalView[] = [];
 	for (const goal of goals) {
-		if (goal == null || goal.isSystemDefault === true) continue;
-		if (typeof goal.id !== "string" || !goal.id) continue;
-		const target =
-			typeof goal.targetAmount === "number" && goal.targetAmount > 0 ? goal.targetAmount : null;
-		const currentAmount = readCents(goal.currentAmount);
-		views.push({
-			id: goal.id,
-			name: readName(goal.label, "Meta"),
-			amountLine: goalAmountLine(currentAmount, target, symbol),
-			percent: savingsBarPercent(currentAmount, target ?? 0),
-			footer: GOAL_WITHOUT_AUTO_CONTRIBUTION,
-		});
+		if (goal.isSystemDefault) continue;
+		views.push(toGoalView(goal, symbol));
 	}
 	return views;
 }
 
-function goalAmountLine(currentAmount: number, target: number | null, symbol: string): string {
-	const currentLabel = formatCentsTrimmed(currentAmount, symbol);
-	if (target == null) return currentLabel;
-	return `${currentLabel} de ${formatCentsTrimmed(target, "").trim()}`;
+function toGoalView(goal: Goal, symbol: string): GoalView {
+	const target = goal.targetAmount != null && goal.targetAmount > 0 ? goal.targetAmount : null;
+	return {
+		id: goal.id,
+		name: goal.label,
+		currentLabel: formatCentsTrimmed(goal.currentAmount, symbol),
+		targetLabel: target == null ? null : `de ${solesBody(target)}`,
+		percent: target == null ? null : savingsBarPercent(goal.currentAmount, target),
+		footer: GOAL_WITHOUT_AUTO_CONTRIBUTION,
+	};
 }
 
 function surplusBanner(context: MoveSurplusContext, symbol: string): SurplusBannerView | null {
-	if (context == null || context.sources == null) return null;
-	const availableCents = context.sources.extraordinary?.availableCents;
-	if (!Number.isInteger(availableCents) || availableCents <= 0) return null;
-	const toSubEnvelopeId = fundDestinationId(context);
+	if (context == null) return null;
+	const availableCents = context.sources.extraordinary.availableCents;
+	if (availableCents <= 0) return null;
 	const fromEnvelope: MoveSurplusArgs["fromEnvelope"] = "extraordinary";
-	const args: MoveSurplusArgs = toSubEnvelopeId
-		? { fromEnvelope, amount: availableCents, toSubEnvelopeId }
+	const fund = context.destinations.find(
+		(destination: NonNullable<MoveSurplusContext>["destinations"][number]) =>
+			destination.isSystemDefault,
+	);
+	const args: MoveSurplusArgs = fund
+		? { fromEnvelope, amount: availableCents, toSubEnvelopeId: fund.id }
 		: { fromEnvelope, amount: availableCents };
 	return {
 		amountLabel: formatCentsTrimmed(availableCents, symbol),
 		args,
 	};
-}
-
-function fundDestinationId(context: NonNullable<MoveSurplusContext>) {
-	if (!Array.isArray(context.destinations)) return undefined;
-	for (const destination of context.destinations) {
-		if (destination?.isSystemDefault && destination.id) return destination.id;
-	}
-	return undefined;
 }
 
 function formatMonthCount(value: number): string | null {
@@ -258,11 +264,6 @@ function formatMonthCount(value: number): string | null {
 	return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
-function readCents(value: unknown): number {
-	return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function readName(value: unknown, fallback: string): string {
-	if (typeof value === "string" && value.trim()) return value.trim();
-	return fallback;
+function solesBody(cents: number): string {
+	return formatCentsTrimmed(cents, "").trim();
 }

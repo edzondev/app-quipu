@@ -1,12 +1,12 @@
-import { Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import AppShell from "@/shared/components/app-shell";
+import { ProgressBody } from "@/shared/components/savings/progress-body";
 
 export default function ProgressPage() {
+	const router = useRouter();
 	return (
 		<AppShell>
-			<View className="flex-1">
-				<Text className="font-newsreader text-[27px] leading-8 text-foreground">Progreso</Text>
-			</View>
+			<ProgressBody onOpenAhorro={() => router.push("/(tabs)/envelopes/ahorro")} />
 		</AppShell>
 	);
 }
