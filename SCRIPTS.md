@@ -65,6 +65,7 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 | Biome en modo CI (format + lint, sin escribir) | `pnpm ci:quality` |
 | Typecheck de CI (móvil, `@quipu/convex-api`, `apps/web/convex`) | `pnpm typecheck:ci` |
 | Jest de `@quipu/mobile` sin watchman | `pnpm test:mobile` |
+| Vitest de `@quipu/web` (Convex y el resto, sin watch) | `pnpm test:web` |
 | Instalar todas las deps del workspace | `pnpm install` |
 
 > `pnpm dev` con Turbo arranca las tareas `dev` declaradas en cada paquete.
@@ -74,7 +75,7 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 
 > `pnpm typecheck` incluye `@quipu/web`, cuyo script corre `convex codegen` y
 > necesita un deployment de Convex. El job de GitHub Actions (`.github/workflows/ci.yml`)
-> no usa ese comando: corre `pnpm ci:quality`, `pnpm typecheck:ci` y `pnpm test:mobile`.
+> no usa ese comando: corre `pnpm ci:quality`, `pnpm typecheck:ci`, `pnpm test:mobile` y `pnpm test:web`.
 
 ## Flujo típico de trabajo diario
 
