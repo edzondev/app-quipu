@@ -19,6 +19,16 @@ export default function EnvelopesPage() {
 			<View className="flex-1">
 				<Pressable
 					accessibilityRole="button"
+					accessibilityLabel="Compromisos"
+					hitSlop={HIT_SLOP}
+					onPress={() => router.push("/(tabs)/envelopes/compromisos")}
+					className="mb-4 flex-row items-center justify-between active:opacity-60"
+				>
+					<Text className="font-hanken-semibold text-[15px] text-foreground">Compromisos</Text>
+					<ChevronRight size={16} color="#9A968C" />
+				</Pressable>
+				<Pressable
+					accessibilityRole="button"
 					accessibilityLabel="Ahorro y metas"
 					hitSlop={HIT_SLOP}
 					onPress={() => router.push("/(tabs)/envelopes/ahorro")}
@@ -32,16 +42,6 @@ export default function EnvelopesPage() {
 							</Text>
 						) : null}
 					</View>
-					<ChevronRight size={16} color="#9A968C" />
-				</Pressable>
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Compromisos"
-					hitSlop={HIT_SLOP}
-					onPress={() => router.push("/(tabs)/envelopes/compromisos")}
-					className="mb-4 flex-row items-center justify-between active:opacity-60"
-				>
-					<Text className="font-hanken-semibold text-[15px] text-foreground">Compromisos</Text>
 					<ChevronRight size={16} color="#9A968C" />
 				</Pressable>
 				<SobresScreen

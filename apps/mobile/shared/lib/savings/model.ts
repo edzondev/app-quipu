@@ -62,8 +62,6 @@ const GOAL_LABEL_MAX = 40;
 /** Convex no trae aporte automático por meta ni mutación para activarlo. */
 export const GOAL_WITHOUT_AUTO_CONTRIBUTION = "SIN APORTE AUTOMÁTICO";
 
-const SURPLUS_SOURCE_ORDER = ["extraordinary", "wants", "needs"] as const;
-
 export function savingsBarPercent(currentCents: number, targetCents: number): number {
 	if (!Number.isFinite(currentCents) || !Number.isFinite(targetCents) || targetCents <= 0) {
 		return 0;
@@ -233,19 +231,17 @@ function goalAmountLine(currentAmount: number, target: number | null, symbol: st
 
 function surplusBanner(context: MoveSurplusContext, symbol: string): SurplusBannerView | null {
 	if (context == null || context.sources == null) return null;
-	for (const fromEnvelope of SURPLUS_SOURCE_ORDER) {
-		const availableCents = context.sources[fromEnvelope]?.availableCents;
-		if (!Number.isInteger(availableCents) || availableCents <= 0) continue;
-		const toSubEnvelopeId = fundDestinationId(context);
-		const args: MoveSurplusArgs = toSubEnvelopeId
-			? { fromEnvelope, amount: availableCents, toSubEnvelopeId }
-			: { fromEnvelope, amount: availableCents };
-		return {
-			amountLabel: formatCentsTrimmed(availableCents, symbol),
-			args,
-		};
-	}
-	return null;
+	const availableCents = context.sources.extraordinary?.availableCents;
+	if (!Number.isInteger(availableCents) || availableCents <= 0) return null;
+	const toSubEnvelopeId = fundDestinationId(context);
+	const fromEnvelope: MoveSurplusArgs["fromEnvelope"] = "extraordinary";
+	const args: MoveSurplusArgs = toSubEnvelopeId
+		? { fromEnvelope, amount: availableCents, toSubEnvelopeId }
+		: { fromEnvelope, amount: availableCents };
+	return {
+		amountLabel: formatCentsTrimmed(availableCents, symbol),
+		args,
+	};
 }
 
 function fundDestinationId(context: NonNullable<MoveSurplusContext>) {

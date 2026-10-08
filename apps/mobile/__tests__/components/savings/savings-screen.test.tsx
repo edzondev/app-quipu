@@ -31,9 +31,9 @@ const filled = presentAhorro(
 	{ emergencyFund: fund },
 	{
 		sources: {
-			needs: { availableCents: 0 },
-			wants: { availableCents: 9600 },
-			extraordinary: { availableCents: 0 },
+			needs: { availableCents: 2500 },
+			wants: { availableCents: 5000 },
+			extraordinary: { availableCents: 9600 },
 		},
 		destinations: [{ id: "fund-secret", label: "Fondo de emergencia", isSystemDefault: true }],
 	},
@@ -83,7 +83,7 @@ describe("SavingsScreen", () => {
 		expect(view.queryByText("goal-secret")).toBeNull();
 		expect(view.queryByText("fund-secret")).toBeNull();
 		expect(
-			view.getByText("Te sobrarán ~S/ 96 al cerrar el ciclo. ¿Los mando al Fondo?"),
+			view.getByText("Tienes ~S/ 96 de ingreso extra este ciclo. ¿Los mando al Fondo?"),
 		).toBeTruthy();
 
 		expect(fillWidth(view.getByLabelText("Avance del fondo, 41 por ciento"))).toBe("41%");
@@ -113,8 +113,33 @@ describe("SavingsScreen", () => {
 			/>,
 		);
 		expect(
-			view.queryByText("Te sobrarán ~S/ 96 al cerrar el ciclo. ¿Los mando al Fondo?"),
+			view.queryByText("Tienes ~S/ 96 de ingreso extra este ciclo. ¿Los mando al Fondo?"),
 		).toBeNull();
+	});
+
+	it("no muestra el banner si el ingreso extra es 0", async () => {
+		const model = presentAhorro(
+			{
+				profile: { currencyCode: "PEN" },
+				totalSavedCents: 305000,
+				cycleContributionCents: 70000,
+				emergencyFund: fund,
+				goals: [],
+				canCreateGoal: true,
+			},
+			{ emergencyFund: fund },
+			{
+				sources: {
+					needs: { availableCents: 2500 },
+					wants: { availableCents: 9600 },
+					extraordinary: { availableCents: 0 },
+				},
+				destinations: [],
+			},
+		);
+		const view = await render(<SavingsScreen {...screenProps} model={model} />);
+		expect(view.queryByText(/ingreso extra/)).toBeNull();
+		expect(view.queryByLabelText("Sí, moverlos")).toBeNull();
 	});
 
 	it("centra el vacío sin ofrecer una acción que Convex no permite", async () => {

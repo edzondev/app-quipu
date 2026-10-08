@@ -176,7 +176,7 @@ function SurplusBanner({
 	return (
 		<View className="mt-4 rounded-xl border border-line px-4 py-3.5">
 			<Text className="font-hanken text-[14px] leading-5 text-foreground">
-				{`Te sobrarán ~${amountLabel} al cerrar el ciclo. ¿Los mando al Fondo?`}
+				{`Tienes ~${amountLabel} de ingreso extra este ciclo. ¿Los mando al Fondo?`}
 			</Text>
 			<View className="mt-3 flex-row gap-2">
 				<Pressable

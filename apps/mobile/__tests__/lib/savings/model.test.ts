@@ -103,7 +103,7 @@ describe("presentAhorro", () => {
 		expect(model.fund?.percent).toBe(41);
 	});
 
-	it("toma un solo availableCents y no suma las fuentes", () => {
+	it("muestra el banner solo con el ingreso extra", () => {
 		const model = presentAhorro(overview, null, {
 			currencyCode: "PEN",
 			sources: {
@@ -118,38 +118,15 @@ describe("presentAhorro", () => {
 			amountLabel: "S/ 96",
 			args: { fromEnvelope: "extraordinary", amount: 9600, toSubEnvelopeId: "fund-1" },
 		});
-		expect(model.surplus?.args.amount).not.toBe(15600);
 	});
 
-	it("sigue con gustos o necesidades cuando el extraordinario está en cero", () => {
-		const wants = presentAhorro(overview, null, {
-			sources: {
-				needs: { availableCents: 0 },
-				wants: { availableCents: 9600 },
-				extraordinary: { availableCents: 0 },
-			},
-			destinations: [{ id: "meta-1", label: "Viaje", isSystemDefault: false }],
-		});
-		expect(wants.surplus?.args).toEqual({ fromEnvelope: "wants", amount: 9600 });
-
-		const needs = presentAhorro(overview, null, {
-			sources: {
-				needs: { availableCents: 2500 },
-				wants: { availableCents: 0 },
-				extraordinary: { availableCents: 0 },
-			},
-			destinations: [],
-		});
-		expect(needs.surplus?.args).toEqual({ fromEnvelope: "needs", amount: 2500 });
-	});
-
-	it("oculta el banner si Convex no confirma excedente", () => {
+	it("oculta el banner si el ingreso extra es 0 aunque needs y wants tengan saldo", () => {
 		expect(presentAhorro(overview, null, null).surplus).toBeNull();
 		expect(
 			presentAhorro(overview, null, {
 				sources: {
-					needs: { availableCents: 0 },
-					wants: { availableCents: 0 },
+					needs: { availableCents: 2500 },
+					wants: { availableCents: 9600 },
 					extraordinary: { availableCents: 0 },
 				},
 				destinations: [],
