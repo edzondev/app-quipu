@@ -9,6 +9,8 @@ import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { RecoverPasswordLink } from "./recover-password-link";
 
+import type { PasswordSignInForm } from "./sign-in-view";
+
 const TurnstileWidget = dynamic(
 	() => import("@/shared/components/turnstile-widget").then((mod) => mod.TurnstileWidget),
 	{ ssr: false },
@@ -32,7 +34,7 @@ export function PasswordStep({
 	showPasskey,
 	returnTo,
 }: {
-	form: any;
+	form: PasswordSignInForm;
 	email: string;
 	error: "credentials" | "passkey" | "unverified" | null;
 	reason?: string;
@@ -124,7 +126,7 @@ export function PasswordStep({
 			>
 				<FieldGroup>
 					<form.Field name="password">
-						{(field: any) => {
+						{(field) => {
 							const isInvalid =
 								(field.state.meta.isTouched && !field.state.meta.isValid) ||
 								error === "credentials";
@@ -160,8 +162,8 @@ export function PasswordStep({
 					onReady={onTurnstileReady}
 					className="min-h-16"
 				/>
-				<form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>
-					{([canSubmit, isSubmitting]: [boolean, boolean]) => (
+				<form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting] as const}>
+					{([canSubmit, isSubmitting]) => (
 						<Button
 							type="submit"
 							disabled={!canSubmit || isSubmitting}

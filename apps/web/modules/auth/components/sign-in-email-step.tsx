@@ -16,6 +16,8 @@ const SignInPasskeyAlternative = dynamic(
 	{ ssr: false },
 );
 
+import type { EmailSignInForm } from "./sign-in-view";
+
 const TurnstileWidget = dynamic(
 	() => import("@/shared/components/turnstile-widget").then((mod) => mod.TurnstileWidget),
 	{ ssr: false },
@@ -32,7 +34,7 @@ export function EmailStep({
 	onTurnstileReady,
 	onPasskeyAttemptComplete,
 }: {
-	form: any;
+	form: EmailSignInForm;
 	reason?: string;
 	error: "credentials" | "passkey" | "unverified" | null;
 	showPasskey: boolean;
@@ -76,7 +78,7 @@ export function EmailStep({
 			>
 				<FieldGroup>
 					<form.Field name="email">
-						{(field: any) => {
+						{(field) => {
 							const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 							return (
 								<Field data-invalid={isInvalid}>
@@ -100,8 +102,8 @@ export function EmailStep({
 						}}
 					</form.Field>
 				</FieldGroup>
-				<form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>
-					{([canSubmit, isSubmitting]: [boolean, boolean]) => (
+				<form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting] as const}>
+					{([canSubmit, isSubmitting]) => (
 						<Button
 							type="submit"
 							disabled={!canSubmit || isSubmitting}

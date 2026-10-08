@@ -40,12 +40,16 @@ describe("pickPostponeCandidate", () => {
 	});
 
 	it("falls back to needs when no wants commitments remain uncovered", () => {
+		const rent = commitments[0];
+		const spotify = commitments[1];
+		const netflix = commitments[2];
+		expect(rent).toBeDefined();
+		expect(spotify).toBeDefined();
+		expect(netflix).toBeDefined();
+		if (!rent || !spotify || !netflix) return;
+
 		expect(
-			pickPostponeCandidate([
-				commitments[0]!,
-				{ ...commitments[1]!, remaining: 0 },
-				{ ...commitments[2]!, remaining: 0 },
-			])?.id,
+			pickPostponeCandidate([rent, { ...spotify, remaining: 0 }, { ...netflix, remaining: 0 }])?.id,
 		).toBe("rent");
 	});
 

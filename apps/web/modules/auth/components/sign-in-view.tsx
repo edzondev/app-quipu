@@ -20,6 +20,29 @@ import { PasswordStep } from "./sign-in-password-step";
 
 type Step = { kind: "email" } | { kind: "password"; email: string };
 
+function useEmailSignInForm(initialEmail: string, onSubmit: (email: string) => void) {
+	return useForm({
+		defaultValues: { email: initialEmail },
+		validators: { onChange: emailOnlySchema },
+		onSubmit: async ({ value }) => {
+			onSubmit(value.email);
+		},
+	});
+}
+
+function usePasswordSignInForm(onSubmit: (password: string) => Promise<void>) {
+	return useForm({
+		defaultValues: { password: "" },
+		validators: { onChange: passwordOnlySchema },
+		onSubmit: async ({ value }) => {
+			await onSubmit(value.password);
+		},
+	});
+}
+
+export type EmailSignInForm = ReturnType<typeof useEmailSignInForm>;
+export type PasswordSignInForm = ReturnType<typeof usePasswordSignInForm>;
+
 function isEmailNotVerified(error: { code?: string; message?: string }) {
 	const message = error.message?.toLowerCase() ?? "";
 	return (
@@ -74,42 +97,34 @@ export function SignInView({
 		});
 	}, [support.conditionalUI, postAuthDestination, turnstile.token]);
 
-	const emailForm = useForm({
-		defaultValues: { email: initialEmail },
-		validators: { onChange: emailOnlySchema },
-		onSubmit: async ({ value }) => {
-			setError(null);
-			setDirection("forward");
-			setStep({ kind: "password", email: value.email });
-		},
+	const emailForm = useEmailSignInForm(initialEmail, (email) => {
+		setError(null);
+		setDirection("forward");
+		setStep({ kind: "password", email });
 	});
 
-	const passwordForm = useForm({
-		defaultValues: { password: "" },
-		validators: { onChange: passwordOnlySchema },
-		onSubmit: async ({ value }) => {
-			if (step.kind !== "password") return;
-			setError(null);
-			if (!requireTurnstileToken(turnstile.token, clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY)) {
-				setError("credentials");
-				return;
-			}
-			const { error: err } = await authClient.signIn.email(
-				{
-					email: step.email,
-					password: value.password,
-				},
-				authFetchOptions(turnstile.token),
-			);
-			turnstile.reset();
-			if (err) {
-				setError(isEmailNotVerified(err) ? "unverified" : "credentials");
-				return;
-			}
-			trackLogin("password");
-			toast.success("Bienvenido de vuelta");
-			navigateAfterAuth(postAuthDestination);
-		},
+	const passwordForm = usePasswordSignInForm(async (password) => {
+		if (step.kind !== "password") return;
+		setError(null);
+		if (!requireTurnstileToken(turnstile.token, clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY)) {
+			setError("credentials");
+			return;
+		}
+		const { error: err } = await authClient.signIn.email(
+			{
+				email: step.email,
+				password,
+			},
+			authFetchOptions(turnstile.token),
+		);
+		turnstile.reset();
+		if (err) {
+			setError(isEmailNotVerified(err) ? "unverified" : "credentials");
+			return;
+		}
+		trackLogin("password");
+		toast.success("Bienvenido de vuelta");
+		navigateAfterAuth(postAuthDestination);
 	});
 
 	return (

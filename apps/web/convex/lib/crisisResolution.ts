@@ -25,7 +25,8 @@ export function pickPostponeCandidate(
 		.filter((commitment) => commitment.envelope === "wants")
 		.sort((a, b) => a.remaining - b.remaining);
 
-	if (wants.length > 0) return wants[0]!;
+	const [firstWant] = wants;
+	if (firstWant) return firstWant;
 
 	const needs = uncovered
 		.filter((commitment) => commitment.envelope === "needs")

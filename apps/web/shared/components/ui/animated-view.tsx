@@ -34,7 +34,7 @@ export function AnimatedView({
 	className,
 	children,
 }: AnimatedViewProps) {
-	const ref = useRef<HTMLDivElement>(null);
+	const ref = useRef<HTMLElement>(null);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: viewKey must re-run focus on step change
 	useEffect(() => {
@@ -44,16 +44,15 @@ export function AnimatedView({
 	}, [viewKey, focusOnMount]);
 
 	return (
-		<div
+		<section
 			key={viewKey}
 			ref={ref}
-			role="region"
 			aria-live={ariaLive}
 			aria-labelledby={ariaLabelledBy}
 			tabIndex={focusOnMount ? -1 : undefined}
 			className={cn(directionClasses[direction], className)}
 		>
 			{children}
-		</div>
+		</section>
 	);
 }

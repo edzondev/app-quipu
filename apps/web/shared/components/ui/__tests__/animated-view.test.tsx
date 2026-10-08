@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AnimatedView } from "../animated-view";
 
 function getRegion(container: HTMLElement) {
-	return container.querySelector('[role="region"]');
+	return container.querySelector("section");
 }
 
 function hasClass(element: Element | null, className: string) {
@@ -83,7 +83,7 @@ describe("AnimatedView", () => {
 		);
 
 		await waitFor(() => {
-			const region = document.querySelector('[role="region"]') as HTMLElement;
+			const region = document.querySelector("section");
 			expect(document.activeElement).toBe(region);
 		});
 
@@ -94,7 +94,7 @@ describe("AnimatedView", () => {
 		);
 
 		await waitFor(() => {
-			const region = document.querySelector('[role="region"]') as HTMLElement;
+			const region = document.querySelector("section");
 			expect(document.activeElement).toBe(region);
 		});
 	});
