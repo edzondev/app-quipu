@@ -78,7 +78,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 
 	it("muestra el header del paso 03, las 3 filas y el indicador de suma", async () => {
 		await renderStep3(null);
-		expect(screen.getByText("TU SISTEMA · 02/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 03/05")).toBeTruthy();
 		expect(screen.getByText("Necesidades")).toBeTruthy();
 		expect(screen.getByText("Gustos")).toBeTruthy();
 		expect(screen.getByText("Ahorro")).toBeTruthy();
@@ -148,19 +148,19 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("allocation-amount-needs").props.children).toBe("S/ 1,750");
 	});
 
-	it("Atrás desde el reparto va al paso 1", async () => {
+	it("Atrás desde el reparto va al paso de cobro", async () => {
 		await renderStep3(null);
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("1");
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 	});
 
-	it("Continuar va al paso 3, no a confirmar", async () => {
+	it("Continuar va a compromisos, no a confirmar", async () => {
 		await renderStep3(null);
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 	});
 });

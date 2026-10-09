@@ -21,7 +21,7 @@ export function Step4Commitments() {
 		defaultValues: { rows: rowsFromCommitments(state.commitments) },
 		onSubmit: ({ value }) => {
 			dispatch({ type: "UPDATE", payload: { commitments: commitmentsFromRows(value.rows) } });
-			dispatch({ type: "SET_STEP", payload: 4 });
+			dispatch({ type: "SET_STEP", payload: 5 });
 		},
 	});
 	const rows = useStore(form.store, (store) => store.values.rows);
@@ -29,12 +29,12 @@ export function Step4Commitments() {
 
 	const skip = () => {
 		dispatch({ type: "UPDATE", payload: { commitments: [] } });
-		dispatch({ type: "SET_STEP", payload: 4 });
+		dispatch({ type: "SET_STEP", payload: 5 });
 	};
 
 	return (
 		<WizardShell
-			stepNumber={3}
+			stepNumber={4}
 			footer={
 				<View className="gap-3">
 					<AuthButton label="Continuar" onPress={() => void form.handleSubmit()} />

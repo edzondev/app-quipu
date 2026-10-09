@@ -5,13 +5,14 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
-import type { WizardStep } from "@/shared/lib/onboarding/types";
+import { WIZARD_STEPS, type WizardStep } from "@/shared/lib/onboarding/types";
 
 function leaveStep(
 	stepNumber: number,
 	onBack: (() => void) | undefined,
 	router: { canGoBack: () => boolean; back: () => void; replace: (href: string) => void },
 	dispatch: (action: { type: "SET_STEP"; payload: WizardStep }) => void,
+	commitmentsSaved: boolean,
 ) {
 	if (onBack) {
 		onBack();
@@ -25,7 +26,8 @@ function leaveStep(
 		}
 		return;
 	}
-	dispatch({ type: "SET_STEP", payload: (stepNumber - 1) as WizardStep });
+	const previous = stepNumber === 5 && commitmentsSaved ? 3 : stepNumber - 1;
+	dispatch({ type: "SET_STEP", payload: previous as WizardStep });
 }
 
 type WizardShellProps = {
@@ -37,17 +39,17 @@ type WizardShellProps = {
 
 export function WizardShell({ stepNumber, children, footer, onBack }: WizardShellProps) {
 	const router = useRouter();
-	const { dispatch } = useOnboarding();
+	const { state, dispatch } = useOnboarding();
 
-	const goBack = () => leaveStep(stepNumber, onBack, router, dispatch);
+	const goBack = () => leaveStep(stepNumber, onBack, router, dispatch, state.commitmentsSaved);
 
 	useEffect(() => {
 		const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-			leaveStep(stepNumber, onBack, router, dispatch);
+			leaveStep(stepNumber, onBack, router, dispatch, state.commitmentsSaved);
 			return true;
 		});
 		return () => subscription.remove();
-	}, [dispatch, onBack, router, stepNumber]);
+	}, [dispatch, onBack, router, state.commitmentsSaved, stepNumber]);
 
 	return (
 		<KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
@@ -59,9 +61,9 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 				</View>
 
 				<View className="gap-4">
-					<MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/04`}</MonoLabel>
+					<MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/${String(WIZARD_STEPS.length).padStart(2, "0")}`}</MonoLabel>
 					<View className="flex-row gap-1.5">
-						{[1, 2, 3, 4].map((segment) => (
+						{WIZARD_STEPS.map((segment) => (
 							<View
 								key={segment}
 								testID={`wizard-progress-${segment}`}

@@ -17,8 +17,6 @@ type Props = {
 	currencySymbol: string;
 	formError?: string | null;
 	hasActiveCycle: boolean;
-	initialAmountCents?: number;
-	prompt?: string;
 	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
 	onCancel: () => void;
 };
@@ -27,8 +25,6 @@ export function IncomeSheetForm({
 	currencySymbol,
 	formError,
 	hasActiveCycle,
-	initialAmountCents = 0,
-	prompt,
 	onSubmit,
 	onCancel,
 }: Props) {
@@ -36,7 +32,7 @@ export function IncomeSheetForm({
 		? INCOME_KINDS
 		: INCOME_KINDS.filter((option) => option.kind === "habitual");
 	const form = useForm({
-		defaultValues: { ...defaultIncomeDraft(), amountCents: initialAmountCents },
+		defaultValues: defaultIncomeDraft(),
 		onSubmit: ({ value }) =>
 			onSubmit({
 				...value,
@@ -62,10 +58,6 @@ export function IncomeSheetForm({
 					<Text className="font-hanken-semibold text-[13px] text-foreground/45">Cancelar</Text>
 				</Pressable>
 			</View>
-
-			{prompt ? (
-				<Text className="mt-4 font-hanken text-[15px] text-foreground">{prompt}</Text>
-			) : null}
 
 			<form.Field name="incomeKind">
 				{(field) => (

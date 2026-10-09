@@ -75,7 +75,7 @@ describe("Paso 2 reparto", () => {
 
 	it("muestra 02/04 y arranca en 50/30/20", async () => {
 		await renderStep2();
-		expect(screen.getByText("TU SISTEMA · 02/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 03/05")).toBeTruthy();
 		expect(screen.getByText("Necesidades")).toBeTruthy();
 		expect(screen.getByText("Gustos")).toBeTruthy();
 		expect(screen.getByText("Ahorro")).toBeTruthy();

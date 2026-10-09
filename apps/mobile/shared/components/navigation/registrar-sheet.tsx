@@ -11,7 +11,6 @@ import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import type { ExpenseDraftInput } from "@/shared/lib/expenses/draft";
 import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
-import type { IncomeRecord } from "@/shared/lib/income/draft";
 import {
 	type RegistrarIntent,
 	type RegistrarMode,
@@ -22,9 +21,6 @@ import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 type Session = {
 	nonce: number;
 	intent: RegistrarIntent;
-	incomeAmountCents?: number;
-	incomePrompt?: string;
-	incomeRecord?: IncomeRecord;
 };
 
 type Props = {
@@ -58,10 +54,8 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 	const noCycle = home.status === "empty" || home.status === "closed";
 	const hasCycle = home.status === "ready";
 	const [picked, setPicked] = useState<RegistrarMode | null>(null);
-	const forcedIncome = session.incomePrompt != null;
-	const mode = forcedIncome
-		? "income"
-		: home.status === "loading"
+	const mode =
+		home.status === "loading"
 			? null
 			: noCycle
 				? "income"
@@ -122,9 +116,9 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 			<View className="px-[22px] pt-1.5">
 				<ModeSwitch
 					value={mode}
-					expenseDisabled={noCycle || forcedIncome}
+					expenseDisabled={noCycle}
 					onChange={(next) => {
-						if ((noCycle || forcedIncome) && next === "expense") return;
+						if (noCycle && next === "expense") return;
 						setPicked(next);
 						setFieldError(null);
 						setFormError(null);
@@ -136,14 +130,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 					currencySymbol={currencySymbol}
 					formError={formError}
 					hasActiveCycle={hasCycle}
-					initialAmountCents={session.incomeAmountCents}
-					prompt={session.incomePrompt}
-					onSubmit={(draft) =>
-						guard(
-							() => registerIncome(draft, session.incomeRecord),
-							"No se pudo guardar el ingreso.",
-						)
-					}
+					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
 					onCancel={onDone}
 				/>
 			) : (

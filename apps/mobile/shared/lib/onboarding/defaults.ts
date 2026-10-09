@@ -43,6 +43,8 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
 	incomeModel: "fixed",
 	payFrequency: "monthly",
 	referenceIncomeCents: null,
+	nextPayDate: null,
+	cycleFieldErrors: {},
 	cycleDurationDays: undefined,
 	mixedFixedAmountCents: undefined,
 	variableIncomeSources: [],
@@ -50,6 +52,8 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
 	allocationWants: 30,
 	allocationSavings: 20,
 	commitments: [],
+	savedProfileId: null,
+	commitmentsSaved: false,
 };
 
 export const PAYDAYS_BY_FREQUENCY: Record<PayFrequency, number[]> = {

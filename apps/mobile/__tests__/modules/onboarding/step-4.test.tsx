@@ -76,7 +76,7 @@ describe("Step4Commitments — compromisos", () => {
 
 	it("muestra el header del paso 03, los chips y el total", async () => {
 		await renderStep4();
-		expect(screen.getByText("TU SISTEMA · 03/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 04/05")).toBeTruthy();
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
 		expect(
 			screen.getByText("Los reservamos de Necesidades para que nunca aparezcan como sorpresa."),
@@ -180,7 +180,7 @@ describe("Step4Commitments — compromisos", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
 		expect(getCommitments()).toHaveLength(1);
 		expect(getCommitments()[0]).toMatchObject({ name: "Agua", amountCents: 110000, dueDay: 5 });
 	});
@@ -198,25 +198,25 @@ describe("Step4Commitments — compromisos", () => {
 			fireEvent.press(screen.getByTestId("commitments-skip"));
 		});
 		expect(mockCreateBulk).not.toHaveBeenCalled();
-		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
 		expect(getCommitments()).toHaveLength(0);
 	});
 
-	it("sin filas, Continuar avanza al paso 4", async () => {
+	it("sin filas, Continuar avanza a confirmar", async () => {
 		await renderStep4();
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
 		expect(getCommitments()).toHaveLength(0);
 	});
 
-	it("el back del paso 3 regresa al paso 2", async () => {
+	it("el back de compromisos regresa al reparto", async () => {
 		await renderStep4();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
 		expect(mockBack).not.toHaveBeenCalled();
 	});
 });
