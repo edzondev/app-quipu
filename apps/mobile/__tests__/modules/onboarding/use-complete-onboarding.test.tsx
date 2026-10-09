@@ -99,6 +99,7 @@ describe("useCompleteOnboarding", () => {
 		expect(payload.allocationWants).toBe(30);
 		expect(payload.allocationSavings).toBe(20);
 		expect(payload).not.toHaveProperty("nextPayDate");
+		expect(payload.completeOnboarding).toBe(false);
 		expect(startFirstCycleMock).toHaveBeenCalledWith({
 			openingBalanceCents: 350000,
 			nextPayDate: "2026-10-20",

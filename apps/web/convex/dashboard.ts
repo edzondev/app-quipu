@@ -83,8 +83,9 @@ export const getSummary = query({
 					ctx,
 					latestClosed._id,
 					latestClosed.closeSurplusMovedAt,
+					latestClosed.carriedOverToCycleId,
 				);
-				surplusCents = amounts.total;
+				surplusCents = amounts.signedSurplusCents;
 			}
 			const closedCycle = summaryClosedCycle(false, latestClosed, surplusCents);
 

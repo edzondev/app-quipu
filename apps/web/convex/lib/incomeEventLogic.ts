@@ -1,17 +1,19 @@
 import { ConvexError } from "convex/values";
+import { limaDayKey } from "../../shared/lib/date";
 import type { Doc } from "../_generated/dataModel";
-import { MS_PER_DAY } from "./dashboardMath";
 
 type MinimalCycle = { _id: string; startDate: number; endDate: number };
 
-/** Habitual pay in the opening cycle may land up to two days before Lima midnight of nextPayDate. */
-const OPENING_EARLY_PAY_DAYS = 2;
-
-/** Edit already rejects `occurredAt > now`. Create uses the same rule. */
+/** A Lima calendar day after today. Later today is allowed. */
 export const FUTURE_INCOME_DATE_MESSAGE = "La fecha del ingreso no puede ser futura.";
 
+export const EXTRA_BEFORE_CYCLE_MESSAGE =
+	"La fecha del ingreso no puede ser anterior al inicio del ciclo.";
+
+export const NO_ACTIVE_CYCLE_MESSAGE = "Registra primero tu sueldo para empezar un ciclo nuevo.";
+
 export function futureIncomeDateMessage(occurredAt: number, now: number): string | null {
-	if (occurredAt > now) return FUTURE_INCOME_DATE_MESSAGE;
+	if (limaDayKey(occurredAt) > limaDayKey(now)) return FUTURE_INCOME_DATE_MESSAGE;
 	return null;
 }
 
@@ -25,22 +27,34 @@ export function rejectFutureIncomeDate(occurredAt: number, now: number): void {
 	});
 }
 
-export function resolveCycleForEvent(input: {
-	activeCycle: MinimalCycle | null;
-	occurredAt: number;
-	now: number;
-}): string | null {
-	if (!input.activeCycle) return null;
-	const { startDate, endDate } = input.activeCycle;
-	if (input.occurredAt >= startDate && input.occurredAt < endDate) {
-		return input.activeCycle._id;
+/** Both kinds: a Lima day after today is future. */
+export function rejectIncomeDateForKind(
+	incomeKind: Doc<"incomeEvents">["incomeKind"],
+	occurredAt: number,
+	now: number,
+): void {
+	if (incomeKind === "extraordinary" || incomeKind === "habitual" || incomeKind === undefined) {
+		rejectFutureIncomeDate(occurredAt, now);
 	}
-	return null;
+}
+
+export function rejectExtraordinaryBeforeCycleStart(
+	incomeKind: Doc<"incomeEvents">["incomeKind"],
+	occurredAt: number,
+	cycleStartDate: number,
+): void {
+	if (incomeKind !== "extraordinary" || occurredAt >= cycleStartDate) return;
+	throw new ConvexError({
+		code: "VALIDATION_ERROR",
+		message: EXTRA_BEFORE_CYCLE_MESSAGE,
+		data: { field: "occurredAt" },
+	});
 }
 
 /**
- * Same window as `resolveCycleForEvent`, except a habitual income on an opening
- * cycle closes it from two days before `endDate`. Other cycles are unchanged.
+ * Kind decides. An expired cycle stays active until a habitual income closes
+ * it. Extraordinary income always stays on that active cycle. NO_ACTIVE_CYCLE
+ * is only when the profile has no active cycle at all.
  */
 export function resolveCycleForIncome(input: {
 	activeCycle: (MinimalCycle & { isOpeningCycle?: boolean }) | null;
@@ -48,13 +62,13 @@ export function resolveCycleForIncome(input: {
 	now: number;
 	incomeKind: Doc<"incomeEvents">["incomeKind"];
 }): string | null {
-	const cycle = input.activeCycle;
-	if (
-		cycle?.isOpeningCycle === true &&
-		input.incomeKind === "habitual" &&
-		input.occurredAt >= cycle.endDate - OPENING_EARLY_PAY_DAYS * MS_PER_DAY
-	) {
-		return null;
+	if (input.incomeKind !== "extraordinary") return null;
+	if (input.activeCycle === null) {
+		throw new ConvexError({
+			code: "NO_ACTIVE_CYCLE",
+			message: NO_ACTIVE_CYCLE_MESSAGE,
+			data: { field: "incomeKind" },
+		});
 	}
-	return resolveCycleForEvent(input);
+	return input.activeCycle._id;
 }

@@ -5,9 +5,14 @@ import {
 	localeForCurrency,
 	marketFromCurrencyCode,
 	resolveMarketTriplet,
+	SUPPORTED_MARKETS,
 } from "./markets";
 
 describe("markets catalog", () => {
+	it("names the three currencies Sol, Euro and Dólar", () => {
+		expect(SUPPORTED_MARKETS.map((market) => market.shortLabel)).toEqual(["Sol", "Euro", "Dólar"]);
+	});
+
 	it("supports PEN EUR USD", () => {
 		expect(isSupportedCurrencyCode("PEN")).toBe(true);
 		expect(isSupportedCurrencyCode("EUR")).toBe(true);

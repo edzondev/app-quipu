@@ -4,6 +4,7 @@ import {
 	closedCycleSurplusBreakdown,
 	closedCycleSurplusCents,
 	dashboardClosedCycle,
+	movableEnvelopeCents,
 	summaryClosedCycle,
 } from "./closedCycleSurplus";
 
@@ -82,6 +83,14 @@ const movedRows = [
 	{ fromEnvelope: "needs", amount: 99_000, createdAt: OTHER_AT, contributionKind: "additional" },
 	{ fromEnvelope: "wants", amount: 77_000, createdAt: MOVED_AT, contributionKind: "objective" },
 ] satisfies ContributionSlice[];
+
+describe("movableEnvelopeCents", () => {
+	it("keeps a fund move at zero when the envelope is negative or empty", () => {
+		expect(movableEnvelopeCents(-100)).toBe(0);
+		expect(movableEnvelopeCents(undefined)).toBe(0);
+		expect(movableEnvelopeCents(50)).toBe(50);
+	});
+});
 
 describe("closedCycleSurplusBreakdown", () => {
 	it("keeps the live split before the move and the contribution rows after", () => {

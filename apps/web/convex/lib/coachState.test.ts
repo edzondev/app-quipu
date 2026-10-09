@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { evaluateCycleCompliance } from "./budgetMath";
 import {
 	buildCrisisCoachMessage,
 	buildWantsOverflowNudge,
@@ -8,6 +9,7 @@ import {
 	resolveCoachPresentation,
 	WANTS_OVERFLOW_EVENT,
 } from "./coachState";
+import { computeSurplusProjection } from "./dashboardMath";
 
 describe("computeUncoveredCommitmentsCents", () => {
 	it("sums amounts for uncovered commitments only", () => {
@@ -31,6 +33,39 @@ describe("resolveCoachPresentation", () => {
 		surplusCents: 24_000,
 		currencySymbol: "S/",
 	};
+
+	it("does not announce a negative sobra when carryover is negative and the cycle is compliant", () => {
+		const envelopes = [
+			{
+				type: "needs" as const,
+				remainingAmount: -12_34,
+				allocatedAmount: 10_00,
+				carriedOverCents: -12_34,
+			},
+			{
+				type: "wants" as const,
+				remainingAmount: 4_00,
+				allocatedAmount: 6_00,
+				carriedOverCents: 0,
+			},
+			{
+				type: "savings" as const,
+				remainingAmount: 2_00,
+				allocatedAmount: 4_00,
+				carriedOverCents: 0,
+			},
+		];
+		const compliance = evaluateCycleCompliance(envelopes);
+		expect(compliance).toBe("compliant");
+		const surplusCents = computeSurplusProjection(envelopes);
+		const message = resolveCoachPresentation({
+			...base,
+			compliance,
+			surplusCents,
+		}).message;
+		expect(message).toContain("sobra");
+		expect(message).not.toMatch(/-\d/);
+	});
 
 	it("returns suggestion when a pending coach interaction exists", () => {
 		const result = resolveCoachPresentation({

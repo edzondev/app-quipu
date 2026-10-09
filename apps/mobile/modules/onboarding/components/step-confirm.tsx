@@ -6,12 +6,7 @@ import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
 import AuthButton from "@/shared/components/auth/auth-button";
 import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
-import { cycleDaysForModel } from "@/shared/lib/onboarding/cycle";
-import {
-	estimateDailyAvailable,
-	formatDailyAvailable,
-	formatSoles,
-} from "@/shared/lib/onboarding/daily";
+import { formatSoles } from "@/shared/lib/onboarding/daily";
 import { formatPayDate } from "@/shared/lib/onboarding/pay-date";
 
 const COMMITMENTS_NOTE = "También puedes agregarlos después desde Plan.";
@@ -47,18 +42,6 @@ export function StepConfirm() {
 
 	const referenceCents = state.referenceIncomeCents;
 	const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
-	const cycleDays = cycleDaysForModel(state);
-	const dailyCents =
-		referenceCents == null
-			? null
-			: estimateDailyAvailable({
-					referenceIncomeCents: referenceCents,
-					commitmentsTotalCents,
-					allocationNeeds: state.allocationNeeds,
-					allocationWants: state.allocationWants,
-					allocationSavings: state.allocationSavings,
-					cycleDays,
-				});
 
 	const envelopeAmount = (pct: number) =>
 		referenceCents == null ? null : Math.floor((referenceCents * pct) / 100);
@@ -107,21 +90,6 @@ export function StepConfirm() {
 			}
 		>
 			<View className="gap-6">
-				<View className="gap-1">
-					<Text className="font-newsreader text-[28px] text-foreground">Puedes gastar hoy</Text>
-					<Text
-						testID="confirm-daily"
-						className="font-newsreader text-[52px] leading-[56px] text-foreground"
-					>
-						{dailyCents == null ? "—" : formatDailyAvailable(dailyCents)}
-					</Text>
-					<Text className="font-hanken text-[14px] text-foreground/55">
-						{dailyCents == null
-							? "Anota el dinero que tienes hoy para ver tu número."
-							: `Después de compromisos y ahorro, en ${cycleDays} días.`}
-					</Text>
-				</View>
-
 				<View className="gap-3">
 					<SummaryRow
 						label="Dinero de hoy"
