@@ -4,13 +4,13 @@ import { evaluateCycleCompliance } from "./budgetMath";
 import { computeNextStreak } from "./gamificationMath";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
-/** La racha ignora el ciclo de apertura. El historial de Progreso no. */
+/** La racha ignora el ciclo de apertura. Progreso lo cuenta igual que cualquier otro. */
 export function openingCycleSkipsProgress(isOpeningCycle: boolean | undefined): boolean {
 	return isOpeningCycle === true;
 }
 
-export function recordsClosedCycleInHistory(isOpeningCycle: boolean | undefined): boolean {
-	return openingCycleSkipsProgress(isOpeningCycle) === false || isOpeningCycle === true;
+export function includeOpeningCycleInProgress(isOpeningCycle: boolean | undefined): boolean {
+	return isOpeningCycle === true || isOpeningCycle === false || isOpeningCycle === undefined;
 }
 
 export function wantsWithinBudgetOnClose(
@@ -38,7 +38,7 @@ export async function evaluateClosedCycle(
 	now: number,
 ) {
 	const cycle = await ctx.db.get("financialCycles", cycleId);
-	if (!cycle || !recordsClosedCycleInHistory(cycle.isOpeningCycle)) return;
+	if (!cycle || !includeOpeningCycleInProgress(cycle.isOpeningCycle)) return;
 
 	const profile = await ctx.db.get("profiles", profileId);
 	const closedAtPremium = profile?.plan === "premium";

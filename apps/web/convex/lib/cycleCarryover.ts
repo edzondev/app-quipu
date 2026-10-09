@@ -54,11 +54,11 @@ export function computeCycleCarryover(input: {
 	};
 }
 
-/** Necesidades + Gustos + extraordinario, with the same signs as the carryover. */
+/** Signed sum carried onto the next cycle's envelopes, negatives included. */
 export function signedCycleSurplusCents(
-	carry: Pick<ReturnType<typeof computeCycleCarryover>, "needs" | "wants" | "extraordinary">,
+	carry: Pick<ReturnType<typeof computeCycleCarryover>, "needs" | "wants" | "savings">,
 ): number {
-	return carry.needs + carry.wants + carry.extraordinary;
+	return carry.needs + carry.wants + carry.savings;
 }
 
 export function envelopeWithCarry(distributionCents: number, carriedOverCents: number) {

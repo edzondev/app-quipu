@@ -110,10 +110,15 @@ describe("computeCycleCarryover", () => {
 		});
 	});
 
-	it("returns the signed net: mixed, zero, and negative", () => {
-		expect(signedCycleSurplusCents(carry({ needs: -100, wants: 50, savings: 0 }))).toBe(-50);
+	it("sums the signed envelope carry, including a negative savings envelope", () => {
+		expect(signedCycleSurplusCents(carry({ needs: -100, wants: 50, savings: -30 }))).toBe(-80);
 		expect(signedCycleSurplusCents(carry({ needs: 0, wants: 0, savings: 0 }))).toBe(0);
-		expect(signedCycleSurplusCents(carry({ needs: -80, wants: -20, savings: 0 }))).toBe(-100);
+		expect(signedCycleSurplusCents(carry({ needs: -80, wants: -20, savings: -10 }))).toBe(-110);
+		expect(
+			signedCycleSurplusCents(
+				carry({ needs: 1_000, wants: 200, savings: 500, extraordinarySavings: 300 }),
+			),
+		).toBe(1_700);
 	});
 
 	it("returns zeros once carriedOverToCycleId is set", () => {
