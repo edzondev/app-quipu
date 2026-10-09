@@ -7,6 +7,7 @@ tags:
 # Ahorro: crear metas. El nombre de 41 caracteres lo corta maxLength={40}
 # antes de llegar al mensaje del servidor: no se puede afirmar ese error.
 # Cuenta propia por corrida (QUIPU_E2E_GOALS_*). No hay cómo borrar la meta en la UI.
+# La hoja es 60% (goal-sheet.tsx). «Crear meta» se busca con scroll antes de tocarlo.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -37,19 +38,43 @@ tags:
 - extendedWaitUntil:
     visible: "(?-i)NUEVA META"
     timeout: 10000
+- scrollUntilVisible:
+    element: "Crear meta"
+    direction: DOWN
+    timeout: 10000
 - tapOn: "Crear meta"
+- scrollUntilVisible:
+    element: "El nombre de la meta es obligatorio."
+    direction: UP
+    timeout: 10000
 - assertVisible: "El nombre de la meta es obligatorio."
 - tapOn: "Nombre de la meta"
 - inputText: ${output.goal}
+- scrollUntilVisible:
+    element: "Meta"
+    direction: DOWN
+    timeout: 10000
 - tapOn: "Meta"
 - inputText: "0"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Crear meta"
+    direction: DOWN
+    timeout: 10000
 - tapOn: "Crear meta"
+- scrollUntilVisible:
+    element: "La meta debe ser mayor a cero."
+    direction: UP
+    timeout: 10000
 - assertVisible: "La meta debe ser mayor a cero."
 - tapOn: "Meta"
 - eraseText
 - inputText: "2000"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Crear meta"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     text: "Crear meta"
     enabled: true
@@ -70,6 +95,10 @@ tags:
 - tapOn: "Nombre de la meta"
 - inputText: ${output.goal}
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Crear meta"
+    direction: DOWN
+    timeout: 10000
 - tapOn: "Crear meta"
 - extendedWaitUntil:
     visible: "Ya tienes una meta con ese nombre."

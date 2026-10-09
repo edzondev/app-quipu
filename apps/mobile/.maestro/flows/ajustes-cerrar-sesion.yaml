@@ -6,6 +6,7 @@ tags:
 # Notion 3f486a7356a681f69b03ce8d1a3addab
 # Notion 3f486a7356a6813d9591f72c49825946 (sin modo avión ni atrás de Android)
 # Abre Seguridad y vuelve. No crea ni borra Passkeys.
+# El cierre de sesión no es la hoja al 60% y no tiene ScrollView: los botones siguen en el sheet.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

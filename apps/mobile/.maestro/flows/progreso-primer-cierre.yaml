@@ -3,7 +3,11 @@ tags:
   - p0
   - progreso
   - blocked
+  - wip
 ---
+# M45, pendiente: Cierre sigue mostrando el subtítulo de la racha aunque streakEvaluated
+# sea falso. Este flujo no afirma ese subtítulo. El tag wip lo deja fuera de la corrida
+# por defecto, junto con blocked (falta la semilla).
 # Notion 3f486a7356a6817698dbdf13ffd7bd83
 # Notion 3f486a7356a6819d80b8f1b507a473e6
 # Bloqueado. Hace falta una cuenta cuyo ciclo de apertura empezó antes de hoy.
@@ -25,6 +29,9 @@ tags:
       QUIPU_MODE_ID: income-mode-new-cycle
 - tapOn:
     text: "Progreso"
+- tapOn:
+    id: progress-preview-live
+    optional: true
 - extendedWaitUntil:
     visible: "CICLOS CERRADOS EN VERDE"
     timeout: 20000

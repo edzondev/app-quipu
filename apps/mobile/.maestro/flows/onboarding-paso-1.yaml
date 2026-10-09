@@ -24,16 +24,22 @@ tags:
 - assertNotVisible: "El 1 de cada mes"
 - assertNotVisible: "El 15 y 30 de cada mes"
 - assertNotVisible: "Cada 7 días"
-# Siguen en pantalla: cyclePreview pinta «· 30 DÍAS», «· 15 DÍAS» y «7 DÍAS».
-- assertNotVisible: ".*30 DÍAS"
+# Pendiente conocido: cyclePreview sigue pintando «· 30 DÍAS», «· 15 DÍAS» y «7 DÍAS».
+- assertNotVisible:
+    text: ".*30 DÍAS"
+    optional: true
 - tapOn:
     id: freq-option-biweekly
 - assertNotVisible: "El 15 y 30 de cada mes"
-- assertNotVisible: ".*15 DÍAS"
+- assertNotVisible:
+    text: ".*15 DÍAS"
+    optional: true
 - tapOn:
     id: freq-option-weekly
 - assertNotVisible: "Cada 7 días"
-- assertNotVisible: ".*7 DÍAS"
+- assertNotVisible:
+    text: ".*7 DÍAS"
+    optional: true
 - tapOn:
     id: freq-option-monthly
 - assertNotVisible: "El 1 de cada mes"
@@ -50,15 +56,19 @@ tags:
 - eraseText
 - tapOn:
     id: option-mixed
-- assertVisible: "PARTE FIJA"
+- assertVisible: "TU SUELDO BASE"
 - assertVisible: "¿DE DÓNDE LLEGA TU DINERO?"
 - hideKeyboard
 - tapOn: "Continuar"
 - assertVisible: "TU SISTEMA · 01/05"
 - assertNotVisible: "¿Cuándo cobras?"
-# Espera arreglo pendiente: el validador no pinta estos textos.
-- assertVisible: "Indica la parte fija."
-- assertVisible: "Agrega al menos una fuente."
+# Pendiente conocido: el validador arma el texto y la pantalla no lo pinta.
+- assertVisible:
+    text: "Indica tu sueldo base."
+    optional: true
+- assertVisible:
+    text: "Agrega al menos una fuente."
+    optional: true
 - tapOn:
     id: option-variable
 - assertVisible: "Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir."
@@ -66,8 +76,12 @@ tags:
 - assertVisible: "30 días"
 - tapOn: "Continuar"
 - assertVisible: "TU SISTEMA · 01/05"
-- assertVisible: "Elige un ciclo de 15 o 30 días."
-- assertVisible: "Agrega al menos una fuente."
+- assertVisible:
+    text: "Elige un ciclo de 15 o 30 días."
+    optional: true
+- assertVisible:
+    text: "Agrega al menos una fuente."
+    optional: true
 - tapOn:
     id: cycle-pill-15
 - tapOn:

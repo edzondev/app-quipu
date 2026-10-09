@@ -1,7 +1,7 @@
 appId: com.quipu.finance
 ---
 # QUIPU_MODE_ID es income-mode-new-cycle o income-mode-add.
-# Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
+# Monto S/ 10.00. Inicio con ciclo entra por la pestaña «Registrar», luego «Ingreso».
 # Si el perfil es de planilla, «Sumar» muestra los tipos (income-extra-*). Se elige Otro.
 # La hoja scrollea: el envío puede quedar abajo.
 - tapOn:

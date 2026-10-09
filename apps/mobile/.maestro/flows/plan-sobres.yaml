@@ -6,6 +6,7 @@ tags:
 # Notion 3f486a7356a68177a53fdbbe81003ba0 Plan
 # Notion 3f486a7356a6811cb630d08b4185f2e5 Sobres
 # «Va rápido» solo sale si el ritmo no alcanza; si no, «Al día» o «Intacto».
+# 99e2e3b solo retoca el espaciado de Sobres (mismos píxeles). No es una hoja al 60%.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

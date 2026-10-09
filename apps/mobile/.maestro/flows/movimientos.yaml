@@ -6,6 +6,7 @@ tags:
 ---
 # Notion 3f486a7356a681c697bad1f751335490
 # Movimientos: lista por día, filtros y búsqueda. El filtro «Ahorro» se ve.
+# 99e2e3b solo retoca el espaciado. La hoja de gasto sigue a pantalla completa.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

@@ -10,6 +10,7 @@ tags:
 # cerrarle un ciclo y esta pantalla deja de estar vacía.
 # «Cierre vacío» (Aún no hay un cierre. / Volver a Progreso) no tiene
 # un control en Progreso vacío: la ruta savings/cierre no se abre desde la UI.
+# En __DEV__ el selector «Datos reales» (progress-preview-live) se toca si está.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -21,6 +22,9 @@ tags:
 - runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - tapOn:
     text: "Progreso"
+- tapOn:
+    id: progress-preview-live
+    optional: true
 - extendedWaitUntil:
     visible: "Aún no cierras un ciclo."
     timeout: 15000

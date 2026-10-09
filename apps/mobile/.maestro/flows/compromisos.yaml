@@ -5,7 +5,10 @@ tags:
 ---
 # Notion 3f486a7356a681f8b73ee3d543a5dcf6 agregar
 # Notion 3f486a7356a68130b200fbcebc4fd595 validaciones (sin el doble toque)
-# Errores de toCreateCommitment: nombre obligatorio, monto mayor a cero, día del 1 al 31.
+# Errores de toCreateCommitment, uno por vez: vacío solo el nombre; el monto se prueba
+# después de llenar el nombre. Día del 1 al 31.
+# La hoja es 60% (commitment-sheet.tsx) y scrollea. No se ancla con below del título:
+# al bajar, «NUEVO COMPROMISO» se sale de la vista.
 # El texto de vencimiento depende del día de Lima; se afirma «Se repite cada mes.» y «MENSUAL» o un estado.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -34,38 +37,83 @@ tags:
     timeout: 10000
 - tapOn:
     text: "Agregar compromiso"
+- scrollUntilVisible:
+    element: "El nombre del compromiso es obligatorio."
+    direction: UP
+    timeout: 10000
 - assertVisible: "El nombre del compromiso es obligatorio."
-- assertVisible: "El monto debe ser mayor a cero."
+- scrollUntilVisible:
+    element: "\\+ Celular"
+    direction: UP
+    timeout: 10000
 - tapOn:
     text: "\\+ Celular"
+- scrollUntilVisible:
+    element: "Monto"
+    direction: DOWN
+    timeout: 10000
 - tapOn: "Monto"
 - inputText: "0"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Agregar compromiso"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     text: "Agregar compromiso"
-    below: "NUEVO COMPROMISO"
+- scrollUntilVisible:
+    element: "El monto debe ser mayor a cero."
+    direction: UP
+    timeout: 10000
 - assertVisible: "El monto debe ser mayor a cero."
+- scrollUntilVisible:
+    element: "Día de vencimiento"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     text: "Día de vencimiento"
 - inputText: "0"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "El día de vencimiento va del 1 al 31."
+    direction: UP
+    timeout: 10000
 - assertVisible: "El día de vencimiento va del 1 al 31."
+- tapOn:
+    text: "Día de vencimiento"
 - eraseText
 - inputText: "32"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "El día de vencimiento va del 1 al 31."
+    direction: UP
+    timeout: 10000
 - assertVisible: "El día de vencimiento va del 1 al 31."
+- tapOn:
+    text: "Día de vencimiento"
 - eraseText
 - inputText: "15"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Se repite cada mes\\..*"
+    direction: UP
+    timeout: 10000
 - assertVisible: "Se repite cada mes\\..*"
+- scrollUntilVisible:
+    element: "Monto"
+    direction: UP
+    timeout: 10000
 - tapOn: "Monto"
 - eraseText
 - inputText: "50"
 - hideKeyboard
+- scrollUntilVisible:
+    element: "Agregar compromiso"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     text: "Agregar compromiso"
     enabled: true
-    below: "NUEVO COMPROMISO"
 - extendedWaitUntil:
     notVisible: "NUEVO COMPROMISO"
     timeout: 20000

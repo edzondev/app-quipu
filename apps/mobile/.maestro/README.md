@@ -2,7 +2,7 @@
 
 Flujos E2E de la app móvil. No se ejecutan en CI: no hay emulador ni APK en este cambio. Donde no hay `testID` se usa el texto visible o el `accessibilityLabel`.
 
-Los flujos están sobre `4bb73db`. La hoja usa `income-mode-new-cycle` y `income-mode-add`. El reparto del asistente es con botones de más y menos. `config.yaml` excluye `one-shot`, `wip` y `blocked`. `pnpm maestro:smoke` sigue usando `--include-tags=smoke`, que tiene prioridad.
+Los flujos están sobre `f93107b` (incluye `99e2e3b`). La hoja usa `income-mode-new-cycle` y `income-mode-add`. El reparto del asistente es con botones de más y menos. `config.yaml` excluye `one-shot`, `wip` y `blocked`. `pnpm maestro:smoke` sigue usando `--include-tags=smoke`, que tiene prioridad.
 
 ## Cómo correrlos
 
@@ -24,6 +24,58 @@ maestro test .maestro/flows/onboarding-ciclo.yaml
 ```
 
 `config.yaml` lista solo `flows/`. `subflows/` no se corre solo.
+
+## Cómo correrlo en Windows
+
+Para Edzon, en su PC, con el emulador de Android Studio API 34 (Google APIs, x86_64). Maestro no se corre en este repo.
+
+Requisitos, según [la instalación oficial](https://docs.maestro.dev/maestro-cli/how-to-install-maestro-cli):
+
+- Java 17 o más. Él tiene 21. `JAVA_HOME` tiene que apuntar a ese JDK y `java` tiene que estar en el PATH.
+- Android Studio con un AVD API 34, imagen Google APIs, x86_64, encendido antes de Maestro.
+- `adb` en el PATH (platform-tools del SDK).
+- Maestro CLI en Windows, no en WSL. Bajar `maestro.zip` de las releases, extraerlo (por ejemplo `C:\maestro`) y agregar `C:\maestro\bin` al PATH. En PowerShell: `setx PATH "%PATH%;C:\maestro\bin"`. Cerrar y abrir la terminal. Comprobar con `maestro --help`.
+
+El binario tiene que ser un build EAS del perfil `preview` (`apps/mobile/eas.json`), apuntando al Convex de desarrollo `perceptive-elk-229`. No uses `production` ni `patient-chihuahua-640`. El perfil `preview` no define `android.buildType: "apk"` (el perfil `development` sí). Ese perfil sí tiene `distribution: "internal"`, y [Expo](https://docs.expo.dev/build-reference/apk) lista esa clave como una forma de sacar un `.apk`. Igual hay que instalar un `.apk`, no un `.aab`:
+
+```powershell
+adb install -r C:\ruta\app-preview.apk
+```
+
+Variables, sin valores reales. Desde `apps/mobile`:
+
+```powershell
+$env:QUIPU_E2E_EMAIL="..."
+$env:QUIPU_E2E_PASSWORD="..."
+pnpm maestro:smoke
+```
+
+Lo mismo con `-e`, sin dejarlas en la sesión:
+
+```powershell
+maestro test --include-tags=smoke .maestro/ -e QUIPU_E2E_EMAIL=... -e QUIPU_E2E_PASSWORD=...
+```
+
+`pnpm maestro:smoke` es `maestro test --include-tags=smoke .maestro/`.
+
+La semilla se corre desde `apps/web`, solo contra el dev. Nunca `--prod`. `DEV_SEED_PASSWORD` ya tiene que estar en el entorno del deployment; no se escribe en el repo.
+
+```powershell
+$EMAIL = "maestro-$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())@example.com"
+npx convex run devSeed:seedVerifiedAccount ('{"email":"' + $EMAIL + '"}')
+$env:QUIPU_E2E_FRESH_EMAIL = $EMAIL
+$env:QUIPU_E2E_FRESH_PASSWORD = $env:DEV_SEED_PASSWORD
+```
+
+`maestro test .maestro/` lee `config.yaml` y no corre flujos con tag `wip`, `blocked` ni `one-shot`. Un solo flujo es el archivo: `maestro test .maestro/flows/home-ciclo.yaml`. Maestro busca `config.yaml` cuando le pasas un directorio ([configuración del proyecto](https://docs.maestro.dev/maestro-flows/workspace-management/project-configuration)); al pasarle un archivo, corre ese flujo.
+
+Los artefactos van a `%USERPROFILE%\.maestro\tests` (`%userprofile%\.maestro\tests` en la [guía de reportes](https://docs.maestro.dev/maestro-flows/workspace-management/test-reports-and-artifacts)). Cada corrida es una carpeta con fecha dentro de esa ruta, por ejemplo `2026-07-31_173617`. Para un XML de JUnit, que no entra en esa carpeta:
+
+```powershell
+maestro test --include-tags=smoke .maestro/ --format junit --output informe.xml
+```
+
+Sin `--output`, Maestro escribe `report.xml` en el directorio actual. `--test-output-dir` cambia solo la carpeta de capturas y logs.
 
 Pasa las variables en el entorno o con `-e` (nunca en el YAML):
 
@@ -114,9 +166,10 @@ Estas afirmaciones todavía no pasan. Cuando llegue el cambio del dueño, tienen
 
 | Afirmación | Dueño | Dónde |
 |---|---|---|
-| El paso 1 no muestra «30 DÍAS» / «15 DÍAS» / «7 DÍAS». En `f98b65b` `cyclePreview` sigue pintando «1 – 30 de cada mes · 30 DÍAS», «· 15 DÍAS» y «7 DÍAS» | sigue en el código | `onboarding-paso-1` |
-| Mixto sin datos muestra «Indica la parte fija.» y «Agrega al menos una fuente.»; Variable muestra «Elige un ciclo de 15 o 30 días.» y «Agrega al menos una fuente.» | el validador no pinta el texto | `onboarding-paso-1` |
-| La racha cuenta solo si pasaron 24 horas reales entre el inicio y el cierre (`closeAt - startDate >=` un día), y nunca el ciclo de apertura. El API expone `streakEvaluated`. Cierre sigue pintando el subtítulo siempre: esconderlo cuando es falso queda para Pixi | Nubo lo expone, Pixi lo esconde | `progreso-primer-cierre` afirma `^0$`; no afirma el texto de Cierre |
+| El paso 1 no muestra «30 DÍAS» / «15 DÍAS» / «7 DÍAS». `cyclePreview` sigue pintando «1 – 30 de cada mes · 30 DÍAS», «· 15 DÍAS» y «7 DÍAS» | pendiente conocido | `onboarding-paso-1` las marca `optional: true` |
+| Mixto sin datos muestra «Indica tu sueldo base.» y «Agrega al menos una fuente.»; Variable muestra «Elige un ciclo de 15 o 30 días.» y «Agrega al menos una fuente.» | el validador no pinta el texto | `onboarding-paso-1`, `optional: true`. La etiqueta visible de Mixto es «TU SUELDO BASE» |
+| La racha cuenta solo si pasaron 24 horas reales, y nunca el ciclo de apertura. Cierre sigue pintando el subtítulo con `streakEvaluated` en falso (M45) | pendiente M45 | `progreso-primer-cierre` no afirma ese subtítulo; tags `wip` y `blocked` |
+| El mismo día de Lima se ven «Empieza un nuevo ciclo» y «Sumar al ciclo actual» (M45) | pendiente M45 | `mismo-dia-solo-sumar`, tag `wip` |
 
 Un ciclo vencido no se cierra solo. Inicio muestra la tarjeta que ya está en `home-closed-cycle.tsx`: «Tu ciclo del <inicio> al <fin> terminó.», «Te quedaron …» o «Te pasaste por …», «Tus movimientos siguen guardados.» y «Registrar nuevo ingreso». «Sumar al ciclo actual» se queda en ese ciclo. «Empieza un nuevo ciclo» lo cierra, salvo que sea el mismo día de Lima (#109). El flujo `ciclo-vencido` espera `QUIPU_E2E_EXPIRED_*`.
 
@@ -130,7 +183,7 @@ La hoja no tiene calendario. «Fecha» muestra «Hoy · …» y no se puede camb
 
 Qué opción viene marcada, como en `initialIncomeKind`: si el ciclo está abierto, «Sumar al ciclo actual»; si está vencido o no hay ciclo, «Empieza un nuevo ciclo». Sin ningún ciclo esa es la única opción. `registrar-ingreso` afirma «Sumar al ciclo actual» con `selected: true`. `ciclo-nuevo-antes-del-fin` toca «Empieza un nuevo ciclo». El flujo futuro `ciclo-vencido` afirma «Empieza un nuevo ciclo» con `selected: true`, y que «Gasto» sigue activo: toca «Gasto» y ve «NUEVO GASTO». Los botones exponen `accessibilityState.selected`.
 
-El mismo día de Lima, las dos opciones se ven. El servidor suma el ingreso habitual (`cycleStartedOnLimaDay`). `mismo-dia-solo-sumar` toca «Empieza un nuevo ciclo» y el rango de «CICLO» no cambia.
+El mismo día de Lima, las dos opciones se ven. Es pendiente M45: `mismo-dia-solo-sumar` tiene tag `wip` y no entra en `maestro test .maestro/`. El servidor suma el ingreso habitual (`cycleStartedOnLimaDay`). El flujo toca «Empieza un nuevo ciclo» y el rango de «CICLO» no cambia. El texto «Empieza un nuevo ciclo» no lleva «¿?»; eso ya es el copy final.
 
 «Anota el dinero que tienes hoy para ver tu número.» está en el paso 5 (`step-confirm.tsx`). `onboarding-saldo-cero` lo afirma.
 
