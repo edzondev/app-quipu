@@ -63,7 +63,7 @@ function toState(value: IncomeDraft): Partial<OnboardingState> {
 	return {
 		incomeModel: value.incomeModel,
 		payFrequency: variable ? null : value.payFrequency,
-		referenceIncomeCents: variable ? null : centsFromDigits(value.amountRaw),
+		referenceIncomeCents: value.incomeModel === "fixed" ? centsFromDigits(value.amountRaw) : null,
 		mixedFixedAmountCents:
 			value.incomeModel === "mixed"
 				? (centsFromDigits(value.mixedAmountRaw) ?? undefined)
@@ -118,7 +118,17 @@ export function Step1IncomeProfile() {
 	return (
 		<WizardShell
 			stepNumber={1}
-			footer={<AuthButton label="Continuar" onPress={() => void form.handleSubmit()} />}
+			footer={
+				<form.Subscribe selector={(formState) => formState.canSubmit}>
+					{(canSubmit) => (
+						<AuthButton
+							label="Continuar"
+							onPress={() => void form.handleSubmit()}
+							disabled={!canSubmit}
+						/>
+					)}
+				</form.Subscribe>
+			}
 		>
 			<View className="gap-1">
 				<Text className="font-newsreader text-[28px] text-foreground">¿Cómo entra tu dinero?</Text>
@@ -137,6 +147,7 @@ export function Step1IncomeProfile() {
 							accessibilityRole="button"
 							accessibilityState={{ selected: isSelected }}
 							onPress={() => {
+								if (option.value === incomeModel) return;
 								form.setFieldValue("incomeModel", option.value);
 								if (option.value === "mixed") form.setFieldValue("mixedAmountRaw", "");
 							}}
@@ -189,14 +200,21 @@ export function Step1IncomeProfile() {
 						key={incomeModel}
 						name={incomeModel === "mixed" ? "mixedAmountRaw" : "amountRaw"}
 						listeners={{
-							onChange: ({ value }) => {
+							onChange: ({ value, fieldApi }) => {
+								const model = form.getFieldValue("incomeModel");
 								const cents = centsFromDigits(value);
+								if (fieldApi.name === "amountRaw") {
+									if (model !== "fixed") return;
+									dispatch({ type: "UPDATE", payload: { referenceIncomeCents: cents } });
+									return;
+								}
+								if (model !== "mixed") return;
 								dispatch({
 									type: "UPDATE",
-									payload:
-										incomeModel === "mixed"
-											? { mixedFixedAmountCents: cents ?? undefined }
-											: { referenceIncomeCents: cents },
+									payload: {
+										mixedFixedAmountCents: cents ?? undefined,
+										referenceIncomeCents: null,
+									},
 								});
 							},
 							onChangeDebounceMs: INCOME_FIELD_DEBOUNCE_MS,

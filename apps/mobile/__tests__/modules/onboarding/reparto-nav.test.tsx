@@ -68,6 +68,30 @@ function Harness() {
 }
 
 describe("navegación del reparto", () => {
+	it("el contador va 01, 02, 03 y 04", async () => {
+		await render(
+			<OnboardingProvider>
+				<Harness />
+			</OnboardingProvider>,
+		);
+
+		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 02/04")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 03/04")).toBeTruthy();
+		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
+		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+	});
+
 	it("desde el paso 2 Continuar va a Compromisos, y atrás es 4→3→2", async () => {
 		await render(
 			<OnboardingProvider>
