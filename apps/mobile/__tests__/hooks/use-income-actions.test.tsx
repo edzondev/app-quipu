@@ -1,7 +1,10 @@
 import { act, render } from "@testing-library/react-native";
 import { type FunctionReference, getFunctionName } from "convex/server";
+import { extraKind, sueldoKind } from "@/__fixtures__/income-kind";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
+import { toCreateIncomeEventArgs } from "@/shared/lib/income/draft";
 import { limaStartOfDay } from "@/shared/lib/lima-date";
+import { assertCreateIncomeEventArgs } from "@/test-support/assert-create-income-event-args";
 
 function isFunctionReference(
 	value: unknown,
@@ -46,16 +49,39 @@ describe("useIncomeActions", () => {
 	it("llama a createIncomeEvent sin allocation", async () => {
 		const occurredAt = limaStartOfDay(NOW);
 		await act(async () => {
-			await actions?.register({ amountCents: 350000, occurredAt });
+			await actions?.register({ amountCents: 350000, occurredAt, incomeKind: sueldoKind });
 		});
 		expect(createMock).toHaveBeenCalledTimes(1);
-		expect(createMock).toHaveBeenCalledWith({
-			amount: 350000,
-			source: "payroll",
-			description: "Sueldo",
+		const expected = toCreateIncomeEventArgs({
+			amountCents: 350000,
 			occurredAt,
-			incomeKind: "habitual",
+			incomeKind: sueldoKind,
 		});
+		assertCreateIncomeEventArgs(expected);
+		expect(createMock).toHaveBeenCalledWith(expected);
+		assertCreateIncomeEventArgs(createMock.mock.calls[0]?.[0]);
 		expect(createMock.mock.calls[0]?.[0]).not.toHaveProperty("allocation");
+		expect(createMock.mock.calls[0]?.[0]).not.toHaveProperty("extraordinaryType");
+	});
+
+	it("reenvía incomeKind extraordinary cuando el ingreso es extra", async () => {
+		const occurredAt = limaStartOfDay(NOW);
+		await act(async () => {
+			await actions?.register({ amountCents: 50000, occurredAt, incomeKind: extraKind });
+		});
+		const expected = toCreateIncomeEventArgs({
+			amountCents: 50000,
+			occurredAt,
+			incomeKind: extraKind,
+		});
+		assertCreateIncomeEventArgs(expected);
+		expect(expected).toMatchObject({
+			incomeKind: "extraordinary",
+			extraordinaryType: "custom",
+			extraordinaryLabel: "Extra",
+			distributionPolicy: "profile_default",
+		});
+		expect(createMock).toHaveBeenCalledWith(expected);
+		assertCreateIncomeEventArgs(createMock.mock.calls[0]?.[0]);
 	});
 });

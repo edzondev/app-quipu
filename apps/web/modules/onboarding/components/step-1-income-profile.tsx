@@ -58,7 +58,7 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
 		<OnboardingShell
 			currentStep={1}
 			title="¿Cómo recibes tu dinero?"
-			subtitle="Elige tu país y cómo cobras. La moneda queda fija después."
+			subtitle="Elige tu moneda y cómo cobras. La moneda queda fija después."
 			hint="Puedes cambiar el tipo de ingreso después"
 			cta={
 				<Button onClick={handleNext} disabled={!state.incomeModel} size="lg">
@@ -68,8 +68,13 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
 			}
 		>
 			<div className="mb-5">
-				<p className="mb-2 text-sm font-medium text-ink">País y moneda</p>
-				<div className="flex flex-col gap-2">
+				<p id="onboarding-currency" className="mb-2 text-sm font-medium text-ink">
+					Moneda
+				</p>
+				<fieldset
+					aria-labelledby="onboarding-currency"
+					className="flex flex-col gap-2 border-0 p-0"
+				>
 					{SUPPORTED_MARKETS.map((market) => {
 						const selected = state.marketId === market.id;
 						return (
@@ -86,9 +91,9 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
 								)}
 							>
 								<span>
-									<span className="font-semibold text-ink">{market.label}</span>
+									<span className="font-semibold text-ink">{market.shortLabel}</span>
 									<span className="mt-0.5 block text-sm text-muted-foreground">
-										{market.currencyLabel} · {market.currencySymbol}
+										{market.currencySymbol}
 									</span>
 								</span>
 								<span
@@ -102,7 +107,7 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
 							</button>
 						);
 					})}
-				</div>
+				</fieldset>
 			</div>
 
 			<div className="flex flex-col gap-3">

@@ -1,11 +1,34 @@
 import { useRouter } from "expo-router";
-import type { ReactNode } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { type ReactNode, useEffect } from "react";
+import { BackHandler, Pressable, ScrollView, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { WIZARD_STEPS, type WizardStep } from "@/shared/lib/onboarding/types";
+
+function leaveStep(
+	stepNumber: number,
+	onBack: (() => void) | undefined,
+	router: { canGoBack: () => boolean; back: () => void; replace: (href: string) => void },
+	dispatch: (action: { type: "SET_STEP"; payload: WizardStep }) => void,
+	commitmentsSaved: boolean,
+) {
+	if (onBack) {
+		onBack();
+		return;
+	}
+	if (stepNumber <= 1) {
+		if (router.canGoBack()) {
+			router.back();
+		} else {
+			router.replace("/(onboarding)");
+		}
+		return;
+	}
+	const previous = stepNumber === 5 && commitmentsSaved ? 3 : stepNumber - 1;
+	dispatch({ type: "SET_STEP", payload: previous as WizardStep });
+}
 
 type WizardShellProps = {
 	stepNumber: number;
@@ -18,22 +41,15 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 	const router = useRouter();
 	const { state, dispatch } = useOnboarding();
 
-	const goBack = () => {
-		if (onBack) {
-			onBack();
-			return;
-		}
-		if (stepNumber <= 1) {
-			if (router.canGoBack()) {
-				router.back();
-			} else {
-				router.replace("/(onboarding)");
-			}
-			return;
-		}
-		const previous = stepNumber === 5 && state.commitmentsSaved ? 3 : stepNumber - 1;
-		dispatch({ type: "SET_STEP", payload: previous as WizardStep });
-	};
+	const goBack = () => leaveStep(stepNumber, onBack, router, dispatch, state.commitmentsSaved);
+
+	useEffect(() => {
+		const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+			leaveStep(stepNumber, onBack, router, dispatch, state.commitmentsSaved);
+			return true;
+		});
+		return () => subscription.remove();
+	}, [dispatch, onBack, router, state.commitmentsSaved, stepNumber]);
 
 	return (
 		<KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
