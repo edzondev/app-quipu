@@ -4,10 +4,10 @@ tags:
   - onboarding
 ---
 # Notion 3f486a7356a681d7a4eafd77e456b2e4
-# Paso 1: Fijo, Mixto y Variable. No llama a «Empezar mi ciclo».
-# Corre ANTES de onboarding-ciclo, con la misma cuenta fresca.
-# «Indica la parte fija.», «Agrega al menos una fuente.» y
-# «Elige un ciclo de 15 o 30 días.» existen en el validador pero no se pintan.
+# Paso 1. No llama a «Empezar mi ciclo».
+# Antes de este flujo, el pre-paso deja una cuenta nueva en QUIPU_E2E_FRESH_*.
+# La flecha (wizard-back) del paso 2 vuelve al paso 1. El atrás de Android es manual:
+# en el paso 1 debe volver a la Bienvenida.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -18,18 +18,24 @@ tags:
     timeout: 30000
 - assertVisible: "TU SISTEMA · 01/05"
 - assertVisible: "Fijo"
-- assertVisible: "DÍA DE PAGO"
-- assertVisible: "El 1 de cada mes"
+- assertVisible: "Mensual"
+# Espera arreglo pendiente (Pixi): se quitó «DÍA DE PAGO · El 1 de cada mes».
+- assertNotVisible: "DÍA DE PAGO"
+- assertNotVisible: "El 1 de cada mes"
+- assertNotVisible: "El 15 y 30 de cada mes"
+- assertNotVisible: "Cada 7 días"
+- assertNotVisible: "30 DÍAS"
 - tapOn:
     id: freq-option-biweekly
-- assertVisible: "El 15 y 30 de cada mes"
+- assertNotVisible: "El 15 y 30 de cada mes"
+- assertNotVisible: "15 DÍAS"
 - tapOn:
     id: freq-option-weekly
-- assertVisible: "Cada 7 días"
+- assertNotVisible: "Cada 7 días"
+- assertNotVisible: "7 DÍAS"
 - tapOn:
     id: freq-option-monthly
-- assertVisible: "El 1 de cada mes"
-- assertVisible: "1 – 30 de cada mes · 30 DÍAS"
+- assertNotVisible: "El 1 de cada mes"
 - tapOn:
     id: amount-input
 - inputText: "12345678901"
@@ -39,6 +45,9 @@ tags:
 - evalScript: "${output.digits = maestro.copiedText.replace(/[^0-9]/g, '')}"
 - assertTrue: "${output.digits.length <= 9 && output.digits.length >= 1}"
 - tapOn:
+    id: amount-input
+- eraseText
+- tapOn:
     id: option-mixed
 - assertVisible: "PARTE FIJA"
 - assertVisible: "¿DE DÓNDE LLEGA TU DINERO?"
@@ -46,6 +55,9 @@ tags:
 - tapOn: "Continuar"
 - assertVisible: "TU SISTEMA · 01/05"
 - assertNotVisible: "¿Cuándo cobras?"
+# Espera arreglo pendiente: el validador no pinta estos textos.
+- assertVisible: "Indica la parte fija."
+- assertVisible: "Agrega al menos una fuente."
 - tapOn:
     id: option-variable
 - assertVisible: "Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir."
@@ -53,6 +65,8 @@ tags:
 - assertVisible: "30 días"
 - tapOn: "Continuar"
 - assertVisible: "TU SISTEMA · 01/05"
+- assertVisible: "Elige un ciclo de 15 o 30 días."
+- assertVisible: "Agrega al menos una fuente."
 - tapOn:
     id: cycle-pill-15
 - tapOn:
@@ -64,6 +78,7 @@ tags:
     id: source-chip-0
 - tapOn:
     id: source-input
+- eraseText
 - inputText: "Ventas"
 - tapOn:
     id: add-source
@@ -78,3 +93,4 @@ tags:
 - tapOn:
     id: wizard-back
 - assertVisible: "¿Cómo entra tu dinero?"
+- assertVisible: "TU SISTEMA · 01/05"

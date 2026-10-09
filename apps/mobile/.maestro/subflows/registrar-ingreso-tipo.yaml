@@ -1,0 +1,25 @@
+appId: com.quipu.finance
+---
+# QUIPU_TIPO es Sueldo o Extra. Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
+# Espera arreglo pendiente (Pixi): el selector todavía no existe; hoy todo se guarda como Sueldo.
+- tapOn:
+    text: "\\+ Ingreso"
+- extendedWaitUntil:
+    visible: "REGISTRAR INGRESO"
+    timeout: 10000
+- tapOn:
+    text: ${QUIPU_TIPO}
+    below: "REGISTRAR INGRESO"
+- tapOn:
+    text: "^1$"
+- tapOn:
+    text: "^0$"
+- tapOn:
+    text: "^0$"
+- tapOn:
+    text: "^0$"
+- assertVisible: "10\\.00"
+- tapOn: "Registrar ingreso"
+- extendedWaitUntil:
+    notVisible: "REGISTRAR INGRESO"
+    timeout: 20000

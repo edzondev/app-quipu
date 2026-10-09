@@ -4,8 +4,8 @@ tags:
   - registrar
 ---
 # Notion 3f486a7356a6815e9dfcf8f2dd7c1ce4
-# Ingreso con ciclo activo. El teléfono lo manda como «Sueldo».
-# No se afirman los soles repartidos: dependen del porcentaje y de los días del ciclo.
+# Ingreso extra con ciclo activo: se elige Extra y el ciclo no se cierra.
+# El detalle de fechas está en extra-no-cierra.yaml.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -24,6 +24,12 @@ tags:
 - extendedWaitUntil:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
+- assertVisible:
+    text: "^Sueldo$"
+    below: "REGISTRAR INGRESO"
+- assertVisible:
+    text: "^Extra$"
+    below: "REGISTRAR INGRESO"
 - tapOn:
     text: "^Gasto$"
 - assertVisible: "NUEVO GASTO"
@@ -32,6 +38,9 @@ tags:
 - extendedWaitUntil:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
+- tapOn:
+    text: "^Extra$"
+    below: "REGISTRAR INGRESO"
 - tapOn:
     text: "^1$"
 - tapOn:
@@ -48,6 +57,6 @@ tags:
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
-    visible: "Sueldo"
+    visible: "10\\.00"
     timeout: 15000
-- assertVisible: "10\\.00"
+- assertVisible: "CICLO "

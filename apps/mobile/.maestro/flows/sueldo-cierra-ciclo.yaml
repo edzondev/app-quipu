@@ -1,0 +1,43 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - registrar
+  - onboarding
+---
+# sin caso aún
+# Un Sueldo cierra el ciclo en cualquier fecha, sin ventana de 2 días, y abre otro.
+# Cobro = mañana, así que el Sueldo de hoy es anterior a esa fecha.
+# Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
+- tapOn:
+    text: "^Movimientos$"
+- extendedWaitUntil:
+    visible: "Todavía no hay nada registrado en este ciclo."
+    timeout: 15000
+- copyTextFrom:
+    text: "CICLO .*"
+- evalScript: "${output.cycleBefore = maestro.copiedText}"
+- tapOn:
+    text: "^Inicio$"
+- runFlow:
+    file: ../subflows/registrar-ingreso-tipo.yaml
+    env:
+      QUIPU_TIPO: Sueldo
+- tapOn:
+    text: "^Movimientos$"
+- extendedWaitUntil:
+    visible: "CICLO "
+    timeout: 20000
+- assertNotVisible: ${output.cycleBefore}
+- assertVisible: "10\\.00"
+- tapOn:
+    text: "^Inicio$"
+- assertVisible: "Hoy puedes gastar"
