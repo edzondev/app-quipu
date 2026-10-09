@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	FUTURE_INCOME_DATE_MESSAGE,
 	futureIncomeDateMessage,
+	NO_ACTIVE_CYCLE_MESSAGE,
 	rejectFutureIncomeDate,
 	resolveCycleForEvent,
 	resolveCycleForIncome,
@@ -105,6 +106,45 @@ describe("resolveCycleForIncome kind", () => {
 		).toBeNull();
 		expect(
 			resolveCycleForIncome({ activeCycle, occurredAt, now, incomeKind: undefined }),
+		).toBeNull();
+	});
+
+	it("refuses to open a cycle for an extraordinary income when none is active", () => {
+		const open = () =>
+			resolveCycleForIncome({
+				activeCycle: null,
+				occurredAt: now,
+				now,
+				incomeKind: "extraordinary",
+			});
+		expect(open).toThrow(ConvexError);
+		try {
+			open();
+		} catch (error) {
+			if (!(error instanceof ConvexError)) throw error;
+			expect(error.data).toMatchObject({
+				code: "NO_ACTIVE_CYCLE",
+				message: NO_ACTIVE_CYCLE_MESSAGE,
+			});
+		}
+	});
+
+	it("still opens a cycle for a habitual income when none is active", () => {
+		expect(
+			resolveCycleForIncome({
+				activeCycle: null,
+				occurredAt: now,
+				now,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+		expect(
+			resolveCycleForIncome({
+				activeCycle: null,
+				occurredAt: now,
+				now,
+				incomeKind: undefined,
+			}),
 		).toBeNull();
 	});
 

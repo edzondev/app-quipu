@@ -10,6 +10,8 @@ const OPENING_EARLY_PAY_DAYS = 2;
 /** Edit already rejects `occurredAt > now`. Create uses the same rule. */
 export const FUTURE_INCOME_DATE_MESSAGE = "La fecha del ingreso no puede ser futura.";
 
+export const NO_ACTIVE_CYCLE_MESSAGE = "Registra primero tu sueldo para empezar un ciclo nuevo.";
+
 export function futureIncomeDateMessage(occurredAt: number, now: number): string | null {
 	if (occurredAt > now) return FUTURE_INCOME_DATE_MESSAGE;
 	return null;
@@ -41,9 +43,10 @@ export function resolveCycleForEvent(input: {
 }
 
 /**
- * Only a habitual income (a missing kind counts as habitual) can close the
- * active cycle. Extraordinary income always stays on it. An opening cycle
- * also closes from two days before `endDate`.
+ * Only a habitual income (a missing kind counts as habitual) can close or
+ * open a cycle. Extraordinary income stays on the active cycle. With no
+ * active cycle it throws. An opening cycle also closes from two days before
+ * `endDate`.
  */
 export function resolveCycleForIncome(input: {
 	activeCycle: (MinimalCycle & { isOpeningCycle?: boolean }) | null;
@@ -51,6 +54,13 @@ export function resolveCycleForIncome(input: {
 	now: number;
 	incomeKind: Doc<"incomeEvents">["incomeKind"];
 }): string | null {
+	if (input.activeCycle === null && input.incomeKind === "extraordinary") {
+		throw new ConvexError({
+			code: "NO_ACTIVE_CYCLE",
+			message: NO_ACTIVE_CYCLE_MESSAGE,
+			data: { field: "incomeKind" },
+		});
+	}
 	const cycle = input.activeCycle;
 	const habitual = input.incomeKind !== "extraordinary";
 	if (
