@@ -1,13 +1,13 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-
-jest.mock("@/shared/hooks/use-profile-gate", () => ({
-	useProfileGate: () => ({ isAuthReady: true, isLoading: false, profile: null }),
-}));
-
+import type { ReactNode } from "react";
 import { Pressable, Text } from "react-native";
 import { SistemaWizard } from "@/app/(onboarding)/sistema";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import type { WizardStep } from "@/shared/lib/onboarding/types";
+
+jest.mock("@/shared/hooks/use-profile-gate", () => ({
+	useProfileGate: () => ({ isAuthReady: true, isLoading: false, profile: null }),
+}));
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({
@@ -35,11 +35,21 @@ jest.mock("@expo/ui/community/slider", () => {
 	};
 });
 
+jest.mock("@expo/ui", () => {
+	const { View } = require("react-native");
+	return {
+		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
+			isPresented ? <View>{children}</View> : null,
+		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+	};
+});
+
 jest.mock("@/modules/onboarding/use-complete-onboarding", () => ({
 	useCompleteOnboarding: () => ({
-		submit: jest.fn(),
+		submit: jest.fn(async () => true),
 		isSubmitting: false,
 		error: null,
+		commitmentsFailed: false,
 	}),
 }));
 
@@ -53,13 +63,36 @@ function Harness() {
 			<SistemaWizard />
 			<Text testID="probe-step">{String(state.step)}</Text>
 			<Pressable testID="go-4" onPress={go(4)} />
-			<Pressable testID="go-3" onPress={go(3)} />
 		</>
 	);
 }
 
 describe("navegación del reparto", () => {
-	it("aparece una sola vez y atrás desde el 4 y el 3 cae en el 2", async () => {
+	it("el contador va 01, 02, 03 y 04", async () => {
+		await render(
+			<OnboardingProvider>
+				<Harness />
+			</OnboardingProvider>,
+		);
+
+		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 02/04")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 03/04")).toBeTruthy();
+		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
+		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+	});
+
+	it("desde el paso 2 Continuar va a Compromisos, y atrás es 4→3→2", async () => {
 		await render(
 			<OnboardingProvider>
 				<Harness />
@@ -73,9 +106,13 @@ describe("navegación del reparto", () => {
 		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("go-4"));
+			fireEvent.press(screen.getByText("Continuar"));
 		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
 		expect(screen.queryByText(REPARTO)).toBeNull();
+
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
@@ -83,13 +120,15 @@ describe("navegación del reparto", () => {
 		expect(screen.getAllByText(REPARTO)).toHaveLength(1);
 
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("go-3"));
+			fireEvent.press(screen.getByTestId("go-4"));
 		});
-		expect(screen.queryByText(REPARTO)).toBeNull();
+		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.queryByText("Todo listo")).toBeNull();
+		expect(screen.queryByText("Tu sistema está listo")).toBeNull();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("2");
-		expect(screen.getAllByText(REPARTO)).toHaveLength(1);
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
 	});
 });

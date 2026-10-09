@@ -32,6 +32,8 @@ function StateProbe() {
 			<Text testID="probe-model">{String(state.incomeModel)}</Text>
 			<Text testID="probe-frequency">{String(state.payFrequency)}</Text>
 			<Text testID="probe-sources">{state.variableIncomeSources.join("|")}</Text>
+			<Text testID="probe-reference">{String(state.referenceIncomeCents)}</Text>
+			<Text testID="probe-mixed">{String(state.mixedFixedAmountCents)}</Text>
 		</>
 	);
 }
@@ -53,6 +55,7 @@ describe("Step1IncomeProfile", () => {
 	it("arranca en 01/04 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
 		await renderStep1();
 		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
 		expect(screen.getByTestId("option-fixed").props.accessibilityState).toMatchObject({
 			selected: true,
 		});
@@ -183,6 +186,58 @@ describe("Step1IncomeProfile", () => {
 			fireEvent.press(screen.getByTestId("option-mixed"));
 		});
 		expect(screen.getByTestId("amount-input").props.value).toBe("");
+	});
+
+	it("Mixto no deja el monto de Fijo como ingreso de referencia", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "3500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByRole("button", { name: "Continuar" }));
+		});
+		expect(screen.getByTestId("probe-model").props.children).toBe("mixed");
+		expect(screen.getByTestId("probe-reference").props.children).toBe("null");
+		expect(screen.getByTestId("probe-mixed").props.children).toBe("80000");
+	});
+
+	it("Continuar se deshabilita si Variable está incompleto", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		const continuar = screen.getByRole("button", { name: "Continuar" });
+		expect(continuar.props.accessibilityState.disabled).toBe(true);
+		await act(async () => {
+			fireEvent.press(continuar);
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("1");
+	});
+
+	it("volver a tocar Mixto no borra la parte fija", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByTestId("amount-input").props.value).toContain("800");
 	});
 
 	it("el back en paso 1 navega hacia atrás en el stack", async () => {

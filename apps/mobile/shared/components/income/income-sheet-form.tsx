@@ -11,13 +11,22 @@ const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 type Props = {
 	currencySymbol: string;
 	formError?: string | null;
+	initialAmountCents?: number;
+	prompt?: string;
 	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
 	onCancel: () => void;
 };
 
-export function IncomeSheetForm({ currencySymbol, formError, onSubmit, onCancel }: Props) {
+export function IncomeSheetForm({
+	currencySymbol,
+	formError,
+	initialAmountCents = 0,
+	prompt,
+	onSubmit,
+	onCancel,
+}: Props) {
 	const form = useForm({
-		defaultValues: defaultIncomeDraft(),
+		defaultValues: { ...defaultIncomeDraft(), amountCents: initialAmountCents },
 		onSubmit: ({ value }) => onSubmit(value),
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
@@ -39,6 +48,10 @@ export function IncomeSheetForm({ currencySymbol, formError, onSubmit, onCancel 
 					<Text className="font-hanken-semibold text-[13px] text-foreground/45">Cancelar</Text>
 				</Pressable>
 			</View>
+
+			{prompt ? (
+				<Text className="mt-4 font-hanken text-[15px] text-foreground">{prompt}</Text>
+			) : null}
 
 			<View className="mt-5">
 				<KeypadAmount currencySymbol={currencySymbol} cents={amountCents} />

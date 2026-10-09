@@ -10,15 +10,26 @@ export type IncomeDraft = {
 	occurredAt: number;
 };
 
+export type IncomeRecord = Pick<CreateIncomeEventArgs, "source" | "description">;
+
+/** Saldo de hoy del onboarding. `other` sale del union de `createIncomeEvent`. */
+export const TODAY_BALANCE_RECORD = {
+	source: "other",
+	description: "Dinero de hoy",
+} satisfies IncomeRecord;
+
 export function defaultIncomeDraft(now = Date.now()): IncomeDraft {
 	return { amountCents: 0, occurredAt: limaStartOfDay(now) };
 }
 
-export function toCreateIncomeEventArgs(draft: IncomeDraft): CreateIncomeEventArgs {
+export function toCreateIncomeEventArgs(
+	draft: IncomeDraft,
+	record?: IncomeRecord,
+): CreateIncomeEventArgs {
 	return {
 		amount: draft.amountCents,
-		source: HABITUAL_INCOME_SOURCE,
-		description: HABITUAL_INCOME_LABEL,
+		source: record?.source ?? HABITUAL_INCOME_SOURCE,
+		description: record?.description ?? HABITUAL_INCOME_LABEL,
 		occurredAt: draft.occurredAt,
 		incomeKind: "habitual",
 	};
