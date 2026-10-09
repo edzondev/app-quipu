@@ -199,7 +199,7 @@ describe("SettingsScreen", () => {
 		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
 		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
 		expect(OFFLINE_SIGN_OUT_MESSAGE).toBe(
-			"Cerraste sesión en este teléfono. Vuelve a intentarlo con conexión para cerrarla en todos lados.",
+			"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.",
 		);
 		expect(welcome.queryByText(/Network request failed|token secreto/)).toBeNull();
 		await welcome.unmount();

@@ -14,7 +14,7 @@ export const SIGNED_OUT_HREF = "/(onboarding)";
 
 /** Aviso fijo cuando el teléfono ya olvidó la sesión y el servidor no se enteró. */
 export const OFFLINE_SIGN_OUT_MESSAGE =
-	"Cerraste sesión en este teléfono. Vuelve a intentarlo con conexión para cerrarla en todos lados.";
+	"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.";
 
 export type AuthSessionSnapshot = {
 	data: unknown;
