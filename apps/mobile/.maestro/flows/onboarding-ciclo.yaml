@@ -38,15 +38,17 @@ tags:
     id: commitments-total
 - tapOn: "Continuar"
 - extendedWaitUntil:
-    visible: "Puedes gastar hoy"
+    visible: "Dinero de hoy"
     timeout: 10000
 - assertVisible: "TU SISTEMA · 05/05"
-- assertVisible:
+- assertVisible: "Próximo cobro"
+# Espera arreglo pendiente (Pixi, PR #106): el paso 5 todavía muestra el diario.
+- assertNotVisible: "Puedes gastar hoy"
+- assertNotVisible:
     id: confirm-daily
-- runFlow: ../subflows/assert-paso5-960.yaml
+- assertNotVisible: "en 30 días."
 - assertVisible:
     id: confirm-income
-- assertVisible: "Próximo cobro"
 - assertVisible:
     id: confirm-pay-date
 - assertVisible: "50% · S/ 600"
@@ -66,7 +68,6 @@ tags:
     timeout: 40000
 - assertVisible: "Inicio"
 - assertVisible: "960"
-- assertVisible: ${output.stepDaily}
 - assertNotVisible: "Saldo que quedó"
 - assertVisible: "Agua"
 - assertVisible: "Necesidades"

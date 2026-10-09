@@ -46,21 +46,24 @@ Producción es `patient-chihuahua-640`. No instales ese APK para estas pruebas: 
 
 `launchApp.clearState` solo borra los datos locales de `com.quipu.finance` para entrar con la cuenta del env. No es `resetAll` y no toca Convex.
 
-## Pre-paso: cuenta nueva (Nato)
+## Pre-paso: cuenta nueva (Nato, PR #107, sin merge)
 
-Nato va a agregar una función interna de Convex, solo de desarrollo, que crea una cuenta verificada y **sin perfil**. El nombre y los argumentos todavía no existen (`d7bcb41`). Placeholder:
+Función interna `devSeed:seedVerifiedAccount`. Solo corre en Convex dev `perceptive-elk-229` si Edzon dejó `ALLOW_DEV_SEED=true` y `DEV_SEED_PASSWORD` en ese deployment. Producción (`patient-chihuahua-640`) no tiene el flag y además rechaza el host. No uses `--prod`. No uses `resetAll`.
+
+Desde `apps/web`, con el CLI apuntando a ese dev:
 
 ```bash
-# Solo contra perceptive-elk-229. Nunca patient-chihuahua-640. Nunca resetAll.
-export QUIPU_E2E_SEED_FN="<fn>"   # TBD, por confirmar con Nato
-npx convex run "$QUIPU_E2E_SEED_FN"
+EMAIL="maestro-$(date +%s)@example.com"
+npx convex run devSeed:seedVerifiedAccount "{\"email\":\"$EMAIL\"}"
+export QUIPU_E2E_FRESH_EMAIL="$EMAIL"
+export QUIPU_E2E_FRESH_PASSWORD="$DEV_SEED_PASSWORD"
 ```
 
-Ese comando se corre **antes de cada flujo** que usa `QUIPU_E2E_FRESH_EMAIL` y `QUIPU_E2E_FRESH_PASSWORD`, y tiene que dejar esas dos variables en el entorno (el mecanismo exacto depende de la firma de la función). Así cada corrida del asistente abre su primer ciclo en una cuenta nueva. No hace falta una cuenta «one-shot» aparte ni `QUIPU_E2E_FRESH_SKIP_*`.
+`DEV_SEED_PASSWORD` es el mismo secreto del deployment. La función no lo devuelve. Devuelve `{ email, userId, emailVerified: true, hasProfile: false }`. La cuenta entra al asistente. Un correo repetido tira «Ya existe una cuenta con ese correo.»: un email nuevo por corrida.
 
 Flujos que piden ese pre-paso: `onboarding-paso-1`, `onboarding-ciclo`, `onboarding-despues`, `onboarding-saldo-cero`, `sueldo-cierra-ciclo`, `progreso-primer-cierre`.
 
-La función, tal como está descrita, no crea una cuenta con perfil y sin ciclo. `home-vacio`, `home-primer-ingreso` y `sin-ciclo-solo-sueldo` siguen usando `QUIPU_E2E_NO_CYCLE_*`. Si Nato agrega un modo para eso, el mismo pre-paso puede exportar esas variables y `home-primer-ingreso` deja de gastarse la cuenta.
+Esa función no crea perfil ni ciclo. `home-vacio`, `home-primer-ingreso` y `sin-ciclo-solo-sueldo` siguen en `QUIPU_E2E_NO_CYCLE_*`: perfil listo y ningún ciclo en la vida de la cuenta. Tampoco crea un ciclo ya vencido (`pastEnd`).
 
 ## Variables
 
@@ -68,9 +71,8 @@ La función, tal como está descrita, no crea una cuenta con perfil y sin ciclo.
 |---|---|---|
 | `QUIPU_E2E_EMAIL` | Verificada, onboarding completo, ciclo activo, Fondo creado, menos de 6 metas, sin ciclos cerrados, saldo para gastos chicos | smoke, gastos, Extra, plan, ajustes |
 | `QUIPU_E2E_PASSWORD` | Contraseña de esa cuenta | los mismos |
-| `QUIPU_E2E_SEED_FN` | Nombre de la función interna (TBD) | pre-paso, no lo leen los YAML |
-| `QUIPU_E2E_FRESH_EMAIL` | La que acaba de crear el pre-paso, sin perfil | asistente, Sueldo que cierra, Progreso del primer cierre |
-| `QUIPU_E2E_FRESH_PASSWORD` | Contraseña de esa cuenta | los mismos |
+| `QUIPU_E2E_FRESH_EMAIL` | El `email` pasado a `devSeed:seedVerifiedAccount` | asistente, Sueldo que cierra, Progreso del primer cierre |
+| `QUIPU_E2E_FRESH_PASSWORD` | El mismo valor que `DEV_SEED_PASSWORD` en el deployment dev | los mismos |
 | `QUIPU_E2E_NO_CYCLE_EMAIL` | Verificada, onboarding completo, sin ciclo activo y sin compromisos | `home-vacio`, `sin-ciclo-solo-sueldo`; `home-primer-ingreso` una sola vez por cuenta |
 | `QUIPU_E2E_NO_CYCLE_PASSWORD` | Contraseña | los mismos |
 
@@ -84,18 +86,16 @@ Estas afirmaciones describen la decisión de Capi. En `d7bcb41` todavía no pasa
 
 | Afirmación | Dueño | Dónde |
 |---|---|---|
-| El paso 1 no muestra «DÍA DE PAGO», «El 1 de cada mes», «El 15 y 30 de cada mes», «Cada 7 días» ni «30 DÍAS» / «15 DÍAS» / «7 DÍAS» | Pixi | `onboarding-paso-1`, `onboarding-hasta-paso-4`, `onboarding-saldo-cero` |
-| Mixto sin datos muestra «Indica la parte fija.» y «Agrega al menos una fuente.»; Variable muestra «Elige un ciclo de 15 o 30 días.» y «Agrega al menos una fuente.» | el texto está en el validador y no se pinta | `onboarding-paso-1` |
-| Paso 5 e Inicio muestran el mismo «Hoy puedes gastar»: S/ 1,200 al 50/30/20 con cobro mañana es 960 ((600 + 360) / 1), con o sin Agua. No dice «en 30 días.» | Pixi | `assert-paso5-960`, `onboarding-ciclo`, `onboarding-abrir-ciclo` |
-| Dinero de hoy vacío es S/ 0 en el paso 5 y en Inicio (`0.00`), no «—» ni «Anota el dinero que tienes hoy…» | Pixi | `onboarding-saldo-cero` |
-| El primer ciclo no muestra «Saldo que quedó» | Pixi | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
-| La hoja de ingreso tiene «Sueldo» y «Extra» | Pixi | `registrar-ingreso`, `registrar-ingreso-tipo`, `extra-no-cierra`, `sueldo-cierra-ciclo`, `progreso-primer-cierre` |
-| Un Sueldo de hoy, con cobro mañana, cambia la línea «CICLO …» de Movimientos y abre otro ciclo | Nubo + Pixi | `sueldo-cierra-ciclo` |
+| El paso 1 no muestra «DÍA DE PAGO», «El 1 de cada mes», «El 15 y 30 de cada mes», «Cada 7 días» ni «30 DÍAS» / «15 DÍAS» / «7 DÍAS» | Pixi, PR #106 | `onboarding-paso-1`, `onboarding-hasta-paso-4`, `onboarding-saldo-cero` |
+| Mixto sin datos muestra «Indica la parte fija.» y «Agrega al menos una fuente.»; Variable muestra «Elige un ciclo de 15 o 30 días.» y «Agrega al menos una fuente.» | el validador no pinta el texto | `onboarding-paso-1` |
+| El paso 5 no muestra «Puedes gastar hoy», `confirm-daily` ni «en 30 días.» El diario queda solo en Inicio | Pixi, PR #106 | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
+| Inicio, S/ 1,200 al 50/30/20 y cobro mañana, muestra 960. Con S/ 0 muestra `0.00`. El primer ciclo no muestra «Saldo que quedó» | Pixi | los mismos, después de «Empezar mi ciclo» |
+| La hoja de ingreso tiene «Sueldo» y «Extra». Sin ciclo nunca creado: solo Sueldo y «Tu sueldo empieza un ciclo nuevo» | Pixi, PR #106 | `registrar-ingreso`, `extra-no-cierra`, `sueldo-cierra-ciclo`, `sin-ciclo-solo-sueldo`, `home-primer-ingreso` |
+| Un Sueldo cierra el ciclo, cambia «CICLO …» y en el ciclo nuevo se ve «Saldo que quedó» | Nubo + Pixi | `sueldo-cierra-ciclo` |
 | Un Extra deja la misma línea «CICLO …» | Nubo + Pixi | `extra-no-cierra` |
-| Sin ciclo activo solo se ve «Sueldo»; «Extra» no está | Pixi | `sin-ciclo-solo-sueldo` |
-| Tras ese Sueldo, Progreso muestra «CICLOS CERRADOS EN VERDE» y «CICLO CERRADO», y no «Aún no cierras un ciclo.» | Nubo | `progreso-primer-cierre` |
+| Tras ese Sueldo, Progreso muestra «CICLOS CERRADOS EN VERDE» y «CICLO CERRADO» | Nubo | `progreso-primer-cierre` |
 
-El texto exacto con el que el servidor rechaza un Extra sin ciclo sigue por confirmar con Nubo. `sin-ciclo-solo-sueldo` no lo afirma: comprueba que la hoja no ofrece Extra.
+Un ciclo vencido no se cierra solo. Inicio muestra la tarjeta que ya está en `home-closed-cycle.tsx`: «Tu ciclo del <inicio> al <fin> terminó.», «Te quedaron …» o «Te pasaste por …», «Tus movimientos siguen guardados.» y «Registrar nuevo ingreso». En la hoja (PR #106, `pastEnd`) siguen Gasto, Sueldo y Extra, con «Cierra este ciclo y empieza uno nuevo». No hay flujo: `devSeed:seedVerifiedAccount` no crea un ciclo con `pastEnd`, y no vamos a esperar a que venza.
 
 ## Qué no está aquí
 
@@ -123,7 +123,7 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `field-error-mixed` | Paso 1 | `step-1-income-profile.tsx` | el validador no pinta «Indica la parte fija.» | `onboarding-paso-1` |
 | `field-error-sources` | Paso 1 | el mismo | «Agrega al menos una fuente.» | `onboarding-paso-1` |
 | `field-error-cycle` | Paso 1 | el mismo | «Elige un ciclo de 15 o 30 días.» | `onboarding-paso-1` |
-| `home-daily` | Inicio | `shared/components/home/home-dense.tsx` | monto «Hoy puedes gastar» | `home-ciclo`, `onboarding-ciclo` |
+| `home-daily` | Inicio | `shared/components/home/home-dense.tsx` | monto «Hoy puedes gastar» (960 o `0.00`) | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
 | `home-cycle-day` | Inicio | el mismo | «Día X/Y» | `home-ciclo` |
 | `home-envelope-needs` | Inicio | el mismo | fila Necesidades | `home-ciclo` |
 | `home-envelope-wants` | Inicio | el mismo | fila Gustos | `home-ciclo` |

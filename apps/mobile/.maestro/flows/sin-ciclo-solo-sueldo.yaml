@@ -5,10 +5,14 @@ tags:
   - no-cycle
 ---
 # sin caso aún
-# Sin ciclo activo la hoja solo ofrece Sueldo. Extra no se ofrece.
-# No guarda: la cuenta sigue sin ciclo y el flujo se puede repetir.
-# El texto del error si un Extra llega al servidor sigue por confirmar con Nubo:
-# este flujo no lo afirma.
+# Solo cuando nunca hubo un ciclo: la hoja ofrece Sueldo y
+# «Tu sueldo empieza un ciclo nuevo». Extra no aparece.
+# Un ciclo vencido sigue ofreciendo Extra; este flujo no es ese caso.
+# No guarda, así que la cuenta sigue sin ciclo.
+#
+# devSeed:seedVerifiedAccount (PR #107) crea una cuenta sin perfil y cae
+# en el asistente. Esta cuenta tiene que tener perfil y ningún ciclo:
+# QUIPU_E2E_NO_CYCLE_*. El seed todavía no arma ese estado.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -24,6 +28,7 @@ tags:
 - assertVisible:
     text: "^Sueldo$"
     below: "REGISTRAR INGRESO"
+- assertVisible: "Tu sueldo empieza un ciclo nuevo"
 - assertNotVisible:
     text: "^Extra$"
 - tapOn: "Cancelar"

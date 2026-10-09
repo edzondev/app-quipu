@@ -5,7 +5,8 @@ tags:
   - onboarding
 ---
 # sin caso aún
-# El primer ciclo cuenta en Progreso. Se cierra el mismo día con un Sueldo.
+# El primer ciclo cuenta en Progreso. Lo cierra un Sueldo, no el vencimiento.
+# Extra no cierra. Hace falta el seed de una cuenta nueva antes de correrlo.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
 - runFlow:
     file: ../subflows/entrar.yaml
