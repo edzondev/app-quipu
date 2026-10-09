@@ -8,14 +8,36 @@ import { type IncomeCycleOffer } from "@/shared/lib/income/cycle-offer";
 import { defaultIncomeDraft, type IncomeDraft, type IncomeKind } from "@/shared/lib/income/draft";
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
-const NO_CYCLE_COPY = "Tu sueldo empieza un ciclo nuevo";
-const PAST_END_COPY = "Cierra este ciclo y empieza uno nuevo";
-const INCOME_KINDS = [
-	{ kind: "habitual", label: "Sueldo" },
-	{ kind: "extraordinary", label: "Extra" },
-] as const satisfies ReadonlyArray<{ kind: IncomeKind; label: string }>;
+const CYCLE_CHOICES = [
+	{
+		kind: "habitual",
+		label: "Empieza un nuevo ciclo",
+		hint: "Abre un período nuevo",
+	},
+	{
+		kind: "extraordinary",
+		label: "Sumar al ciclo actual",
+		hint: "Sin cerrar este período",
+	},
+] as const satisfies ReadonlyArray<{ kind: IncomeKind; label: string; hint: string }>;
 
 type SheetCycle = Exclude<IncomeCycleOffer, "loading">;
+
+function choicesFor(cycle: SheetCycle) {
+	if (cycle === "none") return CYCLE_CHOICES.filter((choice) => choice.kind === "habitual");
+	return CYCLE_CHOICES;
+}
+
+/** Ciclo en curso: sumar. Vencido o sin ciclo: empezar uno nuevo. */
+function initialIncomeKind(cycle: SheetCycle): IncomeKind {
+	return cycle === "open" ? "extraordinary" : "habitual";
+}
+
+/** Si solo hay una opción, el valor sale de esa opción en el render. */
+function resolveIncomeKind(cycle: SheetCycle, chosen: IncomeKind): IncomeKind {
+	if (cycle === "none") return "habitual";
+	return chosen;
+}
 
 type Props = {
 	currencySymbol: string;
@@ -26,14 +48,13 @@ type Props = {
 };
 
 export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, onCancel }: Props) {
-	const kinds =
-		cycle === "none" ? INCOME_KINDS.filter((option) => option.kind === "habitual") : INCOME_KINDS;
+	const choices = choicesFor(cycle);
 	const form = useForm({
-		defaultValues: defaultIncomeDraft(),
+		defaultValues: { ...defaultIncomeDraft(), incomeKind: initialIncomeKind(cycle) },
 		onSubmit: ({ value }) =>
 			onSubmit({
 				...value,
-				incomeKind: cycle === "none" ? "habitual" : value.incomeKind,
+				incomeKind: resolveIncomeKind(cycle, value.incomeKind),
 			}),
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
@@ -58,45 +79,35 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 
 			<form.Field name="incomeKind">
 				{(field) => {
-					const kind = cycle === "none" ? "habitual" : field.state.value;
-					const note =
-						cycle === "none"
-							? NO_CYCLE_COPY
-							: cycle === "pastEnd" && kind === "habitual"
-								? PAST_END_COPY
-								: null;
+					const kind = resolveIncomeKind(cycle, field.state.value);
 					return (
 						<View className="mt-4 gap-2">
-							<View className="flex-row gap-2">
-								{kinds.map((option) => {
-									const selected = kind === option.kind;
-									return (
-										<Pressable
-											key={option.kind}
-											accessibilityRole="button"
-											accessibilityLabel={option.label}
-											accessibilityState={{ selected }}
-											onPress={() => field.handleChange(option.kind)}
-											className={`flex-1 items-center rounded-full border px-3 py-2.5 active:opacity-60 ${
-												selected ? "border-primary bg-primary/5" : "border-line"
+							{choices.map((option) => {
+								const selected = kind === option.kind;
+								return (
+									<Pressable
+										key={option.kind}
+										accessibilityRole="button"
+										accessibilityLabel={option.label}
+										accessibilityState={{ selected }}
+										onPress={() => field.handleChange(option.kind)}
+										className={`rounded-[13px] border px-3.5 py-3 active:opacity-60 ${
+											selected ? "border-primary bg-primary/5" : "border-line"
+										}`}
+									>
+										<Text
+											className={`text-[14px] text-foreground ${
+												selected ? "font-hanken-semibold" : "font-hanken"
 											}`}
 										>
-											<Text
-												className={
-													selected
-														? "font-hanken-semibold text-[13px] text-foreground"
-														: "font-hanken text-[13px] text-foreground/55"
-												}
-											>
-												{option.label}
-											</Text>
-										</Pressable>
-									);
-								})}
-							</View>
-							{note ? (
-								<Text className="font-hanken text-[13px] text-foreground/55">{note}</Text>
-							) : null}
+											{option.label}
+										</Text>
+										<Text className="mt-0.5 font-hanken text-[12px] text-foreground/45">
+											{option.hint}
+										</Text>
+									</Pressable>
+								);
+							})}
 						</View>
 					);
 				}}
