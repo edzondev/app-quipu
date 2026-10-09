@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { limaStartOfDay } from "../shared/lib/date";
 import { mutation } from "./_generated/server";
 import { requireActiveAccount } from "./lib/entitlements";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
@@ -33,7 +34,7 @@ export const startFirstCycle = mutation({
 
 		const cycleId = await ctx.db.insert("financialCycles", {
 			profileId: profile._id,
-			startDate: now,
+			startDate: limaStartOfDay(now),
 			endDate,
 			status: "active",
 			totalIncomeReceived: 0,

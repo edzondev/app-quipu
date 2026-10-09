@@ -1,5 +1,6 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
+import { limaStartOfDay } from "../../shared/lib/date";
 import { computeCycleCarryover, envelopeWithCarry } from "./cycleCarryover";
 import { MS_PER_DAY } from "./dashboardMath";
 import { openingCycleSkipsProgress, streakAfterClose } from "./evaluateClosedCycle";
@@ -171,6 +172,24 @@ describe("income against the opening cycle", () => {
 		});
 	});
 
+	it("opens the next cycle and carries a habitual income one day before payday", () => {
+		const occurredAt = endDate - MS_PER_DAY;
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt,
+				now: occurredAt,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+		expect(openingCarry()).toEqual({
+			needs: 5_000,
+			wants: 3_000,
+			savings: 2_000,
+			extraordinary: 0,
+		});
+	});
+
 	it("opens the next cycle and carries a habitual income on the pay day", () => {
 		expect(
 			resolveCycleForIncome({
@@ -196,15 +215,18 @@ describe("income against the opening cycle", () => {
 		).toBe("opening");
 	});
 
-	it("keeps the current rule when the income is dated before the opening cycle", () => {
+	it("keeps a habitual income dated at Lima start of today on the opening cycle", () => {
+		const now = Date.parse("2026-10-09T15:30:00-05:00");
+		const startOfToday = limaStartOfDay(now);
+		expect(startOfToday).toBeLessThan(now);
 		expect(
 			resolveCycleForIncome({
-				activeCycle: opening,
-				occurredAt: startDate - 1,
-				now: startDate,
+				activeCycle: { ...opening, startDate: startOfToday },
+				occurredAt: startOfToday,
+				now,
 				incomeKind: "habitual",
 			}),
-		).toBeNull();
+		).toBe("opening");
 	});
 
 	it("does not apply the early window to a regular cycle", () => {

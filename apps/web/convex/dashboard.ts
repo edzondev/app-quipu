@@ -151,7 +151,7 @@ export const getSummary = query({
 
 		const cycleMetrics = computeCycleDayMetrics(activeCycle.startDate, activeCycle.endDate, now);
 
-		const compliance = evaluateCycleCompliance(envelopesRaw);
+		const compliance = evaluateCycleCompliance(envelopesRaw, activeCycle.isOpeningCycle === true);
 		const wantsEnvelope = envelopeByType.get("wants");
 		const needsEnvelope = envelopeByType.get("needs");
 		const savingsEnvelope = envelopeByType.get("savings");
