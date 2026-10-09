@@ -148,19 +148,19 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("allocation-amount-needs").props.children).toBe("S/ 1,750");
 	});
 
-	it("desde el paso 3, Atrás va al paso 2", async () => {
+	it("Atrás desde el reparto va al paso 1", async () => {
 		await renderStep3(null);
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+		expect(screen.getByTestId("probe-step").props.children).toBe("1");
 	});
 
-	it("Continuar avanza al paso confirm", async () => {
+	it("Continuar va al paso 3, no a confirmar", async () => {
 		await renderStep3(null);
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
 	});
 });

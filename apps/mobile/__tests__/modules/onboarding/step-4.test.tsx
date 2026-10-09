@@ -5,6 +5,12 @@ import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitm
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
 
+const mockCreateBulk = jest.fn();
+
+jest.mock("convex/react", () => ({
+	useMutation: () => mockCreateBulk,
+}));
+
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 
@@ -68,9 +74,9 @@ describe("Step4Commitments — compromisos", () => {
 		jest.clearAllMocks();
 	});
 
-	it("muestra el header del paso 04, los chips y el total", async () => {
+	it("muestra el header del paso 03, los chips y el total", async () => {
 		await renderStep4();
-		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 03/04")).toBeTruthy();
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
 		expect(
 			screen.getByText("Los reservamos de Necesidades para que nunca aparezcan como sorpresa."),
@@ -87,47 +93,44 @@ describe("Step4Commitments — compromisos", () => {
 	it("tocar el chip '+ Agua' agrega una fila con nombre Agua vacía", async () => {
 		await renderStep4();
 		await pressChip("Agua");
-		expect(getCommitments()).toHaveLength(1);
 		expect(screen.getByTestId("commitment-name-0").props.value).toBe("Agua");
 		expect(screen.getByTestId("commitment-amount-0").props.value).toBe("");
 		expect(screen.getByTestId("commitment-day-0").props.value).toBe("");
 		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
+		expect(getCommitments()).toHaveLength(0);
 	});
 
-	it("editar monto 1100 guarda amountCents 110000 y día 5 guarda dueDay 5", async () => {
+	it("editar monto 1100 y día 5 actualiza el total", async () => {
 		await renderStep4();
 		await pressChip("Agua");
 		await act(async () => {
 			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
 		});
-		expect(getCommitments()[0].amountCents).toBe(110000);
 		await act(async () => {
 			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
 		});
-		expect(getCommitments()[0].dueDay).toBe(5);
-		expect(getCommitments()[0].name).toBe("Agua");
+		expect(screen.getByTestId("commitment-name-0").props.value).toBe("Agua");
 		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 1,100");
 	});
 
-	it("editar el nombre actualiza el compromiso en estado", async () => {
+	it("editar el nombre actualiza la fila", async () => {
 		await renderStep4();
 		await pressChip("Otro");
 		await act(async () => {
 			fireEvent.changeText(screen.getByTestId("commitment-name-0"), "Seguro de vida");
 		});
-		expect(getCommitments()[0].name).toBe("Seguro de vida");
+		expect(screen.getByTestId("commitment-name-0").props.value).toBe("Seguro de vida");
 	});
 
 	it("el icono X elimina la fila", async () => {
 		await renderStep4();
 		await pressChip("Agua");
 		await pressChip("Celular");
-		expect(getCommitments()).toHaveLength(2);
+		expect(screen.getByTestId("commitment-name-1").props.value).toBe("Celular");
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("remove-commitment-0"));
 		});
-		expect(getCommitments()).toHaveLength(1);
-		expect(getCommitments()[0].name).toBe("Celular");
+		expect(screen.getByTestId("commitment-name-0").props.value).toBe("Celular");
 		expect(screen.queryByTestId("commitment-row-1")).toBeNull();
 	});
 
@@ -161,59 +164,54 @@ describe("Step4Commitments — compromisos", () => {
 		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 1,265");
 	});
 
-	it("filas inválidas se marcan con border-danger y bloquean Continuar", async () => {
-		await renderStep4();
-		await pressChip("Agua");
-		expect(screen.getByTestId("commitment-row-0").props.className).toContain("border-danger");
-		await act(async () => {
-			fireEvent.press(screen.getByText("Continuar"));
-		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("4");
-
-		await act(async () => {
-			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "96");
-		});
-		await act(async () => {
-			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "40");
-		});
-		await act(async () => {
-			fireEvent.press(screen.getByText("Continuar"));
-		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("4");
-
-		await act(async () => {
-			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "20");
-		});
-		expect(screen.getByTestId("commitment-row-0").props.className).not.toContain("border-danger");
-		await act(async () => {
-			fireEvent.press(screen.getByText("Continuar"));
-		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
-	});
-
-	it("'Después' avanza al paso confirm sin validación y mantiene el estado", async () => {
+	it("con filas a medio llenar, Continuar solo guarda las válidas", async () => {
 		await renderStep4();
 		await pressChip("Agua");
 		await act(async () => {
 			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
 		});
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("commitments-skip"));
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+		await pressChip("Celular");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-1"), "96");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 		expect(getCommitments()).toHaveLength(1);
-		expect(getCommitments()[0].amountCents).toBe(110000);
+		expect(getCommitments()[0]).toMatchObject({ name: "Agua", amountCents: 110000, dueDay: 5 });
 	});
 
-	it("sin filas, Continuar avanza directo a confirm", async () => {
+	it("'Después' no llama a createCommitmentsBulk y no guarda filas", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("commitments-skip"));
+		});
+		expect(mockCreateBulk).not.toHaveBeenCalled();
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(getCommitments()).toHaveLength(0);
+	});
+
+	it("sin filas, Continuar avanza al paso 4", async () => {
 		await renderStep4();
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(getCommitments()).toHaveLength(0);
 	});
 
-	it("el back del paso 4 regresa al paso 2", async () => {
+	it("el back del paso 3 regresa al paso 2", async () => {
 		await renderStep4();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));

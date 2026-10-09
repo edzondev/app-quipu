@@ -1,15 +1,22 @@
+import { useRouter } from "expo-router";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
-import { ChevronLeft } from "@/shared/components/ui/reicon";
+import AuthButton from "@/shared/components/auth/auth-button";
+import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
+import { TODAY_BALANCE_RECORD } from "@/shared/lib/income/draft";
 import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
-import { currentMonthLabel, cycleDaysForModel } from "@/shared/lib/onboarding/cycle";
+import { cycleDaysForModel } from "@/shared/lib/onboarding/cycle";
 import {
 	estimateDailyAvailable,
 	formatDailyAvailable,
 	formatSoles,
 } from "@/shared/lib/onboarding/daily";
-import { MonoLabel } from "./mono-label";
+
+const INCOME_PROMPT = "¿Cuánto dinero tienes hoy?";
+const COMMITMENTS_NOTE = "También puedes agregarlos después desde Plan.";
 
 function SummaryRow({ label, value, testID }: { label: string; value: string; testID?: string }) {
 	return (
@@ -23,12 +30,16 @@ function SummaryRow({ label, value, testID }: { label: string; value: string; te
 }
 
 export function StepConfirm() {
-	const { state, dispatch } = useOnboarding();
-	const { submit, isSubmitting, error } = useCompleteOnboarding();
+	const router = useRouter();
+	const { state } = useOnboarding();
+	const { submit, isSubmitting, error, commitmentsFailed } = useCompleteOnboarding();
+	const [incomeOpen, setIncomeOpen] = useState(false);
+	const [nonce, setNonce] = useState(0);
+	const startLock = useRef(false);
 
 	const referenceCents = state.referenceIncomeCents;
 	const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
-
+	const cycleDays = cycleDaysForModel(state);
 	const dailyCents =
 		referenceCents == null
 			? null
@@ -38,7 +49,7 @@ export function StepConfirm() {
 					allocationNeeds: state.allocationNeeds,
 					allocationWants: state.allocationWants,
 					allocationSavings: state.allocationSavings,
-					cycleDays: cycleDaysForModel(state),
+					cycleDays,
 				});
 
 	const envelopeAmount = (pct: number) =>
@@ -50,97 +61,114 @@ export function StepConfirm() {
 		{ key: "savings", label: "Ahorro", pct: state.allocationSavings },
 	] as const;
 
+	const leave = () => {
+		router.replace("/(tabs)");
+	};
+
+	const start = async () => {
+		if (startLock.current) return;
+		startLock.current = true;
+		const ok = await submit();
+		if (!ok) {
+			startLock.current = false;
+			return;
+		}
+		setNonce((current) => current + 1);
+		setIncomeOpen(true);
+	};
+
 	return (
-		<View className="flex-1 bg-background px-6 pt-16">
-			<View className="h-14 flex-row items-center">
-				<Pressable
-					testID="confirm-back"
-					onPress={() => dispatch({ type: "SET_STEP", payload: 4 })}
-					hitSlop={12}
-					className="-ml-1 px-1 py-2"
-				>
-					<ChevronLeft size={22} colorClassName="accent-foreground" />
-				</Pressable>
-			</View>
+		<>
+			<WizardShell
+				stepNumber={4}
+				footer={
+					<View className="gap-3">
+						<AuthButton
+							label="Empezar mi ciclo"
+							onPress={() => void start()}
+							loading={isSubmitting}
+							disabled={isSubmitting}
+						/>
+						{error ? (
+							<Pressable
+								testID="confirm-retry"
+								accessibilityRole="button"
+								accessibilityLabel="Reintentar"
+								onPress={() => void start()}
+								disabled={isSubmitting}
+								className="items-center py-2 active:opacity-60"
+							>
+								<Text className="font-hanken-semibold text-[13px] text-foreground">Reintentar</Text>
+							</Pressable>
+						) : null}
+					</View>
+				}
+			>
+				<View className="gap-6">
+					<View className="gap-1">
+						<Text className="font-newsreader text-[28px] text-foreground">Puedes gastar hoy</Text>
+						<Text
+							testID="confirm-daily"
+							className="font-newsreader text-[52px] leading-[56px] text-foreground"
+						>
+							{dailyCents == null ? "—" : formatDailyAvailable(dailyCents)}
+						</Text>
+						<Text className="font-hanken text-[14px] text-foreground/55">
+							{dailyCents == null
+								? "Anota el dinero que tienes hoy para ver tu número."
+								: `Después de compromisos y ahorro, en ${cycleDays} días.`}
+						</Text>
+					</View>
 
-			<View className="flex-1 pt-4">
-				<View className="gap-4">
-					<MonoLabel>CONFIRMA TU SISTEMA</MonoLabel>
-					<Text className="font-newsreader text-[28px] text-foreground">
-						{`Así queda tu ciclo de ${currentMonthLabel()}`}
-					</Text>
-				</View>
+					<View className="gap-3">
+						<SummaryRow
+							label="Dinero de hoy"
+							testID="confirm-income"
+							value={referenceCents == null ? "—" : formatSoles(referenceCents)}
+						/>
+						{envelopes.map((envelope) => {
+							const amount = envelopeAmount(envelope.pct);
+							return (
+								<SummaryRow
+									key={envelope.key}
+									label={envelope.label}
+									testID={`confirm-envelope-${envelope.key}`}
+									value={
+										amount == null
+											? `${envelope.pct}%`
+											: `${envelope.pct}% · ${formatSoles(amount)}`
+									}
+								/>
+							);
+						})}
+						<SummaryRow
+							label="Compromisos"
+							testID="confirm-commitments"
+							value={formatSoles(commitmentsTotalCents)}
+						/>
+					</View>
 
-				<View testID="confirm-daily-card" className="mt-6 rounded-xl bg-primary/10 px-4 py-4">
-					<MonoLabel>PODRÁS GASTAR AL DÍA</MonoLabel>
-					<Text testID="confirm-daily" className="mt-2 font-geist-mono text-[32px] text-foreground">
-						{dailyCents == null ? "—" : formatDailyAvailable(dailyCents)}
-					</Text>
-					{referenceCents == null ? (
-						<Text className="mt-2 font-hanken text-[13px] text-foreground/55">
-							Registra tu primer ingreso para ver tu disponible al día.
+					{error ? (
+						<Text testID="confirm-error" className="font-hanken text-[13px] text-danger">
+							{error}
 						</Text>
 					) : null}
+					{commitmentsFailed ? (
+						<Text className="font-hanken text-[13px] text-foreground/55">{COMMITMENTS_NOTE}</Text>
+					) : null}
 				</View>
-
-				<View className="mt-6 gap-3">
-					<SummaryRow
-						label="Ingreso del ciclo"
-						testID="confirm-income"
-						value={referenceCents == null ? "—" : formatSoles(referenceCents)}
-					/>
-
-					{envelopes.map((envelope) => {
-						const amount = envelopeAmount(envelope.pct);
-						return (
-							<SummaryRow
-								key={envelope.key}
-								label={envelope.label}
-								testID={`confirm-envelope-${envelope.key}`}
-								value={
-									amount == null ? `${envelope.pct}%` : `${envelope.pct}% · ${formatSoles(amount)}`
-								}
-							/>
-						);
-					})}
-
-					<SummaryRow
-						label="Compromisos reservados"
-						testID="confirm-commitments"
-						value={formatSoles(commitmentsTotalCents)}
-					/>
-				</View>
-
-				<Text className="mt-6 font-hanken text-[13px] text-foreground/45">
-					Puedes cambiar cualquiera de estos números después, desde Ajustes · Tu sistema.
-				</Text>
-
-				{error ? (
-					<Text testID="confirm-error" className="mt-4 font-hanken text-[13px] text-danger">
-						{error}
-					</Text>
-				) : null}
-			</View>
-
-			<View className="gap-3 pb-4">
-				<Pressable
-					testID="confirm-submit"
-					onPress={submit}
-					disabled={isSubmitting}
-					className="items-center rounded-xl bg-primary px-5 py-3.5"
-				>
-					<Text className="font-hanken-semibold text-[15px] text-background">
-						{isSubmitting ? "Creando…" : "Empezar mi ciclo"}
-					</Text>
-				</Pressable>
-				<Pressable
-					testID="confirm-adjust"
-					onPress={() => dispatch({ type: "SET_STEP", payload: 2 })}
-					className="items-center py-2"
-				>
-					<Text className="font-hanken-semibold text-[13px] text-foreground/55">Ajustar algo</Text>
-				</Pressable>
-			</View>
-		</View>
+			</WizardShell>
+			<RegistrarSheet
+				isPresented={incomeOpen}
+				session={{
+					nonce,
+					intent: "income",
+					incomeAmountCents: referenceCents ?? 0,
+					incomePrompt: INCOME_PROMPT,
+					incomeRecord: TODAY_BALANCE_RECORD,
+				}}
+				onDismiss={leave}
+			/>
+		</>
 	);
 }

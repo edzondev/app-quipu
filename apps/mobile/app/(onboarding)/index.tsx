@@ -1,4 +1,4 @@
-import { Redirect, router } from "expo-router";
+import { Redirect, router, useIsFocused } from "expo-router";
 import { useEffect } from "react";
 import { View } from "react-native";
 import { Welcome } from "@/modules/onboarding/components/welcome";
@@ -6,12 +6,13 @@ import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
 export default function OnboardingIndexScreen() {
 	const { isAuthReady, isLoading, profile } = useProfileGate();
+	const focused = useIsFocused();
 
 	useEffect(() => {
-		if (isAuthReady && profile?.onboardingComplete) {
+		if (focused && isAuthReady && profile?.onboardingComplete) {
 			router.replace("/(tabs)");
 		}
-	}, [isAuthReady, profile]);
+	}, [focused, isAuthReady, profile]);
 
 	// Sesión/token aún restaurándose en cold start: no decidir todavía.
 	if (isLoading) return null;
