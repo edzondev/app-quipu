@@ -52,13 +52,17 @@ describe("Step1IncomeProfile", () => {
 	it("ofrece Sol, Euro y Dólar bajo Moneda", () => {
 		renderStep();
 
-		expect(screen.getByText("Moneda")).toBeTruthy();
+		expect(
+			screen.getByText("Elige tu moneda y cómo cobras. La moneda queda fija después."),
+		).toBeTruthy();
+		expect(screen.queryByText(/Elige tu país/)).toBeNull();
 		expect(screen.queryByText("País y moneda")).toBeNull();
 		expect(screen.queryByRole("button", { name: /Perú|España|Estados Unidos/ })).toBeNull();
 		expect(screen.queryByRole("button", { name: /Sol peruano|Dólar estadounidense/ })).toBeNull();
 
+		const group = screen.getByRole("group", { name: "Moneda" });
 		for (const name of CURRENCY_NAMES) {
-			expect(currencyButton(name)).toBeTruthy();
+			expect(group.contains(currencyButton(name))).toBe(true);
 		}
 	});
 

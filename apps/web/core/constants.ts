@@ -1,7 +1,6 @@
 export {
 	type CurrencyCode,
 	currencyReadOnlyLabel,
-	currencySelectorLabel,
 	currencySymbolForCode,
 	DEFAULT_CURRENCY,
 	DEFAULT_MARKET,
