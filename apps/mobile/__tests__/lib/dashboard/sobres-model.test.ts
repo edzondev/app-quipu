@@ -32,6 +32,7 @@ function summary(
 			daysRemaining: 15,
 			daysElapsed: 15,
 			progressPercent: 50,
+			pastEnd: false,
 		},
 		hero: {
 			dailyAvailableCents: 0,

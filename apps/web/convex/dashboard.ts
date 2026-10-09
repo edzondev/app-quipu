@@ -21,6 +21,7 @@ import {
 	computeSurplusProjection,
 	detectEarlyCycle,
 	evaluateCycleCompliance,
+	isCyclePastEnd,
 	mergeRecentMovements,
 	resolveHeroStatusBadge,
 	sortCommitmentsByDue,
@@ -367,6 +368,7 @@ export const getSummary = query({
 				needsReview: activeCycle.needsReview ?? false,
 				unallocatedCents: activeCycle.unallocatedCents ?? 0,
 				...cycleMetrics,
+				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
 			},
 			hero,
 			liquidity: {
