@@ -5,8 +5,9 @@ tags:
   - onboarding
 ---
 # sin caso aún
-# Un Sueldo cierra el ciclo en cualquier fecha, sin ventana de 2 días, y abre otro.
+# Un Sueldo cierra el ciclo en cualquier fecha y arrastra lo que quedó en cada sobre.
 # Cobro = mañana, así que el Sueldo de hoy es anterior a esa fecha.
+# Un ciclo ya vencido no se fabrica aquí: el seed no crea pastEnd.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -41,3 +42,4 @@ tags:
 - tapOn:
     text: "^Inicio$"
 - assertVisible: "Hoy puedes gastar"
+- assertVisible: "Saldo que quedó"

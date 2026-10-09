@@ -4,7 +4,8 @@ tags:
   - registrar
 ---
 # sin caso aún
-# Con ciclo activo, Extra se suma y no cambia las fechas del ciclo.
+# Extra entra al ciclo activo y no lo cierra. Tampoco cierra un ciclo vencido;
+# ese caso pide un ciclo con pastEnd y el seed de hoy no lo crea.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

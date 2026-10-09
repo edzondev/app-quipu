@@ -21,6 +21,12 @@ tags:
 - extendedWaitUntil:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
+- assertVisible:
+    text: "^Sueldo$"
+    below: "REGISTRAR INGRESO"
+- assertVisible: "Tu sueldo empieza un ciclo nuevo"
+- assertNotVisible:
+    text: "^Extra$"
 - tapOn:
     text: "^3$"
 - tapOn:

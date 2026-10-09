@@ -4,7 +4,7 @@ tags:
   - onboarding
 ---
 # sin caso aún
-# Dinero de hoy vacío = S/ 0 (Capi, 9 oct). Abre el ciclo con sobres en 0.
+# Dinero de hoy vacío = S/ 0 (Capi, 9 oct). El diario solo se ve en Inicio.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -33,20 +33,18 @@ tags:
 - tapOn:
     id: commitments-skip
 - extendedWaitUntil:
-    visible: "Puedes gastar hoy"
+    visible: "Dinero de hoy"
     timeout: 10000
-# Espera arreglo pendiente (Pixi + Capi): vacío es S/ 0, el mismo número en Inicio.
-# Hoy el paso 5 muestra «—» y «Anota el dinero que tienes hoy para ver tu número.»
-- copyTextFrom:
+- assertVisible: "TU SISTEMA · 05/05"
+# Espera arreglo pendiente (Pixi, PR #106): hoy el paso 5 muestra «Puedes gastar hoy» y «—».
+- assertNotVisible: "Puedes gastar hoy"
+- assertNotVisible:
     id: confirm-daily
-- evalScript: "${output.stepDaily = maestro.copiedText}"
-- assertTrue: "${output.stepDaily.indexOf('0.00') >= 0 || output.stepDaily.indexOf('S/ 0') >= 0}"
 - assertNotVisible: "Anota el dinero que tienes hoy para ver tu número."
 - tapOn: "Empezar mi ciclo"
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 40000
-- assertVisible: ${output.stepDaily}
 - assertVisible: "0.00"
 - assertNotVisible: "Saldo que quedó"
 - assertVisible: "Necesidades"
