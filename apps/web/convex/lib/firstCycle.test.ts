@@ -1,6 +1,7 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { computeCycleCarryover, envelopeWithCarry } from "./cycleCarryover";
+import { MS_PER_DAY } from "./dashboardMath";
 import { openingCycleSkipsProgress, streakAfterClose } from "./evaluateClosedCycle";
 import {
 	assertFirstCycleAvailable,
@@ -9,7 +10,7 @@ import {
 	OPENING_BALANCE_MESSAGE,
 	openingEnvelopes,
 } from "./firstCycle";
-import { resolveCycleForEvent } from "./incomeEventLogic";
+import { resolveCycleForIncome } from "./incomeEventLogic";
 
 const WEIGHTS = {
 	allocationNeeds: 50,
@@ -124,19 +125,11 @@ describe("streakAfterClose", () => {
 describe("income against the opening cycle", () => {
 	const startDate = Date.parse("2026-10-09T15:30:00-05:00");
 	const endDate = Date.parse("2026-10-24T00:00:00-05:00");
-	const opening = { _id: "opening", startDate, endDate };
+	const opening = { _id: "opening", startDate, endDate, isOpeningCycle: true };
 	const envelopes = openingEnvelopes({ openingBalanceCents: 10_000, ...WEIGHTS });
 
-	it("opens a new cycle and carries leftovers when the income is on or after endDate", () => {
-		expect(
-			resolveCycleForEvent({
-				activeCycle: opening,
-				occurredAt: endDate,
-				now: endDate,
-			}),
-		).toBeNull();
-
-		const carry = computeCycleCarryover({
+	function openingCarry() {
+		return computeCycleCarryover({
 			envelopes: envelopes.map((envelope) => ({
 				type: envelope.type,
 				remainingAmount: envelope.remainingAmount,
@@ -145,6 +138,31 @@ describe("income against the opening cycle", () => {
 			surplusContributions: [],
 			incomeEvents: [],
 		});
+	}
+
+	it("keeps a habitual income three days before payday on the opening cycle", () => {
+		const occurredAt = endDate - 3 * MS_PER_DAY;
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt,
+				now: occurredAt,
+				incomeKind: "habitual",
+			}),
+		).toBe("opening");
+	});
+
+	it("opens the next cycle and carries a habitual income two days before payday", () => {
+		const occurredAt = endDate - 2 * MS_PER_DAY;
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt,
+				now: occurredAt,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+		const carry = openingCarry();
 		expect(carry).toEqual({ needs: 5_000, wants: 3_000, savings: 2_000, extraordinary: 0 });
 		expect(envelopeWithCarry(5_000, carry.needs)).toEqual({
 			allocatedAmount: 10_000,
@@ -153,24 +171,51 @@ describe("income against the opening cycle", () => {
 		});
 	});
 
-	it("keeps an income dated inside the opening window on that cycle", () => {
-		const occurredAt = startDate + 60_000;
+	it("opens the next cycle and carries a habitual income on the pay day", () => {
 		expect(
-			resolveCycleForEvent({
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: endDate,
+				now: endDate,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+		expect(openingCarry().needs).toBe(5_000);
+		expect(envelopeWithCarry(5_000, openingCarry().needs).carriedOverCents).toBe(5_000);
+	});
+
+	it("keeps an extraordinary income one day before payday on the opening cycle", () => {
+		const occurredAt = endDate - MS_PER_DAY;
+		expect(
+			resolveCycleForIncome({
 				activeCycle: opening,
 				occurredAt,
 				now: occurredAt,
+				incomeKind: "extraordinary",
 			}),
 		).toBe("opening");
 	});
 
 	it("keeps the current rule when the income is dated before the opening cycle", () => {
 		expect(
-			resolveCycleForEvent({
+			resolveCycleForIncome({
 				activeCycle: opening,
 				occurredAt: startDate - 1,
 				now: startDate,
+				incomeKind: "habitual",
 			}),
 		).toBeNull();
+	});
+
+	it("does not apply the early window to a regular cycle", () => {
+		const occurredAt = endDate - 2 * MS_PER_DAY;
+		expect(
+			resolveCycleForIncome({
+				activeCycle: { ...opening, isOpeningCycle: false },
+				occurredAt,
+				now: occurredAt,
+				incomeKind: "habitual",
+			}),
+		).toBe("opening");
 	});
 });
