@@ -132,6 +132,7 @@ export function idleCommitment(
 
 /** Último ciclo cerrado que devuelve dashboard.getSummary cuando no hay ciclo activo. */
 export const closedCycleOnSummary = {
+	cycleId: fixtureId("financialCycles", "cycle-1"),
 	startDate: Date.UTC(2026, 7, 1, 5, 0, 0),
 	endDate: Date.UTC(2026, 7, 31, 5, 0, 0),
 	surplusCents: 21000,

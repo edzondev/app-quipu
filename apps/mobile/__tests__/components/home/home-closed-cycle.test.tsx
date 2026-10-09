@@ -13,8 +13,15 @@ const mockUseQuery = jest.fn();
 
 jest.mock("convex/react", () => ({
 	useQuery: (...args: unknown[]) => mockUseQuery(...args),
-	useMutation: () => jest.fn(),
 	useConvexAuth: () => ({ isAuthenticated: true, isLoading: false }),
+}));
+
+jest.mock("@/shared/hooks/use-expense-actions", () => ({
+	useExpenseActions: () => ({ register: jest.fn() }),
+}));
+
+jest.mock("@/shared/hooks/use-income-actions", () => ({
+	useIncomeActions: () => ({ register: jest.fn() }),
 }));
 
 jest.mock("@/lib/auth-client", () => ({
