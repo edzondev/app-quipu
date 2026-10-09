@@ -3,12 +3,13 @@ import { describe, expect, it } from "vitest";
 import { computeCycleCarryover } from "./cycleCarryover";
 import { isCyclePastEnd } from "./dashboardMath";
 import {
-	EXTRA_BEFORE_CYCLE_MESSAGE,
+	cycleStartedOnLimaDay,
 	FUTURE_INCOME_DATE_MESSAGE,
 	futureIncomeDateMessage,
+	INCOME_BEFORE_CYCLE_MESSAGE,
 	NO_ACTIVE_CYCLE_MESSAGE,
-	rejectExtraordinaryBeforeCycleStart,
 	rejectFutureIncomeDate,
+	rejectIncomeBeforeCycleStart,
 	rejectIncomeDateForKind,
 	resolveCycleForIncome,
 } from "./incomeEventLogic";
@@ -136,17 +137,79 @@ describe("resolveCycleForIncome kind", () => {
 				}),
 			).toBe("expired-active");
 			expect(() => rejectIncomeDateForKind("extraordinary", occurredAt, now)).not.toThrow();
-			expect(() =>
-				rejectExtraordinaryBeforeCycleStart("extraordinary", occurredAt, expired.startDate),
-			).not.toThrow();
+			expect(() => rejectIncomeBeforeCycleStart(occurredAt, expired.startDate)).not.toThrow();
 		}
 	});
 
-	it("rejects an extraordinary income dated before the active cycle start", () => {
+	it("accepts an income earlier the same Lima day and rejects the previous Lima day", () => {
+		const cycleStart = Date.parse("2026-10-10T00:10:00-05:00");
+		const earlierSameDay = Date.parse("2026-10-10T00:01:00-05:00");
+		const previousLimaDay = Date.parse("2026-10-09T23:50:00-05:00");
+		const cycle = {
+			_id: "started-today",
+			startDate: cycleStart,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+			isOpeningCycle: true,
+		};
+		expect(earlierSameDay).toBeLessThan(cycleStart);
+		for (const occurredAt of [earlierSameDay, cycleStart]) {
+			expect(() => rejectIncomeBeforeCycleStart(occurredAt, cycleStart)).not.toThrow();
+		}
+		expect(
+			resolveCycleForIncome({
+				activeCycle: cycle,
+				occurredAt: earlierSameDay,
+				now: earlierSameDay,
+				incomeKind: "habitual",
+			}),
+		).toBe("started-today");
+
+		const yesterday = () => rejectIncomeBeforeCycleStart(previousLimaDay, cycleStart);
+		expect(yesterday).toThrow(ConvexError);
+		try {
+			yesterday();
+		} catch (error) {
+			if (!(error instanceof ConvexError)) throw error;
+			expect(error.data).toMatchObject({
+				code: "VALIDATION_ERROR",
+				message: INCOME_BEFORE_CYCLE_MESSAGE,
+				data: { field: "occurredAt" },
+			});
+		}
+
+		const afternoonStart = Date.parse("2026-10-09T15:00:00-05:00");
+		const morning = Date.parse("2026-10-09T09:30:00-05:00");
+		const opening = {
+			_id: "opening",
+			startDate: afternoonStart,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+			isOpeningCycle: true,
+		};
+		expect(() => rejectIncomeBeforeCycleStart(morning, afternoonStart)).not.toThrow();
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: morning,
+				now: morning,
+				incomeKind: "habitual",
+			}),
+		).toBe("opening");
+		const nextLimaDay = Date.parse("2026-10-10T09:00:00-05:00");
+		expect(() => rejectIncomeBeforeCycleStart(nextLimaDay, afternoonStart)).not.toThrow();
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: nextLimaDay,
+				now: nextLimaDay,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+	});
+
+	it("rejects any income dated on a Lima day before the cycle start, on create and on edit", () => {
 		const day = 24 * 60 * 60 * 1000;
 		const startDate = now - 10 * day;
-		const beforeStart = () =>
-			rejectExtraordinaryBeforeCycleStart("extraordinary", startDate - day, startDate);
+		const beforeStart = () => rejectIncomeBeforeCycleStart(startDate - day, startDate);
 		expect(beforeStart).toThrow(ConvexError);
 		try {
 			beforeStart();
@@ -154,16 +217,11 @@ describe("resolveCycleForIncome kind", () => {
 			if (!(error instanceof ConvexError)) throw error;
 			expect(error.data).toMatchObject({
 				code: "VALIDATION_ERROR",
-				message: EXTRA_BEFORE_CYCLE_MESSAGE,
+				message: INCOME_BEFORE_CYCLE_MESSAGE,
 				data: { field: "occurredAt" },
 			});
 		}
-		expect(() =>
-			rejectExtraordinaryBeforeCycleStart("habitual", startDate - day, startDate),
-		).not.toThrow();
-		expect(() =>
-			rejectExtraordinaryBeforeCycleStart("extraordinary", startDate, startDate),
-		).not.toThrow();
+		expect(() => rejectIncomeBeforeCycleStart(startDate, startDate)).not.toThrow();
 	});
 
 	it("closes an expired active cycle on a habitual income and carries its envelopes", () => {
@@ -213,6 +271,119 @@ describe("resolveCycleForIncome kind", () => {
 				code: "NO_ACTIVE_CYCLE",
 				message: NO_ACTIVE_CYCLE_MESSAGE,
 			});
+		}
+	});
+
+	it("adds a habitual income on the same Lima day, including both sides of midnight", () => {
+		const morning = Date.parse("2026-10-09T10:00:00-05:00");
+		const justBeforeMidnight = Date.parse("2026-10-09T23:59:00-05:00");
+		const justAfterMidnight = Date.parse("2026-10-10T00:01:00-05:00");
+		const startedBeforeMidnight = {
+			_id: "before-midnight",
+			startDate: Date.parse("2026-10-09T23:50:00-05:00"),
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+		};
+		const startedAfterMidnight = {
+			_id: "after-midnight",
+			startDate: justAfterMidnight,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+		};
+
+		for (const occurredAt of [morning, justBeforeMidnight, startedBeforeMidnight.startDate]) {
+			expect(cycleStartedOnLimaDay(startedBeforeMidnight, occurredAt)).toBe(true);
+			expect(
+				resolveCycleForIncome({
+					activeCycle: startedBeforeMidnight,
+					occurredAt,
+					now: occurredAt,
+					incomeKind: "habitual",
+				}),
+			).toBe("before-midnight");
+			expect(
+				resolveCycleForIncome({
+					activeCycle: startedBeforeMidnight,
+					occurredAt,
+					now: occurredAt,
+					incomeKind: undefined,
+				}),
+			).toBe("before-midnight");
+		}
+
+		expect(cycleStartedOnLimaDay(startedBeforeMidnight, justAfterMidnight)).toBe(false);
+		expect(
+			resolveCycleForIncome({
+				activeCycle: startedBeforeMidnight,
+				occurredAt: justAfterMidnight,
+				now: justAfterMidnight,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+
+		const laterSameDay = Date.parse("2026-10-10T23:50:00-05:00");
+		expect(cycleStartedOnLimaDay(startedAfterMidnight, laterSameDay)).toBe(true);
+		expect(
+			resolveCycleForIncome({
+				activeCycle: startedAfterMidnight,
+				occurredAt: laterSameDay,
+				now: laterSameDay,
+				incomeKind: "habitual",
+			}),
+		).toBe("after-midnight");
+		expect(cycleStartedOnLimaDay(startedAfterMidnight, morning)).toBe(false);
+	});
+
+	it("closes on the next Lima day and still carries the envelopes", () => {
+		const startDate = Date.parse("2026-10-09T23:50:00-05:00");
+		const nextLimaDay = Date.parse("2026-10-10T00:10:00-05:00");
+		const active = {
+			_id: "active",
+			startDate,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+		};
+		expect(cycleStartedOnLimaDay(active, nextLimaDay)).toBe(false);
+		expect(
+			resolveCycleForIncome({
+				activeCycle: active,
+				occurredAt: nextLimaDay,
+				now: nextLimaDay,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+		expect(
+			computeCycleCarryover({
+				envelopes: [
+					{ type: "needs", remainingAmount: -100 },
+					{ type: "wants", remainingAmount: 50 },
+					{ type: "savings", remainingAmount: -30 },
+				],
+				closeSurplusMovedAt: undefined,
+				surplusContributions: [],
+				incomeEvents: [],
+			}),
+		).toEqual({ needs: -100, wants: 50, savings: -30, extraordinary: 0 });
+	});
+
+	it("uses cycleStartedOnLimaDay for habitual add-vs-close and for startedToday", () => {
+		const startDate = Date.parse("2026-10-09T23:50:00-05:00");
+		const cycle = {
+			_id: "active",
+			startDate,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+		};
+		for (const at of [
+			startDate,
+			Date.parse("2026-10-09T23:59:00-05:00"),
+			Date.parse("2026-10-10T00:01:00-05:00"),
+			Date.parse("2026-10-10T18:00:00-05:00"),
+		]) {
+			const startedToday = cycleStartedOnLimaDay(cycle, at);
+			const resolved = resolveCycleForIncome({
+				activeCycle: cycle,
+				occurredAt: at,
+				now: at,
+				incomeKind: "habitual",
+			});
+			expect(resolved === cycle._id).toBe(startedToday);
 		}
 	});
 

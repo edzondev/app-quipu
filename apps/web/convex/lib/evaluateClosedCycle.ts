@@ -1,6 +1,7 @@
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { evaluateCycleCompliance } from "./budgetMath";
+import { MS_PER_DAY } from "./dashboardMath";
 import { computeNextStreak } from "./gamificationMath";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
@@ -17,14 +18,32 @@ export function wantsWithinBudgetOnClose(
 	return (wants?.remainingAmount ?? 0) - carry >= 0;
 }
 
+export function cycleCountsForStreakAndGreen(input: {
+	isOpeningCycle: Doc<"financialCycles">["isOpeningCycle"];
+	startDate: number;
+	closeAt: number;
+}): boolean {
+	if (openingCycleSkipsStreak(input.isOpeningCycle)) return false;
+	return input.closeAt - input.startDate >= MS_PER_DAY;
+}
+
 export function streakAfterClose(input: {
-	isOpeningCycle: boolean | undefined;
+	isOpeningCycle: Doc<"financialCycles">["isOpeningCycle"];
+	startDate: number;
+	closeAt: number;
 	currentStreak: number;
 	longestStreak: number;
 	compliance: Parameters<typeof computeNextStreak>[2];
 }): { currentStreak: number; longestStreak: number } | null {
-	if (openingCycleSkipsStreak(input.isOpeningCycle)) return null;
+	if (!cycleCountsForStreakAndGreen(input)) return null;
 	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance);
+}
+
+/** «CICLOS CERRADOS EN VERDE» follows the same predicate as the streak. */
+export function closedGreenCountAfterClose(input: Parameters<typeof streakAfterClose>[0]): number {
+	if (!cycleCountsForStreakAndGreen(input)) return input.currentStreak;
+	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance)
+		.currentStreak;
 }
 
 export async function evaluateClosedCycle(
@@ -84,6 +103,8 @@ export async function evaluateClosedCycle(
 	const longestStreak = streakRow?.longestStreak ?? 0;
 	const next = streakAfterClose({
 		isOpeningCycle: cycle.isOpeningCycle,
+		startDate: cycle.startDate,
+		closeAt: now,
 		currentStreak,
 		longestStreak,
 		compliance,

@@ -90,6 +90,7 @@ export const closeReport = {
 		],
 		savingsCents: 29000,
 		streak: 3,
+		streakEvaluated: true,
 		status: "compliant" as const,
 		hasExtraordinaryIncome: false,
 	},

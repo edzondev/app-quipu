@@ -7,7 +7,7 @@ type MinimalCycle = { _id: string; startDate: number; endDate: number };
 /** A Lima calendar day after today. Later today is allowed. */
 export const FUTURE_INCOME_DATE_MESSAGE = "La fecha del ingreso no puede ser futura.";
 
-export const EXTRA_BEFORE_CYCLE_MESSAGE =
+export const INCOME_BEFORE_CYCLE_MESSAGE =
 	"La fecha del ingreso no puede ser anterior al inicio del ciclo.";
 
 export const NO_ACTIVE_CYCLE_MESSAGE = "Registra primero tu sueldo para empezar un ciclo nuevo.";
@@ -38,23 +38,28 @@ export function rejectIncomeDateForKind(
 	}
 }
 
-export function rejectExtraordinaryBeforeCycleStart(
-	incomeKind: Doc<"incomeEvents">["incomeKind"],
-	occurredAt: number,
-	cycleStartDate: number,
-): void {
-	if (incomeKind !== "extraordinary" || occurredAt >= cycleStartDate) return;
+/** Create and edit share this. Any kind, compared by Lima day. */
+export function rejectIncomeBeforeCycleStart(occurredAt: number, cycleStartDate: number): void {
+	if (limaDayKey(occurredAt) >= limaDayKey(cycleStartDate)) return;
 	throw new ConvexError({
 		code: "VALIDATION_ERROR",
-		message: EXTRA_BEFORE_CYCLE_MESSAGE,
+		message: INCOME_BEFORE_CYCLE_MESSAGE,
 		data: { field: "occurredAt" },
 	});
 }
 
+/** True when `at` falls on the same Lima calendar day as the cycle start. */
+export function cycleStartedOnLimaDay(
+	cycle: Pick<Doc<"financialCycles">, "startDate">,
+	at: number,
+): boolean {
+	return limaDayKey(cycle.startDate) === limaDayKey(at);
+}
+
 /**
- * Kind decides. An expired cycle stays active until a habitual income closes
- * it. Extraordinary income always stays on that active cycle. NO_ACTIVE_CYCLE
- * is only when the profile has no active cycle at all.
+ * Kind decides, never source or description. Extraordinary income stays on
+ * the active cycle. Habitual income closes it unless that cycle started on
+ * the same Lima day as the income. NO_ACTIVE_CYCLE only when none is active.
  */
 export function resolveCycleForIncome(input: {
 	activeCycle: (MinimalCycle & { isOpeningCycle?: boolean }) | null;
@@ -62,13 +67,19 @@ export function resolveCycleForIncome(input: {
 	now: number;
 	incomeKind: Doc<"incomeEvents">["incomeKind"];
 }): string | null {
-	if (input.incomeKind !== "extraordinary") return null;
 	if (input.activeCycle === null) {
+		if (input.incomeKind !== "extraordinary") return null;
 		throw new ConvexError({
 			code: "NO_ACTIVE_CYCLE",
 			message: NO_ACTIVE_CYCLE_MESSAGE,
 			data: { field: "incomeKind" },
 		});
 	}
-	return input.activeCycle._id;
+	if (
+		input.incomeKind === "extraordinary" ||
+		cycleStartedOnLimaDay(input.activeCycle, input.occurredAt)
+	) {
+		return input.activeCycle._id;
+	}
+	return null;
 }
