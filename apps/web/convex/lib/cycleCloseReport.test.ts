@@ -7,6 +7,7 @@ import {
 	isCloseReportEligible,
 	isJustClosedAfterCycleClose,
 } from "./cycleCloseReport";
+import { cycleCountsForStreakAndGreen } from "./evaluateClosedCycle";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -144,6 +145,37 @@ describe("buildCycleCloseReport", () => {
 describe("computeEnvelopeSpentCents", () => {
 	it("never returns negative spend", () => {
 		expect(computeEnvelopeSpentCents(100, 150)).toBe(0);
+	});
+});
+
+describe("streakEvaluated on the close report", () => {
+	const startDate = Date.parse("2026-10-09T15:00:00-05:00");
+
+	it("is false for an opening cycle and for a close under 24 hours", () => {
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: true,
+				startDate,
+				closeAt: startDate + MS_PER_DAY,
+			}),
+		).toBe(false);
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: startDate + 20 * 60 * 1000,
+			}),
+		).toBe(false);
+	});
+
+	it("is true for a non-opening cycle that lasted at least 24 hours", () => {
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: startDate + MS_PER_DAY,
+			}),
+		).toBe(true);
 	});
 });
 
