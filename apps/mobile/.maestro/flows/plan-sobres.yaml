@@ -1,0 +1,50 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - plan
+---
+# Notion 3f486a7356a68177a53fdbbe81003ba0 Plan
+# Notion 3f486a7356a6811cb630d08b4185f2e5 Sobres
+# «Va rápido» solo sale si el ritmo no alcanza; si no, «Al día» o «Intacto».
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- tapOn:
+    text: "^Plan$"
+- extendedWaitUntil:
+    visible: "Dónde está tu dinero antes de que lo gastes."
+    timeout: 10000
+- assertVisible: "TOTAL REPARTIDO"
+- assertVisible: "Sobres"
+- assertVisible: "Necesidades, Gustos y Ahorro"
+- assertVisible: "Compromisos"
+- assertVisible: "Ahorro y metas"
+- assertNotVisible: "Reparto del ciclo"
+- tapOn:
+    text: "^Sobres$"
+- extendedWaitUntil:
+    visible: "Tu sueldo ya está dividido. Esto es lo que queda."
+    timeout: 15000
+- assertVisible: "Necesidades"
+- assertVisible: "Gustos"
+- assertVisible: "Ahorro"
+- assertVisible: "GASTADO"
+- assertVisible: "apartado este ciclo"
+- assertNotVisible:
+    text: "^Mover dinero$"
+- runFlow:
+    when:
+      notVisible: "Al día"
+    commands:
+      - runFlow:
+          when:
+            notVisible: "Va rápido"
+          commands:
+            - assertVisible: "Intacto"
+- tapOn: "Volver"
+- assertVisible: "Ahorro y metas"

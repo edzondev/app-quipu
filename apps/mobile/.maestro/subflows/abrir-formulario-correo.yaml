@@ -1,0 +1,20 @@
+appId: com.quipu.finance
+---
+# Sesión local vacía solo de esta app, para entrar con la cuenta del env.
+# No borra datos en Convex y no es resetAll.
+- launchApp:
+    appId: com.quipu.finance
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Ya tengo cuenta"
+    timeout: 25000
+- tapOn: "Ya tengo cuenta"
+- extendedWaitUntil:
+    visible: "Entrar con correo"
+    timeout: 10000
+- tapOn:
+    text: "^Entrar con correo$"
+- extendedWaitUntil:
+    visible: "Entra con tu respaldo."
+    timeout: 10000

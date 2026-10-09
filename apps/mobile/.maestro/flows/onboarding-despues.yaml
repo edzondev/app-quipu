@@ -1,0 +1,38 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - onboarding
+  - one-shot
+---
+# Notion 3f486a7356a681c78c1be4c0e607cad5
+# «Después» no guarda compromisos. Cuenta distinta: QUIPU_E2E_FRESH_SKIP_*.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_SKIP_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_SKIP_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- runFlow: ../subflows/onboarding-hasta-paso-4.yaml
+- tapOn:
+    id: commitments-skip
+- extendedWaitUntil:
+    visible: "Puedes gastar hoy"
+    timeout: 10000
+- assertVisible: "S/ 32"
+- assertVisible:
+    id: confirm-commitments
+- tapOn: "Empezar mi ciclo"
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 40000
+- tapOn:
+    text: "^Plan$"
+- tapOn: "Compromisos"
+- extendedWaitUntil:
+    visible: "SIN COMPROMISOS"
+    timeout: 15000
+- assertVisible: "Aún no registras tus pagos fijos."
+- assertVisible: "Agregar compromiso"
+- assertVisible: "RESERVADO ESTE CICLO"

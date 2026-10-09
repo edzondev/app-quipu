@@ -1,0 +1,80 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - onboarding
+---
+# Notion 3f486a7356a681d7a4eafd77e456b2e4
+# Paso 1: Fijo, Mixto y Variable. No llama a «Empezar mi ciclo».
+# Corre ANTES de onboarding-ciclo, con la misma cuenta fresca.
+# «Indica la parte fija.», «Agrega al menos una fuente.» y
+# «Elige un ciclo de 15 o 30 días.» existen en el validador pero no se pintan.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- assertVisible: "TU SISTEMA · 01/05"
+- assertVisible: "Fijo"
+- assertVisible: "DÍA DE PAGO"
+- assertVisible: "El 1 de cada mes"
+- tapOn:
+    id: freq-option-biweekly
+- assertVisible: "El 15 y 30 de cada mes"
+- tapOn:
+    id: freq-option-weekly
+- assertVisible: "Cada 7 días"
+- tapOn:
+    id: freq-option-monthly
+- assertVisible: "El 1 de cada mes"
+- assertVisible: "1 – 30 de cada mes · 30 DÍAS"
+- tapOn:
+    id: amount-input
+- inputText: "12345678901"
+- hideKeyboard
+- copyTextFrom:
+    id: amount-input
+- evalScript: "${output.digits = maestro.copiedText.replace(/[^0-9]/g, '')}"
+- assertTrue: "${output.digits.length <= 9 && output.digits.length >= 1}"
+- tapOn:
+    id: option-mixed
+- assertVisible: "PARTE FIJA"
+- assertVisible: "¿DE DÓNDE LLEGA TU DINERO?"
+- hideKeyboard
+- tapOn: "Continuar"
+- assertVisible: "TU SISTEMA · 01/05"
+- assertNotVisible: "¿Cuándo cobras?"
+- tapOn:
+    id: option-variable
+- assertVisible: "Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir."
+- assertVisible: "15 días"
+- assertVisible: "30 días"
+- tapOn: "Continuar"
+- assertVisible: "TU SISTEMA · 01/05"
+- tapOn:
+    id: cycle-pill-15
+- tapOn:
+    id: source-input
+- inputText: "Ventas"
+- tapOn:
+    id: add-source
+- assertVisible:
+    id: source-chip-0
+- tapOn:
+    id: source-input
+- inputText: "Ventas"
+- tapOn:
+    id: add-source
+- assertNotVisible:
+    id: source-chip-1
+- hideKeyboard
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cuándo cobras?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 02/05"
+- tapOn:
+    id: wizard-back
+- assertVisible: "¿Cómo entra tu dinero?"

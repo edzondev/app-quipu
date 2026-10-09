@@ -1,0 +1,91 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - plan
+---
+# Notion 3f486a7356a681f8b73ee3d543a5dcf6 agregar
+# Notion 3f486a7356a68130b200fbcebc4fd595 validaciones (sin el doble toque)
+# El texto de vencimiento depende del día de Lima; se afirma «Se repite cada mes.» y «MENSUAL» o un estado.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- tapOn:
+    text: "^Plan$"
+- extendedWaitUntil:
+    visible: "Compromisos"
+    timeout: 10000
+- tapOn: "Compromisos"
+- extendedWaitUntil:
+    visible: "RESERVADO ESTE CICLO"
+    timeout: 15000
+- tapOn: "Agregar compromiso"
+- extendedWaitUntil:
+    visible: "NUEVO COMPROMISO"
+    timeout: 10000
+- tapOn:
+    text: "^Agregar compromiso$"
+    below: "NUEVO COMPROMISO"
+- extendedWaitUntil:
+    visible: "El nombre del compromiso es obligatorio."
+    timeout: 5000
+- assertVisible: "El monto debe ser mayor a cero."
+- tapOn:
+    text: "\\+ Celular"
+- tapOn: "Monto"
+- inputText: "0"
+- hideKeyboard
+- tapOn:
+    text: "^Agregar compromiso$"
+    below: "NUEVO COMPROMISO"
+- assertVisible: "El monto debe ser mayor a cero."
+- tapOn:
+    text: "^Día de vencimiento$"
+- inputText: "0"
+- hideKeyboard
+- extendedWaitUntil:
+    visible: "El día de vencimiento va del 1 al 31."
+    timeout: 5000
+- eraseText
+- inputText: "32"
+- hideKeyboard
+- extendedWaitUntil:
+    visible: "El día de vencimiento va del 1 al 31."
+    timeout: 5000
+- eraseText
+- inputText: "15"
+- hideKeyboard
+- assertVisible: "Se repite cada mes."
+- tapOn: "Monto"
+- eraseText
+- inputText: "50"
+- hideKeyboard
+- tapOn:
+    text: "^Agregar compromiso$"
+    below: "NUEVO COMPROMISO"
+- extendedWaitUntil:
+    notVisible: "NUEVO COMPROMISO"
+    timeout: 20000
+- assertVisible: "Celular"
+- assertVisible: "S/ 50"
+- runFlow:
+    when:
+      notVisible: "MENSUAL"
+    commands:
+      - runFlow:
+          when:
+            notVisible: "Cubierto"
+          commands:
+            - runFlow:
+                when:
+                  notVisible: "Parcial"
+                commands:
+                  - runFlow:
+                      when:
+                        notVisible: "Sin cubrir"
+                      commands:
+                        - assertVisible: "VENCE"
