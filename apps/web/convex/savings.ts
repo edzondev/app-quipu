@@ -2,6 +2,7 @@ import { ConvexError, type Infer, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { findLatestClosedCycle, loadClosedCycleSurplusAmounts } from "./lib/closedCycleSurplus";
 import {
 	buildCycleSavingsContextLabel,
 	computeCycleSavingsBreakdown,
@@ -1060,59 +1061,6 @@ const closedCycleSurplusValidator = v.union(
 
 const moveClosedCycleSurplusResultValidator = v.null();
 
-async function findLatestClosedCycle(ctx: QueryCtx | MutationCtx, profileId: Id<"profiles">) {
-	return await ctx.db
-		.query("financialCycles")
-		.withIndex("by_profile_status", (q) => q.eq("profileId", profileId).eq("status", "closed"))
-		.order("desc")
-		.first();
-}
-
-async function loadClosedCycleSurplusAmounts(
-	ctx: QueryCtx | MutationCtx,
-	cycleId: Id<"financialCycles">,
-) {
-	const [needsEnvelope, wantsEnvelope, savingsEnvelope, incomeEvents, surplusContributions] =
-		await Promise.all([
-			ctx.db
-				.query("envelopes")
-				.withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId).eq("type", "needs"))
-				.unique(),
-			ctx.db
-				.query("envelopes")
-				.withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId).eq("type", "wants"))
-				.unique(),
-			ctx.db
-				.query("envelopes")
-				.withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId).eq("type", "savings"))
-				.unique(),
-			ctx.db
-				.query("incomeEvents")
-				.withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-				.collect(),
-			ctx.db
-				.query("surplusContributions")
-				.withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-				.collect(),
-		]);
-
-	const needs = Math.max(0, needsEnvelope?.remainingAmount ?? 0);
-	const wants = Math.max(0, wantsEnvelope?.remainingAmount ?? 0);
-	const extraordinary = computeAvailableExtraordinarySavingsForMove({
-		incomeEvents: incomeEvents.map((event) => ({
-			incomeKind: event.incomeKind,
-			distributionApplied: event.distributionApplied,
-		})),
-		surplusContributions: surplusContributions.map((row) => ({
-			fromEnvelope: row.fromEnvelope,
-			amount: row.amount,
-		})),
-		savingsEnvelopeRemainingCents: Math.max(0, savingsEnvelope?.remainingAmount ?? 0),
-	});
-
-	return { needs, wants, extraordinary, total: needs + wants + extraordinary };
-}
-
 export const getClosedCycleSurplus = query({
 	args: {},
 	returns: closedCycleSurplusValidator,
@@ -1129,7 +1077,11 @@ export const getClosedCycleSurplus = query({
 		const closedCycle = await findLatestClosedCycle(ctx, profile._id);
 		if (closedCycle === null) return null;
 
-		const amounts = await loadClosedCycleSurplusAmounts(ctx, closedCycle._id);
+		const amounts = await loadClosedCycleSurplusAmounts(
+			ctx,
+			closedCycle._id,
+			closedCycle.closeSurplusMovedAt,
+		);
 		return {
 			closedCycleId: closedCycle._id,
 			needs: amounts.needs,
@@ -1185,7 +1137,7 @@ export const moveClosedCycleSurplusToFund = mutation({
 			});
 		}
 
-		const amounts = await loadClosedCycleSurplusAmounts(ctx, cycle._id);
+		const amounts = await loadClosedCycleSurplusAmounts(ctx, cycle._id, cycle.closeSurplusMovedAt);
 		if (amounts.total === 0) {
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
