@@ -16,7 +16,9 @@ const NOW = Date.parse("2026-10-10T02:30:00.000Z");
 const NEW_CYCLE = "Empieza un nuevo ciclo";
 const ADD_TO_CYCLE = "Sumar al ciclo actual";
 
-function selected(view: ReturnType<typeof render>, name: string) {
+type Rendered = Awaited<ReturnType<typeof render>>;
+
+function selected(view: Rendered, name: string) {
 	return view.getByRole("button", { name }).props.accessibilityState.selected === true;
 }
 
