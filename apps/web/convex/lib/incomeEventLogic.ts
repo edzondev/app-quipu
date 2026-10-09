@@ -43,7 +43,8 @@ export function rejectExtraordinaryBeforeCycleStart(
 	occurredAt: number,
 	cycleStartDate: number,
 ): void {
-	if (incomeKind !== "extraordinary" || occurredAt >= cycleStartDate) return;
+	if (incomeKind !== "extraordinary") return;
+	if (limaDayKey(occurredAt) >= limaDayKey(cycleStartDate)) return;
 	throw new ConvexError({
 		code: "VALIDATION_ERROR",
 		message: EXTRA_BEFORE_CYCLE_MESSAGE,

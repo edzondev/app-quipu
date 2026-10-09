@@ -143,6 +143,37 @@ describe("resolveCycleForIncome kind", () => {
 		}
 	});
 
+	it("accepts an extraordinary income earlier the same Lima day and rejects the previous Lima day", () => {
+		const cycleStart = Date.parse("2026-10-10T00:10:00-05:00");
+		const earlierSameDay = Date.parse("2026-10-10T00:01:00-05:00");
+		const previousLimaDay = Date.parse("2026-10-09T23:50:00-05:00");
+		expect(earlierSameDay).toBeLessThan(cycleStart);
+		expect(() =>
+			rejectExtraordinaryBeforeCycleStart("extraordinary", earlierSameDay, cycleStart),
+		).not.toThrow();
+		const dayBefore = () =>
+			rejectExtraordinaryBeforeCycleStart("extraordinary", previousLimaDay, cycleStart);
+		expect(dayBefore).toThrow(ConvexError);
+		try {
+			dayBefore();
+		} catch (error) {
+			if (!(error instanceof ConvexError)) throw error;
+			expect(error.data).toMatchObject({
+				code: "VALIDATION_ERROR",
+				message: EXTRA_BEFORE_CYCLE_MESSAGE,
+				data: { field: "occurredAt" },
+			});
+		}
+		const afternoonStart = Date.parse("2026-10-09T15:00:00-05:00");
+		expect(() =>
+			rejectExtraordinaryBeforeCycleStart(
+				"extraordinary",
+				Date.parse("2026-10-09T09:30:00-05:00"),
+				afternoonStart,
+			),
+		).not.toThrow();
+	});
+
 	it("rejects an extraordinary income dated before the active cycle start", () => {
 		const day = 24 * 60 * 60 * 1000;
 		const startDate = now - 10 * day;

@@ -134,6 +134,27 @@ describe("streakAfterClose", () => {
 		).toBeNull();
 	});
 
+	it("does not count an opening cycle in closed green cycles and still charts it", () => {
+		const openingStart = Date.parse("2026-10-09T15:30:00-05:00");
+		const closeAt = openingStart + MS_PER_DAY;
+		expect(
+			streakAfterClose({
+				isOpeningCycle: true,
+				startDate: openingStart,
+				closeAt,
+				currentStreak: 2,
+				longestStreak: 4,
+				compliance: "compliant",
+			}),
+		).toBeNull();
+		const bars = buildCycleChartBars([
+			{ status: "compliant", evaluatedAt: closeAt, cycleStart: openingStart },
+		]);
+		expect(bars.some((bar) => bar.cycleStart === openingStart && bar.status === "compliant")).toBe(
+			true,
+		);
+	});
+
 	it("counts the opening cycle in progress like any other cycle and still skips the streak", () => {
 		const openingStart = Date.parse("2026-10-09T15:30:00-05:00");
 		const laterStart = Date.parse("2026-11-09T15:30:00-05:00");
