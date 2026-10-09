@@ -12,12 +12,43 @@ const SESSION_KEY_SUFFIXES = ["_cookie", "_session_data"] as const;
 /** Puerta de entrada sin sesión. La misma ruta que usa OnboardingGate. */
 export const SIGNED_OUT_HREF = "/(onboarding)";
 
+/** Aviso fijo cuando el teléfono ya olvidó la sesión y el servidor no se enteró. */
+export const OFFLINE_SIGN_OUT_MESSAGE =
+	"Cerraste sesión en este teléfono. No pudimos avisar al servidor; se cerrará sola cuando venza.";
+
+export type AuthSessionSnapshot = {
+	data: unknown;
+	error: unknown;
+	isPending: boolean;
+};
+
+export function clearedAuthSession<T extends AuthSessionSnapshot>(current: T): T {
+	return { ...current, data: null, error: null, isPending: false };
+}
+
+let offlineNotice: string | null = null;
+
+export function noteOfflineSignOut() {
+	offlineNotice = OFFLINE_SIGN_OUT_MESSAGE;
+}
+
+export function takeOfflineSignOutNotice(): string | null {
+	const current = offlineNotice;
+	offlineNotice = null;
+	return current;
+}
+
 export type DeviceSessionDeps = {
 	storagePrefix: string;
 	signOut: () => Promise<unknown>;
 	readSecure: (key: string) => Promise<string | null>;
 	deleteSecure: (key: string) => Promise<void>;
 	resetConvex: () => void;
+	clearMemorySession: () => void;
+};
+
+export type DeviceSignOutResult = {
+	serverNotified: boolean;
 };
 
 function chunkCount(stored: string | null): number {
@@ -38,11 +69,14 @@ export function secureKeysFor(prefix: string, stored: Record<string, string | nu
 	return keys;
 }
 
-export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<void> {
+export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<DeviceSignOutResult> {
+	let serverNotified = true;
 	try {
 		await deps.signOut();
 	} catch {
-		// El teléfono igual tiene que olvidar a este usuario.
+		// El átomo de Better Auth sigue con la sesión si el fetch ni siquiera arranca.
+		serverNotified = false;
+		deps.clearMemorySession();
 	}
 
 	const stored: Record<string, string | null> = {};
@@ -68,4 +102,5 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<vo
 	);
 
 	deps.resetConvex();
+	return { serverNotified };
 }

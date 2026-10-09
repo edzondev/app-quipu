@@ -29,6 +29,9 @@ function harness(stored: Record<string, string | null> = {}) {
 			resetConvex: () => {
 				log.push("reset");
 			},
+			clearMemorySession: () => {
+				log.push("memory");
+			},
 		},
 	};
 }
@@ -75,8 +78,11 @@ describe("signOutAndClearDevice", () => {
 			throw new Error("red");
 		};
 
-		await expect(signOutAndClearDevice(deps)).resolves.toBeUndefined();
+		const result = await signOutAndClearDevice(deps);
+		expect(result).toEqual({ serverNotified: false });
 		expect(log).toContain("signOut");
+		expect(log.indexOf("memory")).toBeGreaterThan(log.indexOf("signOut"));
+		expect(log.indexOf("memory")).toBeLessThan(log.indexOf("reset"));
 		expect(deleted).toContain(`${PREFIX}_session_data`);
 		expect(log.at(-1)).toBe("reset");
 	});
@@ -89,7 +95,8 @@ describe("signOutAndClearDevice", () => {
 			deleted.push(key);
 		};
 
-		await expect(signOutAndClearDevice(deps)).resolves.toBeUndefined();
+		await expect(signOutAndClearDevice(deps)).resolves.toEqual({ serverNotified: true });
+		expect(log).not.toContain("memory");
 		expect(deleted).toContain(`${PREFIX}_session_data`);
 		expect(log.at(-1)).toBe("reset");
 	});

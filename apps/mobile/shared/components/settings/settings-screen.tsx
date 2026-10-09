@@ -1,12 +1,12 @@
 import { BottomSheet, RNHostView } from "@expo/ui";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { X } from "@/shared/components/ui/reicon";
-import { SIGNED_OUT_HREF } from "@/shared/lib/auth/device-session";
+import { noteOfflineSignOut, SIGNED_OUT_HREF } from "@/shared/lib/auth/device-session";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
@@ -20,20 +20,21 @@ type Props = {
 export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props) {
 	const router = useRouter();
 	const [confirming, setConfirming] = useState(false);
-	const [pending, setPending] = useState(false);
+	const pending = useRef(false);
 
 	async function confirmSignOut() {
-		if (pending) return;
-		setPending(true);
+		if (pending.current) return;
+		pending.current = true;
 		try {
-			await signOutAndClearLocalData();
+			const result = await signOutAndClearLocalData();
+			if (result?.serverNotified === false) noteOfflineSignOut();
 		} finally {
 			router.replace(SIGNED_OUT_HREF);
 		}
 	}
 
 	function dismissConfirm() {
-		if (pending) return;
+		if (pending.current) return;
 		setConfirming(false);
 	}
 
@@ -92,11 +93,9 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 				<Pressable
 					accessibilityRole="button"
 					accessibilityLabel="Cerrar sesión"
-					accessibilityState={{ disabled: pending }}
-					disabled={pending}
 					hitSlop={HIT_SLOP}
 					onPress={() => setConfirming(true)}
-					className={`mt-4 border-t border-line py-3.5 active:opacity-60 ${pending ? "opacity-40" : ""}`}
+					className="mt-4 border-t border-line py-3.5 active:opacity-60"
 				>
 					<Text className="font-hanken text-[15px] text-danger">Cerrar sesión</Text>
 				</Pressable>
@@ -119,8 +118,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 							<Pressable
 								accessibilityRole="button"
 								accessibilityLabel="Confirmar cierre de sesión"
-								accessibilityState={{ disabled: pending }}
-								disabled={pending}
 								onPress={() => {
 									void confirmSignOut();
 								}}
@@ -133,7 +130,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 							<Pressable
 								accessibilityRole="button"
 								accessibilityLabel="Cancelar"
-								disabled={pending}
 								onPress={dismissConfirm}
 								className="mt-2.5 items-center rounded-xl border border-line py-[15px] active:opacity-60"
 							>

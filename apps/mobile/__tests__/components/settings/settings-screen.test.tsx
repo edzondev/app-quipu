@@ -1,13 +1,22 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
+import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
 const mockClear = jest.fn();
 
 jest.mock("expo-router", () => ({
-	useRouter: () => ({ replace: mockReplace }),
+	useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+	Redirect: () => null,
+	router: { replace: mockReplace },
+	useIsFocused: () => true,
+}));
+
+jest.mock("@/shared/hooks/use-profile-gate", () => ({
+	useProfileGate: () => ({ isAuthReady: false, isLoading: false, profile: null }),
 }));
 
 jest.mock("@/lib/device-sign-out", () => ({
@@ -149,9 +158,6 @@ describe("SettingsScreen", () => {
 		const confirm = view.getByRole("button", { name: "Confirmar cierre de sesión" });
 		await act(async () => {
 			fireEvent.press(confirm);
-		});
-		expect(confirm.props.accessibilityState.disabled).toBe(true);
-		await act(async () => {
 			fireEvent.press(confirm);
 		});
 		expect(mockClear).toHaveBeenCalledTimes(1);
@@ -160,6 +166,33 @@ describe("SettingsScreen", () => {
 			release();
 		});
 		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+	});
+
+	it("si el servidor no se entera, la Bienvenida avisa en español y no muestra el error crudo", async () => {
+		mockClear.mockResolvedValue({ serverNotified: false });
+		const ajustes = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		await act(async () => {
+			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+		});
+		await act(async () => {
+			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+		});
+		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		await ajustes.unmount();
+
+		const welcome = await render(<OnboardingIndexScreen />);
+		expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
+		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
+		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
+		expect(welcome.queryByText(/Network request failed|token secreto/)).toBeNull();
+		await welcome.unmount();
 	});
 
 	it("mientras carga sigue habiendo una sola opción de cerrar sesión", async () => {
