@@ -1,7 +1,6 @@
-import { act, cleanup, fireEvent, render } from "@testing-library/react-native";
+import { cleanup, fireEvent, render } from "@testing-library/react-native";
 import { getFunctionName } from "convex/server";
 import type { ReactNode } from "react";
-import { closedCycleSurplus } from "@/__fixtures__/closed-cycle-surplus";
 import {
 	closedCycleOnSummary,
 	summaryAfterClose,
@@ -11,12 +10,10 @@ import HomePage from "@/app/(tabs)";
 import { RegistrarProvider } from "@/shared/components/navigation/registrar-context";
 
 const mockUseQuery = jest.fn();
-const mockUseMutation = jest.fn();
-const moveMock = jest.fn();
 
 jest.mock("convex/react", () => ({
 	useQuery: (...args: unknown[]) => mockUseQuery(...args),
-	useMutation: (...args: unknown[]) => mockUseMutation(...args),
+	useMutation: () => jest.fn(),
 	useConvexAuth: () => ({ isAuthenticated: true, isLoading: false }),
 }));
 
@@ -62,6 +59,22 @@ jest.mock("@expo/ui", () => {
 	};
 });
 
+const WITH_SURPLUS =
+	"Tu ciclo del 1 AGO al 30 AGO terminó. Te quedaron S/ 210 y se suman a tu próximo ingreso. Tus movimientos siguen guardados.";
+const NEUTRAL = "Tu ciclo del 1 AGO al 30 AGO terminó. Tus movimientos siguen guardados.";
+
+function summaryFor(surplusCents: number) {
+	return summaryAfterClose({ ...closedCycleOnSummary, surplusCents });
+}
+
+function mockSummary(summary: ReturnType<typeof summaryAfterClose> | typeof summaryWithoutCycle) {
+	mockUseQuery.mockImplementation((query: unknown) => {
+		const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
+		if (name === "dashboard:getSummary") return summary;
+		return undefined;
+	});
+}
+
 function renderHome() {
 	return render(
 		<RegistrarProvider>
@@ -73,100 +86,41 @@ function renderHome() {
 describe("Inicio con ciclo cerrado", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		moveMock.mockResolvedValue(null);
-		mockUseMutation.mockReturnValue(moveMock);
-		mockUseQuery.mockImplementation((query: unknown) => {
-			const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
-			if (name === "dashboard:getSummary") return summaryAfterClose(closedCycleOnSummary);
-			if (name === "savings:getClosedCycleSurplus") return closedCycleSurplus;
-			return undefined;
-		});
+		mockSummary(summaryAfterClose(closedCycleOnSummary));
 	});
 
 	afterEach(() => {
 		cleanup();
 	});
 
-	it("muestra la tarjeta con las fechas y el monto del ciclo cerrado, sin el dibujo de vacío", async () => {
+	it("muestra el monto y que se suma al próximo ingreso, sin el dibujo de vacío", async () => {
 		const view = await renderHome();
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Edzon")).toBeTruthy();
-		expect(
-			view.getByText(
-				"Tu ciclo del 1 AGO al 30 AGO terminó. Te sobraron S/ 210. Tus movimientos siguen guardados.",
-			),
-		).toBeTruthy();
+		expect(view.getByText(WITH_SURPLUS)).toBeTruthy();
 		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
 		expect(
 			view.queryByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
 		).toBeNull();
-		expect(view.queryByText(closedCycleSurplus.closedCycleId)).toBeNull();
-	});
-
-	it("omite el sobrante y Mover al Fondo cuando el sobrante es 0", async () => {
-		mockUseQuery.mockImplementation((query: unknown) => {
-			const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
-			if (name === "dashboard:getSummary") {
-				return summaryAfterClose({ ...closedCycleOnSummary, surplusCents: 0 });
-			}
-			if (name === "savings:getClosedCycleSurplus") return { ...closedCycleSurplus, total: 0 };
-			return undefined;
-		});
-		const view = await renderHome();
-		expect(view.queryByText(/Te sobraron/)).toBeNull();
-		expect(view.queryByText("Mover al Fondo")).toBeNull();
-		expect(view.queryByRole("button", { name: "Mover al Fondo" })).toBeNull();
-		expect(view.getByText(/Tus movimientos siguen guardados/)).toBeTruthy();
-	});
-
-	it("muestra Ya lo moviste cuando el sobrante ya se movió", async () => {
-		mockUseQuery.mockImplementation((query: unknown) => {
-			const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
-			if (name === "dashboard:getSummary") {
-				return summaryAfterClose({
-					...closedCycleOnSummary,
-					surplusMovedAt: 1_700_000_000_000,
-				});
-			}
-			if (name === "savings:getClosedCycleSurplus") {
-				return { ...closedCycleSurplus, movedAt: 1_700_000_000_000 };
-			}
-			return undefined;
-		});
-		const view = await renderHome();
-		expect(view.getByText("Ya lo moviste")).toBeTruthy();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
 		expect(view.queryByRole("button", { name: "Mover al Fondo" })).toBeNull();
 	});
 
-	it("Mover al Fondo llama a la mutación una sola vez con doble tap", async () => {
-		let release: (value: null) => void = () => {};
-		moveMock.mockImplementation(
-			() =>
-				new Promise((resolve) => {
-					release = resolve;
-				}),
-		);
+	it("con sobrante 0 muestra el texto neutro y no ofrece Mover al Fondo", async () => {
+		mockSummary(summaryFor(0));
 		const view = await renderHome();
-		const button = view.getByRole("button", { name: "Mover al Fondo" });
-		await fireEvent.press(button);
-		await fireEvent.press(button);
-		expect(moveMock).toHaveBeenCalledTimes(1);
-		expect(moveMock).toHaveBeenCalledWith({ closedCycleId: closedCycleSurplus.closedCycleId });
-		expect(getFunctionName(mockUseMutation.mock.calls[0]?.[0])).toBe(
-			"savings:moveClosedCycleSurplusToFund",
-		);
-		await act(async () => {
-			release(null);
-		});
+		expect(view.getByText(NEUTRAL)).toBeTruthy();
+		expect(view.queryByText(/Te quedaron/)).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 
-	it("muestra un error en español si la mutación falla, sin el texto del servidor", async () => {
-		moveMock.mockRejectedValue(new Error("INTERNAL_SERVER_BOOM"));
+	it("con sobrante negativo muestra el texto neutro y no ofrece Mover al Fondo", async () => {
+		mockSummary(summaryFor(-1500));
 		const view = await renderHome();
-		await fireEvent.press(view.getByRole("button", { name: "Mover al Fondo" }));
-		expect(view.getByText("No se pudo mover el sobrante al Fondo.")).toBeTruthy();
-		expect(view.queryByText(/INTERNAL_SERVER_BOOM/)).toBeNull();
+		expect(view.getByText(NEUTRAL)).toBeTruthy();
+		expect(view.queryByText(/Te quedaron/)).toBeNull();
+		expect(view.queryByText(/S\//)).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 
 	it("Registrar nuevo ingreso abre el sheet en Ingreso", async () => {
@@ -182,11 +136,7 @@ describe("Inicio con ciclo cerrado", () => {
 	});
 
 	it("muestra el dibujo de vacío cuando no hay ciclo ni ciclo cerrado", async () => {
-		mockUseQuery.mockImplementation((query: unknown) => {
-			const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
-			if (name === "dashboard:getSummary") return summaryWithoutCycle;
-			return null;
-		});
+		mockSummary(summaryWithoutCycle);
 		const view = await renderHome();
 		expect(view.getByText("Aún no hay ciclo")).toBeTruthy();
 		expect(
