@@ -11,7 +11,6 @@ appId: com.quipu.finance
     timeout: 10000
 - assertVisible: "Dinero de hoy"
 - assertVisible: "Próximo cobro"
-# Espera arreglo pendiente (Pixi, PR #106): el paso 5 todavía muestra el diario.
 - assertNotVisible: "Puedes gastar hoy"
 - assertNotVisible:
     id: confirm-daily
@@ -22,5 +21,4 @@ appId: com.quipu.finance
     timeout: 40000
 # Inicio. S/ 1,200 al 50/30/20 y cobro mañana: (600 + 360) / 1 día = 960.
 - assertVisible: "S/ 960\\.00"
-# Espera arreglo pendiente (Pixi): el primer ciclo no muestra arrastre.
 - assertNotVisible: "Saldo que quedó.*"

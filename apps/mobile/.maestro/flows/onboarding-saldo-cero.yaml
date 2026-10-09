@@ -36,9 +36,9 @@ tags:
     visible: "TU SISTEMA · 05/05"
     timeout: 10000
 - assertVisible: "Dinero de hoy"
-# Espera arreglo pendiente (Pixi, PR #106): hoy el paso 5 muestra «Puedes gastar hoy» y «—».
-# «Anota el dinero que tienes hoy…» queda por confirmar con Pixi: no se afirma.
 - assertNotVisible: "Puedes gastar hoy"
+# Espera arreglo pendiente (Pixi, sin PR): #106 lo quitó. Pixi lo va a devolver.
+- assertVisible: "Anota el dinero que tienes hoy para ver tu número\\."
 - assertNotVisible:
     id: confirm-daily
 - tapOn: "Empezar mi ciclo"

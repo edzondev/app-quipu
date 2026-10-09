@@ -42,7 +42,6 @@ tags:
     timeout: 10000
 - assertVisible: "Dinero de hoy"
 - assertVisible: "Próximo cobro"
-# Espera arreglo pendiente (Pixi, PR #106): el paso 5 todavía muestra el diario.
 - assertNotVisible: "Puedes gastar hoy"
 - assertNotVisible:
     id: confirm-daily

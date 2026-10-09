@@ -3,8 +3,8 @@ appId: com.quipu.finance
 # QUIPU_TIPO es el texto completo de la opción, como regex:
 # "¿Empieza un nuevo ciclo\\?" o "Sumar al ciclo actual".
 # Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
-# Espera arreglo pendiente (Pixi): en e54ad3d la hoja no pregunta.
-# Todo ingreso se manda como habitual y cierra el ciclo.
+# En f98b65b la hoja dice «Sueldo» / «Extra» (viene marcado «Sueldo»).
+# Los textos nuevos esperan la rama de Pixi feature/mobile-income-cycle-choice.
 - tapOn:
     text: "\\+ Ingreso"
 - extendedWaitUntil:

@@ -8,9 +8,8 @@ tags:
 # Bloqueado. Hace falta una cuenta cuyo ciclo de apertura empezó antes de hoy.
 # Ninguna semilla lo dice todavía: QUIPU_E2E_OPENING_PRIOR_* (Nato).
 # No uses la cuenta fija ni una semilla de hoy: ese día no se puede cerrar.
-# El cierre entra en el historial de Progreso. La racha no cambia.
-# No se afirma el número: si cuenta el ciclo de apertura está por confirmar.
-# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
+# El cierre entra en el historial de Progreso. No cuenta en «CICLOS CERRADOS EN VERDE» ni en la racha.
+# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -29,4 +28,7 @@ tags:
     visible: "CICLOS CERRADOS EN VERDE"
     timeout: 20000
 - assertVisible: "CICLO CERRADO · .*"
+- assertVisible:
+    text: "^0$"
+    below: "CICLOS CERRADOS EN VERDE"
 - assertNotVisible: "Aún no cierras un ciclo."

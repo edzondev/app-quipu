@@ -10,7 +10,7 @@ tags:
 # Cuenta nueva por corrida (pre-paso + asistente). El ciclo empieza hoy,
 # así que no hace falta uno de un día anterior.
 # El ciclo vencido queda para la semilla planeada de Nato. No hay flujo.
-# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
+# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

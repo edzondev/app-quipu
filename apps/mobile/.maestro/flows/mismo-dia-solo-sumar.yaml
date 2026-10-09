@@ -8,7 +8,7 @@ tags:
 # Notion 3f486a7356a681239318fa33957072e0
 # El asistente abre el ciclo hoy. Solo «Sumar al ciclo actual».
 # El cierre con arrastre está en ciclo-nuevo-antes-del-fin.
-# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
+# Espera arreglo pendiente: rama de Pixi feature/mobile-income-cycle-choice y Nubo, PR #109.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
 - runFlow:
     file: ../subflows/entrar.yaml

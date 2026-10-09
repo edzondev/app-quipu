@@ -4,7 +4,6 @@ appId: com.quipu.finance
 # No toca el calendario nativo.
 - assertVisible: "TU SISTEMA · 01/05"
 - assertVisible: "¿Cómo entra tu dinero?"
-# Espera arreglo pendiente (Pixi): el paso 1 ya no muestra el día de pago fijo.
 - assertNotVisible: "DÍA DE PAGO"
 - assertNotVisible: "El 1 de cada mes"
 - tapOn:

@@ -19,11 +19,11 @@ tags:
 - assertVisible: "TU SISTEMA · 01/05"
 - assertVisible: "Fijo"
 - assertVisible: "Mensual"
-# Espera arreglo pendiente (Pixi): se quitó «DÍA DE PAGO · El 1 de cada mes».
 - assertNotVisible: "DÍA DE PAGO"
 - assertNotVisible: "El 1 de cada mes"
 - assertNotVisible: "El 15 y 30 de cada mes"
 - assertNotVisible: "Cada 7 días"
+# Siguen en pantalla: cyclePreview pinta «· 30 DÍAS», «· 15 DÍAS» y «7 DÍAS».
 - assertNotVisible: ".*30 DÍAS"
 - tapOn:
     id: freq-option-biweekly

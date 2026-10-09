@@ -9,7 +9,7 @@ tags:
 # El ciclo tiene que haber empezado antes de hoy y quedar a varios días del fin.
 # No sirve la cuenta fija ni una semilla de hoy: depende de una semilla futura,
 # una cuenta nueva por corrida (QUIPU_E2E_PRIOR_CYCLE_*). No uses una cuenta personal.
-# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
+# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

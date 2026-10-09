@@ -2,7 +2,7 @@
 
 Flujos E2E de la app móvil. No se ejecutan en CI: no hay emulador ni APK en este cambio. Donde no hay `testID` se usa el texto visible o el `accessibilityLabel`.
 
-Los flujos esperan las decisiones de Capi del 9 oct sobre `e54ad3d` (PR #105). Pixi todavía no puso en la app el selector «¿Empieza un nuevo ciclo?» / «Sumar al ciclo actual»: esos flujos están en **espera arreglo pendiente**.
+Los flujos esperan las decisiones de Capi del 9 oct sobre `f98b65b` (#106 y #108). En ese commit la hoja dice «Sueldo» / «Extra». Los textos «¿Empieza un nuevo ciclo?» / «Sumar al ciclo actual» esperan la rama de Pixi `feature/mobile-income-cycle-choice` (no está en GitHub): esos flujos están en **espera arreglo pendiente**.
 
 ## Cómo correrlos
 
@@ -100,22 +100,22 @@ La hoja pregunta «¿Empieza un nuevo ciclo?» o «Sumar al ciclo actual». El `
 
 ## Espera arreglo pendiente
 
-Estas afirmaciones describen la decisión de Capi. En `e54ad3d` todavía no pasan. Cuando llegue el PR del dueño, tienen que pasar.
+Hecho en #106 (`f98b65b`): el paso 1 no muestra «DÍA DE PAGO», «El 1 de cada mes», «El 15 y 30 de cada mes» ni «Cada 7 días». El paso 5 no muestra «Puedes gastar hoy», `confirm-daily` ni «Después de compromisos y ahorro, en N días.». Inicio muestra `S/ 960.00` o `S/ 0.00`. El primer ciclo no muestra «Saldo que quedó …».
+
+Estas afirmaciones todavía no pasan. Cuando llegue el cambio del dueño, tienen que pasar.
 
 | Afirmación | Dueño | Dónde |
 |---|---|---|
-| El paso 1 no muestra «DÍA DE PAGO», «El 1 de cada mes», «El 15 y 30 de cada mes», «Cada 7 días» ni «30 DÍAS» / «15 DÍAS» / «7 DÍAS» | Pixi, PR #106 | `onboarding-paso-1`, `onboarding-hasta-paso-4`, `onboarding-saldo-cero` |
+| El paso 1 no muestra «30 DÍAS» / «15 DÍAS» / «7 DÍAS». En `f98b65b` `cyclePreview` sigue pintando «1 – 30 de cada mes · 30 DÍAS», «· 15 DÍAS» y «7 DÍAS» | sigue en el código | `onboarding-paso-1` |
 | Mixto sin datos muestra «Indica la parte fija.» y «Agrega al menos una fuente.»; Variable muestra «Elige un ciclo de 15 o 30 días.» y «Agrega al menos una fuente.» | el validador no pinta el texto | `onboarding-paso-1` |
-| El paso 5 no muestra monto diario («Puedes gastar hoy», `confirm-daily`, «Después de compromisos y ahorro, en N días.»). Inicio muestra `S/ 960.00` o `S/ 0.00` | Pixi, PR #106 | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
-| El primer ciclo no muestra «Saldo que quedó …» | Pixi, PR #106 | los mismos, en Inicio |
-| La hoja pregunta «¿Empieza un nuevo ciclo?» y «Sumar al ciclo actual». En `e54ad3d` no está: todo ingreso se manda como habitual | Pixi | `registrar-ingreso`, `sumar-no-cierra`, `ciclo-nuevo-antes-del-fin`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`, `mismo-dia-solo-sumar`, `progreso-primer-cierre` |
-| Un ciclo que empezó hoy solo acepta «Sumar al ciclo actual» | Pixi + Nubo | `mismo-dia-solo-sumar` |
-| La etiqueta de la fila del ingreso en Movimientos | Pixi | `home-primer-ingreso` (no se afirma) |
-| La racha ignora un ciclo de menos de un día (Notion `3f486a7356a68157a6e5df4e560dfd46`). En `e54ad3d` solo se salta el ciclo de apertura | Nubo | ningún flujo: haría falta cerrar dos veces el mismo día |
+| El paso 5 con saldo vacío muestra «Anota el dinero que tienes hoy para ver tu número.» #106 lo quitó | Pixi, sin PR | `onboarding-saldo-cero` |
+| La hoja pregunta «¿Empieza un nuevo ciclo?» y «Sumar al ciclo actual». En `f98b65b` dice «Sueldo» / «Extra» y manda `incomeKind` (Extra suma, Sueldo cierra) | Pixi, `feature/mobile-income-cycle-choice` | `registrar-ingreso`, `sumar-no-cierra`, `ciclo-nuevo-antes-del-fin`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`, `mismo-dia-solo-sumar`, `progreso-primer-cierre` |
+| Un ciclo que empezó hoy solo acepta «Sumar al ciclo actual» | Pixi (rama sin push) + Nubo, PR #109 | `mismo-dia-solo-sumar` |
+| La racha ignora un ciclo de menos de un día (Notion `3f486a7356a68157a6e5df4e560dfd46`) | Nubo, PR #109 | ningún flujo |
 
 Un ciclo vencido no se cierra solo. Inicio muestra la tarjeta que ya está en `home-closed-cycle.tsx`: «Tu ciclo del <inicio> al <fin> terminó.», «Te quedaron …» o «Te pasaste por …», «Tus movimientos siguen guardados.» y «Registrar nuevo ingreso». Sigue activo hasta «¿Empieza un nuevo ciclo?». «Sumar al ciclo actual» se queda en ese ciclo. El flujo `ciclo-vencido` espera `QUIPU_E2E_EXPIRED_*`.
 
-Cerrar el ciclo de apertura lo anota en el historial de Progreso y no mueve la racha. `progreso-primer-cierre` no afirma el número. Está bloqueado hasta `QUIPU_E2E_OPENING_PRIOR_*`.
+Cerrar el ciclo de apertura lo anota en el historial de Progreso. No cuenta en «CICLOS CERRADOS EN VERDE» ni en la racha: `progreso-primer-cierre` afirma `^0$` debajo de ese título, junto a «CICLO CERRADO · …». Está bloqueado hasta `QUIPU_E2E_OPENING_PRIOR_*`.
 
 La hoja no tiene calendario. «Fecha» muestra «Hoy · …» y no se puede cambiar. Son casos de API y de la web de desarrollo, sin flujo de Maestro:
 
@@ -123,7 +123,7 @@ La hoja no tiene calendario. «Fecha» muestra «Hoy · …» y no se puede camb
 - «Sumar al ciclo actual» con fecha anterior al inicio: «La fecha del ingreso no puede ser anterior al inicio del ciclo.» Notion `3f486a7356a6814bb142d69eff7f1558`.
 - Sumar sin ningún ciclo: «Registra primero tu sueldo para empezar un ciclo nuevo.» Notion `3f486a7356a6819786ecce6a1650094c`.
 
-Cuál opción viene marcada según la fecha no está en `e54ad3d`. Estos flujos no lo afirman.
+Qué opción viene marcada: si `pastEnd` es verdadero, «¿Empieza un nuevo ciclo?»; si no, «Sumar al ciclo actual». Sin ningún ciclo solo está el ciclo nuevo. Si el ciclo empezó hoy, solo se puede sumar. Cuando llegue `feature/mobile-income-cycle-choice`, `registrar-ingreso` afirma «Sumar al ciclo actual» con `selected: true` (el ciclo no está vencido; `ciclo-nuevo-antes-del-fin` igual tiene que tocar «¿Empieza…»). El flujo futuro `ciclo-vencido` (`QUIPU_E2E_EXPIRED_*`) afirma `"¿Empieza un nuevo ciclo\\?"` con `selected: true`, y que «Gasto» sigue activo: `tapOn: "^Gasto$"` y `assertVisible: "NUEVO GASTO"`. Si Pixi no expone `accessibilityState.selected` en las opciones nuevas, hay que pedirlo. En `f98b65b` los chips «Sueldo» / «Extra» sí lo exponen.
 
 ## Qué no está aquí
 
@@ -189,7 +189,7 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `tab-movimientos` | la misma | el mismo | Movimientos | varios |
 | `tab-plan` | la misma | el mismo | Plan | varios |
 | `tab-progreso` | la misma | el mismo | Progreso | `progreso-vacio`, `progreso-primer-cierre` |
-| `income-mode-new-cycle` | Hoja de ingreso | `apps/mobile/shared/components/income/income-sheet-form.tsx` (Pixi, todavía no está) | «¿Empieza un nuevo ciclo?» | `registrar-ingreso`, `ciclo-nuevo-antes-del-fin`, `sin-ciclo-solo-ciclo-nuevo`, `progreso-primer-cierre`, `home-primer-ingreso` |
-| `income-mode-add` | la misma | el mismo | «Sumar al ciclo actual» | `registrar-ingreso`, `sumar-no-cierra`, `mismo-dia-solo-sumar` |
+| `income-mode-new-cycle` | Hoja de ingreso | propuesto, por confirmar con Pixi. `feature/mobile-income-cycle-choice` no está en GitHub. En `f98b65b` no hay testID: el chip usa `accessibilityLabel` «Sueldo» | «¿Empieza un nuevo ciclo?» | `registrar-ingreso`, `ciclo-nuevo-antes-del-fin`, `sin-ciclo-solo-ciclo-nuevo`, `progreso-primer-cierre`, `home-primer-ingreso` |
+| `income-mode-add` | la misma | propuesto, por confirmar con Pixi. En `f98b65b` el chip usa `accessibilityLabel` «Extra» | «Sumar al ciclo actual» | `registrar-ingreso`, `sumar-no-cierra`, `mismo-dia-solo-sumar` |
 | `progress-closed-cycle` | Progreso | `apps/mobile/shared/components/progress/progress-screen.tsx` | «CICLO CERRADO · <MES>» | `progreso-primer-cierre` |
 | `progress-closed-count` | Progreso | el mismo | «CICLOS CERRADOS EN VERDE» | `progreso-primer-cierre` |

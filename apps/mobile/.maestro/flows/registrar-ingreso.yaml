@@ -8,7 +8,7 @@ tags:
 # «Sumar al ciclo actual» no lo cierra. El rango se compara en sumar-no-cierra.
 # No uses la cuenta fija: cada corrida necesita la suya. Una semilla de hoy
 # no alcanza (ese día solo se ve «Sumar»). Depende de QUIPU_E2E_PRIOR_CYCLE_*.
-# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
+# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -33,6 +33,10 @@ tags:
 - assertVisible:
     text: "Sumar al ciclo actual"
     below: "REGISTRAR INGRESO"
+# Cuando llegue feature/mobile-income-cycle-choice. Sin pastEnd, «Sumar» viene marcada.
+- assertVisible:
+    text: "Sumar al ciclo actual"
+    selected: true
 - tapOn:
     text: "^Gasto$"
 - assertVisible: "NUEVO GASTO"

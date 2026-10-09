@@ -9,7 +9,7 @@ tags:
 # Sin ningún ciclo solo se puede empezar uno. «Sumar al ciclo actual» no está.
 # El texto de ayuda, si lo hay, está por confirmar con Pixi.
 # No guarda, así que la cuenta sigue sin ciclo.
-# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
+# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
 #
 # devSeed:seedVerifiedAccount (PR #107) crea una cuenta sin perfil y cae
 # en el asistente. Esta cuenta tiene que tener perfil y ningún ciclo:
