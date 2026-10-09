@@ -65,7 +65,7 @@ describe("SobresScreen", () => {
 		await cleanup();
 	});
 
-	it("muestra barra, ritmo y las dos acciones", async () => {
+	it("muestra barra y ritmo, y deja solo registrar gasto", async () => {
 		const onMoveMoney = jest.fn();
 		const onRegisterExpense = jest.fn();
 		const view = await render(
@@ -99,9 +99,10 @@ describe("SobresScreen", () => {
 			now: 78,
 		});
 
-		await press(view.getByText("Mover dinero"));
+		expect(view.queryByText("Mover dinero")).toBeNull();
+		expect(view.queryByRole("button", { name: "Mover dinero" })).toBeNull();
 		await press(view.getByText("Registrar gasto"));
-		expect(onMoveMoney).toHaveBeenCalledTimes(1);
+		expect(onMoveMoney).not.toHaveBeenCalled();
 		expect(onRegisterExpense).toHaveBeenCalledTimes(1);
 	});
 

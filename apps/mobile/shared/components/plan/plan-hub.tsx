@@ -1,6 +1,7 @@
 import { ScrollView, Text, View } from "react-native";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
+import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type { PlanHubModel, PlanSegment } from "@/shared/lib/plan/model";
 import type { AhorroPlanRow } from "@/shared/lib/savings/model";
 
@@ -37,6 +38,8 @@ export function PlanHub({
 	onOpenCommitments,
 	onOpenAhorro,
 }: Props) {
+	const showCycleSplit = model?.repartoSubtitle != null && !HIDDEN_UNTIL_READY.cycleSplit;
+
 	return (
 		<ScrollView
 			className="flex-1"
@@ -84,9 +87,9 @@ export function PlanHub({
 							subtitle={ahorro?.subtitle ?? null}
 							value={ahorro?.totalLabel ?? null}
 							onPress={onOpenAhorro}
-							isLast={model.repartoSubtitle == null}
+							isLast={!showCycleSplit}
 						/>
-						{model.repartoSubtitle ? (
+						{showCycleSplit ? (
 							<ListRow
 								dotClass={DOT.reparto}
 								label="Reparto del ciclo"

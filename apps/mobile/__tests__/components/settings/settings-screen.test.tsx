@@ -64,20 +64,23 @@ describe("SettingsScreen", () => {
 		expect(view.getByText("Edzon Perez")).toBeTruthy();
 		expect(view.getByText("edzon@correo.com · Perú")).toBeTruthy();
 		expect(view.getByText("CUENTA")).toBeTruthy();
-		expect(view.getByText("Perfil y datos")).toBeTruthy();
+		expect(view.queryByText("Perfil y datos")).toBeNull();
 		expect(view.getByText("Seguridad y Passkeys")).toBeTruthy();
 		expect(view.getByText("2 llaves")).toBeTruthy();
-		expect(view.getByText("Plan y suscripción")).toBeTruthy();
-		expect(view.getByText("Gratis")).toBeTruthy();
-		expect(view.getByText("TU SISTEMA")).toBeTruthy();
-		expect(view.getByText("Reparto")).toBeTruthy();
-		expect(view.getByText("50 / 30 / 20")).toBeTruthy();
-		expect(view.getByText("Ciclo e ingresos")).toBeTruthy();
-		expect(view.getByText("Mensual · día 1")).toBeTruthy();
+		expect(view.queryByText("Plan y suscripción")).toBeNull();
+		expect(view.queryByText("Gratis")).toBeNull();
+		expect(view.queryByText("TU SISTEMA")).toBeNull();
+		expect(view.queryByText("Reparto")).toBeNull();
+		expect(view.queryByText("50 / 30 / 20")).toBeNull();
+		expect(view.queryByText("Ciclo e ingresos")).toBeNull();
+		expect(view.queryByText("Mensual · día 1")).toBeNull();
 		expect(view.queryByText("EN ESTE TELÉFONO")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
 		expect(view.queryByText("Apariencia")).toBeNull();
 		expect(view.queryByRole("button", { name: "Perfil y datos" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Plan y suscripción" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Reparto" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Ciclo e ingresos" })).toBeNull();
 
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Cerrar" }));
@@ -191,6 +194,9 @@ describe("SettingsScreen", () => {
 		expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
 		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
 		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
+		expect(OFFLINE_SIGN_OUT_MESSAGE).toBe(
+			"Cerraste sesión en este teléfono. No pudimos avisar al servidor; se cerrará sola cuando venza.",
+		);
 		expect(welcome.queryByText(/Network request failed|token secreto/)).toBeNull();
 		await welcome.unmount();
 	});

@@ -6,6 +6,7 @@ import { Camera } from "reicon-react-native/icons/Camera";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
 import { ErrorText } from "@/shared/components/forms/field-error";
+import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
 import type { FrequentExpense } from "@/shared/lib/expenses/expense-record";
 import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
@@ -171,9 +172,11 @@ export function ExpenseDetailForm({
 							{formatExpenseWhen(timestamp)}
 						</Text>
 					</DetailRow>
-					<DetailRow label="Nota">
-						<Text className="font-hanken text-[15.5px] text-foreground/35">Opcional</Text>
-					</DetailRow>
+					{HIDDEN_UNTIL_READY.expenseNote ? null : (
+						<DetailRow label="Nota">
+							<Text className="font-hanken text-[15.5px] text-foreground/35">Opcional</Text>
+						</DetailRow>
+					)}
 				</View>
 
 				{frecuentes.length > 0 ? (
@@ -201,13 +204,15 @@ export function ExpenseDetailForm({
 					</View>
 				) : null}
 
-				<View className="mt-5 flex-row items-center gap-2.5 rounded-[13px] bg-foreground/5 px-4 py-3.5">
-					<Camera size={19} color="#3C7D6E" />
-					<Text className="font-hanken-semibold text-[13.5px] text-foreground">
-						Adjuntar boleta
-					</Text>
-					<Text className="ml-auto font-geist-mono text-[11.5px] text-foreground/45">OCR</Text>
-				</View>
+				{HIDDEN_UNTIL_READY.attachReceipt ? null : (
+					<View className="mt-5 flex-row items-center gap-2.5 rounded-[13px] bg-foreground/5 px-4 py-3.5">
+						<Camera size={19} color="#3C7D6E" />
+						<Text className="font-hanken-semibold text-[13.5px] text-foreground">
+							Adjuntar boleta
+						</Text>
+						<Text className="ml-auto font-geist-mono text-[11.5px] text-foreground/45">OCR</Text>
+					</View>
+				)}
 			</ScrollView>
 
 			<View className="px-[22px] pb-2">
