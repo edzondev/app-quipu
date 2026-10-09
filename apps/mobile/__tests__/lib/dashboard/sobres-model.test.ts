@@ -99,6 +99,7 @@ function summary(
 		},
 		movements: [],
 		isEarlyCycle: false,
+		closedCycle: null,
 	};
 }
 
