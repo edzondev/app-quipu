@@ -3,6 +3,7 @@ import {
 	commitmentRowErrors,
 	isCommitmentRowReady,
 	isCommitmentValid,
+	newCommitmentId,
 	validCommitmentsTotalCents,
 } from "@/shared/lib/onboarding/commitments";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
@@ -92,5 +93,12 @@ describe("commitmentRowErrors", () => {
 		for (const day of ["0", "32", "99"]) {
 			expect(commitmentRowErrors(row({ dueDay: day }), { complete: true }).dueDay).toBeDefined();
 		}
+	});
+});
+
+describe("newCommitmentId", () => {
+	it("nunca repite un id", () => {
+		const ids = Array.from({ length: 500 }, () => newCommitmentId());
+		expect(new Set(ids).size).toBe(ids.length);
 	});
 });

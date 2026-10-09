@@ -1,5 +1,5 @@
 import { useForm, useStore } from "@tanstack/react-form";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CommitmentRow } from "@/modules/onboarding/components/commitment-row";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
@@ -11,6 +11,7 @@ import {
 	commitmentRowErrors,
 	commitmentsFromRows,
 	isCommitmentRowReady,
+	newCommitmentId,
 	rowsFromCommitments,
 	validCommitmentsTotalCents,
 } from "@/shared/lib/onboarding/commitments";
@@ -21,7 +22,6 @@ const BLOCKED_MESSAGE =
 
 export function Step4Commitments() {
 	const { state, dispatch } = useOnboarding();
-	const rowKey = useRef(0);
 	const [attempted, setAttempted] = useState(false);
 	const form = useForm({
 		defaultValues: { rows: rowsFromCommitments(state.commitments) },
@@ -90,9 +90,8 @@ export function Step4Commitments() {
 							accessibilityRole="button"
 							accessibilityLabel={`Agregar ${name}`}
 							onPress={() => {
-								rowKey.current += 1;
 								form.pushFieldValue("rows", {
-									key: `row-${rowKey.current}`,
+									key: newCommitmentId(),
 									name,
 									amountRaw: "",
 									dueDay: "",

@@ -65,28 +65,31 @@ describe("computeSurplusProjection", () => {
 		allocatedAmount: 0,
 	});
 
-	it("clamps each envelope at zero for the coach projection", () => {
+	it("sums every envelope as is", () => {
+		expect(
+			computeSurplusProjection([
+				envelope("needs", 100),
+				envelope("wants", 50),
+				envelope("savings", 0),
+			]),
+		).toBe(150);
+	});
+
+	it("does not count an overspent envelope as zero", () => {
 		expect(
 			computeSurplusProjection([
 				envelope("needs", -100),
 				envelope("wants", 50),
 				envelope("savings", 0),
 			]),
-		).toBe(50);
-		expect(
-			computeSurplusProjection([
-				envelope("needs", 0),
-				envelope("wants", 0),
-				envelope("savings", 0),
-			]),
-		).toBe(0);
+		).toBe(-50);
 		expect(
 			computeSurplusProjection([
 				envelope("needs", -80),
 				envelope("wants", -20),
 				envelope("savings", 0),
 			]),
-		).toBe(0);
+		).toBe(-100);
 	});
 });
 

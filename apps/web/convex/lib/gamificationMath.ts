@@ -65,6 +65,8 @@ export const progressChartBarValidator = v.object({
 	heightPx: v.number(),
 	cycleStart: v.union(v.number(), v.null()),
 	monthLabel: v.union(v.string(), v.null()),
+	// Closed cycles only: false for the opening cycle or one shorter than 24h.
+	countsForStreak: v.boolean(),
 });
 
 type ProgressChartBar = Infer<typeof progressChartBarValidator>;
@@ -135,7 +137,8 @@ export async function countLoggingStreak(
 
 export function buildCycleChartBars(
 	history: ReadonlyArray<
-		Pick<CycleHistoryFact, "status" | "evaluatedAt"> & Pick<ProgressChartBar, "cycleStart">
+		Pick<CycleHistoryFact, "status" | "evaluatedAt"> &
+			Pick<ProgressChartBar, "cycleStart" | "countsForStreak">
 	>,
 	currentCycle: { cycleStart: number } | null = null,
 	limit = 12,
@@ -152,6 +155,7 @@ export function buildCycleChartBars(
 			heightPx: base + wobble,
 			cycleStart: entry.cycleStart,
 			monthLabel: entry.cycleStart === null ? null : buildCycleLabel(entry.cycleStart),
+			countsForStreak: entry.countsForStreak,
 		};
 	});
 	let emptySlot = 0;
@@ -162,6 +166,7 @@ export function buildCycleChartBars(
 			heightPx: 0,
 			cycleStart: null,
 			monthLabel: null,
+			countsForStreak: false,
 		});
 		emptySlot += 1;
 	}
@@ -172,6 +177,7 @@ export function buildCycleChartBars(
 			heightPx: CURRENT_CYCLE_BAR_HEIGHT_PX,
 			cycleStart: currentCycle.cycleStart,
 			monthLabel: buildCycleLabel(currentCycle.cycleStart),
+			countsForStreak: false,
 		});
 	}
 	return bars;

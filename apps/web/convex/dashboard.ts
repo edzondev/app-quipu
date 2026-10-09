@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import {
@@ -50,7 +51,9 @@ function envelopeLabel(type: "needs" | "wants" | "savings"): string {
 }
 
 export const getSummary = query({
-	args: {},
+	// Cache key only: the server decides everything with Date.now(). A new Lima day
+	// makes the client re-subscribe, so the summary is recomputed after midnight.
+	args: { limaDay: v.optional(v.string()) },
 	handler: async (ctx) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
@@ -310,6 +313,7 @@ export const getSummary = query({
 			.order("desc")
 			.first();
 
+		const surplusCents = computeSurplusProjection(envelopes);
 		const uncoveredCommitmentsCents = computeUncoveredCommitmentRemainingCents(
 			commitments.map((commitment) => ({
 				remaining: commitment.remaining,
@@ -344,7 +348,8 @@ export const getSummary = query({
 			compliance,
 			uncoveredCommitmentsCents,
 			profileName: profile.name,
-			surplusCents: computeSurplusProjection(envelopes),
+			// The tranquil copy says «de sobra», so it never receives a negative amount.
+			surplusCents: Math.max(0, surplusCents),
 			currencySymbol: profile.currencySymbol,
 			crisisSnoozed:
 				profile.coachCrisisSnoozedUntil != null && profile.coachCrisisSnoozedUntil > now,
@@ -406,6 +411,7 @@ export const getSummary = query({
 				startedToday: cycleStartedOnLimaDay(activeCycle, now),
 			},
 			hero,
+			surplusCents,
 			liquidity: {
 				spendableCents: spendable.spendableCents,
 				reservedCents: spendable.reservedCents,

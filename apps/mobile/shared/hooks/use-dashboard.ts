@@ -4,11 +4,13 @@ import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
 import { currencySymbol } from "@/shared/lib/money";
 import { profileInitial } from "@/shared/lib/settings/model";
+import { useLimaDayKey } from "./use-lima-day-key";
 import { useProfileGate } from "./use-profile-gate";
 
 export function useDashboardSummary() {
 	const { isAuthReady } = useProfileGate();
-	return useQuery(api.dashboard.getSummary, isAuthReady ? {} : "skip");
+	const limaDay = useLimaDayKey();
+	return useQuery(api.dashboard.getSummary, isAuthReady ? { limaDay } : "skip");
 }
 
 export function useHomeModel() {

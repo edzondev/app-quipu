@@ -93,7 +93,7 @@ export function SecurityScreen({
 				<Text className="flex-1 text-center font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
 					SEGURIDAD
 				</Text>
-				<View className="w-[22px]" />
+				<View className="w-5.5" />
 			</View>
 
 			{status === "loading" ? (
@@ -111,9 +111,9 @@ export function SecurityScreen({
 					contentContainerClassName="grow pb-4"
 					showsVerticalScrollIndicator={false}
 				>
-					<View className="mt-[26px]">
+					<View className="mt-6.5">
 						<Text className="font-newsreader text-[27px] leading-8 text-foreground">Passkeys</Text>
-						<Text className="mt-2 font-hanken text-[14px] leading-[21px] text-foreground/55">
+						<Text className="mt-2 font-hanken text-[14px] leading-5.25 text-foreground/55">
 							{INTRO}
 						</Text>
 					</View>
@@ -157,7 +157,7 @@ export function SecurityScreen({
 				contentPadding={0}
 				containerColorClassName="accent-background"
 			>
-				<RNHostView matchContents>
+				<RNHostView>
 					{confirm ? (
 						<ConfirmSheet
 							confirm={confirm}
@@ -198,7 +198,7 @@ function PasskeySection({
 		return <Text className="mt-4 font-hanken text-[15px] text-foreground/55">{UNAVAILABLE}</Text>;
 	}
 	return (
-		<View className="mt-[22px] border-t border-line">
+		<View className="mt-5.5 border-t border-line">
 			{passkeys.length === 0 ? (
 				<Text className="py-4 font-hanken text-[15px] text-foreground/55">
 					Todavía no hay Passkeys.
@@ -341,7 +341,7 @@ function ConfirmSheet({
 				{copy.body}
 			</Text>
 			{passkey ? (
-				<View className="mt-5 rounded-xl bg-line px-[18px] py-4">
+				<View className="mt-5 rounded-xl bg-line px-4.5 py-4">
 					<Text className="font-hanken-semibold text-[14.5px] text-foreground">{passkey.name}</Text>
 					{passkey.createdLabel ? (
 						<Text className="mt-1.5 font-geist-mono text-[11.5px] text-foreground/45">
@@ -362,7 +362,7 @@ function ConfirmSheet({
 				accessibilityState={{ disabled: pending }}
 				disabled={pending}
 				onPress={onConfirm}
-				className="mt-[22px] items-center rounded-xl bg-danger py-4 active:opacity-80"
+				className="mt-5.5 items-center rounded-xl bg-danger py-4 active:opacity-80"
 			>
 				<Text className="font-hanken-semibold text-[15px] text-background">{copy.confirm}</Text>
 			</Pressable>
@@ -371,7 +371,7 @@ function ConfirmSheet({
 				accessibilityLabel="Cancelar"
 				disabled={pending}
 				onPress={onDismiss}
-				className="mt-2.5 items-center rounded-xl border border-line py-[15px] active:opacity-60"
+				className="mt-2.5 items-center rounded-xl border border-line py-3.75 active:opacity-60"
 			>
 				<Text className="font-hanken-semibold text-[15px] text-foreground">Cancelar</Text>
 			</Pressable>

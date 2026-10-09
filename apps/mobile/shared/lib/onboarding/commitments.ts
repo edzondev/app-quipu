@@ -68,6 +68,15 @@ export function rowsFromCommitments(commitments: DraftCommitment[]): CommitmentR
 	}));
 }
 
+/**
+ * Id de un compromiso nuevo. Solo identifica la fila en el cliente (el servidor no lo usa), así
+ * que basta un valor aleatorio sin estado: no depende de cuántas filas hay ni de si el paso se
+ * desmontó. Hermes no trae `crypto.randomUUID`.
+ */
+export function newCommitmentId(): string {
+	return `commitment-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export function isCommitmentValid(commitment: DraftCommitment): boolean {
 	return (
 		commitment.name.trim().length > 0 &&
