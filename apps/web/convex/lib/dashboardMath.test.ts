@@ -3,6 +3,7 @@ import {
 	buildEarlyCycleCoachMessage,
 	buildEarlyCycleHeroBody,
 	computeCommitmentCoverageMvp,
+	computeCycleDayMetrics,
 	computeCycleProgress,
 	computeDailyAvailable,
 	computeDisplayDailyCents,
@@ -36,6 +37,24 @@ describe("isCyclePastEnd", () => {
 
 	it("is false one millisecond before endDate", () => {
 		expect(isCyclePastEnd(endDate, endDate - 1)).toBe(false);
+	});
+
+	it("does not treat UTC midnight as Lima midnight", () => {
+		const limaMidnight = Date.parse("2026-10-10T05:00:00.000Z");
+		expect(isCyclePastEnd(limaMidnight, Date.parse("2026-10-10T00:00:00.000Z"))).toBe(false);
+		expect(isCyclePastEnd(limaMidnight, limaMidnight)).toBe(true);
+	});
+
+	it("keeps remaining days at zero and daily available non-negative after the end", () => {
+		const start = endDate - 15 * MS_PER_DAY;
+		const now = endDate + 3 * 60 * 60 * 1000;
+		expect(isCyclePastEnd(endDate, now)).toBe(true);
+		const metrics = computeCycleDayMetrics(start, endDate, now);
+		expect(metrics.daysRemaining).toBe(0);
+		expect(metrics.daysRemaining).toBeGreaterThanOrEqual(0);
+		const daily = computeDailyAvailable(12_00, -4_00, metrics.daysRemaining);
+		expect(Number.isFinite(daily)).toBe(true);
+		expect(daily).toBeGreaterThanOrEqual(0);
 	});
 });
 
