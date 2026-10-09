@@ -130,6 +130,16 @@ export function idleCommitment(
 	};
 }
 
+/** Último ciclo cerrado que devuelve dashboard.getSummary cuando no hay ciclo activo. */
+export const closedCycleOnSummary = {
+	cycleId: fixtureId("financialCycles", "cycle-1"),
+	startDate: Date.UTC(2026, 7, 1, 5, 0, 0),
+	endDate: Date.UTC(2026, 7, 31, 5, 0, 0),
+	surplusCents: 21000,
+	surplusDestination: "emergency_fund",
+	surplusMovedAt: null,
+} satisfies NonNullable<IdleSummary["closedCycle"]>;
+
 /** Resumen sin ciclo activo, compartido por home y sobres. */
 export const summaryWithoutCycle: IdleSummary = {
 	profile: {
@@ -149,3 +159,12 @@ export const summaryWithoutCycle: IdleSummary = {
 	isEarlyCycle: false,
 	closedCycle: null,
 } satisfies IdleSummary;
+
+/** Resumen sin ciclo activo, con o sin el último ciclo ya cerrado. */
+export function summaryAfterClose(closedCycle: IdleSummary["closedCycle"]): IdleSummary {
+	const summary = {
+		...summaryWithoutCycle,
+		closedCycle,
+	} satisfies IdleSummary;
+	return summary;
+}

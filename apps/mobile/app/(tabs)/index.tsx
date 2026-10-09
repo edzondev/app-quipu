@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import AppShell from "@/shared/components/app-shell";
+import { HomeClosedCycle } from "@/shared/components/home/home-closed-cycle";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty, HomeLoading } from "@/shared/components/home/home-empty";
 import { useRegistrar } from "@/shared/components/navigation/registrar-context";
@@ -17,6 +18,16 @@ export default function HomePage() {
 				<HomeEmpty
 					name={model.profileName}
 					initial={model.profileInitial}
+					onOpenSettings={() => router.push("/ajustes")}
+					onRegisterIncome={() => openCreate("income")}
+				/>
+			) : null}
+			{model.status === "closed" ? (
+				<HomeClosedCycle
+					name={model.profileName}
+					initial={model.profileInitial}
+					closedCycle={model.closedCycle}
+					currencySymbol={model.currencySymbol}
 					onOpenSettings={() => router.push("/ajustes")}
 					onRegisterIncome={() => openCreate("income")}
 				/>

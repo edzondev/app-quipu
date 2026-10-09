@@ -55,7 +55,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 	const { register: registerIncome } = useIncomeActions();
 	const home = useHomeModel();
 	const { profile } = useProfileGate();
-	const noCycle = home.status === "empty";
+	const noCycle = home.status === "empty" || home.status === "closed";
 	const hasCycle = home.status === "ready";
 	const [picked, setPicked] = useState<RegistrarMode | null>(null);
 	const forcedIncome = session.incomePrompt != null;
