@@ -138,13 +138,50 @@ describe("MovementsList", () => {
 				onCreate={jest.fn()}
 			/>,
 		);
+		expect(view.getByText("Todos")).toBeTruthy();
+		expect(view.getByText("Necesidades")).toBeTruthy();
+		expect(view.getByRole("button", { name: "Ahorro" })).toBeTruthy();
 		await press(view.getByText("Gustos"));
 		expect(view.getByText("Plaza Vea")).toBeTruthy();
 		expect(view.queryByText("Sueldo")).toBeNull();
 		expect(view.queryByText("Ningún movimiento con ese criterio.")).toBeNull();
-		await press(view.getByText("Ahorro"));
-		expect(view.getByText("Ningún movimiento con ese criterio.")).toBeTruthy();
 		expect(view.queryByText("—")).toBeNull();
+	});
+
+	it("filtra los movimientos de ahorro al tocar el chip", async () => {
+		const view = await render(
+			<MovementsList
+				status="ready"
+				data={{
+					...filled,
+					movements: [
+						...filled.movements,
+						{
+							id: "exp_fondo",
+							kind: "expense" as const,
+							label: "Fondo",
+							amount: 1000,
+							timestamp: Date.parse("2026-08-10T12:00:00-05:00"),
+							envelopeLabel: "Ahorro",
+						},
+					],
+				}}
+				now={NOW}
+				onOpenExpense={jest.fn()}
+				onCreate={jest.fn()}
+			/>,
+		);
+
+		expect(view.getByText("Fondo")).toBeTruthy();
+		expect(view.getByText("Plaza Vea")).toBeTruthy();
+		expect(view.getByText("Sueldo")).toBeTruthy();
+
+		await press(view.getByRole("button", { name: "Ahorro" }));
+
+		expect(view.getByText("Fondo")).toBeTruthy();
+		expect(view.queryByText("Plaza Vea")).toBeNull();
+		expect(view.queryByText("Sueldo")).toBeNull();
+		expect(view.queryByText("Ningún movimiento con ese criterio.")).toBeNull();
 	});
 
 	it("busca por el nombre del movimiento una vez pasado el debounce", async () => {

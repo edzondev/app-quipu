@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
+import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type {
 	SobresEnvelopeView,
 	SobresScreenModel,
@@ -84,13 +85,15 @@ export function SobresScreen({ status, screen, onBack, onMoveMoney, onRegisterEx
 
 			{screen ? (
 				<View className="flex-row gap-2.5 pt-4">
-					<Pressable
-						accessibilityRole="button"
-						className="flex-1 items-center rounded-xl border border-[#DAD7CE] py-3.5"
-						onPress={onMoveMoney}
-					>
-						<Text className="font-hanken-semibold text-[14px] text-foreground">Mover dinero</Text>
-					</Pressable>
+					{HIDDEN_UNTIL_READY.moveMoney ? null : (
+						<Pressable
+							accessibilityRole="button"
+							className="flex-1 items-center rounded-xl border border-[#DAD7CE] py-3.5"
+							onPress={onMoveMoney}
+						>
+							<Text className="font-hanken-semibold text-[14px] text-foreground">Mover dinero</Text>
+						</Pressable>
+					)}
 					<Pressable
 						accessibilityRole="button"
 						className="flex-1 items-center rounded-xl bg-foreground py-3.5"

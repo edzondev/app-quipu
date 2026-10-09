@@ -172,6 +172,28 @@ describe("SecurityScreen", () => {
 		expect(onRevokeAll).toHaveBeenCalledTimes(1);
 	});
 
+	it("contraseña y correo de recuperación son estado, no botones", async () => {
+		const { view } = await screen();
+		expect(view.getByText("Contraseña")).toBeTruthy();
+		expect(view.getByText("Definida")).toBeTruthy();
+		expect(view.getByText("Correo de recuperación")).toBeTruthy();
+		expect(view.getByText("Verificado")).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Contraseña" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Correo de recuperación" })).toBeNull();
+
+		for (const label of ["Contraseña", "Correo de recuperación"]) {
+			let node = view.getByText(label).parent;
+			while (node) {
+				expect(node.props.accessibilityRole).not.toBe("button");
+				const className = node.props.className;
+				if (typeof className === "string") {
+					expect(className).not.toContain("active:opacity");
+				}
+				node = node.parent;
+			}
+		}
+	});
+
 	it("no muestra ids crudos ni datos que no existen", async () => {
 		const { view } = await screen();
 		const tree = JSON.stringify(view.toJSON());
