@@ -5,7 +5,7 @@ import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { Briefcase } from "reicon-react/icons/Briefcase";
 import { ChartTrend } from "reicon-react/icons/ChartTrend";
 import { Layers } from "reicon-react/icons/Layers";
-import { SUPPORTED_MARKETS, type SupportedMarket } from "@/core/constants";
+import { currencySelectorLabel, SUPPORTED_MARKETS, type SupportedMarket } from "@/core/constants";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { INCOME_MODEL_OPTIONS } from "../constants";
@@ -68,7 +68,7 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
 			}
 		>
 			<div className="mb-5">
-				<p className="mb-2 text-sm font-medium text-ink">País y moneda</p>
+				<p className="mb-2 text-sm font-medium text-ink">Moneda</p>
 				<div className="flex flex-col gap-2">
 					{SUPPORTED_MARKETS.map((market) => {
 						const selected = state.marketId === market.id;
@@ -86,9 +86,9 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
 								)}
 							>
 								<span>
-									<span className="font-semibold text-ink">{market.label}</span>
+									<span className="font-semibold text-ink">{currencySelectorLabel(market)}</span>
 									<span className="mt-0.5 block text-sm text-muted-foreground">
-										{market.currencyLabel} · {market.currencySymbol}
+										{market.currencySymbol}
 									</span>
 								</span>
 								<span

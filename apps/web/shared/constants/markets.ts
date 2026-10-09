@@ -84,6 +84,15 @@ export function currencySymbolForCode(code: string): string {
 	return marketFromCurrencyCode(code)?.currencySymbol ?? DEFAULT_MARKET.currencySymbol;
 }
 
+/** Nombre corto del selector: primera palabra de `currencyLabel` (Sol, Euro, Dólar). */
+export function currencySelectorLabel(market: SupportedMarket): string {
+	const [name] = market.currencyLabel.split(" ");
+	if (name === undefined || name.length === 0) {
+		return market.currencyLabel;
+	}
+	return name;
+}
+
 export function currencyReadOnlyLabel(code: string, symbol?: string): string {
 	const market = marketFromCurrencyCode(code);
 	if (!market) {
