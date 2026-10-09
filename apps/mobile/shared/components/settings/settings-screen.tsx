@@ -124,7 +124,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 				contentPadding={0}
 				containerColorClassName="accent-background"
 			>
-				<RNHostView matchContents>
+				<RNHostView>
 					{confirming ? (
 						<View className="bg-background px-5.5 pb-8 pt-3">
 							<View className="border-l-2 border-danger pl-3.5">

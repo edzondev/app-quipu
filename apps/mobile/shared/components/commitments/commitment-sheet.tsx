@@ -15,7 +15,7 @@ export function CommitmentSheet({ isPresented, session, onDismiss, onSubmit }: P
 		<BottomSheet
 			isPresented={isPresented}
 			onDismiss={onDismiss}
-			snapPoints={["full"]}
+			snapPoints={[{ fraction: 0.6 }]}
 			contentPadding={0}
 			containerColorClassName="accent-background"
 		>

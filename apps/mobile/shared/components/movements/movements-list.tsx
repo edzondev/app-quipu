@@ -93,7 +93,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 			) : null}
 
 			{model && !model.isEmpty ? (
-				<View className="mt-[18px] flex-row flex-wrap gap-[7px]">
+				<View className="mt-4.5 flex-row flex-wrap gap-1.75">
 					{MOVEMENT_FILTERS.map((item) => (
 						<FilterChip
 							key={item.id}
@@ -189,7 +189,7 @@ function FilterChip({
 			accessibilityRole="button"
 			accessibilityState={{ selected }}
 			onPress={onPress}
-			className={`rounded-full px-[13px] py-[7px] ${
+			className={`rounded-full px-3.25 py-1.75 ${
 				selected ? "bg-foreground" : "border border-line"
 			}`}
 		>
@@ -207,7 +207,7 @@ function FilterChip({
 function MovementRow({ row, onOpen }: { row: MovementListRow; onOpen: (id: string) => void }) {
 	const body = (
 		<View className="flex-row items-center justify-between border-b border-line py-3">
-			<View className="min-w-0 flex-1 flex-row items-center gap-[11px] pr-3">
+			<View className="min-w-0 flex-1 flex-row items-center gap-2.75 pr-3">
 				<View className={`h-1.5 w-1.5 rounded-full ${DOT[row.dot]}`} />
 				<View className="min-w-0 flex-1">
 					<Text className="font-hanken-semibold text-[14.5px] text-foreground" numberOfLines={1}>
@@ -215,7 +215,7 @@ function MovementRow({ row, onOpen }: { row: MovementListRow; onOpen: (id: strin
 					</Text>
 					{row.meta ? (
 						<Text
-							className={`mt-[5px] font-geist-mono text-[11.5px] uppercase ${
+							className={`mt-1.25 font-geist-mono text-[11.5px] uppercase ${
 								row.metaTone ? META[row.metaTone] : "text-foreground/45"
 							}`}
 							numberOfLines={1}
@@ -253,12 +253,12 @@ function EmptyState({ onCreate, label }: { onCreate: () => void; label: string }
 			<Text className="text-center font-newsreader text-[23px] leading-8 text-foreground">
 				{EMPTY_TITLE}
 			</Text>
-			<Text className="mt-3 max-w-[300px] text-center font-hanken text-[14.5px] leading-6 text-foreground/55">
+			<Text className="mt-3 max-w-75 text-center font-hanken text-[14.5px] leading-6 text-foreground/55">
 				{EMPTY_BODY}
 			</Text>
 			<Pressable
 				accessibilityRole="button"
-				className="mt-6 rounded-xl bg-foreground px-[22px] py-3.5"
+				className="mt-6 rounded-xl bg-foreground px-5.5 py-3.5"
 				onPress={onCreate}
 			>
 				<Text className="font-hanken-semibold text-[14px] text-background">{label}</Text>
@@ -275,7 +275,7 @@ function EmptyArt() {
 			className="mb-7 h-40 w-40 items-center justify-center"
 		>
 			<View className="absolute h-36 w-36 rounded-full bg-primary/10" />
-			<View className="h-[92px] w-[74px] rounded-2xl border border-line bg-background px-3 pt-3">
+			<View className="h-23 w-18.5 rounded-2xl border border-line bg-background px-3 pt-3">
 				<View className="mb-2 h-2 w-8 rounded-full bg-wants" />
 				<View className="mb-1.5 h-1.5 w-full rounded-full bg-foreground/10" />
 				<View className="h-1.5 w-10 rounded-full bg-foreground/10" />
@@ -286,10 +286,6 @@ function EmptyArt() {
 				<View className="mt-2 flex-row items-center gap-1.5">
 					<View className="h-1.5 w-1.5 rounded-full bg-wants" />
 					<View className="h-1.5 flex-1 rounded-full bg-foreground/10" />
-				</View>
-				<View className="mt-2 flex-row items-center gap-1.5">
-					<View className="h-1.5 w-1.5 rounded-full bg-savings" />
-					<View className="h-1.5 w-8 rounded-full bg-foreground/10" />
 				</View>
 			</View>
 		</View>

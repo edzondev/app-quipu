@@ -1,6 +1,14 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { type FundingEvent, isVirtualFundingId } from "./commitmentCoverage";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
+
+/** Solo los ingresos reales se persisten en `coveredBy`; las fuentes virtuales se descartan. */
+export function persistableCoveredBy(fundingEvents: readonly FundingEvent[]): Id<"incomeEvents">[] {
+	return fundingEvents
+		.filter((funding) => !isVirtualFundingId(funding.eventId))
+		.map((funding) => funding.eventId as Id<"incomeEvents">);
+}
 
 export async function clearCommitmentCoverageForProfile(
 	ctx: MutationCtx,
@@ -38,13 +46,7 @@ export async function evaluateCommitmentCoverageForCycle(
 			if (!coverage) return Promise.resolve();
 
 			if (coverage.status === "covered") {
-				const coveredBy: Id<"incomeEvents">[] = [];
-				for (const funding of coverage.fundingEvents) {
-					const eventId = funding.eventId;
-					if (!eventId.startsWith("__boost_") && !eventId.startsWith("__reservation_")) {
-						coveredBy.push(eventId as Id<"incomeEvents">);
-					}
-				}
+				const coveredBy = persistableCoveredBy(coverage.fundingEvents);
 
 				if (commitment.postponedForCycleId === cycleId) {
 					return ctx.db.patch(commitment._id, {

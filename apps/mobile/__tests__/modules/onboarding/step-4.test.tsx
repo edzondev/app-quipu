@@ -222,6 +222,47 @@ describe("Step4Commitments — compromisos", () => {
 		expect(getCommitments()[1]).toMatchObject({ name: "Celular", amountCents: 9600, dueDay: 10 });
 	});
 
+	it("al volver al paso con compromisos ya guardados, uno nuevo recibe un id distinto", async () => {
+		function SeedWithTwo() {
+			const { dispatch } = useOnboarding();
+			useEffect(() => {
+				dispatch({
+					type: "UPDATE",
+					payload: {
+						commitments: [
+							{ id: "row-1", name: "Agua", amountCents: 110000, dueDay: 5 },
+							{ id: "row-2", name: "Celular", amountCents: 9600, dueDay: 10 },
+						],
+					},
+				});
+				dispatch({ type: "SET_STEP", payload: 4 });
+			}, [dispatch]);
+			return null;
+		}
+
+		await render(
+			<OnboardingProvider>
+				<SeedWithTwo />
+				<StateProbe />
+				<Step4Commitments />
+			</OnboardingProvider>,
+		);
+
+		expect(screen.getByTestId("commitment-name-0").props.value).toBe("Agua");
+		expect(screen.getByTestId("commitment-name-1").props.value).toBe("Celular");
+		await pressChip("Gimnasio");
+		expect(screen.getByTestId("commitment-name-2").props.value).toBe("Gimnasio");
+		expect(screen.getAllByTestId(/^commitment-row-/)).toHaveLength(3);
+
+		await fill(2, "80", "12");
+		await pressContinue();
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
+		const saved = getCommitments();
+		expect(saved).toHaveLength(3);
+		expect(new Set(saved.map((row) => row.id)).size).toBe(3);
+		expect(saved[2]).toMatchObject({ name: "Gimnasio" });
+	});
+
 	it("un día fuera de 1–31 se marca apenas se escribe y bloquea Continuar", async () => {
 		await renderStep4();
 		await pressChip("Agua");

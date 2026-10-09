@@ -67,7 +67,7 @@ export function SobresScreen({ status, screen, onBack, onMoveMoney, onRegisterEx
 
 				{screen ? (
 					<>
-						<Text className="mt-2 font-hanken text-[14px] leading-[21px] text-foreground/55">
+						<Text className="mt-2 font-hanken text-[14px] leading-5.25 text-foreground/55">
 							{SUBTITLE}
 						</Text>
 						<View>
@@ -119,11 +119,11 @@ function EnvelopeBlock({
 	isFirst: boolean;
 	isLast: boolean;
 }) {
-	const rule = isLast ? "" : "border-b border-line pb-[22px]";
+	const rule = isLast ? "" : "border-b border-line pb-5.5";
 	return (
-		<View className={`${isFirst ? "mt-[26px]" : "mt-[22px]"} ${rule}`}>
-			<View className="flex-row items-center gap-[9px]">
-				<View className={`h-[7px] w-[7px] rounded-full ${DOT[envelope.tone]}`} />
+		<View className={`${isFirst ? "mt-6.5" : "mt-5.5"} ${rule}`}>
+			<View className="flex-row items-center gap-2.25">
+				<View className={`h-1.75 w-1.75 rounded-full ${DOT[envelope.tone]}`} />
 				<Text className="font-hanken-semibold text-[15px] text-foreground">{envelope.label}</Text>
 				{envelope.statusLabel ? (
 					<Text
@@ -152,16 +152,16 @@ function EnvelopeBlock({
 				accessibilityRole="progressbar"
 				accessibilityLabel={envelope.label}
 				accessibilityValue={{ min: 0, max: 100, now: envelope.progress }}
-				className="mt-3.5 h-1 overflow-hidden rounded-[2px] bg-[#EDEBE4]"
+				className="mt-3.5 h-1 overflow-hidden rounded-xs bg-[#EDEBE4]"
 			>
 				<View
-					className={`h-full rounded-[2px] ${DOT[envelope.tone]}`}
+					className={`h-full rounded-xs ${DOT[envelope.tone]}`}
 					style={{ width: `${envelope.progress}%` }}
 				/>
 			</View>
 
 			{envelope.footLeft || envelope.footRight ? (
-				<View className="mt-[9px] flex-row items-center">
+				<View className="mt-2.25 flex-row items-center">
 					<Text
 						className="flex-1 font-geist-mono text-[11.5px] text-foreground/45"
 						numberOfLines={1}
