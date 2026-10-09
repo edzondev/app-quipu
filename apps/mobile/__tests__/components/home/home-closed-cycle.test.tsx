@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import {
 	closedCycleOnSummary,
 	summaryAfterClose,
+	summaryWithCycle,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
 import HomePage from "@/app/(tabs)";
@@ -76,7 +77,12 @@ function summaryFor(surplusCents: number) {
 	return summaryAfterClose({ ...closedCycleOnSummary, surplusCents });
 }
 
-function mockSummary(summary: ReturnType<typeof summaryAfterClose> | typeof summaryWithoutCycle) {
+function mockSummary(
+	summary:
+		| ReturnType<typeof summaryAfterClose>
+		| typeof summaryWithoutCycle
+		| ReturnType<typeof summaryWithCycle>,
+) {
 	mockUseQuery.mockImplementation((query: unknown) => {
 		const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
 		if (name === "dashboard:getSummary") return summary;
@@ -148,6 +154,43 @@ describe("Inicio con ciclo cerrado", () => {
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
 			true,
 		);
+	});
+
+	it("muestra la tarjeta en Inicio cuando pastEnd es true y el ciclo sigue activo", async () => {
+		const live = summaryWithCycle();
+		mockSummary({
+			...live,
+			cycle: { ...live.cycle, pastEnd: true },
+			closedCycle: { ...closedCycleOnSummary, surplusCents: -12_345 },
+		});
+		const view = await renderHome();
+		expect(view.getByText(/Te pasaste por S\/ 123\.45/)).toBeTruthy();
+		expect(view.queryByText("Ciclo agosto")).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
+	});
+
+	it("muestra la tarjeta de ciclo cerrado en Inicio cuando el ciclo ya venció", async () => {
+		mockSummary(summaryAfterClose(closedCycleOnSummary));
+		const view = await renderHome();
+		expect(view.getByText(/Tu ciclo del 1 AGO al 30 AGO terminó/)).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
+		expect(view.queryByText("Ciclo agosto")).toBeNull();
+	});
+
+	it("pinta el arrastre positivo que manda el servidor", async () => {
+		mockSummary(summaryFor(12_345));
+		const view = await renderHome();
+		expect(view.getByText(/Te quedaron S\/ 123\.45/)).toBeTruthy();
+		expect(view.queryByText(/Te pasaste/)).toBeNull();
+	});
+
+	it("pinta el arrastre negativo que manda el servidor", async () => {
+		mockSummary(summaryFor(-12_345));
+		const view = await renderHome();
+		expect(view.getByText(/Te pasaste por S\/ 123\.45/)).toBeTruthy();
+		expect(view.queryByText(/Te quedaron/)).toBeNull();
+		expect(view.queryByText(/-S\//)).toBeNull();
 	});
 
 	it("muestra el dibujo de vacío cuando no hay ciclo ni ciclo cerrado", async () => {

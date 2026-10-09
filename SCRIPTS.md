@@ -77,6 +77,25 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 > necesita un deployment de Convex. El job de GitHub Actions (`.github/workflows/ci.yml`)
 > no usa ese comando: corre `pnpm ci:quality`, `pnpm typecheck:ci`, `pnpm test:mobile` y `pnpm test:web`.
 
+## Semilla de Maestro (solo dev)
+
+Crea una cuenta verificada **sin perfil** para que Maestro entre y caiga en onboarding. Corre contra el deployment de desarrollo `perceptive-elk-229`. Nunca contra producción (`patient-chihuahua-640`) y nunca con `--prod`.
+
+En el deployment de desarrollo, y solo ahí, hay que tener:
+
+- `ALLOW_DEV_SEED=true`
+- `DEV_SEED_PASSWORD=<secreto>`
+
+El secreto no vive en el repo. Maestro usa el mismo valor desde su propio entorno. El valor que estuvo en el commit `9ddd9ce` quedó público; en dev hay que usar uno nuevo.
+
+Desde `apps/web`, con el CLI apuntando a ese deployment:
+
+```bash
+npx convex run devSeed:seedVerifiedAccount '{"email":"maestro-e2e@example.com"}'
+```
+
+La función es `internalMutation`: el cliente no puede llamarla. Si `ALLOW_DEV_SEED` no es exactamente `"true"`, o si `CONVEX_CLOUD_URL` no es el host de `perceptive-elk-229`, lanza. Si falta `DEV_SEED_PASSWORD`, también.
+
 ## Flujo típico de trabajo diario
 
 ```bash

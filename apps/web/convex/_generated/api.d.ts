@@ -18,6 +18,7 @@ import type * as crons_contentReviewScan from "../crons/contentReviewScan.js";
 import type * as cycleCorrection from "../cycleCorrection.js";
 import type * as cycleReport from "../cycleReport.js";
 import type * as dashboard from "../dashboard.js";
+import type * as devSeed from "../devSeed.js";
 import type * as expenses from "../expenses.js";
 import type * as feedback from "../feedback.js";
 import type * as firstCycle from "../firstCycle.js";
@@ -47,6 +48,7 @@ import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
 import type * as lib_defaultAllocationPlan from "../lib/defaultAllocationPlan.js";
 import type * as lib_deployment from "../lib/deployment.js";
+import type * as lib_devSeedGuard from "../lib/devSeedGuard.js";
 import type * as lib_email_authEmailLayout from "../lib/email/authEmailLayout.js";
 import type * as lib_email_authEmailTokens from "../lib/email/authEmailTokens.js";
 import type * as lib_email_authMail from "../lib/email/authMail.js";
@@ -130,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   cycleCorrection: typeof cycleCorrection;
   cycleReport: typeof cycleReport;
   dashboard: typeof dashboard;
+  devSeed: typeof devSeed;
   expenses: typeof expenses;
   feedback: typeof feedback;
   firstCycle: typeof firstCycle;
@@ -159,6 +162,7 @@ declare const fullApi: ApiFromModules<{
   "lib/dashboardMath": typeof lib_dashboardMath;
   "lib/defaultAllocationPlan": typeof lib_defaultAllocationPlan;
   "lib/deployment": typeof lib_deployment;
+  "lib/devSeedGuard": typeof lib_devSeedGuard;
   "lib/email/authEmailLayout": typeof lib_email_authEmailLayout;
   "lib/email/authEmailTokens": typeof lib_email_authEmailTokens;
   "lib/email/authMail": typeof lib_email_authMail;
