@@ -6,6 +6,11 @@ import { mutation } from "./_generated/server";
 import { persistIncomeAllocation } from "./lib/applyIncomeAllocation";
 import { CYCLE_DAYS, ENVELOPE_TYPES } from "./lib/budgetMath";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
+import {
+	computeCycleCarryover,
+	envelopeWithCarry,
+	surplusWasCarriedOver,
+} from "./lib/cycleCarryover";
 import { computeCycleDayMetrics, computeDisplayDailyCents } from "./lib/dashboardMath";
 import { buildDefaultAllocationPlan, resolveIncomeAllocation } from "./lib/defaultAllocationPlan";
 import { requireActiveAccount } from "./lib/entitlements";
@@ -228,6 +233,8 @@ export const createIncomeEvent = mutation({
 
 		let cycleId: Id<"financialCycles">;
 		let isNewCycle = false;
+		let carry = { needs: 0, wants: 0, savings: 0, extraordinary: 0 };
+		let closedForCarry: typeof activeCycle = null;
 
 		if (resolvedId && activeCycle && resolvedId === activeCycle._id) {
 			cycleId = activeCycle._id;
@@ -235,6 +242,30 @@ export const createIncomeEvent = mutation({
 			if (activeCycle) {
 				await evaluateClosedCycle(ctx, profile._id, activeCycle._id, now);
 				await ctx.db.patch(activeCycle._id, { status: "closed" });
+				if (!surplusWasCarriedOver(activeCycle.carriedOverToCycleId)) {
+					closedForCarry = activeCycle;
+					const [closedEnvelopes, surplusContributions, closedIncomes] = await Promise.all([
+						ctx.db
+							.query("envelopes")
+							.withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+							.collect(),
+						ctx.db
+							.query("surplusContributions")
+							.withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+							.collect(),
+						ctx.db
+							.query("incomeEvents")
+							.withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+							.collect(),
+					]);
+					carry = computeCycleCarryover({
+						envelopes: closedEnvelopes,
+						closeSurplusMovedAt: activeCycle.closeSurplusMovedAt,
+						carriedOverToCycleId: activeCycle.carriedOverToCycleId,
+						surplusContributions,
+						incomeEvents: closedIncomes,
+					});
+				}
 			}
 			let cycleDays: number;
 			if (profile.incomeModel === "variable") {
@@ -257,7 +288,16 @@ export const createIncomeEvent = mutation({
 				endDate,
 				status: "active",
 				totalIncomeReceived: 0,
+				...(closedForCarry
+					? {
+							carriedOverFromCycleId: closedForCarry._id,
+							carriedOverExtraordinaryCents: carry.extraordinary,
+						}
+					: {}),
 			});
+			if (closedForCarry) {
+				await ctx.db.patch(closedForCarry._id, { carriedOverToCycleId: cycleId });
+			}
 			isNewCycle = true;
 			await clearCommitmentCoverageForProfile(ctx, profile._id);
 		}
@@ -315,29 +355,19 @@ export const createIncomeEvent = mutation({
 			.collect();
 
 		if (envelopes.length === 0) {
-			await Promise.all([
-				ctx.db.insert("envelopes", {
-					profileId: profile._id,
-					cycleId,
-					type: "needs",
-					allocatedAmount: distribution.needs,
-					remainingAmount: distribution.needs,
+			await Promise.all(
+				ENVELOPE_TYPES.map((type) => {
+					const opened = envelopeWithCarry(distribution[type], carry[type]);
+					return ctx.db.insert("envelopes", {
+						profileId: profile._id,
+						cycleId,
+						type,
+						allocatedAmount: opened.allocatedAmount,
+						remainingAmount: opened.remainingAmount,
+						carriedOverCents: opened.carriedOverCents,
+					});
 				}),
-				ctx.db.insert("envelopes", {
-					profileId: profile._id,
-					cycleId,
-					type: "wants",
-					allocatedAmount: distribution.wants,
-					remainingAmount: distribution.wants,
-				}),
-				ctx.db.insert("envelopes", {
-					profileId: profile._id,
-					cycleId,
-					type: "savings",
-					allocatedAmount: distribution.savings,
-					remainingAmount: distribution.savings,
-				}),
-			]);
+			);
 		} else {
 			await Promise.all(
 				envelopes.map((env) =>

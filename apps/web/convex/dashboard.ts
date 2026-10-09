@@ -235,11 +235,19 @@ export const getSummary = query({
 			const envelope = envelopeByType.get(type);
 			const remainingAmount = envelope?.remainingAmount ?? 0;
 			const allocatedAmount = envelope?.allocatedAmount ?? 0;
+			const carriedOverCents = envelope?.carriedOverCents ?? 0;
+			const incomeCents = incomesForCycle.reduce(
+				(sum, event) => sum + event.distributionApplied[type],
+				0,
+			);
 			return {
 				type,
 				remainingAmount,
 				allocatedAmount,
 				percentRemaining: computeEnvelopePercentRemaining(remainingAmount, allocatedAmount),
+				carriedOverCents,
+				incomeCents,
+				totalCents: carriedOverCents + incomeCents,
 			};
 		});
 
@@ -249,6 +257,7 @@ export const getSummary = query({
 				commitments: commitmentsRaw,
 				incomeEvents: incomesForCycle,
 				reservationRows: reservationsForCycle,
+				envelopes: envelopesRaw,
 			},
 			now,
 		);
@@ -385,6 +394,8 @@ export const getSummary = query({
 				endDate: activeCycle.endDate,
 				needsReview: activeCycle.needsReview ?? false,
 				unallocatedCents: activeCycle.unallocatedCents ?? 0,
+				carriedOverFromCycleId: activeCycle.carriedOverFromCycleId ?? null,
+				carriedOverExtraordinaryCents: activeCycle.carriedOverExtraordinaryCents ?? 0,
 				...cycleMetrics,
 				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
 			},

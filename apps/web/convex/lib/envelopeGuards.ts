@@ -1,3 +1,5 @@
+import type { Doc } from "../_generated/dataModel";
+
 /**
  * Guards for envelope spend / reverse operations (pure, unit-tested).
  */
@@ -19,10 +21,10 @@ export function canReverseEnvelopeAllocation(input: {
 	return input.remainingAmount >= input.reverseCents;
 }
 
-export type EnvelopeReverseSlice = {
-	type: "needs" | "wants" | "savings";
-	remainingAmount: number;
-};
+export type EnvelopeReverseSlice = Pick<
+	Doc<"envelopes">,
+	"type" | "remainingAmount" | "carriedOverCents"
+>;
 
 /**
  * True when every envelope still has enough remaining to undo the given
@@ -40,7 +42,7 @@ export function canReverseDistributionApplied(
 		const reverseCents = distributionApplied[envelope.type] ?? 0;
 		if (
 			!canReverseEnvelopeAllocation({
-				remainingAmount: envelope.remainingAmount,
+				remainingAmount: envelope.remainingAmount - (envelope.carriedOverCents ?? 0),
 				reverseCents,
 			})
 		) {

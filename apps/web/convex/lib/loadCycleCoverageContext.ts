@@ -11,6 +11,7 @@ import { activeReservedCents } from "./commitmentReservation";
 
 export type CycleCoverageDocs = {
 	cycle: Pick<Doc<"financialCycles">, "_id" | "startDate" | "endDate" | "coverageBoost">;
+	envelopes?: ReadonlyArray<Pick<Doc<"envelopes">, "type" | "carriedOverCents">>;
 	commitments: ReadonlyArray<
 		Pick<
 			Doc<"fixedCommitments">,
@@ -41,7 +42,7 @@ export function buildCoverageByIdFromCycleDocs(
 	docs: CycleCoverageDocs,
 	now: number,
 ): Map<string, CommitmentCoverageResult> {
-	const { cycle, commitments, incomeEvents, reservationRows } = docs;
+	const { cycle, commitments, incomeEvents, reservationRows, envelopes } = docs;
 
 	const commitmentSlices: CommitmentSlice[] = commitments.map((commitment) => ({
 		id: commitment._id,
@@ -57,6 +58,24 @@ export function buildCoverageByIdFromCycleDocs(
 		occurredAt: event.occurredAt,
 		distributionApplied: event.distributionApplied,
 	}));
+	const needsCarry =
+		envelopes?.find((envelope) => envelope.type === "needs")?.carriedOverCents ?? 0;
+	const wantsCarry =
+		envelopes?.find((envelope) => envelope.type === "wants")?.carriedOverCents ?? 0;
+	if (needsCarry > 0) {
+		incomeEventSlices.push({
+			id: "__carry_needs__",
+			occurredAt: cycle.startDate,
+			distributionApplied: { needs: needsCarry, wants: 0, savings: 0 },
+		});
+	}
+	if (wantsCarry > 0) {
+		incomeEventSlices.push({
+			id: "__carry_wants__",
+			occurredAt: cycle.startDate,
+			distributionApplied: { needs: 0, wants: wantsCarry, savings: 0 },
+		});
+	}
 
 	const reservations: ReservationCoverageSlice[] = reservationRows.map((row) => ({
 		commitmentId: row.commitmentId,
@@ -100,7 +119,7 @@ export async function loadCycleCoverageById(
 	const cycle = await ctx.db.get(cycleId);
 	if (!cycle) return null;
 
-	const [commitments, incomeEvents, reservationRows] = await Promise.all([
+	const [commitments, incomeEvents, reservationRows, envelopes] = await Promise.all([
 		ctx.db
 			.query("fixedCommitments")
 			.withIndex("by_profileId", (q) => q.eq("profileId", profileId))
@@ -113,6 +132,10 @@ export async function loadCycleCoverageById(
 			.query("commitmentReservations")
 			.withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
 			.collect(),
+		ctx.db
+			.query("envelopes")
+			.withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
+			.collect(),
 	]);
 
 	const coverageById = buildCoverageByIdFromCycleDocs(
@@ -121,6 +144,7 @@ export async function loadCycleCoverageById(
 			commitments,
 			incomeEvents,
 			reservationRows,
+			envelopes,
 		},
 		now,
 	);

@@ -113,4 +113,30 @@ describe("buildCoverageByIdFromCycleDocs", () => {
 		expect(withReservations.get("rent")?.status).toBe("covered");
 		expect(withoutReservations.get("rent")?.status).not.toBe("covered");
 	});
+
+	it("covers needs and wants from positive carryover, not from a negative one", () => {
+		const coverage = (needsCarry: number, wantsCarry: number) =>
+			buildCoverageByIdFromCycleDocs(
+				{
+					cycle: { ...CYCLE, _id: "cycle1" as never },
+					commitments: [
+						{ _id: "rent" as never, amount: 80_000, envelope: "needs", dueDay: 5 },
+						{ _id: "netflix" as never, amount: 20_000, envelope: "wants", dueDay: 18 },
+					],
+					incomeEvents: [],
+					reservationRows: [],
+					envelopes: [
+						{ type: "needs", carriedOverCents: needsCarry },
+						{ type: "wants", carriedOverCents: wantsCarry },
+					],
+				},
+				Date.UTC(2026, 0, 10),
+			);
+		const covered = coverage(80_000, 20_000);
+		expect(covered.get("rent")?.status).toBe("covered");
+		expect(covered.get("rent")?.fundingEvents[0]?.eventId).toBe("__carry_needs__");
+		expect(covered.get("netflix")?.status).toBe("covered");
+		expect(covered.get("netflix")?.fundingEvents[0]?.eventId).toBe("__carry_wants__");
+		expect(coverage(-80_000, -20_000).get("rent")?.status).not.toBe("covered");
+	});
 });

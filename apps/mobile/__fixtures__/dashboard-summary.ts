@@ -3,6 +3,12 @@ import type { FunctionReturnType } from "convex/server";
 import { fixtureId } from "@/__fixtures__/convex-id";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
+
+export const emptyEnvelopeCarry = { carriedOverCents: 0, incomeCents: 0, totalCents: 0 };
+export const emptyCycleCarry = {
+	carriedOverFromCycleId: null,
+	carriedOverExtraordinaryCents: 0,
+};
 type ActiveSummary = Extract<DashboardSummary, { cycle: { startDate: number } }>;
 type IdleSummary = Extract<DashboardSummary, { cycle: null }>;
 type SummaryCommitment = ActiveSummary["commitments"][number];
@@ -37,7 +43,15 @@ export function envelope(
 	remainingAmount: number,
 	allocatedAmount = remainingAmount,
 ): ActiveSummary["envelopes"][number] {
-	return { type, remainingAmount, allocatedAmount, percentRemaining: 0 };
+	return {
+		type,
+		remainingAmount,
+		allocatedAmount,
+		percentRemaining: 0,
+		...emptyEnvelopeCarry,
+		incomeCents: allocatedAmount,
+		totalCents: allocatedAmount,
+	};
 }
 
 /** Ciclo de agosto con el reparto del diseño 3i (1,138 / 231 / 700). */
@@ -62,6 +76,7 @@ export function summaryWithCycle(
 			endDate: AUGUST_START,
 			needsReview: false,
 			unallocatedCents: 0,
+			...emptyCycleCarry,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,

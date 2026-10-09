@@ -10,7 +10,6 @@ const dashboardClosedCycleValidator = v.union(
 		startDate: v.number(),
 		endDate: v.number(),
 		surplusCents: v.number(),
-		surplusDestination: v.literal("emergency_fund"),
 		surplusMovedAt: v.union(v.number(), v.null()),
 	}),
 );
@@ -169,7 +168,6 @@ export function dashboardClosedCycle<TId extends string>(
 	startDate: number;
 	endDate: number;
 	surplusCents: number;
-	surplusDestination: "emergency_fund";
 	surplusMovedAt: number | null;
 } {
 	if (latestClosed === null) return null;
@@ -178,7 +176,6 @@ export function dashboardClosedCycle<TId extends string>(
 		startDate: latestClosed.startDate,
 		endDate: latestClosed.endDate,
 		surplusCents,
-		surplusDestination: "emergency_fund",
 		surplusMovedAt: latestClosed.closeSurplusMovedAt ?? null,
 	};
 }
