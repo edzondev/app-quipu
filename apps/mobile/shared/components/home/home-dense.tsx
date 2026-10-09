@@ -1,5 +1,4 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-import SignOutButton from "@/shared/components/auth/sign-out-button";
 import { SectionLabel } from "@/shared/components/section-label";
 import type { BadgeTone, HomeModel, HomeTone } from "@/shared/lib/dashboard/home-model";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
@@ -205,10 +204,6 @@ export function HomeDense({
 						);
 					})
 				)}
-			</View>
-
-			<View className="mt-6 items-start">
-				<SignOutButton />
 			</View>
 		</ScrollView>
 	);

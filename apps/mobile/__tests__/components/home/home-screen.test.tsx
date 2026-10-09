@@ -198,7 +198,8 @@ describe("Home 1d", () => {
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Hola, Edzon")).toBeTruthy();
 		expect(view.getByText("+ Ingreso")).toBeTruthy();
-		expect(view.getByText("Salir")).toBeTruthy();
+		expect(view.queryByText("Salir")).toBeNull();
+		expect(view.queryByText("Cerrar sesión")).toBeNull();
 		await fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
 		expect(mockPush).toHaveBeenCalledWith("/ajustes");
 		await fireEvent.press(view.getByText("+ Ingreso"));
