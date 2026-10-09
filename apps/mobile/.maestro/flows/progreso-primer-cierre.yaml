@@ -4,7 +4,8 @@ tags:
   - progreso
   - onboarding
 ---
-# sin caso aún
+# Notion 3f486a7356a6817698dbdf13ffd7bd83
+# Notion 3f486a7356a6819d80b8f1b507a473e6
 # El primer ciclo cuenta en Progreso. Lo cierra un Sueldo, no el vencimiento.
 # Extra no cierra. Hace falta el seed de una cuenta nueva antes de correrlo.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
@@ -26,5 +27,5 @@ tags:
 - extendedWaitUntil:
     visible: "CICLOS CERRADOS EN VERDE"
     timeout: 20000
-- assertVisible: "CICLO CERRADO"
+- assertVisible: "CICLO CERRADO · .*"
 - assertNotVisible: "Aún no cierras un ciclo."

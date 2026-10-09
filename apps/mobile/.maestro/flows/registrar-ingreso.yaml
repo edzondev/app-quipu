@@ -57,6 +57,6 @@ tags:
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
-    visible: "10\\.00"
+    visible: ".*10\\.00"
     timeout: 15000
-- assertVisible: "CICLO "
+- assertVisible: "CICLO .*"

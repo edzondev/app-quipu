@@ -47,7 +47,7 @@ tags:
 - tapOn:
     text: "^Gustos$"
     below: "NUEVO GASTO"
-- assertVisible: "DESPUÉS DE ESTE GASTO"
+- assertVisible: "DESPUÉS DE ESTE GASTO.*"
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"
@@ -57,4 +57,4 @@ tags:
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000
-- assertVisible: "20\\.00"
+- assertVisible: ".*20\\.00"

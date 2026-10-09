@@ -3,9 +3,11 @@ tags:
   - p0
   - registrar
 ---
-# Notion 3f486a7356a681a482f5ee2d8b6e2702
-# Extra entra al ciclo activo y no lo cierra. Tampoco cierra un ciclo vencido;
-# ese caso pide un ciclo con pastEnd y el seed de hoy no lo crea.
+# Notion 3f486a7356a681b0b79ffe78ff0896aa
+# Un Sueldo varios días antes del fin cierra el ciclo. No hay ventana de 2 días.
+# La cuenta QUIPU_E2E_EMAIL tiene que tener un ciclo activo con varios días
+# por delante (más de 2). Cobro mañana no sirve: en d7bcb41 eso ya cierra.
+# Bloqueado hasta la semilla de ciclo activo de Nato. No uses una cuenta personal.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -27,13 +29,15 @@ tags:
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: Extra
+      QUIPU_TIPO: Sueldo
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
-    visible: "${output.cycleBefore} · .*"
+    visible: ".*10\\.00"
     timeout: 20000
-- assertVisible: ".*10\\.00"
+- assertNotVisible: "${output.cycleBefore} · .*"
+- assertVisible: "CICLO .*"
 - tapOn:
     text: "^Inicio$"
 - assertVisible: "Hoy puedes gastar"
+- assertVisible: "Saldo que quedó.*"

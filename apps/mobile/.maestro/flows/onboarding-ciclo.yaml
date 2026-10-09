@@ -5,7 +5,7 @@ tags:
 ---
 # Notion 3f486a7356a6811e875cd4a55d3340cd reparto (en el código es el paso 3)
 # Notion 3f486a7356a681c78c1be4c0e607cad5 compromisos completos
-# Notion 3f486a7356a68125aec2f56e21bd1d92 resumen
+# Notion 3f486a7356a68125aec2f56e21bd1d92 Paso 5: sin monto diario
 # Notion 3f486a7356a681f4a6e6d2b0add684ee solo la fecha de mañana, sin calendario
 # El pre-paso crea otra cuenta en QUIPU_E2E_FRESH_* antes de esta corrida.
 # wizard-back es la flecha de la app (paso 4 → 3). El atrás de Android es manual.
@@ -38,15 +38,15 @@ tags:
     id: commitments-total
 - tapOn: "Continuar"
 - extendedWaitUntil:
-    visible: "Dinero de hoy"
+    visible: "TU SISTEMA · 05/05"
     timeout: 10000
-- assertVisible: "TU SISTEMA · 05/05"
+- assertVisible: "Dinero de hoy"
 - assertVisible: "Próximo cobro"
 # Espera arreglo pendiente (Pixi, PR #106): el paso 5 todavía muestra el diario.
 - assertNotVisible: "Puedes gastar hoy"
 - assertNotVisible:
     id: confirm-daily
-- assertNotVisible: "en 30 días."
+- assertNotVisible: "Después de compromisos y ahorro, en .* días\\."
 - assertVisible:
     id: confirm-income
 - assertVisible:
@@ -67,10 +67,10 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 40000
 - assertVisible: "Inicio"
-- assertVisible: "960"
-- assertNotVisible: "Saldo que quedó"
+- assertVisible: "S/ 960\\.00"
+- assertNotVisible: "Saldo que quedó.*"
 - assertVisible: "Agua"
-- assertVisible: "Necesidades"
+- assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - tapOn:

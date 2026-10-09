@@ -59,7 +59,7 @@ tags:
     visible: ${output.goal}
     timeout: 20000
 - assertVisible: "SIN APORTE AUTOMÁTICO"
-- assertVisible: "de 2,000"
+- assertVisible: ".*de 2,000"
 - runFlow:
     when:
       visible: "Crear mi primera meta"

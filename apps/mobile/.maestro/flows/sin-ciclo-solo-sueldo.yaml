@@ -4,7 +4,7 @@ tags:
   - registrar
   - no-cycle
 ---
-# sin caso aún
+# Notion 3f486a7356a681daadc6eba893faea43
 # Solo cuando nunca hubo un ciclo: la hoja ofrece Sueldo y
 # «Tu sueldo empieza un ciclo nuevo». Extra no aparece.
 # Un ciclo vencido sigue ofreciendo Extra; este flujo no es ese caso.
