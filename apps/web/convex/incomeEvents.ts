@@ -7,7 +7,7 @@ import { persistIncomeAllocation } from "./lib/applyIncomeAllocation";
 import { CYCLE_DAYS, ENVELOPE_TYPES } from "./lib/budgetMath";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import { computeCycleDayMetrics, computeDisplayDailyCents } from "./lib/dashboardMath";
-import { buildDefaultAllocationPlan } from "./lib/defaultAllocationPlan";
+import { buildDefaultAllocationPlan, resolveIncomeAllocation } from "./lib/defaultAllocationPlan";
 import { requireActiveAccount } from "./lib/entitlements";
 import { canReverseDistributionApplied } from "./lib/envelopeGuards";
 import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
@@ -84,8 +84,8 @@ export const createIncomeEvent = mutation({
 		extraordinaryType: v.optional(extraordinaryTypeValidator),
 		extraordinaryLabel: v.optional(v.string()),
 		distributionPolicy: v.optional(distributionPolicyValidator),
-		// Explicit distribution plan (required). Reservations + envelopes + contributions.
-		allocation: allocationPlanValidator,
+		// Omitted: server builds the plan from the profile percentages.
+		allocation: v.optional(allocationPlanValidator),
 	},
 	handler: async (ctx, args) => {
 		const profile = await requireActiveAccount(ctx);
@@ -97,36 +97,28 @@ export const createIncomeEvent = mutation({
 			});
 		}
 
-		const explicitAllocation = args.allocation;
-		const validated = validateAllocationPlan(args.amount, {
-			reservations: explicitAllocation.reservations.map((row) => ({
-				commitmentId: row.commitmentId,
-				amountCents: row.amountCents,
-			})),
-			envelopes: explicitAllocation.envelopes,
-			savingsContributions: explicitAllocation.savingsContributions.map((row) => ({
-				amountCents: row.amountCents,
-				kind: row.kind,
-				subEnvelopeId: row.subEnvelopeId,
-			})),
-			leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
-		});
-		if (!validated.ok) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: validated.message,
-				data: { field: "allocation" },
+		if (args.allocation) {
+			const validated = validateAllocationPlan(args.amount, {
+				reservations: args.allocation.reservations.map((row) => ({
+					commitmentId: row.commitmentId,
+					amountCents: row.amountCents,
+				})),
+				envelopes: args.allocation.envelopes,
+				savingsContributions: args.allocation.savingsContributions.map((row) => ({
+					amountCents: row.amountCents,
+					kind: row.kind,
+					subEnvelopeId: row.subEnvelopeId,
+				})),
+				leaveUnallocatedCents: args.allocation.leaveUnallocatedCents,
 			});
+			if (!validated.ok) {
+				throw new ConvexError({
+					code: "VALIDATION_ERROR",
+					message: validated.message,
+					data: { field: "allocation" },
+				});
+			}
 		}
-
-		const heldCents = explicitAllocation.reservations.reduce(
-			(sum, row) => sum + row.amountCents,
-			0,
-		);
-		const distributableCents =
-			explicitAllocation.envelopes.needs +
-			explicitAllocation.envelopes.wants +
-			explicitAllocation.envelopes.savings;
 
 		const incomeKind = args.incomeKind ?? "habitual";
 		let resolvedSource = args.source;
@@ -206,6 +198,15 @@ export const createIncomeEvent = mutation({
 			}
 		}
 
+		const plan = resolveIncomeAllocation({
+			amountCents: args.amount,
+			allocation: args.allocation,
+			profile,
+			distributionPolicy,
+		});
+		const heldCents = plan.reservations.reduce((sum, row) => sum + row.amountCents, 0);
+		const distributableCents = plan.envelopes.needs + plan.envelopes.wants + plan.envelopes.savings;
+
 		const now = Date.now();
 		const activeCycle = await ctx.db
 			.query("financialCycles")
@@ -260,7 +261,7 @@ export const createIncomeEvent = mutation({
 			await clearCommitmentCoverageForProfile(ctx, profile._id);
 		}
 
-		const distribution = { ...explicitAllocation.envelopes };
+		const distribution = { ...plan.envelopes };
 
 		const eventId = await ctx.db.insert("incomeEvents", {
 			profileId: profile._id,
@@ -286,20 +287,6 @@ export const createIncomeEvent = mutation({
 				.withIndex("by_profile", (q) => q.eq("profileId", profile._id))
 				.collect()
 		).find((row) => row.isSystemDefault);
-
-		const plan: AllocationPlan = {
-			reservations: explicitAllocation.reservations.map((row) => ({
-				commitmentId: row.commitmentId,
-				amountCents: row.amountCents,
-			})),
-			envelopes: explicitAllocation.envelopes,
-			savingsContributions: explicitAllocation.savingsContributions.map((row) => ({
-				amountCents: row.amountCents,
-				kind: row.kind,
-				subEnvelopeId: row.subEnvelopeId,
-			})),
-			leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
-		};
 
 		let addedUnallocated = 0;
 		try {

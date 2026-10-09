@@ -29,7 +29,14 @@ function summary(
 	} = {},
 ): ActiveSummary {
 	return {
-		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+		profile: {
+			name: "Edzon",
+			currencyCode: "PEN",
+			plan: "free",
+			allocationNeeds: 50,
+			allocationWants: 30,
+			allocationSavings: 20,
+		},
 		cycle: {
 			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
