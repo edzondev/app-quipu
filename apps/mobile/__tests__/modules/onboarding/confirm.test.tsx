@@ -137,12 +137,12 @@ describe("StepConfirm — confirmación del sistema", () => {
 		expect(screen.getByText("No se pudo crear tu sistema. Intenta de nuevo.")).toBeTruthy();
 	});
 
-	it("'Ajustar algo' vuelve al paso 3", async () => {
+	it("'Ajustar algo' vuelve al paso 2", async () => {
 		await renderConfirm(FULL_SEED);
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("confirm-adjust"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 	});
 
 	it("el back regresa al paso 4", async () => {

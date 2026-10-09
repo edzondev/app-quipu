@@ -135,7 +135,7 @@ export function StepConfirm() {
 				</Pressable>
 				<Pressable
 					testID="confirm-adjust"
-					onPress={() => dispatch({ type: "SET_STEP", payload: 3 })}
+					onPress={() => dispatch({ type: "SET_STEP", payload: 2 })}
 					className="items-center py-2"
 				>
 					<Text className="font-hanken-semibold text-[13px] text-foreground/55">Ajustar algo</Text>

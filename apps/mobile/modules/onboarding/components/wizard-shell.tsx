@@ -11,13 +11,18 @@ type WizardShellProps = {
 	stepNumber: number;
 	children: ReactNode;
 	footer?: ReactNode;
+	onBack?: () => void;
 };
 
-export function WizardShell({ stepNumber, children, footer }: WizardShellProps) {
+export function WizardShell({ stepNumber, children, footer, onBack }: WizardShellProps) {
 	const router = useRouter();
 	const { dispatch } = useOnboarding();
 
 	const goBack = () => {
+		if (onBack) {
+			onBack();
+			return;
+		}
 		if (stepNumber <= 1) {
 			if (router.canGoBack()) {
 				router.back();
