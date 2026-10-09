@@ -1,5 +1,5 @@
 import DateTimePicker from "@expo/ui/community/datetime-picker";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { Text, View } from "react-native";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
@@ -18,14 +18,8 @@ export function StepPayDate() {
 	const bounds = payDateBounds(now);
 	const form = useForm({
 		defaultValues: { nextPayDate: state.nextPayDate ?? bounds.earliest },
-		validators: {
-			onSubmit: ({ value }) => {
-				if (!isAllowedPayDate(value.nextPayDate, Date.now())) {
-					return { fields: { nextPayDate: NEXT_PAY_DATE_MESSAGE } };
-				}
-			},
-		},
 		onSubmit: ({ value }) => {
+			if (!isAllowedPayDate(value.nextPayDate, Date.now())) return;
 			dispatch({
 				type: "UPDATE",
 				payload: {
@@ -38,20 +32,18 @@ export function StepPayDate() {
 			dispatch({ type: "SET_STEP", payload: 3 });
 		},
 	});
+	const nextPayDate = useStore(form.store, (store) => store.values.nextPayDate);
+	const canContinue = isAllowedPayDate(nextPayDate, Date.now());
 
 	return (
 		<WizardShell
 			stepNumber={2}
 			footer={
-				<form.Subscribe selector={(formState) => formState.canSubmit}>
-					{(canSubmit) => (
-						<AuthButton
-							label="Continuar"
-							onPress={() => void form.handleSubmit()}
-							disabled={!canSubmit}
-						/>
-					)}
-				</form.Subscribe>
+				<AuthButton
+					label="Continuar"
+					onPress={() => void form.handleSubmit()}
+					disabled={!canContinue}
+				/>
 			}
 		>
 			<View className="gap-1">
@@ -62,9 +54,9 @@ export function StepPayDate() {
 			</View>
 			<form.Field name="nextPayDate">
 				{(field) => {
-					const fieldError = field.state.meta.errors[0];
+					const outOfRange = !isAllowedPayDate(field.state.value, Date.now());
 					const message =
-						typeof fieldError === "string" ? fieldError : state.cycleFieldErrors.nextPayDate;
+						state.cycleFieldErrors.nextPayDate ?? (outOfRange ? NEXT_PAY_DATE_MESSAGE : undefined);
 					return (
 						<View className="mt-6 gap-3">
 							<DateTimePicker

@@ -23,6 +23,7 @@ type IncomeDraft = {
 	payFrequency: FixedPayFrequency;
 	amountRaw: string;
 	mixedAmountRaw: string;
+	openingRaw: string;
 	cycleDurationDays: 15 | 30 | null;
 	sourceDraft: string;
 	sources: string[];
@@ -63,7 +64,9 @@ function toState(value: IncomeDraft): Partial<OnboardingState> {
 	return {
 		incomeModel: value.incomeModel,
 		payFrequency: variable ? null : value.payFrequency,
-		referenceIncomeCents: value.incomeModel === "fixed" ? centsFromDigits(value.amountRaw) : null,
+		referenceIncomeCents: centsFromDigits(
+			value.incomeModel === "fixed" ? value.amountRaw : value.openingRaw,
+		),
 		mixedFixedAmountCents:
 			value.incomeModel === "mixed"
 				? (centsFromDigits(value.mixedAmountRaw) ?? undefined)
@@ -81,6 +84,7 @@ export function Step1IncomeProfile() {
 			incomeModel: state.incomeModel ?? "fixed",
 			payFrequency: fixedFrequency(state.payFrequency),
 			amountRaw: digitsFromCents(state.referenceIncomeCents),
+			openingRaw: state.incomeModel === "fixed" ? "" : digitsFromCents(state.referenceIncomeCents),
 			mixedAmountRaw:
 				state.incomeModel === "mixed" ? digitsFromCents(state.mixedFixedAmountCents) : "",
 			cycleDurationDays: state.cycleDurationDays ?? null,
@@ -211,31 +215,18 @@ export function Step1IncomeProfile() {
 								if (model !== "mixed") return;
 								dispatch({
 									type: "UPDATE",
-									payload: {
-										mixedFixedAmountCents: cents ?? undefined,
-										referenceIncomeCents: null,
-									},
+									payload: { mixedFixedAmountCents: cents ?? undefined },
 								});
 							},
 							onChangeDebounceMs: INCOME_FIELD_DEBOUNCE_MS,
 						}}
 					>
 						{(field) => (
-							<View className="gap-2">
-								<AmountInput
-									label={incomeModel === "mixed" ? "PARTE FIJA" : "¿Cuánto dinero tienes hoy?"}
-									valueCents={centsFromDigits(field.state.value)}
-									onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
-								/>
-								{incomeModel === "fixed" && state.cycleFieldErrors.openingBalanceCents ? (
-									<Text
-										testID="field-error-openingBalanceCents"
-										className="font-hanken text-[13px] text-danger"
-									>
-										{state.cycleFieldErrors.openingBalanceCents}
-									</Text>
-								) : null}
-							</View>
+							<AmountInput
+								label={incomeModel === "mixed" ? "PARTE FIJA" : "¿Cuánto dinero tienes hoy?"}
+								valueCents={centsFromDigits(field.state.value)}
+								onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
+							/>
 						)}
 					</form.Field>
 				</View>
@@ -331,6 +322,29 @@ export function Step1IncomeProfile() {
 						</View>
 					) : null}
 				</View>
+			) : null}
+
+			{incomeModel !== "fixed" ? (
+				<form.Field name="openingRaw">
+					{(field) => (
+						<View className="mt-6">
+							<AmountInput
+								label="¿Cuánto dinero tienes hoy?"
+								testID="opening-balance-input"
+								valueCents={centsFromDigits(field.state.value)}
+								onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
+							/>
+						</View>
+					)}
+				</form.Field>
+			) : null}
+			{state.cycleFieldErrors.openingBalanceCents ? (
+				<Text
+					testID="field-error-openingBalanceCents"
+					className="mt-2 font-hanken text-[13px] text-danger"
+				>
+					{state.cycleFieldErrors.openingBalanceCents}
+				</Text>
 			) : null}
 		</WizardShell>
 	);

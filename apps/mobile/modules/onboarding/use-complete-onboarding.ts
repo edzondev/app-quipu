@@ -54,14 +54,19 @@ export function useCompleteOnboarding() {
 		}
 		const openingBalanceCents = state.referenceIncomeCents ?? 0;
 		try {
-			const profileId = await createProfile(buildOnboardingPayload(state));
+			let profileId = state.savedProfileId;
+			if (profileId == null) {
+				profileId = await createProfile(buildOnboardingPayload(state));
+				dispatch({ type: "UPDATE", payload: { savedProfileId: profileId } });
+			}
 			const valid = state.commitments.filter(isCommitmentValid);
-			if (valid.length > 0) {
+			if (valid.length > 0 && !state.commitmentsSaved) {
 				try {
 					await createBulk({
 						profileId,
 						commitments: valid.map(toBulkCommitment),
 					});
+					dispatch({ type: "UPDATE", payload: { commitmentsSaved: true } });
 				} catch {
 					setCommitmentsFailed(true);
 					setError(COMMITMENTS_ERROR);

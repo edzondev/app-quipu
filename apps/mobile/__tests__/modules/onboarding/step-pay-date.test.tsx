@@ -77,6 +77,34 @@ describe("¿Cuándo cobras?", () => {
 		expect(screen.getByTestId("probe-step").props.children).toBe("3");
 	});
 
+	it("un día fuera de rango deshabilita Continuar y un día válido lo reactiva", async () => {
+		function Gate() {
+			const { state, dispatch } = useOnboarding();
+			useEffect(() => {
+				if (state.nextPayDate !== "2026-10-09") {
+					dispatch({ type: "UPDATE", payload: { nextPayDate: "2026-10-09" } });
+				}
+			}, [dispatch, state.nextPayDate]);
+			if (state.nextPayDate !== "2026-10-09") return null;
+			return <StepPayDate />;
+		}
+		await render(
+			<OnboardingProvider>
+				<Gate />
+			</OnboardingProvider>,
+		);
+		const button = () => screen.getByRole("button", { name: "Continuar" });
+		expect(button().props.accessibilityState.disabled).toBe(true);
+		expect(screen.getByTestId("field-error-nextPayDate")).toBeTruthy();
+		await act(async () => {
+			screen
+				.getByTestId("pay-date-picker")
+				.props.onValueChange({}, payDateToPickerDate("2026-10-10"));
+		});
+		expect(button().props.accessibilityState.disabled).toBe(false);
+		expect(screen.queryByTestId("field-error-nextPayDate")).toBeNull();
+	});
+
 	it("muestra el error del servidor en el campo de la fecha", async () => {
 		await render(
 			<OnboardingProvider>

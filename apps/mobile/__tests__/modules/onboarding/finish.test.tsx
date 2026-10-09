@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useEffect } from "react";
+import { Pressable } from "react-native";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import type { OnboardingState } from "@/shared/lib/onboarding/types";
@@ -49,13 +50,29 @@ const SEED: Partial<OnboardingState> = {
 	],
 };
 
-function Host() {
-	const { dispatch } = useOnboarding();
+function Host({ remount = false }: { remount?: boolean }) {
+	const { state, dispatch } = useOnboarding();
 	useEffect(() => {
 		dispatch({ type: "UPDATE", payload: SEED });
 		dispatch({ type: "SET_STEP", payload: 5 });
 	}, [dispatch]);
-	return <StepConfirm />;
+	return (
+		<>
+			{state.step === 5 ? <StepConfirm /> : null}
+			{remount ? (
+				<>
+					<Pressable
+						testID="leave-confirm"
+						onPress={() => dispatch({ type: "SET_STEP", payload: 2 })}
+					/>
+					<Pressable
+						testID="go-confirm"
+						onPress={() => dispatch({ type: "SET_STEP", payload: 5 })}
+					/>
+				</>
+			) : null}
+		</>
+	);
 }
 
 describe("Empezar mi ciclo", () => {
@@ -172,6 +189,58 @@ describe("Empezar mi ciclo", () => {
 		});
 		expect(mockStartFirstCycle).toHaveBeenCalledTimes(2);
 		expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+	});
+
+	it("si el ciclo falla, reintentar no vuelve a crear los compromisos", async () => {
+		mockStartFirstCycle.mockRejectedValueOnce(new Error("cycle down"));
+		await render(
+			<OnboardingProvider>
+				<Host />
+			</OnboardingProvider>,
+		);
+		await act(async () => {
+			fireEvent.press(screen.getByText("Empezar mi ciclo"));
+		});
+		expect(mockCreateProfile).toHaveBeenCalledTimes(1);
+		expect(mockCreateBulk).toHaveBeenCalledTimes(1);
+		await act(async () => {
+			fireEvent.press(screen.getByText("Reintentar"));
+		});
+		expect(mockCreateProfile).toHaveBeenCalledTimes(1);
+		expect(mockCreateBulk).toHaveBeenCalledTimes(1);
+		expect(mockStartFirstCycle).toHaveBeenCalledTimes(2);
+	});
+
+	it("tras un VALIDATION_ERROR, volver y confirmar no duplica compromisos", async () => {
+		mockStartFirstCycle.mockRejectedValueOnce({
+			data: {
+				code: "VALIDATION_ERROR",
+				message: "Tu próxima fecha de cobro debe estar entre mañana y los próximos 31 días.",
+				data: { field: "nextPayDate" },
+			},
+		});
+		await render(
+			<OnboardingProvider>
+				<Host remount />
+			</OnboardingProvider>,
+		);
+		await act(async () => {
+			fireEvent.press(screen.getByText("Empezar mi ciclo"));
+		});
+		expect(mockCreateBulk).toHaveBeenCalledTimes(1);
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("leave-confirm"));
+		});
+		expect(screen.queryByText("Empezar mi ciclo")).toBeNull();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("go-confirm"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Empezar mi ciclo"));
+		});
+		expect(mockCreateProfile).toHaveBeenCalledTimes(1);
+		expect(mockCreateBulk).toHaveBeenCalledTimes(1);
+		expect(mockStartFirstCycle).toHaveBeenCalledTimes(2);
 	});
 
 	it("ALREADY_EXISTS sigue a Inicio", async () => {

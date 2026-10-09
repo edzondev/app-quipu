@@ -7,6 +7,8 @@ export type IncomeModel = CreateProfileArgs["incomeModel"];
 export type PayFrequency = NonNullable<CreateProfileArgs["payFrequency"]>;
 export type CycleField = keyof StartFirstCycleArgs;
 export type CycleFieldErrors = Partial<Record<CycleField, string>>;
+type BulkArgs = FunctionArgs<typeof api.fixedCommitments.createCommitmentsBulk>;
+export type SavedProfileId = BulkArgs["profileId"];
 export const WIZARD_STEPS = [1, 2, 3, 4, 5] as const;
 export type WizardStep = (typeof WIZARD_STEPS)[number];
 export type EnvelopeKey = "needs" | "wants" | "savings";
@@ -34,6 +36,8 @@ export type OnboardingState = {
 	allocationWants: number;
 	allocationSavings: number;
 	commitments: DraftCommitment[];
+	savedProfileId: SavedProfileId | null;
+	commitmentsSaved: boolean;
 };
 
 export type OnboardingAction =
