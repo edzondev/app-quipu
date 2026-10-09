@@ -1,7 +1,7 @@
 import { Redirect, router } from "expo-router";
 import { useEffect } from "react";
 import { View } from "react-native";
-import { IntroCarousel } from "@/modules/onboarding/components/intro-carousel";
+import { Welcome } from "@/modules/onboarding/components/welcome";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
 export default function OnboardingIndexScreen() {
@@ -20,7 +20,7 @@ export default function OnboardingIndexScreen() {
 	if (!isAuthReady) {
 		return (
 			<View className="flex-1 bg-background px-0 pt-16">
-				<IntroCarousel />
+				<Welcome />
 			</View>
 		);
 	}
