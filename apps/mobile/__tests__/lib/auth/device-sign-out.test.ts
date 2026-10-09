@@ -22,7 +22,7 @@ import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 describe("signOutAndClearLocalData", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		mockSignOut.mockResolvedValue(undefined);
+		mockSignOut.mockResolvedValue({ error: null });
 		mockGet.mockResolvedValue(null);
 		mockDelete.mockResolvedValue(undefined);
 	});

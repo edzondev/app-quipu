@@ -161,6 +161,10 @@ describe("SettingsScreen", () => {
 		const confirm = view.getByRole("button", { name: "Confirmar cierre de sesión" });
 		await act(async () => {
 			fireEvent.press(confirm);
+		});
+		expect(view.getByText("Cerrando…")).toBeTruthy();
+		expect(confirm.props.accessibilityState.disabled).toBe(true);
+		await act(async () => {
 			fireEvent.press(confirm);
 		});
 		expect(mockClear).toHaveBeenCalledTimes(1);
@@ -195,7 +199,7 @@ describe("SettingsScreen", () => {
 		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
 		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
 		expect(OFFLINE_SIGN_OUT_MESSAGE).toBe(
-			"Cerraste sesión en este teléfono. No pudimos avisar al servidor; se cerrará sola cuando venza.",
+			"Cerraste sesión en este teléfono. Vuelve a intentarlo con conexión para cerrarla en todos lados.",
 		);
 		expect(welcome.queryByText(/Network request failed|token secreto/)).toBeNull();
 		await welcome.unmount();

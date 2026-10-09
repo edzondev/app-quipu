@@ -6,7 +6,10 @@ import { clearedAuthSession, signOutAndClearDevice } from "@/shared/lib/auth/dev
 export function signOutAndClearLocalData() {
 	return signOutAndClearDevice({
 		storagePrefix: authStoragePrefix,
-		signOut: () => authClient.signOut(),
+		signOut: async () => {
+			const result = await authClient.signOut();
+			if (result.error) throw result.error;
+		},
 		readSecure: (key) => SecureStore.getItemAsync(key),
 		deleteSecure: (key) => SecureStore.deleteItemAsync(key),
 		resetConvex: resetConvexClient,

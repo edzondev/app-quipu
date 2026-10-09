@@ -21,6 +21,7 @@ type Props = {
 export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props) {
 	const router = useRouter();
 	const [confirming, setConfirming] = useState(false);
+	const [closing, setClosing] = useState(false);
 	const pending = useRef(false);
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
@@ -31,6 +32,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	async function confirmSignOut() {
 		if (pending.current) return;
 		pending.current = true;
+		setClosing(true);
 		try {
 			const result = await signOutAndClearLocalData();
 			if (result?.serverNotified === false) noteOfflineSignOut();
@@ -133,13 +135,15 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 							<Pressable
 								accessibilityRole="button"
 								accessibilityLabel="Confirmar cierre de sesión"
+								accessibilityState={{ disabled: closing }}
+								disabled={closing}
 								onPress={() => {
 									void confirmSignOut();
 								}}
 								className="mt-[22px] items-center rounded-xl bg-danger py-4 active:opacity-80"
 							>
 								<Text className="font-hanken-semibold text-[15px] text-background">
-									Cerrar sesión
+									{closing ? "Cerrando…" : "Cerrar sesión"}
 								</Text>
 							</Pressable>
 							<Pressable

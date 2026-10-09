@@ -14,7 +14,7 @@ export const SIGNED_OUT_HREF = "/(onboarding)";
 
 /** Aviso fijo cuando el teléfono ya olvidó la sesión y el servidor no se enteró. */
 export const OFFLINE_SIGN_OUT_MESSAGE =
-	"Cerraste sesión en este teléfono. No pudimos avisar al servidor; se cerrará sola cuando venza.";
+	"Cerraste sesión en este teléfono. Vuelve a intentarlo con conexión para cerrarla en todos lados.";
 
 export type AuthSessionSnapshot = {
 	data: unknown;
