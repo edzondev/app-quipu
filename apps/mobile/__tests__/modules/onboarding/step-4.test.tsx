@@ -213,12 +213,12 @@ describe("Step4Commitments — compromisos", () => {
 		expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
 	});
 
-	it("el back del paso 4 regresa al paso 3 (SET_STEP 3)", async () => {
+	it("el back del paso 4 regresa al paso 2", async () => {
 		await renderStep4();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 		expect(mockBack).not.toHaveBeenCalled();
 	});
 });

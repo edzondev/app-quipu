@@ -1,5 +1,9 @@
-export type IncomeModel = "fixed" | "variable" | "mixed";
-export type PayFrequency = "monthly" | "biweekly" | "weekly";
+import type { api } from "@quipu/convex-api";
+import type { FunctionArgs } from "convex/server";
+
+export type CreateProfileArgs = FunctionArgs<typeof api.profiles.createProfile>;
+export type IncomeModel = CreateProfileArgs["incomeModel"];
+export type PayFrequency = NonNullable<CreateProfileArgs["payFrequency"]>;
 export type WizardStep = 1 | 2 | 3 | 4 | "confirm" | "success";
 export type EnvelopeKey = "needs" | "wants" | "savings";
 

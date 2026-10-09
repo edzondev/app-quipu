@@ -78,14 +78,14 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 
 	it("muestra el header del paso 03, las 3 filas y el indicador de suma", async () => {
 		await renderStep3(null);
-		expect(screen.getByText("TU SISTEMA · 03/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 02/04")).toBeTruthy();
 		expect(screen.getByText("Necesidades")).toBeTruthy();
 		expect(screen.getByText("Gustos")).toBeTruthy();
 		expect(screen.getByText("Ahorro")).toBeTruthy();
 		expect(screen.getByTestId("allocation-percent-needs").props.children).toBe("50%");
 		expect(screen.getByTestId("allocation-percent-wants").props.children).toBe("30%");
 		expect(screen.getByTestId("allocation-percent-savings").props.children).toBe("20%");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 		expect(screen.getByTestId("icon-check")).toBeTruthy();
 	});
 
@@ -111,7 +111,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-savings").props.children).toBe("16");
 		expect(screen.getByTestId("allocation-percent-wants").props.children).toBe("24%");
 		expect(screen.getByTestId("allocation-percent-savings").props.children).toBe("16%");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 		expect(screen.getByTestId("allocation-amount-needs").props.children).toBe("S/ 2,100");
 		expect(screen.getByTestId("allocation-amount-wants").props.children).toBe("S/ 840");
 		expect(screen.getByTestId("allocation-amount-savings").props.children).toBe("S/ 560");
@@ -123,7 +123,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-needs").props.children).toBe("43");
 		expect(screen.getByTestId("probe-wants").props.children).toBe("40");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("17");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 	});
 
 	it("redondea valores flotantes del slider a enteros (60.65… → 61, suma 100)", async () => {
@@ -132,7 +132,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-needs").props.children).toBe("61");
 		expect(screen.getByTestId("probe-wants").props.children).toBe("23");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("16");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 	});
 
 	it("'Volver al 50/30/20 recomendado' restaura los defaults", async () => {
@@ -146,6 +146,14 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-wants").props.children).toBe("30");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("20");
 		expect(screen.getByTestId("allocation-amount-needs").props.children).toBe("S/ 1,750");
+	});
+
+	it("desde el paso 3, Atrás va al paso 2", async () => {
+		await renderStep3(null);
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("wizard-back"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 	});
 
 	it("Continuar avanza al paso confirm", async () => {
