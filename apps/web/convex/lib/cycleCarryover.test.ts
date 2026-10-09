@@ -188,4 +188,34 @@ describe("evaluateCycleCompliance with carryover", () => {
 			]),
 		).toBe("failed");
 	});
+
+	it("does not fail a normal spend in the opening cycle, and fails when that balance is overspent", () => {
+		const opening = (
+			type: "needs" | "wants" | "savings",
+			allocatedAmount: number,
+			remainingAmount: number,
+		) => ({
+			type,
+			allocatedAmount,
+			remainingAmount,
+			carriedOverCents: allocatedAmount,
+		});
+		const withinBalance = [
+			opening("needs", 10_000, 9_000),
+			opening("wants", 3_000, 3_000),
+			opening("savings", 2_000, 2_000),
+		];
+		expect(evaluateCycleCompliance(withinBalance, true)).toBe("compliant");
+		expect(evaluateCycleCompliance(withinBalance)).toBe("failed");
+		expect(
+			evaluateCycleCompliance(
+				[
+					opening("needs", 10_000, -1_000),
+					opening("wants", 3_000, 3_000),
+					opening("savings", 2_000, 2_000),
+				],
+				true,
+			),
+		).toBe("failed");
+	});
 });
