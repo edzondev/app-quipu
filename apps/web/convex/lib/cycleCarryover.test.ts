@@ -84,6 +84,31 @@ describe("computeCycleCarryover", () => {
 		).toEqual({ needs: 0, wants: 0, savings: 4_600, extraordinary: 1_600 });
 	});
 
+	it("still carries closed leftovers when an extraordinary income opens the cycle", () => {
+		const closed = carry({
+			needs: 1_000,
+			wants: 200,
+			savings: 500,
+			extraordinarySavings: 300,
+		});
+		expect(closed.extraordinary).toBe(300);
+		expect(envelopeWithCarry(0, closed.needs)).toEqual({
+			allocatedAmount: 1_000,
+			remainingAmount: 1_000,
+			carriedOverCents: 1_000,
+		});
+		expect(envelopeWithCarry(0, closed.wants)).toEqual({
+			allocatedAmount: 200,
+			remainingAmount: 200,
+			carriedOverCents: 200,
+		});
+		expect(envelopeWithCarry(8_000, closed.savings)).toEqual({
+			allocatedAmount: 8_500,
+			remainingAmount: 8_500,
+			carriedOverCents: 500,
+		});
+	});
+
 	it("returns zeros once carriedOverToCycleId is set", () => {
 		expect(
 			carry({
