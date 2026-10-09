@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildCycleCloseReport,
 	buildCycleLabel,
+	type CycleCloseReportInput,
 	computeEnvelopeSpentCents,
 	isCloseReportEligible,
 	isJustClosedAfterCycleClose,
@@ -68,6 +69,29 @@ describe("buildCycleCloseReport", () => {
 		expect(result.streak).toBe(2);
 		expect(result.status).toBe("warning");
 		expect(result.hasExtraordinaryIncome).toBe(false);
+	});
+
+	it("is identical before and after a surplus move that leaves remaining in place", () => {
+		const input: CycleCloseReportInput = {
+			cycleStartDate: Date.UTC(2026, 6, 1),
+			incomeEvents: [{ amount: 3_500_00, incomeKind: "habitual" }],
+			envelopes: [
+				{ type: "needs", allocatedAmount: 1_750_00, remainingAmount: 250_00 },
+				{ type: "wants", allocatedAmount: 1_050_00, remainingAmount: 400_00 },
+				{ type: "savings", allocatedAmount: 700_00, remainingAmount: 200_00 },
+			],
+			cycleHistory: { status: "warning" },
+			streak: 2,
+		};
+		const before = buildCycleCloseReport(input);
+		const after = buildCycleCloseReport(input);
+
+		expect(after).toEqual(before);
+		expect(before.spendByEnvelope).toEqual([
+			{ type: "needs", label: "Necesidades", spentCents: 1_500_00 },
+			{ type: "wants", label: "Gustos", spentCents: 650_00 },
+			{ type: "savings", label: "Ahorro", spentCents: 500_00 },
+		]);
 	});
 
 	it("flags extraordinary income in the report", () => {

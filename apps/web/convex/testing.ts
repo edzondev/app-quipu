@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { isDevelopmentDeployment } from "./lib/deployment";
+import { assertDevCloudOnly } from "./lib/devCloudGuard";
 import { assertAccountActive } from "./lib/entitlements";
 
 /**
@@ -8,12 +9,13 @@ import { assertAccountActive } from "./lib/entitlements";
  *
  * Existe porque los smoke tests del rescate premium (`smoke.p0.spec.ts`) no
  * pueden pasar por el flujo real de facturación (Polar, pendiente). El guard
- * de deployment la hace inejecutable en producción. Acepta `dev:` y
- * `anonymous:` (Cloud Agent) vía `isDevelopmentDeployment()`.
+ * de deployment la hace inejecutable en producción: `CONVEX_CLOUD_URL` debe
+ * ser perceptive-elk-229 y `isDevelopmentDeployment()` debe aceptar el entorno.
  */
 export const setMyPlan = mutation({
 	args: { plan: v.union(v.literal("free"), v.literal("premium")) },
 	handler: async (ctx, args) => {
+		assertDevCloudOnly(process.env.CONVEX_CLOUD_URL);
 		if (!isDevelopmentDeployment()) {
 			throw new ConvexError({
 				code: "FORBIDDEN",
