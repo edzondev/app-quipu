@@ -2,7 +2,6 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { shouldWarnWantsBurn } from "./lib/budgetMath";
 import { buildWantsOverflowNudge, WANTS_OVERFLOW_EVENT } from "./lib/coachState";
-import { activeCycleAcceptsExpense } from "./lib/cycleExpiry";
 import { requireActiveAccount } from "./lib/entitlements";
 import { isEnvelopeFrozen } from "./lib/envelopeGuards";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
@@ -26,12 +25,11 @@ export const registerExpense = mutation({
 			});
 		}
 
-		const now = Date.now();
 		const activeCycle = await ctx.db
 			.query("financialCycles")
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "active"))
 			.unique();
-		if (activeCycle === null || !activeCycleAcceptsExpense(activeCycle, now)) {
+		if (!activeCycle) {
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
 				message: "No hay un ciclo financiero activo. Procesa tu día de pago primero.",
@@ -54,6 +52,7 @@ export const registerExpense = mutation({
 			});
 		}
 
+		const now = Date.now();
 		if (isEnvelopeFrozen(envelope.frozenUntil, now)) {
 			throw new ConvexError({
 				code: "ENVELOPE_FROZEN",

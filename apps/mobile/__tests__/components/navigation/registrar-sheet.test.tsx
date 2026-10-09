@@ -121,8 +121,30 @@ describe("RegistrarSheet", () => {
 
 	it("con ciclo vencido ofrece Gasto, Sueldo y Extra, y el sueldo cierra el ciclo", async () => {
 		const open = summaryWithCycle();
-		mockSummary.mockReturnValue({ ...open, cycle: { ...open.cycle, pastEnd: true } });
-		home.mockReturnValue(readyHome);
+		mockSummary.mockReturnValue({
+			...open,
+			cycle: { ...open.cycle, pastEnd: true },
+			closedCycle: {
+				cycleId: open.cycle.id,
+				startDate: open.cycle.startDate,
+				endDate: open.cycle.endDate,
+				surplusCents: -1_500,
+				surplusMovedAt: null,
+			},
+		});
+		home.mockReturnValue({
+			status: "closed",
+			profileName: "Edzon",
+			profileInitial: "E",
+			currencySymbol: "S/",
+			closedCycle: {
+				cycleId: open.cycle.id,
+				startDate: open.cycle.startDate,
+				endDate: open.cycle.endDate,
+				surplusCents: -1_500,
+				surplusMovedAt: null,
+			},
+		});
 		const view = await render(
 			<RegistrarSheet isPresented session={{ nonce: 4, intent: "income" }} onDismiss={jest.fn()} />,
 		);

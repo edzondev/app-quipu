@@ -1,6 +1,7 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import {
+	dashboardClosedCycle,
 	findLatestClosedCycle,
 	loadClosedCycleSurplusAmounts,
 	summaryClosedCycle,
@@ -17,7 +18,6 @@ import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
-import { pastEndClosedCard } from "./lib/cycleExpiry";
 import {
 	buildEarlyCycleHeroBody,
 	buildValidationCopy,
@@ -416,16 +416,17 @@ export const getSummary = query({
 			movements,
 			isEarlyCycle,
 			closedCycle: pastEnd
-				? pastEndClosedCard({
-						pastEnd,
-						cycle: activeCycle,
-						envelopes: envelopesRaw,
-						incomeEvents: incomesForCycle,
-						surplusContributions: await ctx.db
-							.query("surplusContributions")
-							.withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-							.collect(),
-					})
+				? dashboardClosedCycle(
+						activeCycle,
+						(
+							await loadClosedCycleSurplusAmounts(
+								ctx,
+								activeCycle._id,
+								activeCycle.closeSurplusMovedAt,
+								activeCycle.carriedOverToCycleId,
+							)
+						).signedSurplusCents,
+					)
 				: summaryClosedCycle(true, null, 0),
 		};
 	},

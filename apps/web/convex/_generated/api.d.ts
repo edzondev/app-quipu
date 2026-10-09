@@ -43,7 +43,6 @@ import type * as lib_crisisPlan from "../lib/crisisPlan.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
 import type * as lib_cycleCloseReport from "../lib/cycleCloseReport.js";
 import type * as lib_cycleCorrection from "../lib/cycleCorrection.js";
-import type * as lib_cycleExpiry from "../lib/cycleExpiry.js";
 import type * as lib_cycleForecast from "../lib/cycleForecast.js";
 import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
@@ -158,7 +157,6 @@ declare const fullApi: ApiFromModules<{
   "lib/crisisResolution": typeof lib_crisisResolution;
   "lib/cycleCloseReport": typeof lib_cycleCloseReport;
   "lib/cycleCorrection": typeof lib_cycleCorrection;
-  "lib/cycleExpiry": typeof lib_cycleExpiry;
   "lib/cycleForecast": typeof lib_cycleForecast;
   "lib/cycleSavingsBreakdown": typeof lib_cycleSavingsBreakdown;
   "lib/dashboardMath": typeof lib_dashboardMath;
