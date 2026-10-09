@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { EnvelopeChoices } from "@/shared/components/expenses/envelope-choices";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import {
+	COMMITMENT_QUICK_NAMES,
 	type CommitmentFormValues,
 	type CreateCommitmentArgs,
 	DUE_DAY_ERROR,
@@ -12,8 +13,6 @@ import {
 } from "@/shared/lib/commitments/model";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
-
-const QUICK_NAMES = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"] as const;
 
 const DEFAULT_VALUES: CommitmentFormValues = {
 	name: "",
@@ -96,7 +95,7 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 			</form.Field>
 
 			<View className="mt-4 flex-row flex-wrap gap-2">
-				{QUICK_NAMES.map((name) => (
+				{COMMITMENT_QUICK_NAMES.map((name) => (
 					<Pressable
 						key={name}
 						accessibilityRole="button"

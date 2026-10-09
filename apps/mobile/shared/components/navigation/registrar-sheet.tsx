@@ -21,6 +21,8 @@ import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 type Session = {
 	nonce: number;
 	intent: RegistrarIntent;
+	incomeAmountCents?: number;
+	incomePrompt?: string;
 };
 
 type Props = {
@@ -39,13 +41,13 @@ export default function RegistrarSheet({ isPresented, session, onDismiss }: Prop
 			containerColor="#FBFAF7"
 		>
 			<RNHostView>
-				<SheetBody key={session.nonce} intent={session.intent} onDone={onDismiss} />
+				<SheetBody key={session.nonce} session={session} onDone={onDismiss} />
 			</RNHostView>
 		</BottomSheet>
 	);
 }
 
-function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => void }) {
+function SheetBody({ session, onDone }: { session: Session; onDone: () => void }) {
 	const router = useRouter();
 	const { register } = useExpenseActions();
 	const { register: registerIncome } = useIncomeActions();
@@ -54,12 +56,14 @@ function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => 
 	const noCycle = home.status === "empty";
 	const hasCycle = home.status === "ready";
 	const [picked, setPicked] = useState<RegistrarMode | null>(null);
-	const mode =
-		home.status === "loading"
+	const forcedIncome = session.incomePrompt != null;
+	const mode = forcedIncome
+		? "income"
+		: home.status === "loading"
 			? null
 			: noCycle
 				? "income"
-				: (picked ?? resolveRegistrarMode(intent, hasCycle));
+				: (picked ?? resolveRegistrarMode(session.intent, hasCycle));
 	const [fieldError, setFieldError] = useState<{
 		field: ExpenseValidationError["field"];
 		message: string;
@@ -116,9 +120,9 @@ function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => 
 			<View className="px-[22px] pt-1.5">
 				<ModeSwitch
 					value={mode}
-					expenseDisabled={noCycle}
+					expenseDisabled={noCycle || forcedIncome}
 					onChange={(next) => {
-						if (noCycle && next === "expense") return;
+						if ((noCycle || forcedIncome) && next === "expense") return;
 						setPicked(next);
 						setFieldError(null);
 						setFormError(null);
@@ -129,6 +133,8 @@ function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => 
 				<IncomeSheetForm
 					currencySymbol={currencySymbol}
 					formError={formError}
+					initialAmountCents={session.incomeAmountCents}
+					prompt={session.incomePrompt}
 					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
 					onCancel={onDone}
 				/>

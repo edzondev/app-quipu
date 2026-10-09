@@ -30,9 +30,9 @@ describe("onboardingReducer", () => {
 	it("SET_STEP cambia el paso", () => {
 		const next = onboardingReducer(baseState, {
 			type: "SET_STEP",
-			payload: "confirm",
+			payload: 4,
 		});
-		expect(next.step).toBe("confirm");
+		expect(next.step).toBe(4);
 		expect(next.incomeModel).toBe("fixed");
 	});
 
