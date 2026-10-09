@@ -1,16 +1,22 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
-import { limaStartOfDay } from "../../shared/lib/date";
 import { computeCycleCarryover, envelopeWithCarry } from "./cycleCarryover";
 import { MS_PER_DAY } from "./dashboardMath";
-import { openingCycleSkipsProgress, streakAfterClose } from "./evaluateClosedCycle";
+import {
+	openingCycleSkipsStreak,
+	streakAfterClose,
+	wantsWithinBudgetOnClose,
+} from "./evaluateClosedCycle";
 import {
 	assertFirstCycleAvailable,
 	assertOpeningBalanceCents,
 	FIRST_CYCLE_EXISTS_MESSAGE,
+	firstCycleOnboardingRetry,
 	OPENING_BALANCE_MESSAGE,
+	onboardingCompleteOnCreate,
 	openingEnvelopes,
 } from "./firstCycle";
+import { buildCycleChartBars } from "./gamificationMath";
 import { resolveCycleForIncome } from "./incomeEventLogic";
 
 const WEIGHTS = {
@@ -64,6 +70,26 @@ describe("openingEnvelopes", () => {
 	});
 });
 
+describe("onboarding and the first cycle", () => {
+	it("leaves onboarding incomplete when createProfile defers it", () => {
+		expect(onboardingCompleteOnCreate(undefined)).toBe(true);
+		expect(onboardingCompleteOnCreate(true)).toBe(true);
+		expect(onboardingCompleteOnCreate(false)).toBe(false);
+	});
+
+	it("marks onboarding complete with the existing cycle instead of a half retry", () => {
+		expect(firstCycleOnboardingRetry({ hasCycle: false, onboardingComplete: false })).toEqual({
+			action: "create",
+		});
+		expect(firstCycleOnboardingRetry({ hasCycle: true, onboardingComplete: true })).toEqual({
+			action: "already_exists",
+		});
+		expect(firstCycleOnboardingRetry({ hasCycle: true, onboardingComplete: false })).toEqual({
+			action: "complete_existing",
+		});
+	});
+});
+
 describe("assertFirstCycleAvailable", () => {
 	it("rejects when the profile already has a personal cycle", () => {
 		expect(() => assertFirstCycleAvailable(false)).not.toThrow();
@@ -82,7 +108,7 @@ describe("assertFirstCycleAvailable", () => {
 
 describe("streakAfterClose", () => {
 	it("neither adds to nor breaks the streak for an opening cycle", () => {
-		expect(openingCycleSkipsProgress(true)).toBe(true);
+		expect(openingCycleSkipsStreak(true)).toBe(true);
 		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
@@ -101,9 +127,38 @@ describe("streakAfterClose", () => {
 		).toBeNull();
 	});
 
+	it("counts the opening cycle in progress like any other cycle and still skips the streak", () => {
+		const openingStart = Date.parse("2026-10-09T15:30:00-05:00");
+		const laterStart = Date.parse("2026-11-09T15:30:00-05:00");
+		const bars = buildCycleChartBars([
+			{ status: "compliant", evaluatedAt: 1, cycleStart: openingStart },
+			{ status: "warning", evaluatedAt: 2, cycleStart: laterStart },
+		]);
+		expect(bars.some((bar) => bar.cycleStart === openingStart && bar.status === "compliant")).toBe(
+			true,
+		);
+		expect(bars.some((bar) => bar.cycleStart === laterStart && bar.status === "warning")).toBe(
+			true,
+		);
+		expect(
+			wantsWithinBudgetOnClose({ remainingAmount: 2_500, carriedOverCents: 3_000 }, true),
+		).toBe(true);
+		expect(
+			wantsWithinBudgetOnClose({ remainingAmount: 2_500, carriedOverCents: 3_000 }, false),
+		).toBe(false);
+		expect(
+			streakAfterClose({
+				isOpeningCycle: true,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBeNull();
+	});
+
 	it("still updates the streak for a regular closed cycle", () => {
-		expect(openingCycleSkipsProgress(undefined)).toBe(false);
-		expect(openingCycleSkipsProgress(false)).toBe(false);
+		expect(openingCycleSkipsStreak(undefined)).toBe(false);
+		expect(openingCycleSkipsStreak(false)).toBe(false);
 		expect(
 			streakAfterClose({
 				isOpeningCycle: undefined,
@@ -141,28 +196,17 @@ describe("income against the opening cycle", () => {
 		});
 	}
 
-	it("keeps a habitual income three days before payday on the opening cycle", () => {
-		const occurredAt = endDate - 3 * MS_PER_DAY;
-		expect(
-			resolveCycleForIncome({
-				activeCycle: opening,
-				occurredAt,
-				now: occurredAt,
-				incomeKind: "habitual",
-			}),
-		).toBe("opening");
-	});
-
-	it("opens the next cycle and carries a habitual income two days before payday", () => {
-		const occurredAt = endDate - 2 * MS_PER_DAY;
-		expect(
-			resolveCycleForIncome({
-				activeCycle: opening,
-				occurredAt,
-				now: occurredAt,
-				incomeKind: "habitual",
-			}),
-		).toBeNull();
+	it("closes on a habitual income at any date, including 10 days before payday", () => {
+		for (const occurredAt of [endDate - 10 * MS_PER_DAY, endDate - 3 * MS_PER_DAY, endDate]) {
+			expect(
+				resolveCycleForIncome({
+					activeCycle: opening,
+					occurredAt,
+					now: occurredAt,
+					incomeKind: "habitual",
+				}),
+			).toBeNull();
+		}
 		const carry = openingCarry();
 		expect(carry).toEqual({ needs: 5_000, wants: 3_000, savings: 2_000, extraordinary: 0 });
 		expect(envelopeWithCarry(5_000, carry.needs)).toEqual({
@@ -170,37 +214,6 @@ describe("income against the opening cycle", () => {
 			remainingAmount: 10_000,
 			carriedOverCents: 5_000,
 		});
-	});
-
-	it("opens the next cycle and carries a habitual income one day before payday", () => {
-		const occurredAt = endDate - MS_PER_DAY;
-		expect(
-			resolveCycleForIncome({
-				activeCycle: opening,
-				occurredAt,
-				now: occurredAt,
-				incomeKind: "habitual",
-			}),
-		).toBeNull();
-		expect(openingCarry()).toEqual({
-			needs: 5_000,
-			wants: 3_000,
-			savings: 2_000,
-			extraordinary: 0,
-		});
-	});
-
-	it("opens the next cycle and carries a habitual income on the pay day", () => {
-		expect(
-			resolveCycleForIncome({
-				activeCycle: opening,
-				occurredAt: endDate,
-				now: endDate,
-				incomeKind: "habitual",
-			}),
-		).toBeNull();
-		expect(openingCarry().needs).toBe(5_000);
-		expect(envelopeWithCarry(5_000, openingCarry().needs).carriedOverCents).toBe(5_000);
 	});
 
 	it("keeps an extraordinary income one day before payday on the opening cycle", () => {
@@ -215,29 +228,44 @@ describe("income against the opening cycle", () => {
 		).toBe("opening");
 	});
 
-	it("keeps a habitual income dated at Lima start of today on the opening cycle", () => {
-		const now = Date.parse("2026-10-09T15:30:00-05:00");
-		const startOfToday = limaStartOfDay(now);
-		expect(startOfToday).toBeLessThan(now);
+	it("keeps an extraordinary income on payday and before the opening cycle", () => {
 		expect(
 			resolveCycleForIncome({
-				activeCycle: { ...opening, startDate: startOfToday },
-				occurredAt: startOfToday,
-				now,
-				incomeKind: "habitual",
+				activeCycle: opening,
+				occurredAt: endDate,
+				now: endDate,
+				incomeKind: "extraordinary",
+			}),
+		).toBe("opening");
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: startDate - MS_PER_DAY,
+				now: endDate,
+				incomeKind: "extraordinary",
 			}),
 		).toBe("opening");
 	});
 
-	it("does not apply the early window to a regular cycle", () => {
-		const occurredAt = endDate - 2 * MS_PER_DAY;
+	it("treats a missing income kind as habitual at any date", () => {
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: endDate - 10 * MS_PER_DAY,
+				now: endDate - 10 * MS_PER_DAY,
+				incomeKind: undefined,
+			}),
+		).toBeNull();
+	});
+
+	it("closes a regular cycle on a habitual income 10 days before the end", () => {
 		expect(
 			resolveCycleForIncome({
 				activeCycle: { ...opening, isOpeningCycle: false },
-				occurredAt,
-				now: occurredAt,
+				occurredAt: endDate - 10 * MS_PER_DAY,
+				now: endDate - 10 * MS_PER_DAY,
 				incomeKind: "habitual",
 			}),
-		).toBe("opening");
+		).toBeNull();
 	});
 });

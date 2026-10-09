@@ -17,6 +17,20 @@ export function assertOpeningBalanceCents(openingBalanceCents: number): void {
 	});
 }
 
+/** Web onboarding finishes here. Mobile defers the flag to `startFirstCycle`. */
+export function onboardingCompleteOnCreate(completeOnboarding: boolean | undefined): boolean {
+	return completeOnboarding !== false;
+}
+
+export function firstCycleOnboardingRetry(input: {
+	hasCycle: boolean;
+	onboardingComplete: boolean;
+}): { action: "create" | "already_exists" | "complete_existing" } {
+	if (!input.hasCycle) return { action: "create" };
+	if (input.onboardingComplete) return { action: "already_exists" };
+	return { action: "complete_existing" };
+}
+
 export function assertFirstCycleAvailable(hasPersonalCycle: boolean): void {
 	if (!hasPersonalCycle) return;
 	throw new ConvexError({

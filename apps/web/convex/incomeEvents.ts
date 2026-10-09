@@ -27,7 +27,11 @@ import {
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
-import { rejectFutureIncomeDate, resolveCycleForIncome } from "./lib/incomeEventLogic";
+import {
+	rejectExtraordinaryBeforeCycleStart,
+	rejectIncomeDateForKind,
+	resolveCycleForIncome,
+} from "./lib/incomeEventLogic";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 import { reverseIncomeAllocationLedger } from "./lib/reverseIncomeAllocationLedger";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
@@ -213,11 +217,14 @@ export const createIncomeEvent = mutation({
 		const distributableCents = plan.envelopes.needs + plan.envelopes.wants + plan.envelopes.savings;
 
 		const now = Date.now();
-		rejectFutureIncomeDate(args.occurredAt, now);
+		rejectIncomeDateForKind(incomeKind, args.occurredAt, now);
 		const activeCycle = await ctx.db
 			.query("financialCycles")
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "active"))
 			.unique();
+		if (activeCycle !== null) {
+			rejectExtraordinaryBeforeCycleStart(incomeKind, args.occurredAt, activeCycle.startDate);
+		}
 
 		const resolvedId = resolveCycleForIncome({
 			activeCycle: activeCycle
@@ -596,15 +603,8 @@ export const updateIncomeEvent = mutation({
 		}
 
 		const now = Date.now();
-
-		if (args.occurredAt < cycle.startDate) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: "La fecha del ingreso debe estar dentro del ciclo activo.",
-				data: { field: "occurredAt" },
-			});
-		}
-		rejectFutureIncomeDate(args.occurredAt, now);
+		rejectIncomeDateForKind(incomeKind, args.occurredAt, now);
+		rejectExtraordinaryBeforeCycleStart(incomeKind, args.occurredAt, cycle.startDate);
 
 		const weights = {
 			allocationNeeds: profile.allocationNeeds,
