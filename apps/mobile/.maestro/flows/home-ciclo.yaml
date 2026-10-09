@@ -18,7 +18,8 @@ tags:
     timeout: 30000
 - assertVisible: "Inicio"
 - assertVisible: "Día .*"
-- assertVisible: ".*Sobra .*"
+# f93107b: si el saldo quedó negativo, la misma línea dice «Te pasaste por S/ X» (overspentByLabel).
+- assertVisible: "(.*Sobra .*|.*Te pasaste por .*)"
 - assertVisible: "Sobres · queda"
 - assertVisible: "Necesid\\."
 - assertVisible: "Gustos"

@@ -12,7 +12,9 @@ Desde `apps/mobile`, con el APK ya instalado:
 maestro test --include-tags=smoke .maestro/
 ```
 
-Ese es el script `pnpm maestro:smoke`. `smoke` es la corrida repetible con la cuenta de datos: bienvenida, entrar, Inicio, un gasto en la hoja y Movimientos.
+Ese es el script `pnpm maestro:smoke`. `smoke` es la corrida repetible con la cuenta de datos: bienvenida, entrar, Inicio, un gasto en la hoja, Movimientos y `preview-sin-selector-dev`.
+
+`preview-sin-selector-dev` entra con `QUIPU_E2E_EMAIL`, abre Progreso y afirma que no están el selector de escenarios ni sus `id`: `progress-preview-picker`, `progress-preview-live`, `progress-preview-sinCiclos`, `progress-preview-primerCierre`, `progress-preview-rachaSeis`, `progress-preview-rachaRota`, ni el texto «Vista de prueba · solo desarrollo». Eso solo existe con `__DEV__` (`progress-preview-picker.tsx`). Si aparece, el APK de preview es un build de desarrollo. `progreso-vacio` y `progreso-primer-cierre` siguen tocando `progress-preview-live` con `optional: true`, así que en el APK de preview ese toque no corre.
 
 Otras corridas:
 
@@ -36,7 +38,7 @@ Requisitos, según [la instalación oficial](https://docs.maestro.dev/maestro-cl
 - `adb` en el PATH (platform-tools del SDK).
 - Maestro CLI en Windows, no en WSL. Bajar `maestro.zip` de las releases, extraerlo (por ejemplo `C:\maestro`) y agregar `C:\maestro\bin` al PATH. En PowerShell: `setx PATH "%PATH%;C:\maestro\bin"`. Cerrar y abrir la terminal. Comprobar con `maestro --help`.
 
-El binario tiene que ser un build EAS del perfil `preview` (`apps/mobile/eas.json`), apuntando al Convex de desarrollo `perceptive-elk-229`. No uses `production` ni `patient-chihuahua-640`. El perfil `preview` no define `android.buildType: "apk"` (el perfil `development` sí). Ese perfil sí tiene `distribution: "internal"`, y [Expo](https://docs.expo.dev/build-reference/apk) lista esa clave como una forma de sacar un `.apk`. Igual hay que instalar un `.apk`, no un `.aab`:
+El binario tiene que ser un build EAS del perfil `preview` (`apps/mobile/eas.json`), apuntando al Convex de desarrollo `perceptive-elk-229`. No uses `production` ni `patient-chihuahua-640`. [Expo](https://docs.expo.dev/build-reference/apk) dice que el formato por defecto de Android en EAS Build es un Android App Bundle (`.aab`), y que un `.aab` no se instala directo en el teléfono o el emulador. Para generar un `.apk`, la misma página dice agregar en el perfil una de estas propiedades: `developmentClient: true`, `distribution: "internal"`, `android.buildType: "apk"`, o un `android.gradleCommand` que produzca un `.apk` (el ejemplo `preview4` es solo `distribution: "internal"`). El perfil `preview` de este repo ya tiene `distribution: "internal"`, así que ese build ya sale como `.apk`. No hace falta agregar `android.buildType`. Instálalo igual con `adb`:
 
 ```powershell
 adb install -r C:\ruta\app-preview.apk

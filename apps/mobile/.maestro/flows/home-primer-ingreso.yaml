@@ -57,7 +57,8 @@ tags:
 - assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
-- assertVisible: ".*Sobra .*"
+# Misma línea de Inicio que home-ciclo: «Sobra» o «Te pasaste por» si el saldo quedó negativo.
+- assertVisible: "(.*Sobra .*|.*Te pasaste por .*)"
 - tapOn:
     text: "Movimientos"
 - extendedWaitUntil:
