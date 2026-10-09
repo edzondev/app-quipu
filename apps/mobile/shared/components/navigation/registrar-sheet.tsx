@@ -54,12 +54,12 @@ function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => 
 	const noCycle = home.status === "empty";
 	const hasCycle = home.status === "ready";
 	const [picked, setPicked] = useState<RegistrarMode | null>(null);
-	const mode = noCycle
-		? "income"
-		: (picked ??
-			(intent === "auto" && home.status === "loading"
-				? null
-				: resolveRegistrarMode(intent, hasCycle)));
+	const mode =
+		home.status === "loading"
+			? null
+			: noCycle
+				? "income"
+				: (picked ?? resolveRegistrarMode(intent, hasCycle));
 	const [fieldError, setFieldError] = useState<{
 		field: ExpenseValidationError["field"];
 		message: string;

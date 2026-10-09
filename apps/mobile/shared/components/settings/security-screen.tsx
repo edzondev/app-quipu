@@ -165,7 +165,7 @@ export function SecurityScreen({
 									void run(() => onDeletePasskey(confirm.passkey.id), copy.error);
 									return;
 								}
-								void run(onRevokeAll, copy.error);
+								void run(onRevokeAll, copy.error).catch(() => {});
 							}}
 						/>
 					) : (

@@ -90,7 +90,7 @@ function SignOutRow() {
 			accessibilityState={{ disabled: pending }}
 			disabled={pending}
 			onPress={() => {
-				void closeSession();
+				void closeSession().catch(() => {});
 			}}
 			className={`mt-4 border-t border-line py-3.5 active:opacity-60 ${pending ? "opacity-40" : ""}`}
 		>
