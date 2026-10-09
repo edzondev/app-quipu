@@ -27,7 +27,7 @@ import {
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
-import { rejectFutureIncomeDate, resolveCycleForIncome } from "./lib/incomeEventLogic";
+import { rejectIncomeDateForKind, resolveCycleForIncome } from "./lib/incomeEventLogic";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 import { reverseIncomeAllocationLedger } from "./lib/reverseIncomeAllocationLedger";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
@@ -213,7 +213,7 @@ export const createIncomeEvent = mutation({
 		const distributableCents = plan.envelopes.needs + plan.envelopes.wants + plan.envelopes.savings;
 
 		const now = Date.now();
-		rejectFutureIncomeDate(args.occurredAt, now);
+		rejectIncomeDateForKind(incomeKind, args.occurredAt, now);
 		const activeCycle = await ctx.db
 			.query("financialCycles")
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "active"))
@@ -596,7 +596,7 @@ export const updateIncomeEvent = mutation({
 		}
 
 		const now = Date.now();
-		rejectFutureIncomeDate(args.occurredAt, now);
+		rejectIncomeDateForKind(incomeKind, args.occurredAt, now);
 
 		const weights = {
 			allocationNeeds: profile.allocationNeeds,

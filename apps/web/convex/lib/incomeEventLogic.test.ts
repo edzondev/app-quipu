@@ -1,10 +1,13 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
+import { computeCycleCarryover } from "./cycleCarryover";
+import { isCyclePastEnd } from "./dashboardMath";
 import {
 	FUTURE_INCOME_DATE_MESSAGE,
 	futureIncomeDateMessage,
 	NO_ACTIVE_CYCLE_MESSAGE,
 	rejectFutureIncomeDate,
+	rejectIncomeDateForKind,
 	resolveCycleForIncome,
 } from "./incomeEventLogic";
 
@@ -89,6 +92,77 @@ describe("resolveCycleForIncome kind", () => {
 				incomeKind: undefined,
 			}),
 		).toBeNull();
+	});
+
+	it("adds an extraordinary income to an expired cycle that is still active", () => {
+		const day = 24 * 60 * 60 * 1000;
+		const expired = {
+			_id: "expired-active",
+			startDate: now - 40 * day,
+			endDate: now - day,
+		};
+		expect(isCyclePastEnd(expired.endDate, now)).toBe(true);
+		for (const occurredAt of [expired.startDate - day, expired.endDate, now, now + 5 * day]) {
+			expect(
+				resolveCycleForIncome({
+					activeCycle: expired,
+					occurredAt,
+					now,
+					incomeKind: "extraordinary",
+				}),
+			).toBe("expired-active");
+			expect(() => rejectIncomeDateForKind("extraordinary", occurredAt, now)).not.toThrow();
+		}
+	});
+
+	it("closes an expired active cycle on a habitual income and carries its envelopes", () => {
+		const day = 24 * 60 * 60 * 1000;
+		const expired = {
+			_id: "expired-active",
+			startDate: now - 40 * day,
+			endDate: now - day,
+		};
+		expect(isCyclePastEnd(expired.endDate, now)).toBe(true);
+		expect(
+			resolveCycleForIncome({
+				activeCycle: expired,
+				occurredAt: now,
+				now,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
+		expect(
+			computeCycleCarryover({
+				envelopes: [
+					{ type: "needs", remainingAmount: -100 },
+					{ type: "wants", remainingAmount: 50 },
+					{ type: "savings", remainingAmount: -30 },
+				],
+				closeSurplusMovedAt: undefined,
+				surplusContributions: [],
+				incomeEvents: [],
+			}),
+		).toEqual({ needs: -100, wants: 50, savings: -30, extraordinary: 0 });
+	});
+
+	it("throws NO_ACTIVE_CYCLE for an extraordinary income when the profile has no cycle", () => {
+		const open = () =>
+			resolveCycleForIncome({
+				activeCycle: null,
+				occurredAt: now + 24 * 60 * 60 * 1000,
+				now,
+				incomeKind: "extraordinary",
+			});
+		expect(open).toThrow(ConvexError);
+		try {
+			open();
+		} catch (error) {
+			if (!(error instanceof ConvexError)) throw error;
+			expect(error.data).toMatchObject({
+				code: "NO_ACTIVE_CYCLE",
+				message: NO_ACTIVE_CYCLE_MESSAGE,
+			});
+		}
 	});
 
 	it("never closes on an extraordinary income, before, inside, or after the cycle", () => {

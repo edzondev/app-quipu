@@ -23,10 +23,20 @@ export function rejectFutureIncomeDate(occurredAt: number, now: number): void {
 	});
 }
 
+/** A date never rejects or reroutes an extraordinary income. */
+export function rejectIncomeDateForKind(
+	incomeKind: Doc<"incomeEvents">["incomeKind"],
+	occurredAt: number,
+	now: number,
+): void {
+	if (incomeKind === "extraordinary") return;
+	rejectFutureIncomeDate(occurredAt, now);
+}
+
 /**
- * Kind decides. A habitual income (a missing kind counts as habitual) closes
- * the active cycle at any date, or opens one when none is active. Extraordinary
- * income never closes; with no active cycle it throws.
+ * Kind decides. An expired cycle stays active until a habitual income closes
+ * it. Extraordinary income always stays on that active cycle. NO_ACTIVE_CYCLE
+ * is only when the profile has no active cycle at all.
  */
 export function resolveCycleForIncome(input: {
 	activeCycle: (MinimalCycle & { isOpeningCycle?: boolean }) | null;
