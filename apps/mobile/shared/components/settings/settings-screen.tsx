@@ -5,6 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { X } from "@/shared/components/ui/reicon";
+import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
@@ -16,6 +17,12 @@ type Props = {
 };
 
 export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props) {
+	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
+	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
+	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
+	const showCycle = !HIDDEN_UNTIL_READY.cycleAndIncome;
+	const showSystem = showAllocation || showCycle;
+
 	return (
 		<View className="flex-1">
 			<View className="flex-row items-center justify-between">
@@ -50,19 +57,28 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					</View>
 					<View className="mt-5">
 						<SectionLabel className="mb-1">CUENTA</SectionLabel>
-						<ListRow label="Perfil y datos" />
+						{showProfile ? <ListRow label="Perfil y datos" /> : null}
 						<ListRow
 							label="Seguridad y Passkeys"
 							value={model.passkeysLabel}
 							onPress={onOpenSecurity}
+							isLast={!showPlan}
 						/>
-						<ListRow label="Plan y suscripción" value={model.planLabel} isLast />
+						{showPlan ? (
+							<ListRow label="Plan y suscripción" value={model.planLabel} isLast />
+						) : null}
 					</View>
-					<View className="mt-[18px] border-t border-line pt-4">
-						<SectionLabel className="mb-1">TU SISTEMA</SectionLabel>
-						<ListRow label="Reparto" value={model.repartoLabel} />
-						<ListRow label="Ciclo e ingresos" value={model.scheduleCopy} isLast />
-					</View>
+					{showSystem ? (
+						<View className="mt-[18px] border-t border-line pt-4">
+							<SectionLabel className="mb-1">TU SISTEMA</SectionLabel>
+							{showAllocation ? (
+								<ListRow label="Reparto" value={model.repartoLabel} isLast={!showCycle} />
+							) : null}
+							{showCycle ? (
+								<ListRow label="Ciclo e ingresos" value={model.scheduleCopy} isLast />
+							) : null}
+						</View>
+					) : null}
 					<SignOutRow />
 				</ScrollView>
 			) : null}
