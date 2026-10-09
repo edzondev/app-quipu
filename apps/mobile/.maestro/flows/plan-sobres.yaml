@@ -33,7 +33,7 @@ tags:
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
-- assertVisible: "GASTADO"
+- assertVisible: "GASTADO.*"
 - assertVisible: "apartado este ciclo"
 - assertNotVisible:
     text: "^Mover dinero$"

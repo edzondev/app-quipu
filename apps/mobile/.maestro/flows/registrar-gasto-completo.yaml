@@ -40,7 +40,7 @@ tags:
     visible: "REGISTRAR GASTO"
     timeout: 10000
 - assertVisible: ${output.merchant}
-- assertVisible: "HOY QUEDARÍA"
+- assertVisible: "HOY QUEDARÍA.*"
 - assertNotVisible:
     text: "^Nota$"
 - assertNotVisible: "Adjuntar boleta"
@@ -65,4 +65,4 @@ tags:
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000
-- assertVisible: "15\\.50"
+- assertVisible: ".*15\\.50"

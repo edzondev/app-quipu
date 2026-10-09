@@ -59,7 +59,7 @@ tags:
 - eraseText
 - inputText: "15"
 - hideKeyboard
-- assertVisible: "Se repite cada mes."
+- assertVisible: "Se repite cada mes\\..*"
 - tapOn: "Monto"
 - eraseText
 - inputText: "50"
@@ -74,7 +74,7 @@ tags:
 - assertVisible: "S/ 50"
 - runFlow:
     when:
-      notVisible: "MENSUAL"
+            notVisible: ".*MENSUAL"
     commands:
       - runFlow:
           when:
@@ -88,4 +88,4 @@ tags:
                       when:
                         notVisible: "Sin cubrir"
                       commands:
-                        - assertVisible: "VENCE"
+                        - assertVisible: "VENCE.*"

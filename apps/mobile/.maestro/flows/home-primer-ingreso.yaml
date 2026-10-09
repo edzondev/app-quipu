@@ -45,10 +45,10 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - assertNotVisible: "Aún no hay ciclo"
-- assertVisible: "Necesidades"
+- assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
-- assertVisible: "Sobra"
+- assertVisible: ".*Sobra .*"
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:

@@ -25,6 +25,7 @@ executionOrder:
     - onboarding-despues
     - onboarding-saldo-cero
     - sueldo-cierra-ciclo
+    - sueldo-antes-del-fin
     - progreso-primer-cierre
     - home-vacio
     - home-primer-ingreso

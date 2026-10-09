@@ -5,9 +5,7 @@ tags:
   - movimientos
 ---
 # Notion 3f486a7356a681c697bad1f751335490
-# Movimientos: lista por día, filtros y búsqueda
-# El filtro «Ahorro» sí está en el código (MOVEMENT_FILTERS). El caso
-# 3f486a7356a68129be59ee9aea1efcc9 dice que estaría escondido: no coincide.
+# Movimientos: lista por día, filtros y búsqueda. El filtro «Ahorro» se ve.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -46,8 +44,8 @@ tags:
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000
-- assertVisible: "CICLO "
-- assertVisible: "HOY ·"
+- assertVisible: "CICLO .*"
+- assertVisible: "HOY · .*"
 - assertVisible: "Todos"
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"

@@ -24,15 +24,15 @@ tags:
 - assertNotVisible: "El 1 de cada mes"
 - assertNotVisible: "El 15 y 30 de cada mes"
 - assertNotVisible: "Cada 7 días"
-- assertNotVisible: "30 DÍAS"
+- assertNotVisible: ".*30 DÍAS"
 - tapOn:
     id: freq-option-biweekly
 - assertNotVisible: "El 15 y 30 de cada mes"
-- assertNotVisible: "15 DÍAS"
+- assertNotVisible: ".*15 DÍAS"
 - tapOn:
     id: freq-option-weekly
 - assertNotVisible: "Cada 7 días"
-- assertNotVisible: "7 DÍAS"
+- assertNotVisible: ".*7 DÍAS"
 - tapOn:
     id: freq-option-monthly
 - assertNotVisible: "El 1 de cada mes"

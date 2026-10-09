@@ -17,10 +17,11 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - assertVisible: "Inicio"
-- assertVisible: "Día "
-- assertVisible: "Sobra"
-- assertVisible: "Sobres · queda"
-- assertVisible: "Necesidades"
+- assertVisible: "Día .*"
+- assertVisible: ".*Sobra .*"
+# El nodo dice «Sobres · queda»; la clase uppercase puede leerse «SOBRES · QUEDA».
+- assertVisible: "(?i)Sobres · queda"
+- assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - assertVisible:

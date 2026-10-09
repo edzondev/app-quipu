@@ -63,17 +63,19 @@ export QUIPU_E2E_FRESH_PASSWORD="$DEV_SEED_PASSWORD"
 
 Flujos que piden ese pre-paso: `onboarding-paso-1`, `onboarding-ciclo`, `onboarding-despues`, `onboarding-saldo-cero`, `sueldo-cierra-ciclo`, `progreso-primer-cierre`.
 
-Esa función no crea perfil ni ciclo. `home-vacio`, `home-primer-ingreso` y `sin-ciclo-solo-sueldo` siguen en `QUIPU_E2E_NO_CYCLE_*`: perfil listo y ningún ciclo en la vida de la cuenta. Tampoco crea un ciclo ya vencido (`pastEnd`).
+Hasta que el #107 se mergee y Edzon ponga esas dos variables, los flujos de cuenta nueva están bloqueados.
+
+`devSeed:seedVerifiedAccount` no crea perfil ni ciclo. Nato va a agregar dos semillas más (nombres por confirmar): una con perfil y **ningún ciclo en la vida de la cuenta**, y otra con ciclo activo. `QUIPU_E2E_NO_CYCLE_*` y `QUIPU_E2E_EMAIL` saldrán de esas dos. No uses una cuenta personal. Hace falta una tercera semilla para un ciclo ya vencido (`pastEnd`): la tarjeta «Tu ciclo del <inicio> al <fin> terminó.» queda pendiente de esa semilla.
 
 ## Variables
 
 | Variable | Cuenta | Flujos |
 |---|---|---|
-| `QUIPU_E2E_EMAIL` | Verificada, onboarding completo, ciclo activo, Fondo creado, menos de 6 metas, sin ciclos cerrados, saldo para gastos chicos | smoke, gastos, Extra, plan, ajustes |
+| `QUIPU_E2E_EMAIL` | Semilla futura de ciclo **activo y sin vencer**, con varios días por delante, Fondo, menos de 6 metas y saldo. No es una cuenta personal | smoke, gastos, Extra, `sueldo-antes-del-fin`, plan, ajustes |
 | `QUIPU_E2E_PASSWORD` | Contraseña de esa cuenta | los mismos |
-| `QUIPU_E2E_FRESH_EMAIL` | El `email` pasado a `devSeed:seedVerifiedAccount` | asistente, Sueldo que cierra, Progreso del primer cierre |
-| `QUIPU_E2E_FRESH_PASSWORD` | El mismo valor que `DEV_SEED_PASSWORD` en el deployment dev | los mismos |
-| `QUIPU_E2E_NO_CYCLE_EMAIL` | Verificada, onboarding completo, sin ciclo activo y sin compromisos | `home-vacio`, `sin-ciclo-solo-sueldo`; `home-primer-ingreso` una sola vez por cuenta |
+| `QUIPU_E2E_FRESH_EMAIL` | El `email` pasado a `devSeed:seedVerifiedAccount` | asistente, Sueldo del primer ciclo, Progreso del primer cierre |
+| `QUIPU_E2E_FRESH_PASSWORD` | El mismo valor que `DEV_SEED_PASSWORD` en el deployment dev. No va en el repo | los mismos |
+| `QUIPU_E2E_NO_CYCLE_EMAIL` | Semilla futura: perfil completo y **nunca tuvo un ciclo**. No es «ciclo vencido» ni una cuenta personal | `home-vacio`, `sin-ciclo-solo-sueldo`; `home-primer-ingreso` una sola vez por cuenta |
 | `QUIPU_E2E_NO_CYCLE_PASSWORD` | Contraseña | los mismos |
 
 La contraseña incorrecta del flujo de entrar es el literal `clave-incorrecta`. No es una cuenta. Nada de esto va en los YAML.
@@ -88,14 +90,17 @@ Estas afirmaciones describen la decisión de Capi. En `d7bcb41` todavía no pasa
 |---|---|---|
 | El paso 1 no muestra «DÍA DE PAGO», «El 1 de cada mes», «El 15 y 30 de cada mes», «Cada 7 días» ni «30 DÍAS» / «15 DÍAS» / «7 DÍAS» | Pixi, PR #106 | `onboarding-paso-1`, `onboarding-hasta-paso-4`, `onboarding-saldo-cero` |
 | Mixto sin datos muestra «Indica la parte fija.» y «Agrega al menos una fuente.»; Variable muestra «Elige un ciclo de 15 o 30 días.» y «Agrega al menos una fuente.» | el validador no pinta el texto | `onboarding-paso-1` |
-| El paso 5 no muestra «Puedes gastar hoy», `confirm-daily` ni «en 30 días.» El diario queda solo en Inicio | Pixi, PR #106 | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
-| Inicio, S/ 1,200 al 50/30/20 y cobro mañana, muestra 960. Con S/ 0 muestra `0.00`. El primer ciclo no muestra «Saldo que quedó» | Pixi | los mismos, después de «Empezar mi ciclo» |
-| La hoja de ingreso tiene «Sueldo» y «Extra». Sin ciclo nunca creado: solo Sueldo y «Tu sueldo empieza un ciclo nuevo» | Pixi, PR #106 | `registrar-ingreso`, `extra-no-cierra`, `sueldo-cierra-ciclo`, `sin-ciclo-solo-sueldo`, `home-primer-ingreso` |
-| Un Sueldo cierra el ciclo, cambia «CICLO …» y en el ciclo nuevo se ve «Saldo que quedó» | Nubo + Pixi | `sueldo-cierra-ciclo` |
-| Un Extra deja la misma línea «CICLO …» | Nubo + Pixi | `extra-no-cierra` |
-| Tras ese Sueldo, Progreso muestra «CICLOS CERRADOS EN VERDE» y «CICLO CERRADO» | Nubo | `progreso-primer-cierre` |
+| El paso 5 no muestra monto diario («Puedes gastar hoy», `confirm-daily`, «Después de compromisos y ahorro, en N días.»). Inicio muestra `S/ 960.00` o `S/ 0.00` | Pixi, PR #106 | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
+| El primer ciclo no muestra «Saldo que quedó …» | Pixi, PR #106 | los mismos, en Inicio |
+| La hoja de ingreso tiene «Sueldo» y «Extra». Sin ningún ciclo: solo Sueldo y «Tu sueldo empieza un ciclo nuevo» | Pixi, PR #106 | `registrar-ingreso`, `extra-no-cierra`, `sueldo-cierra-ciclo`, `sueldo-antes-del-fin`, `sin-ciclo-solo-sueldo`, `home-primer-ingreso` |
+| Un Sueldo con cobro mañana cambia el rango de «CICLO» y el ciclo nuevo muestra «Saldo que quedó …». El selector es de Pixi; en `d7bcb41` ese ingreso ya cierra por la ventana de 2 días | Pixi | `sueldo-cierra-ciclo` |
+| Un Sueldo varios días antes del fin cierra igual: no hay ventana de 2 días | Nubo | `sueldo-antes-del-fin` |
+| Un Extra deja el mismo rango de «CICLO» (antes de « · N REGISTROS») | Nubo + Pixi | `extra-no-cierra` |
+| Tras ese Sueldo, Progreso muestra «CICLOS CERRADOS EN VERDE» y «CICLO CERRADO · <MES>» | Nubo | `progreso-primer-cierre` |
 
-Un ciclo vencido no se cierra solo. Inicio muestra la tarjeta que ya está en `home-closed-cycle.tsx`: «Tu ciclo del <inicio> al <fin> terminó.», «Te quedaron …» o «Te pasaste por …», «Tus movimientos siguen guardados.» y «Registrar nuevo ingreso». En la hoja (PR #106, `pastEnd`) siguen Gasto, Sueldo y Extra, con «Cierra este ciclo y empieza uno nuevo». No hay flujo: `devSeed:seedVerifiedAccount` no crea un ciclo con `pastEnd`, y no vamos a esperar a que venza.
+Un ciclo vencido no se cierra solo. Inicio muestra la tarjeta que ya está en `home-closed-cycle.tsx`: «Tu ciclo del <inicio> al <fin> terminó.», «Te quedaron …» o «Te pasaste por …», «Tus movimientos siguen guardados.» y «Registrar nuevo ingreso». En la hoja (PR #106, `pastEnd`) siguen Gasto, Sueldo y Extra, con «Cierra este ciclo y empieza uno nuevo». No hay flujo: `devSeed:seedVerifiedAccount` no crea un ciclo con `pastEnd`, y no vamos a esperar a que venza. Esa tarjeta queda pendiente de una tercera semilla (ciclo ya vencido).
+
+El servidor rechaza un Extra solo si la cuenta no tiene ningún ciclo. En la app no se llega a mandarlo. Es un caso de API (Notion `3f486a7356a6819786ecce6a1650094c`), sin texto exacto todavía. No se prueba en Maestro.
 
 ## Qué no está aquí
 
@@ -123,7 +128,7 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `field-error-mixed` | Paso 1 | `step-1-income-profile.tsx` | el validador no pinta «Indica la parte fija.» | `onboarding-paso-1` |
 | `field-error-sources` | Paso 1 | el mismo | «Agrega al menos una fuente.» | `onboarding-paso-1` |
 | `field-error-cycle` | Paso 1 | el mismo | «Elige un ciclo de 15 o 30 días.» | `onboarding-paso-1` |
-| `home-daily` | Inicio | `shared/components/home/home-dense.tsx` | monto «Hoy puedes gastar» (960 o `0.00`) | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
+| `home-daily` | Inicio | `shared/components/home/home-dense.tsx` | monto «Hoy puedes gastar» (`S/ 960.00` o `S/ 0.00`) | `onboarding-ciclo`, `onboarding-abrir-ciclo`, `onboarding-saldo-cero` |
 | `home-cycle-day` | Inicio | el mismo | «Día X/Y» | `home-ciclo` |
 | `home-envelope-needs` | Inicio | el mismo | fila Necesidades | `home-ciclo` |
 | `home-envelope-wants` | Inicio | el mismo | fila Gustos | `home-ciclo` |

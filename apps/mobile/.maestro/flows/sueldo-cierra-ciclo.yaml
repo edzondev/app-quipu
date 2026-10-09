@@ -4,9 +4,10 @@ tags:
   - registrar
   - onboarding
 ---
-# sin caso aún
-# Un Sueldo cierra el ciclo en cualquier fecha y arrastra lo que quedó en cada sobre.
-# Cobro = mañana, así que el Sueldo de hoy es anterior a esa fecha.
+# Notion 3f486a7356a681b0b79ffe78ff0896aa
+# Notion 3f486a7356a6817698dbdf13ffd7bd83
+# Un Sueldo cierra el ciclo y arrastra lo que quedó en cada sobre.
+# Cobro = mañana cae dentro de la ventana de 2 días de d7bcb41: no prueba esa ventana.
 # Un ciclo ya vencido no se fabrica aquí: el seed no crea pastEnd.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
 - runFlow:
@@ -25,7 +26,7 @@ tags:
     timeout: 15000
 - copyTextFrom:
     text: "CICLO .*"
-- evalScript: "${output.cycleBefore = maestro.copiedText}"
+- evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
 - tapOn:
     text: "^Inicio$"
 - runFlow:
@@ -35,11 +36,11 @@ tags:
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
-    visible: "CICLO "
+    visible: ".*10\\.00"
     timeout: 20000
-- assertNotVisible: ${output.cycleBefore}
-- assertVisible: "10\\.00"
+- assertNotVisible: "${output.cycleBefore} · .*"
+- assertVisible: "CICLO .*"
 - tapOn:
     text: "^Inicio$"
 - assertVisible: "Hoy puedes gastar"
-- assertVisible: "Saldo que quedó"
+- assertVisible: "Saldo que quedó.*"

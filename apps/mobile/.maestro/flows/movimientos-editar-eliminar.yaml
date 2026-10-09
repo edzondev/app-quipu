@@ -47,7 +47,7 @@ tags:
 - extendedWaitUntil:
     visible: "EDITAR GASTO"
     timeout: 10000
-- assertVisible: "HOY QUEDARÍA"
+- assertVisible: "HOY QUEDARÍA.*"
 - tapOn: "Monto"
 - eraseText
 - inputText: "30"
@@ -57,7 +57,7 @@ tags:
     notVisible: "EDITAR GASTO"
     timeout: 20000
 - extendedWaitUntil:
-    visible: "30\\.00"
+    visible: ".*30\\.00"
     timeout: 15000
 - tapOn: ${output.merchant}
 - extendedWaitUntil:

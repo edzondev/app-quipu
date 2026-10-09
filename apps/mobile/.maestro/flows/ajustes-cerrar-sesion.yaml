@@ -16,7 +16,7 @@ tags:
     timeout: 30000
 - tapOn: "Ajustes"
 - extendedWaitUntil:
-    visible: ${QUIPU_E2E_EMAIL}
+    visible: ".*${QUIPU_E2E_EMAIL}.*"
     timeout: 15000
 - assertVisible: "Seguridad y Passkeys"
 - assertVisible: "Cerrar sesión"
@@ -46,5 +46,5 @@ tags:
 - extendedWaitUntil:
     visible: "Ya tengo cuenta"
     timeout: 20000
-- assertNotVisible: ${QUIPU_E2E_EMAIL}
+- assertNotVisible: ".*${QUIPU_E2E_EMAIL}.*"
 - assertVisible: "S/ 42\\.30"

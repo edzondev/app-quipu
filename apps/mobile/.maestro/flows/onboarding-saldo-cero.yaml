@@ -3,7 +3,7 @@ tags:
   - p0
   - onboarding
 ---
-# sin caso aún
+# Notion 3f486a7356a681f9880cdca871f470e8
 # Dinero de hoy vacío = S/ 0 (Capi, 9 oct). El diario solo se ve en Inicio.
 # Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
 - runFlow:
@@ -33,20 +33,20 @@ tags:
 - tapOn:
     id: commitments-skip
 - extendedWaitUntil:
-    visible: "Dinero de hoy"
+    visible: "TU SISTEMA · 05/05"
     timeout: 10000
-- assertVisible: "TU SISTEMA · 05/05"
+- assertVisible: "Dinero de hoy"
 # Espera arreglo pendiente (Pixi, PR #106): hoy el paso 5 muestra «Puedes gastar hoy» y «—».
+# «Anota el dinero que tienes hoy…» queda por confirmar con Pixi: no se afirma.
 - assertNotVisible: "Puedes gastar hoy"
 - assertNotVisible:
     id: confirm-daily
-- assertNotVisible: "Anota el dinero que tienes hoy para ver tu número."
 - tapOn: "Empezar mi ciclo"
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 40000
-- assertVisible: "0.00"
-- assertNotVisible: "Saldo que quedó"
-- assertVisible: "Necesidades"
+- assertVisible: "S/ 0\\.00"
+- assertNotVisible: "Saldo que quedó.*"
+- assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
