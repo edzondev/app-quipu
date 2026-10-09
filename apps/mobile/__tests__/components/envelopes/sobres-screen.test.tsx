@@ -22,6 +22,7 @@ const screen: SobresScreenModel = {
 			footLeft: "GASTADO S/ 612",
 			footRight: "ALQUILER PENDIENTE",
 			footRightTone: "calm",
+			carryLabel: null,
 		},
 		{
 			tone: "wants",
@@ -36,6 +37,7 @@ const screen: SobresScreenModel = {
 			footLeft: "GASTADO S/ 819",
 			footRight: "ALCANZA 6 DÍAS",
 			footRightTone: "fast",
+			carryLabel: null,
 		},
 		{
 			tone: "savings",
@@ -50,6 +52,7 @@ const screen: SobresScreenModel = {
 			footLeft: "FONDO + VIAJE",
 			footRight: "100%",
 			footRightTone: "calm",
+			carryLabel: null,
 		},
 	],
 };
@@ -132,6 +135,30 @@ describe("SobresScreen", () => {
 		expect(empty.getByText("Todavía no hay sobres en el ciclo activo.")).toBeTruthy();
 		expect(empty.queryByText("Registrar gasto")).toBeNull();
 		expect(empty.queryByText("Necesidades")).toBeNull();
+	});
+
+	it("muestra la línea de arrastre con tabular-nums", async () => {
+		const withCarry: SobresScreenModel = {
+			...screen,
+			envelopes: [
+				{
+					...screen.envelopes[0],
+					carryLabel: "Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910",
+				},
+				...screen.envelopes.slice(1),
+			],
+		};
+		const view = await render(
+			<SobresScreen
+				status="ready"
+				screen={withCarry}
+				onBack={jest.fn()}
+				onMoveMoney={jest.fn()}
+				onRegisterExpense={jest.fn()}
+			/>,
+		);
+		const line = view.getByText("Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910");
+		expect(line.props.className).toContain("tabular-nums");
 	});
 
 	it("vuelve atrás con ChevronLeft", async () => {

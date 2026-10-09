@@ -44,6 +44,19 @@ jest.mock("@expo/ui", () => {
 	};
 });
 
+jest.mock("@/shared/hooks/use-dashboard", () => ({
+	useHomeModel: () => ({ status: "empty", profileName: "Ana", profileInitial: "A" }),
+	useDashboardSummary: () => undefined,
+}));
+
+jest.mock("@/shared/hooks/use-expense-actions", () => ({
+	useExpenseActions: () => ({ register: jest.fn() }),
+}));
+
+jest.mock("@/shared/hooks/use-income-actions", () => ({
+	useIncomeActions: () => ({ register: jest.fn() }),
+}));
+
 jest.mock("@/modules/onboarding/use-complete-onboarding", () => ({
 	useCompleteOnboarding: () => ({
 		submit: jest.fn(async () => true),

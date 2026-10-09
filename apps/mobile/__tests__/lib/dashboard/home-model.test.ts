@@ -5,7 +5,11 @@ import {
 	emptyEnvelopeCarry,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
-import { envelopeCarryLabel, mapDashboardHome } from "@/shared/lib/dashboard/home-model";
+import {
+	envelopeCarryLabel,
+	mapDashboardHome,
+	serverDailyCents,
+} from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
@@ -384,6 +388,28 @@ describe("envelopeCarryLabel", () => {
 
 	it("no arma línea cuando el arrastre es 0", () => {
 		expect(envelopeCarryLabel(0, 80000, 80000, "S/")).toBeNull();
+	});
+
+	it("no arma línea en el ciclo de apertura aunque haya arrastre", () => {
+		expect(envelopeCarryLabel(12000, 80000, 91000, "S/", true)).toBeNull();
+	});
+
+	it("el diario de Inicio es displayDailyCents, sin restar compromisos", () => {
+		const value = summary({
+			hero: { ...hero, displayDailyCents: 6400, dailyAvailableCents: 9000 },
+			commitments: [
+				commitment({
+					id: "rent",
+					name: "Alquiler",
+					amount: 110000,
+					daysUntilDue: 1,
+					paymentStatus: "pending",
+				}),
+			],
+		});
+		expect(serverDailyCents(value)).toBe(6400);
+		expect(mapDashboardHome(value)?.dailyCents).toBe(6400);
+		expect(serverDailyCents(summaryWithoutCycle)).toBeNull();
 	});
 
 	it("pone el signo menos delante de S/ cuando el arrastre es negativo", () => {

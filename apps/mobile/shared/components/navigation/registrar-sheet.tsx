@@ -135,6 +135,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 				<IncomeSheetForm
 					currencySymbol={currencySymbol}
 					formError={formError}
+					hasActiveCycle={hasCycle}
 					initialAmountCents={session.incomeAmountCents}
 					prompt={session.incomePrompt}
 					onSubmit={(draft) =>

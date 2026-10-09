@@ -76,6 +76,7 @@ jest.mock("@expo/ui", () => {
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useHomeModel: () => ({ status: "empty", profileName: "Ana", profileInitial: "A" }),
+	useDashboardSummary: () => undefined,
 }));
 
 jest.mock("@/shared/hooks/use-expense-actions", () => ({

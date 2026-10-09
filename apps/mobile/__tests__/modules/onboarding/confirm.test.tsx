@@ -1,12 +1,16 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { type ReactNode, useEffect } from "react";
 import { Text } from "react-native";
+import { summaryWithCycle, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
+import { mapDashboardHome, serverDailyCents } from "@/shared/lib/dashboard/home-model";
+import { formatDailyAvailable } from "@/shared/lib/onboarding/daily";
 import type { OnboardingState } from "@/shared/lib/onboarding/types";
 
 const mockSubmit = jest.fn(async () => true);
 const mockReplace = jest.fn();
+const mockDashboardSummary = jest.fn();
 
 const hookState = {
 	submit: mockSubmit,
@@ -43,6 +47,7 @@ jest.mock("@expo/ui", () => {
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useHomeModel: () => ({ status: "empty", profileName: "Ana", profileInitial: "A" }),
+	useDashboardSummary: () => mockDashboardSummary(),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -97,6 +102,7 @@ const FULL_SEED: Partial<OnboardingState> = {
 describe("StepConfirm — tu número", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		mockDashboardSummary.mockReturnValue(undefined);
 		hookState.submit = mockSubmit;
 		hookState.isSubmitting = false;
 		hookState.error = null;
@@ -108,8 +114,10 @@ describe("StepConfirm — tu número", () => {
 		await renderConfirm(FULL_SEED);
 		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
 		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
-		expect(screen.getByTestId("confirm-daily").props.children).toBe("S/ 51.16");
-		expect(screen.getByText("Después de compromisos y ahorro, en 30 días.")).toBeTruthy();
+		expect(screen.getByTestId("confirm-daily").props.children).toBe("—");
+		expect(screen.getByText("Anota el dinero que tienes hoy para ver tu número.")).toBeTruthy();
+		expect(screen.queryByText("S/ 51.16")).toBeNull();
+		expect(screen.queryByText(/en 30 días/)).toBeNull();
 		expect(screen.getByText("Dinero de hoy")).toBeTruthy();
 		expect(screen.getByTestId("confirm-income").props.children).toBe("S/ 3,500");
 		expect(screen.getByTestId("confirm-envelope-needs").props.children).toBe("50% · S/ 1,750");
@@ -120,6 +128,33 @@ describe("StepConfirm — tu número", () => {
 		expect(screen.queryByText("Todo listo")).toBeNull();
 		expect(screen.queryByText("Tu sistema está listo")).toBeNull();
 		expect(screen.queryByText("Ajustar algo")).toBeNull();
+	});
+
+	it("muestra el mismo diario que Inicio cuando getSummary trae hero", async () => {
+		const summary = summaryWithCycle();
+		summary.hero.displayDailyCents = 6400;
+		summary.hero.dailyAvailableCents = 6400;
+		mockDashboardSummary.mockReturnValue(summary);
+		await renderConfirm(FULL_SEED);
+		const home = mapDashboardHome(summary);
+		if (!home) throw new Error("expected home");
+		expect(serverDailyCents(summary)).toBe(6400);
+		expect(home.dailyCents).toBe(6400);
+		expect(screen.getByTestId("confirm-daily").props.children).toBe(
+			formatDailyAvailable(home.dailyCents),
+		);
+		expect(screen.getByText(home.heroSubtitle)).toBeTruthy();
+		expect(screen.queryByText("S/ 51.16")).toBeNull();
+		expect(screen.queryByText(/en 30 días/)).toBeNull();
+	});
+
+	it("sin hero de getSummary no calcula el diario aunque haya ingreso y compromisos", async () => {
+		mockDashboardSummary.mockReturnValue(summaryWithoutCycle);
+		await renderConfirm(FULL_SEED);
+		expect(serverDailyCents(summaryWithoutCycle)).toBeNull();
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
+		expect(screen.getByTestId("confirm-daily").props.children).toBe("—");
+		expect(screen.queryByText("S/ 51.16")).toBeNull();
 	});
 
 	it("sin referencia de ingreso muestra — y no inventa un número", async () => {

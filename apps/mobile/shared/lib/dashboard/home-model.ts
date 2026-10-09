@@ -68,7 +68,15 @@ export type HomeModel = {
 	coachMessage: string | null;
 	commitments: HomeCommitment[];
 	recentMovements: HomeMovement[];
+	/** Primer ciclo: getSummary.cycle.isOpeningCycle. El dinero de hoy no es arrastre. */
+	isOpeningCycle: boolean;
 };
+
+/** Diario de Inicio. Null si getSummary no trae hero (no hay ciclo activo). */
+export function serverDailyCents(summary: DashboardSummary | null | undefined): number | null {
+	if (!summary?.hero) return null;
+	return summary.hero.displayDailyCents;
+}
 
 const ENVELOPE_LABEL = {
 	needs: "Necesidades",
@@ -106,7 +114,8 @@ const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
 const LIMA = "America/Lima";
 
 export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
-	if (!summary.cycle || !summary.hero) return null;
+	const dailyCents = serverDailyCents(summary);
+	if (!summary.cycle || dailyCents == null) return null;
 
 	const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
 	const tone = readBadgeTone(summary.hero.statusBadge);
@@ -121,7 +130,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		badgeLabel: BADGE_LABEL[tone],
 		badgeTone: tone,
 		cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
-		dailyCents: summary.hero.displayDailyCents,
+		dailyCents,
 		heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
 		currencySymbol: symbol,
 		envelopes,
@@ -141,6 +150,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 			amountCents: movement.amount,
 			tone: movementTone(movement.kind, movement.envelopeLabel),
 		})),
+		isOpeningCycle: summary.cycle.isOpeningCycle,
 	};
 }
 
@@ -152,8 +162,9 @@ export function envelopeCarryLabel(
 	incomeCents: number,
 	totalCents: number,
 	symbol: string,
+	isOpeningCycle = false,
 ): string | null {
-	if (carriedOverCents === 0) return null;
+	if (isOpeningCycle || carriedOverCents === 0) return null;
 	const carried = formatCarryCents(carriedOverCents, symbol);
 	const income = formatCarryCents(incomeCents, symbol);
 	const total = formatCarryCents(totalCents, symbol);

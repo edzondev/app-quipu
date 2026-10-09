@@ -7,7 +7,7 @@ import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
 import { Check } from "@/shared/components/ui/reicon";
-import { cyclePreview, paydayText } from "@/shared/lib/onboarding/cycle";
+import { cyclePreview } from "@/shared/lib/onboarding/cycle";
 import {
 	type FixedPayFrequency,
 	FREQ_DRIFT_COPY,
@@ -185,10 +185,6 @@ export function Step1IncomeProfile() {
 						onChange={(frequency) => form.setFieldValue("payFrequency", frequency)}
 					/>
 					<View className="gap-2">
-						<MonoLabel>DÍA DE PAGO</MonoLabel>
-						<Text className="font-hanken-semibold text-[15px] text-foreground">
-							{paydayText(payFrequency)}
-						</Text>
 						<Text className="font-hanken text-[13px] text-foreground/55">
 							{FREQ_DRIFT_COPY[payFrequency]}
 						</Text>

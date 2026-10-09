@@ -6,14 +6,11 @@ import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
 import AuthButton from "@/shared/components/auth/auth-button";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
+import { useDashboardSummary } from "@/shared/hooks/use-dashboard";
+import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import { TODAY_BALANCE_RECORD } from "@/shared/lib/income/draft";
 import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
-import { cycleDaysForModel } from "@/shared/lib/onboarding/cycle";
-import {
-	estimateDailyAvailable,
-	formatDailyAvailable,
-	formatSoles,
-} from "@/shared/lib/onboarding/daily";
+import { formatDailyAvailable, formatSoles } from "@/shared/lib/onboarding/daily";
 
 const INCOME_PROMPT = "¿Cuánto dinero tienes hoy?";
 const COMMITMENTS_NOTE = "También puedes agregarlos después desde Plan.";
@@ -39,18 +36,9 @@ export function StepConfirm() {
 
 	const referenceCents = state.referenceIncomeCents;
 	const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
-	const cycleDays = cycleDaysForModel(state);
-	const dailyCents =
-		referenceCents == null
-			? null
-			: estimateDailyAvailable({
-					referenceIncomeCents: referenceCents,
-					commitmentsTotalCents,
-					allocationNeeds: state.allocationNeeds,
-					allocationWants: state.allocationWants,
-					allocationSavings: state.allocationSavings,
-					cycleDays,
-				});
+	const summary = useDashboardSummary();
+	const home = summary ? mapDashboardHome(summary) : null;
+	const dailyCents = home ? home.dailyCents : null;
 
 	const envelopeAmount = (pct: number) =>
 		referenceCents == null ? null : Math.floor((referenceCents * pct) / 100);
@@ -114,9 +102,7 @@ export function StepConfirm() {
 							{dailyCents == null ? "—" : formatDailyAvailable(dailyCents)}
 						</Text>
 						<Text className="font-hanken text-[14px] text-foreground/55">
-							{dailyCents == null
-								? "Anota el dinero que tienes hoy para ver tu número."
-								: `Después de compromisos y ahorro, en ${cycleDays} días.`}
+							{home ? home.heroSubtitle : "Anota el dinero que tienes hoy para ver tu número."}
 						</Text>
 					</View>
 

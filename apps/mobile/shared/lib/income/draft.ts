@@ -4,10 +4,12 @@ import { HABITUAL_INCOME_LABEL, HABITUAL_INCOME_SOURCE } from "@/shared/lib/inco
 import { limaStartOfDay } from "@/shared/lib/lima-date";
 
 export type CreateIncomeEventArgs = FunctionArgs<typeof api.incomeEvents.createIncomeEvent>;
+export type IncomeKind = NonNullable<CreateIncomeEventArgs["incomeKind"]>;
 
 export type IncomeDraft = {
 	amountCents: number;
 	occurredAt: number;
+	incomeKind: IncomeKind;
 };
 
 export type IncomeRecord = Pick<CreateIncomeEventArgs, "source" | "description">;
@@ -19,7 +21,7 @@ export const TODAY_BALANCE_RECORD = {
 } satisfies IncomeRecord;
 
 export function defaultIncomeDraft(now = Date.now()): IncomeDraft {
-	return { amountCents: 0, occurredAt: limaStartOfDay(now) };
+	return { amountCents: 0, occurredAt: limaStartOfDay(now), incomeKind: "habitual" };
 }
 
 export function toCreateIncomeEventArgs(
@@ -31,6 +33,6 @@ export function toCreateIncomeEventArgs(
 		source: record?.source ?? HABITUAL_INCOME_SOURCE,
 		description: record?.description ?? HABITUAL_INCOME_LABEL,
 		occurredAt: draft.occurredAt,
-		incomeKind: "habitual",
+		incomeKind: draft.incomeKind,
 	};
 }

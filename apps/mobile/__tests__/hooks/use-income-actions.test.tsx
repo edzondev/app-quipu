@@ -1,5 +1,6 @@
 import { act, render } from "@testing-library/react-native";
 import { type FunctionReference, getFunctionName } from "convex/server";
+import { extraKind, sueldoKind } from "@/__fixtures__/income-kind";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
 import { TODAY_BALANCE_RECORD } from "@/shared/lib/income/draft";
 import { limaStartOfDay } from "@/shared/lib/lima-date";
@@ -47,7 +48,7 @@ describe("useIncomeActions", () => {
 	it("llama a createIncomeEvent sin allocation", async () => {
 		const occurredAt = limaStartOfDay(NOW);
 		await act(async () => {
-			await actions?.register({ amountCents: 350000, occurredAt });
+			await actions?.register({ amountCents: 350000, occurredAt, incomeKind: sueldoKind });
 		});
 		expect(createMock).toHaveBeenCalledTimes(1);
 		expect(createMock).toHaveBeenCalledWith({
@@ -55,7 +56,7 @@ describe("useIncomeActions", () => {
 			source: "payroll",
 			description: "Sueldo",
 			occurredAt,
-			incomeKind: "habitual",
+			incomeKind: sueldoKind,
 		});
 		expect(createMock.mock.calls[0]?.[0]).not.toHaveProperty("allocation");
 	});
@@ -63,18 +64,35 @@ describe("useIncomeActions", () => {
 	it("el saldo de hoy es other y «Dinero de hoy», y sigue siendo ingreso habitual", async () => {
 		const occurredAt = limaStartOfDay(NOW);
 		await act(async () => {
-			await actions?.register({ amountCents: 350000, occurredAt }, TODAY_BALANCE_RECORD);
+			await actions?.register(
+				{ amountCents: 350000, occurredAt, incomeKind: sueldoKind },
+				TODAY_BALANCE_RECORD,
+			);
 		});
 		expect(createMock).toHaveBeenCalledWith({
 			amount: 350000,
 			source: "other",
 			description: "Dinero de hoy",
 			occurredAt,
-			incomeKind: "habitual",
+			incomeKind: sueldoKind,
 		});
 		const payload = createMock.mock.calls[0]?.[0];
 		expect(payload).not.toHaveProperty("extraordinaryType");
 		expect(payload).not.toHaveProperty("distributionPolicy");
 		expect(payload).not.toHaveProperty("extraordinaryLabel");
+	});
+
+	it("reenvía incomeKind extraordinary cuando el ingreso es extra", async () => {
+		const occurredAt = limaStartOfDay(NOW);
+		await act(async () => {
+			await actions?.register({ amountCents: 50000, occurredAt, incomeKind: extraKind });
+		});
+		expect(createMock).toHaveBeenCalledWith({
+			amount: 50000,
+			source: "payroll",
+			description: "Sueldo",
+			occurredAt,
+			incomeKind: extraKind,
+		});
 	});
 });
