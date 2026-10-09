@@ -60,7 +60,7 @@ describe("useIncomeActions", () => {
 		expect(createMock.mock.calls[0]?.[0]).not.toHaveProperty("allocation");
 	});
 
-	it("el saldo de hoy se envía como other y «Dinero de hoy», no como sueldo", async () => {
+	it("el saldo de hoy es other y «Dinero de hoy», y sigue siendo ingreso habitual", async () => {
 		const occurredAt = limaStartOfDay(NOW);
 		await act(async () => {
 			await actions?.register({ amountCents: 350000, occurredAt }, TODAY_BALANCE_RECORD);
@@ -72,5 +72,9 @@ describe("useIncomeActions", () => {
 			occurredAt,
 			incomeKind: "habitual",
 		});
+		const payload = createMock.mock.calls[0]?.[0];
+		expect(payload).not.toHaveProperty("extraordinaryType");
+		expect(payload).not.toHaveProperty("distributionPolicy");
+		expect(payload).not.toHaveProperty("extraordinaryLabel");
 	});
 });
