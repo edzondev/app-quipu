@@ -58,7 +58,8 @@ describe("PlanHub", () => {
 		expect(view.getByText("S/ 1,265")).toBeTruthy();
 		expect(view.getByText("Fondo + 2 metas activas")).toBeTruthy();
 		expect(view.getByText("S/ 4,320")).toBeTruthy();
-		expect(view.getByText("50 / 30 / 20 · Mensual · día 1")).toBeTruthy();
+		expect(view.queryByText("Reparto del ciclo")).toBeNull();
+		expect(view.queryByText("50 / 30 / 20 · Mensual · día 1")).toBeNull();
 		expect(view.queryByText("Mover dinero entre sobres")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
 		expect(view.queryByRole("button", { name: "Reparto del ciclo" })).toBeNull();

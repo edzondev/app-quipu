@@ -39,10 +39,9 @@ describe("ExpenseDetailForm", () => {
 		expect(view.getByText("Gustos")).toBeTruthy();
 		expect(view.getByText("Fecha")).toBeTruthy();
 		expect(view.getByText("15 ago")).toBeTruthy();
-		expect(view.getByText("Nota")).toBeTruthy();
-		expect(view.getByText("Opcional")).toBeTruthy();
-		expect(view.getByText("Adjuntar boleta")).toBeTruthy();
-		expect(view.getByText("OCR")).toBeTruthy();
+		expect(view.queryByText("Nota")).toBeNull();
+		expect(view.queryByText("Adjuntar boleta")).toBeNull();
+		expect(view.queryByText("OCR")).toBeNull();
 		expect(view.getByText("FRECUENTES")).toBeTruthy();
 
 		await fireEvent.press(view.getByText("Café · 8"));
