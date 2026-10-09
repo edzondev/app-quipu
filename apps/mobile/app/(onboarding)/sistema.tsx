@@ -1,7 +1,6 @@
 import { Redirect } from "expo-router";
 import { View } from "react-native";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
-import { Step2System } from "@/modules/onboarding/components/step-2-system";
 import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
@@ -16,8 +15,8 @@ function SistemaWizard() {
 		case 1:
 			return <Step1IncomeProfile />;
 		case 2:
-			return <Step2System />;
 		case 3:
+			// El reparto es el paso 2. Continuar sigue en continueToConfirm (PR B reordena 3 y 4).
 			return <Step3Allocation />;
 		case 4:
 			return <Step4Commitments />;

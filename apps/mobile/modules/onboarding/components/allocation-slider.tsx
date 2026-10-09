@@ -2,7 +2,7 @@ import { Slider } from "@expo/ui/community/slider";
 import { Text, View } from "react-native";
 import { formatSoles } from "@/shared/lib/onboarding/daily";
 import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
-import { ENVELOPE_BG, ENVELOPE_LABELS } from "./envelopes";
+import { ENVELOPE_BG, ENVELOPE_HINT, ENVELOPE_LABELS } from "./envelopes";
 
 // Hex equivalentes a los tokens oklch (--color-*) para el tint nativo del Slider.
 const ENVELOPE_TINT: Record<EnvelopeKey, string> = {
@@ -31,9 +31,14 @@ export function AllocationSlider({
 			<View className="flex-row items-center justify-between">
 				<View className="flex-row items-center gap-2">
 					<View className={`h-2.5 w-2.5 rounded-full ${ENVELOPE_BG[envelope]}`} />
-					<Text className="font-hanken-semibold text-[15px] text-foreground">
-						{ENVELOPE_LABELS[envelope]}
-					</Text>
+					<View>
+						<Text className="font-hanken-semibold text-[15px] text-foreground">
+							{ENVELOPE_LABELS[envelope]}
+						</Text>
+						<Text className="font-hanken text-[13px] text-foreground/55">
+							{ENVELOPE_HINT[envelope]}
+						</Text>
+					</View>
 				</View>
 				<View className="flex-row items-baseline gap-2">
 					<Text

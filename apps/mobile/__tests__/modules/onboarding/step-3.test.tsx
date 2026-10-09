@@ -85,7 +85,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("allocation-percent-needs").props.children).toBe("50%");
 		expect(screen.getByTestId("allocation-percent-wants").props.children).toBe("30%");
 		expect(screen.getByTestId("allocation-percent-savings").props.children).toBe("20%");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 		expect(screen.getByTestId("icon-check")).toBeTruthy();
 	});
 
@@ -111,7 +111,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-savings").props.children).toBe("16");
 		expect(screen.getByTestId("allocation-percent-wants").props.children).toBe("24%");
 		expect(screen.getByTestId("allocation-percent-savings").props.children).toBe("16%");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 		expect(screen.getByTestId("allocation-amount-needs").props.children).toBe("S/ 2,100");
 		expect(screen.getByTestId("allocation-amount-wants").props.children).toBe("S/ 840");
 		expect(screen.getByTestId("allocation-amount-savings").props.children).toBe("S/ 560");
@@ -123,7 +123,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-needs").props.children).toBe("43");
 		expect(screen.getByTestId("probe-wants").props.children).toBe("40");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("17");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 	});
 
 	it("redondea valores flotantes del slider a enteros (60.65… → 61, suma 100)", async () => {
@@ -132,7 +132,7 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 		expect(screen.getByTestId("probe-needs").props.children).toBe("61");
 		expect(screen.getByTestId("probe-wants").props.children).toBe("23");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("16");
-		expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+		expect(screen.getByTestId("allocation-sum").props.children).toBe("Suma 100%");
 	});
 
 	it("'Volver al 50/30/20 recomendado' restaura los defaults", async () => {

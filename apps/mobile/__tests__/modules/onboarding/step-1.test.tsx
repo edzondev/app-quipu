@@ -1,7 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
+import { onboardingVariableSources } from "@/__fixtures__/onboarding";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
+import { FREQ_OPTIONS, INCOME_MODEL_OPTIONS } from "@/shared/lib/onboarding/defaults";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
@@ -28,11 +30,13 @@ function StateProbe() {
 		<>
 			<Text testID="probe-step">{String(state.step)}</Text>
 			<Text testID="probe-model">{String(state.incomeModel)}</Text>
+			<Text testID="probe-frequency">{String(state.payFrequency)}</Text>
+			<Text testID="probe-sources">{state.variableIncomeSources.join("|")}</Text>
 		</>
 	);
 }
 
-function renderStep1() {
+async function renderStep1() {
 	return render(
 		<OnboardingProvider>
 			<StateProbe />
@@ -46,73 +50,58 @@ describe("Step1IncomeProfile", () => {
 		jest.clearAllMocks();
 	});
 
-	it("renderiza el header del wizard y las 3 opciones", async () => {
+	it("arranca en 01/04 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
 		await renderStep1();
 		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
-		expect(screen.getByText("Fijo")).toBeTruthy();
-		expect(screen.getByText("Variable")).toBeTruthy();
-		expect(screen.getByText("Mixto")).toBeTruthy();
-		expect(screen.getByText("Continuar")).toBeTruthy();
-	});
-
-	it("el paso 1 llena solo la primera barra de progreso", async () => {
-		await renderStep1();
-		expect(screen.getByTestId("wizard-progress-1").props.className).toContain("bg-primary");
-		expect(screen.getByTestId("wizard-progress-4").props.className).toContain("bg-line");
-	});
-
-	it("Continuar no dispatcha nada sin selección", async () => {
-		await renderStep1();
-		await act(async () => {
-			fireEvent.press(screen.getByText("Continuar"));
+		expect(screen.getByTestId("option-fixed").props.accessibilityState).toMatchObject({
+			selected: true,
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("1");
-		expect(screen.getByTestId("probe-model").props.children).toBe("null");
-	});
-
-	it("seleccionar Fijo lo marca con borde primary, fondo primary/5 y check", async () => {
-		await renderStep1();
-		expect(screen.queryByTestId("check-fixed")).toBeNull();
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("option-fixed"));
+		expect(screen.getByTestId("freq-option-monthly").props.accessibilityState).toMatchObject({
+			selected: true,
 		});
-		expect(screen.getByTestId("option-fixed").props.className).toContain("border-primary");
-		expect(screen.getByTestId("option-fixed").props.className).toContain("bg-primary/5");
 		expect(screen.getByTestId("check-fixed")).toBeTruthy();
-		expect(screen.getByTestId("icon-check")).toBeTruthy();
-		expect(screen.queryByTestId("check-variable")).toBeNull();
+		for (const option of INCOME_MODEL_OPTIONS) {
+			expect(screen.getByTestId(`option-${option.value}`)).toBeTruthy();
+			expect(screen.getByText(option.description)).toBeTruthy();
+		}
+		for (const option of FREQ_OPTIONS) {
+			expect(screen.getByTestId(`freq-option-${option.value}`)).toBeTruthy();
+			expect(screen.getAllByText(option.label).length).toBeGreaterThan(0);
+		}
 	});
 
-	it("la nota variable solo aparece con Variable seleccionado", async () => {
+	it("Variable admite varias fuentes", async () => {
 		await renderStep1();
-		expect(
-			screen.queryByText(
-				"Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir.",
-			),
-		).toBeNull();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("option-variable"));
 		});
-		expect(
-			screen.getByText(
-				"Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir.",
-			),
-		).toBeTruthy();
-	});
-
-	it("con selección, Continuar dispatcha UPDATE { incomeModel } y avanza a paso 2", async () => {
-		await renderStep1();
+		expect(screen.queryByTestId("freq-option-monthly")).toBeNull();
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("option-mixed"));
+			fireEvent.changeText(screen.getByTestId("source-input"), onboardingVariableSources[0]);
 		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), onboardingVariableSources[1]);
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		expect(screen.getByTestId("source-chip-0").props.children).toBe(onboardingVariableSources[0]);
+		expect(screen.getByTestId("source-chip-1").props.children).toBe(onboardingVariableSources[1]);
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
+		expect(screen.getByTestId("probe-model").props.children).toBe("variable");
+		expect(screen.getByTestId("probe-frequency").props.children).toBe("null");
+		expect(screen.getByTestId("probe-sources").props.children).toBe(
+			onboardingVariableSources.join("|"),
+		);
 		expect(screen.getByTestId("probe-step").props.children).toBe("2");
-		expect(screen.getByTestId("probe-model").props.children).toBe("mixed");
 	});
 
-	it("el back en paso 1 navega hacia atrás en el stack (router.back)", async () => {
+	it("el back en paso 1 navega hacia atrás en el stack", async () => {
 		await renderStep1();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));

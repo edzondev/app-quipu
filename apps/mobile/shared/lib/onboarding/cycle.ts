@@ -21,6 +21,7 @@ const MONTHS = [
 
 /** Copia del día de pago según frecuencia (paso 2). */
 export function paydayText(frequency: PayFrequency): string {
+	if (frequency === "variable") return "Sin día fijo";
 	const paydays = PAYDAYS_BY_FREQUENCY[frequency];
 	if (frequency === "weekly") {
 		return `Cada ${CYCLE_DAYS_BY_FREQUENCY.weekly} días`;
@@ -28,8 +29,9 @@ export function paydayText(frequency: PayFrequency): string {
 	return `El ${paydays.join(" y ")} de cada mes`;
 }
 
-/** Preview "TU CICLO SERÍA" según frecuencia (paso 2). */
+/** Preview "TU CICLO SERÍA" según frecuencia. */
 export function cyclePreview(frequency: PayFrequency): string {
+	if (frequency === "variable") return "Sin ciclo fijo";
 	const paydays = PAYDAYS_BY_FREQUENCY[frequency];
 	const cycleDays = CYCLE_DAYS_BY_FREQUENCY[frequency];
 	if (frequency === "monthly") {
@@ -55,7 +57,8 @@ export function cycleDaysForModel(state: CycleDaysInput): number {
 	if (state.incomeModel === "variable") {
 		return state.cycleDurationDays ?? 30;
 	}
-	return state.payFrequency ? CYCLE_DAYS_BY_FREQUENCY[state.payFrequency] : 30;
+	if (!state.payFrequency || state.payFrequency === "variable") return 30;
+	return CYCLE_DAYS_BY_FREQUENCY[state.payFrequency];
 }
 
 /** "enero" → "Enero" según el mes actual (título de la confirmación). */

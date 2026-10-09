@@ -1,7 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { AllocationSlider } from "@/modules/onboarding/components/allocation-slider";
 import { ENVELOPE_BG } from "@/modules/onboarding/components/envelopes";
-import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
@@ -15,6 +14,7 @@ import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
 
 export function Step3Allocation() {
 	const { state, dispatch } = useOnboarding();
+	const stepNumber = state.step === 2 ? 2 : 3;
 
 	const values: Record<EnvelopeKey, number> = {
 		needs: state.allocationNeeds,
@@ -38,7 +38,7 @@ export function Step3Allocation() {
 
 	return (
 		<WizardShell
-			stepNumber={3}
+			stepNumber={stepNumber}
 			footer={<AuthButton label="Continuar" onPress={continueToConfirm} />}
 		>
 			<View className="gap-6">
@@ -79,7 +79,6 @@ export function Step3Allocation() {
 				</View>
 
 				<View className="flex-row items-center justify-between">
-					<MonoLabel>Suma</MonoLabel>
 					<View className="flex-row items-center gap-1.5">
 						<Text
 							testID="allocation-sum"
@@ -87,7 +86,7 @@ export function Step3Allocation() {
 								sum === 100 ? "text-savings" : "text-foreground"
 							}`}
 						>
-							{`${sum}%`}
+							{`Suma ${sum}%`}
 						</Text>
 						{sum === 100 ? <Check size={14} colorClassName="text-savings" /> : null}
 					</View>
@@ -95,11 +94,12 @@ export function Step3Allocation() {
 
 				<Pressable
 					testID="allocation-reset"
+					accessibilityRole="button"
 					onPress={resetToDefaults}
-					className="items-center py-2"
+					className="items-center py-2 active:opacity-60"
 				>
 					<Text className="font-hanken-semibold text-[13px] text-foreground/55">
-						Volver al 50/30/20 recomendado
+						Volver al 50/30/20
 					</Text>
 				</Pressable>
 			</View>

@@ -16,6 +16,8 @@ export function FrequencyPicker({ value, onChange }: FrequencyPickerProps) {
 					<Pressable
 						key={option.value}
 						testID={`freq-option-${option.value}`}
+						accessibilityRole="button"
+						accessibilityState={{ selected: isActive }}
 						onPress={() => onChange(option.value)}
 						className={
 							isActive
