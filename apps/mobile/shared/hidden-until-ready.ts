@@ -11,7 +11,6 @@ export const HIDDEN_UNTIL_READY: {
 	allocation: boolean;
 	cycleAndIncome: boolean;
 	cycleSplit: boolean;
-	movementsSavingsFilter: boolean;
 } = {
 	moveMoney: true,
 	expenseNote: true,
@@ -21,5 +20,4 @@ export const HIDDEN_UNTIL_READY: {
 	allocation: true,
 	cycleAndIncome: true,
 	cycleSplit: true,
-	movementsSavingsFilter: true,
 };

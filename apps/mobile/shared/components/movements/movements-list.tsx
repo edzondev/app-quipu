@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown } from "react-native-reanimated";
 import { Search } from "reicon-react-native/icons/Search";
-import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
 import {
 	MOVEMENT_FILTERS,
@@ -37,10 +36,6 @@ const META: Record<MovementMetaTone, string> = {
 	note: "text-warning",
 	muted: "text-foreground/45",
 };
-
-const VISIBLE_FILTERS = MOVEMENT_FILTERS.filter(
-	(item) => item.id !== "savings" || !HIDDEN_UNTIL_READY.movementsSavingsFilter,
-);
 
 const AMOUNT: Record<MovementListRow["amountTone"], string> = {
 	out: "text-foreground",
@@ -99,7 +94,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 
 			{model && !model.isEmpty ? (
 				<View className="mt-[18px] flex-row flex-wrap gap-[7px]">
-					{VISIBLE_FILTERS.map((item) => (
+					{MOVEMENT_FILTERS.map((item) => (
 						<FilterChip
 							key={item.id}
 							label={item.label}
