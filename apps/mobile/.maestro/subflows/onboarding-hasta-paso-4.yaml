@@ -1,0 +1,32 @@
+appId: com.quipu.finance
+---
+# Paso 1 Fijo con S/ 1200, paso 2 con la fecha por defecto (mañana) y paso 3 en 50/30/20.
+# No toca el calendario nativo.
+- assertVisible: "TU SISTEMA · 01/05"
+- assertVisible: "¿Cómo entra tu dinero?"
+- assertVisible: "DÍA DE PAGO"
+- tapOn:
+    id: amount-input
+- inputText: "1200"
+- hideKeyboard
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cuándo cobras?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 02/05"
+- assertVisible: "Elige el próximo día de cobro, entre mañana y los próximos 31 días."
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cómo repartes tu ingreso?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 03/05"
+- assertVisible: "Suma 100%"
+- assertVisible: "Volver al 50/30/20"
+- tapOn:
+    id: allocation-reset
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Qué pagas todos los meses?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 04/05"
+- assertVisible: "Si falta el monto o el día, esa fila no se guarda."

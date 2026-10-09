@@ -1,0 +1,12 @@
+appId: com.quipu.finance
+---
+- runFlow: abrir-formulario-correo.yaml
+- tapOn:
+    text: "^Correo$"
+- inputText: ${QUIPU_EMAIL}
+- tapOn:
+    text: "^Contraseña$"
+- inputText: ${QUIPU_PASSWORD}
+- hideKeyboard
+- tapOn:
+    text: "^Entrar$"

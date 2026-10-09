@@ -1,0 +1,62 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - hidden
+---
+# H1–H8, flags de shared/hidden-until-ready.ts. Selección por texto visible.
+# H1 Mover dinero          envelopes/sobres-screen.tsx
+# H2 Nota                  expenses/expense-detail-form.tsx
+# H3 Adjuntar boleta       expenses/expense-detail-form.tsx
+# H4 Perfil y datos        settings/settings-screen.tsx
+# H5 Plan y suscripción    settings/settings-screen.tsx
+# H6 Reparto               settings/settings-screen.tsx
+# H7 Ciclo e ingresos      settings/settings-screen.tsx
+# H8 Reparto del ciclo     plan/plan-hub.tsx
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- tapOn:
+    text: "^Plan$"
+- extendedWaitUntil:
+    visible: "Ahorro y metas"
+    timeout: 10000
+- assertNotVisible: "Reparto del ciclo"
+- tapOn:
+    text: "^Sobres$"
+- extendedWaitUntil:
+    visible: "Tu sueldo ya está dividido. Esto es lo que queda."
+    timeout: 15000
+- assertNotVisible:
+    text: "^Mover dinero$"
+- tapOn: "Volver"
+- tapOn:
+    text: "^Inicio$"
+- tapOn:
+    text: "^Registrar$"
+- extendedWaitUntil:
+    visible: "NUEVO GASTO"
+    timeout: 10000
+- tapOn: "Abrir detalle del gasto"
+- extendedWaitUntil:
+    visible: "REGISTRAR GASTO"
+    timeout: 10000
+- assertNotVisible:
+    text: "^Nota$"
+- assertNotVisible: "Adjuntar boleta"
+- tapOn: "Volver"
+- tapOn: "Ajustes"
+- extendedWaitUntil:
+    visible: "Cerrar sesión"
+    timeout: 10000
+- assertNotVisible: "Perfil y datos"
+- assertNotVisible: "Plan y suscripción"
+- assertNotVisible:
+    text: "^Reparto$"
+- assertNotVisible: "Ciclo e ingresos"
+- tapOn:
+    text: "^Cerrar$"

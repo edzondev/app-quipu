@@ -1,0 +1,39 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+  - p1
+  - auth
+---
+# Notion 3f486a7356a681698c8ccd745398cce5
+# Bienvenida sin sesión: una sola pantalla
+- launchApp:
+    appId: com.quipu.finance
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Ya tengo cuenta"
+    timeout: 25000
+- assertVisible: "QUIPU"
+- assertVisible: "Divide tu dinero antes de gastarlo"
+- assertVisible: "EJEMPLO · PUEDES GASTAR HOY"
+- assertVisible: "S/ 42\\.30"
+- assertVisible: "Es un ejemplo. Tu número sale del dinero que tienes hoy."
+- assertVisible:
+    text: "^Crear cuenta$"
+- tapOn:
+    text: "^Crear cuenta$"
+- extendedWaitUntil:
+    visible: "Crea tu cuenta."
+    timeout: 10000
+- assertVisible: "CREAR CUENTA · 01/03"
+- tapOn: "Volver"
+- extendedWaitUntil:
+    visible: "S/ 42\\.30"
+    timeout: 10000
+- assertVisible: "Ya tengo cuenta"
+- tapOn: "Ya tengo cuenta"
+- extendedWaitUntil:
+    visible: "Entrar con correo"
+    timeout: 10000
+- assertVisible: "Divide tu dinero antes de gastarlo."
+- assertVisible: "Continuar con Passkey"

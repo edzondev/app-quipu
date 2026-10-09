@@ -1,0 +1,25 @@
+# Flujos ejecutables. subflows/ solo se llama con runFlow.
+flows:
+  - "flows/*"
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - welcome
+    - sign-in
+    - home-ciclo
+    - registrar-gasto-hoja
+    - registrar-gasto-completo
+    - registrar-ingreso
+    - movimientos
+    - movimientos-editar-eliminar
+    - compromisos
+    - ahorro-metas
+    - plan-sobres
+    - controles-escondidos
+    - progreso-vacio
+    - ajustes-cerrar-sesion
+    - onboarding-paso-1
+    - onboarding-ciclo
+    - onboarding-despues
+    - home-vacio
+    - home-primer-ingreso
