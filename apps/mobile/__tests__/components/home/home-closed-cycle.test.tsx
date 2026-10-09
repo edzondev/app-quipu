@@ -9,8 +9,6 @@ import {
 } from "@/__fixtures__/dashboard-summary";
 import HomePage from "@/app/(tabs)";
 import { RegistrarProvider } from "@/shared/components/navigation/registrar-context";
-import { limaDayLabel } from "@/shared/lib/lima-date";
-import { formatCentsTrimmed } from "@/shared/lib/money";
 
 const mockUseQuery = jest.fn();
 const mockUseMutation = jest.fn();
@@ -64,15 +62,6 @@ jest.mock("@expo/ui", () => {
 	};
 });
 
-function cycleSentence(cycle: typeof closedCycleOnSummary) {
-	const start = limaDayLabel(cycle.startDate);
-	const end = limaDayLabel(cycle.endDate);
-	const ended = `Tu ciclo del ${start} al ${end} terminó.`;
-	const kept = "Tus movimientos siguen guardados.";
-	if (cycle.surplusCents === 0) return `${ended} ${kept}`;
-	return `${ended} Te sobraron ${formatCentsTrimmed(cycle.surplusCents)}. ${kept}`;
-}
-
 function renderHome() {
 	return render(
 		<RegistrarProvider>
@@ -102,7 +91,11 @@ describe("Inicio con ciclo cerrado", () => {
 		const view = await renderHome();
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Edzon")).toBeTruthy();
-		expect(view.getByText(cycleSentence(closedCycleOnSummary))).toBeTruthy();
+		expect(
+			view.getByText(
+				"Tu ciclo del 1 AGO al 30 AGO terminó. Te sobraron S/ 210. Tus movimientos siguen guardados.",
+			),
+		).toBeTruthy();
 		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
 		expect(
 			view.queryByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),

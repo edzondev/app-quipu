@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
-import { limaDayLabel } from "@/shared/lib/lima-date";
+import { inclusiveEndDate, limaDayLabel } from "@/shared/lib/lima-date";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 import { HomeIdentity } from "./home-identity";
 
@@ -16,7 +16,7 @@ const MOVE_ERROR = "No se pudo mover el sobrante al Fondo.";
 
 function closedCycleMessage(cycle: ClosedCycleSummary, symbol: string): string {
 	const start = limaDayLabel(cycle.startDate);
-	const end = limaDayLabel(cycle.endDate);
+	const end = limaDayLabel(inclusiveEndDate(cycle.endDate));
 	const ended = `Tu ciclo del ${start} al ${end} terminó.`;
 	const kept = "Tus movimientos siguen guardados.";
 	if (cycle.surplusCents === 0) return `${ended} ${kept}`;
@@ -61,6 +61,7 @@ export function HomeClosedCycle({
 				) : null}
 				<Pressable
 					accessibilityRole="button"
+					accessibilityLabel="Registrar nuevo ingreso"
 					onPress={onRegisterIncome}
 					className="mt-3 items-center rounded-[13px] border border-line py-4 active:opacity-80"
 				>
