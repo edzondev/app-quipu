@@ -74,6 +74,8 @@ jest.mock("@expo/ui", () => {
 const WITH_SURPLUS =
 	"Tu ciclo del 1 AGO al 30 AGO terminó. Te quedaron S/ 210 y se suman a tu próximo ingreso. Tus movimientos siguen guardados.";
 const NEUTRAL = "Tu ciclo del 1 AGO al 30 AGO terminó. Tus movimientos siguen guardados.";
+const OVERSPENT =
+	"Tu ciclo del 1 AGO al 30 AGO terminó. Te pasaste por S/ 15 y se descuenta de tu próximo ingreso. Tus movimientos siguen guardados.";
 
 function summaryFor(surplusCents: number) {
 	return summaryAfterClose({ ...closedCycleOnSummary, surplusCents });
@@ -110,6 +112,7 @@ describe("Inicio con ciclo cerrado", () => {
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Edzon")).toBeTruthy();
 		expect(view.getByText(WITH_SURPLUS)).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
 		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
 		expect(
 			view.queryByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
@@ -122,16 +125,21 @@ describe("Inicio con ciclo cerrado", () => {
 		mockSummary(summaryFor(0));
 		const view = await renderHome();
 		expect(view.getByText(NEUTRAL)).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
 		expect(view.queryByText(/Te quedaron/)).toBeNull();
+		expect(view.queryByText(/Te pasaste/)).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 
-	it("con sobrante negativo muestra el texto neutro y no ofrece Mover al Fondo", async () => {
+	it("con sobrante negativo dice que se descuenta del próximo ingreso", async () => {
 		mockSummary(summaryFor(-1500));
 		const view = await renderHome();
-		expect(view.getByText(NEUTRAL)).toBeTruthy();
+		expect(view.getByText(OVERSPENT)).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.queryByText(NEUTRAL)).toBeNull();
 		expect(view.queryByText(/Te quedaron/)).toBeNull();
-		expect(view.queryByText(/S\//)).toBeNull();
+		expect(view.queryByText(/S\/ -/)).toBeNull();
+		expect(view.queryByText(/-S\//)).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 

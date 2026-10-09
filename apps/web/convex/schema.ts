@@ -145,6 +145,8 @@ export const appTables = {
 		carriedOverFromCycleId: v.optional(v.id("financialCycles")),
 		carriedOverToCycleId: v.optional(v.id("financialCycles")),
 		carriedOverExtraordinaryCents: v.optional(v.number()),
+		// Onboarding: saldo de hoy hasta el próximo cobro. No es un ingreso y no cuenta en la racha.
+		isOpeningCycle: v.optional(v.boolean()),
 	}).index("by_profile_status", ["profileId", "status"]),
 
 	// SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
