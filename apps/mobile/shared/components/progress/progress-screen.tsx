@@ -13,10 +13,6 @@ const SOLID_BAR: Record<Exclude<ProgressBarView["tone"], "current">, string> = {
 	failed: "bg-foreground/30",
 };
 
-const CURRENT_STRIPES = Array.from({ length: 8 }, (_, index) =>
-	index % 2 === 0 ? "bg-line" : "bg-background",
-);
-
 type Props = {
 	status: "loading" | "ready";
 	model: ProgressScreenModel | null;
@@ -95,18 +91,18 @@ function EmptyProgress({ onOpenPlan }: { onOpenPlan: () => void }) {
 function FilledProgress({ model }: { model: ProgressScreenModel }) {
 	return (
 		<View>
-			<Text className="mt-[26px] font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+			<Text className="mt-8 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
 				CICLOS CERRADOS EN VERDE
 			</Text>
-			<View className="mt-3 flex-row items-baseline gap-2.5">
+			<View className="mt-2.5 flex-row items-baseline gap-2.5">
 				<Text className="font-newsreader text-[58px] leading-none tracking-tight text-foreground tabular-nums">
 					{model.streakLabel}
 				</Text>
-				<Text className="font-hanken text-[17px] text-[#6B6B6B]">seguidos</Text>
+				<Text className="font-newsreader text-[18px] text-[#6B6B6B]">seguidos</Text>
 			</View>
 
 			{model.bars.length > 0 ? (
-				<View className="mt-5 flex-row gap-[7px]">
+				<View className="mt-6 flex-row gap-2">
 					{model.bars.map((bar) => (
 						<CycleBar key={bar.key} bar={bar} />
 					))}
@@ -114,20 +110,20 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			) : null}
 
 			{model.savedLabel || model.registeredExpenseLabel || model.daysWithoutSkippingLabel ? (
-				<View className="mt-7 flex-row justify-between border-y border-line py-[18px]">
-					{model.savedLabel ? <Stat label="AHORRADO TOTAL" value={model.savedLabel} /> : null}
+				<View className="mt-8 flex-row gap-3 border-y border-line py-5">
+					{model.savedLabel ? <Stat label={"AHORRADO\nTOTAL"} value={model.savedLabel} /> : null}
 					{model.registeredExpenseLabel ? (
-						<Stat label="GASTOS REGISTRADOS" value={model.registeredExpenseLabel} />
+						<Stat label={"GASTOS\nREGISTRADOS"} value={model.registeredExpenseLabel} />
 					) : null}
 					{model.daysWithoutSkippingLabel ? (
-						<Stat label="DÍAS SIN SALTAR" value={model.daysWithoutSkippingLabel} />
+						<Stat label={"DÍAS SIN\nSALTAR"} value={model.daysWithoutSkippingLabel} />
 					) : null}
 				</View>
 			) : null}
 
 			{model.achievements.length > 0 ? (
-				<View className="mt-[22px]">
-					<Text className="mb-1.5 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+				<View className="mt-7">
+					<Text className="mb-2 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
 						LOGROS
 					</Text>
 					{model.achievements.map((row, index) => (
@@ -141,7 +137,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			) : null}
 
 			{model.rewardText ? (
-				<View className="mt-4 rounded-[14px] bg-[#F3F1EB] px-[18px] py-[15px]">
+				<View className="mt-5 rounded-[14px] bg-[#F3F1EB] px-[18px] py-4">
 					<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-primary">
 						RECOMPENSA
 					</Text>
@@ -157,19 +153,12 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 function CycleBar({ bar }: { bar: ProgressBarView }) {
 	const monthClass =
 		bar.tone === "current"
-			? "mt-[7px] text-center font-geist-mono text-[10px] text-foreground/35"
-			: "mt-[7px] text-center font-geist-mono text-[10px] text-foreground/50";
+			? "mt-2 text-center font-geist-mono text-[10px] tracking-[0.06em] text-foreground/35"
+			: "mt-2 text-center font-geist-mono text-[10px] tracking-[0.06em] text-foreground/50";
 	return (
-		<View className="flex-1">
+		<View className="min-w-0 flex-1">
 			{bar.tone === "current" ? (
-				<View
-					accessibilityLabel="Ciclo en curso"
-					className="h-[34px] flex-row overflow-hidden rounded-[5px]"
-				>
-					{CURRENT_STRIPES.map((tone, index) => (
-						<View key={`${tone}-${String(index)}`} className={`h-full flex-1 ${tone}`} />
-					))}
-				</View>
+				<CurrentCycleBar />
 			) : (
 				<View className={`h-[34px] rounded-[5px] ${SOLID_BAR[bar.tone]}`} />
 			)}
@@ -178,11 +167,41 @@ function CycleBar({ bar }: { bar: ProgressBarView }) {
 	);
 }
 
+/** Bloque claro con rayas diagonales (mismo patrón del mock). */
+function CurrentCycleBar() {
+	return (
+		<View
+			accessibilityLabel="Ciclo en curso"
+			className="h-[34px] overflow-hidden rounded-[5px] bg-[#F7F5EF]"
+		>
+			{Array.from({ length: 20 }, (_, index) => (
+				<View
+					key={String(index)}
+					style={{
+						position: "absolute",
+						top: -22,
+						left: index * 14 - 28,
+						width: 5,
+						height: 78,
+						backgroundColor: "#EDEAE1",
+						transform: [{ rotate: "45deg" }],
+					}}
+				/>
+			))}
+		</View>
+	);
+}
+
 function Stat({ label, value }: { label: string; value: string }) {
 	return (
-		<View>
-			<Text className="font-geist-mono text-[12px] text-foreground/50">{label}</Text>
-			<Text className="mt-[9px] font-newsreader text-[24px] text-foreground tabular-nums">
+		<View className="min-w-0 flex-1">
+			<Text
+				className="h-[26px] font-geist-mono text-[10px] leading-[13px] tracking-[0.08em] text-foreground/50"
+				numberOfLines={2}
+			>
+				{label}
+			</Text>
+			<Text className="mt-2 font-newsreader text-[22px] leading-7 text-foreground tabular-nums">
 				{value}
 			</Text>
 		</View>
@@ -195,7 +214,7 @@ function AchievementRow({ row, isLast }: { row: AchievementRowView; isLast: bool
 			className={`flex-row items-center gap-3 py-3.5 ${isLast ? "" : "border-b border-[#F0EEE8]"}`}
 		>
 			<View
-				className={`h-[30px] w-[30px] items-center justify-center rounded-[9px] ${
+				className={`h-[30px] w-[30px] items-center justify-center rounded-full ${
 					row.done ? "bg-savings/15" : "border border-dashed border-[#DAD7CE]"
 				}`}
 			>

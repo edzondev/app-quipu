@@ -54,6 +54,25 @@ describe("CreateAccountScreen", () => {
 		cleanup();
 	});
 
+	it("el nombre usa el mismo campo que el correo y la contraseña", async () => {
+		const view = await render(<CreateAccountScreen />);
+		const styles = ["Nombre", "Correo", "Contraseña"].map(
+			(label) => view.getByLabelText(label).props.className,
+		);
+		expect(new Set(styles).size).toBe(1);
+		expect(view.getByText("Nombre")).toBeTruthy();
+	});
+
+	it("pide el nombre antes de crear la cuenta", async () => {
+		const view = await render(<CreateAccountScreen />);
+		await fireEvent.changeText(view.getByLabelText("Correo"), "ana@quipu.test");
+		await fireEvent.changeText(view.getByLabelText("Contraseña"), "secreta-123");
+		await fireEvent.press(view.getByText("Continuar"));
+
+		expect(await view.findByText("Dinos cómo te llamas")).toBeTruthy();
+		expect(mockSignUp).not.toHaveBeenCalled();
+	});
+
 	it("envía el OTP al completar los 6 dígitos", async () => {
 		mockSignUp.mockResolvedValue({ error: null });
 		mockVerify.mockResolvedValue({ error: null });

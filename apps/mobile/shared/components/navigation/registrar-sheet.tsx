@@ -1,9 +1,10 @@
-import { BottomSheet, RNHostView } from "@expo/ui";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
 import { IncomeSheetForm } from "@/shared/components/income/income-sheet-form";
+import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
+import { SheetHost } from "@/shared/components/ui/sheet-host";
 import { useDashboardSummary, useHomeModel } from "@/shared/hooks/use-dashboard";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
@@ -37,11 +38,11 @@ export default function RegistrarSheet({ isPresented, session, onDismiss }: Prop
 			onDismiss={onDismiss}
 			snapPoints={["full"]}
 			contentPadding={0}
-			containerColor="#FBFAF7"
+			containerColorClassName="accent-background"
 		>
-			<RNHostView>
+			<SheetHost>
 				<SheetBody key={session.nonce} session={session} onDone={onDismiss} />
-			</RNHostView>
+			</SheetHost>
 		</BottomSheet>
 	);
 }
@@ -108,14 +109,14 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 
 	if (offer === "loading" || mode == null) {
 		return (
-			<View className="flex-1 items-center justify-center">
+			<View className="items-center justify-center py-16">
 				<Text className="font-hanken text-[15px] text-foreground/55">Cargando…</Text>
 			</View>
 		);
 	}
 
 	return (
-		<View className="flex-1">
+		<View>
 			<View className="px-[22px] pt-1.5">
 				<ModeSwitch
 					value={mode}
@@ -133,6 +134,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 					currencySymbol={currencySymbol}
 					formError={formError}
 					cycle={offer}
+					incomeModel={profile?.incomeModel ?? null}
 					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
 					onCancel={onDone}
 				/>

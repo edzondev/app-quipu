@@ -22,23 +22,6 @@ jest.mock("@/shared/components/ui/reicon", () => {
 	};
 });
 
-jest.mock("@expo/ui/community/slider", () => {
-	const { View } = require("react-native");
-	return {
-		Slider: (props: { onValueChange: (value: number) => void }) => (
-			<View onValueChange={props.onValueChange} />
-		),
-	};
-});
-
-function setSlider(testId: string, value: number) {
-	const wrapper = screen.getByTestId(testId);
-	const slider = wrapper.props.children;
-	return act(async () => {
-		slider.props.onValueChange(value);
-	});
-}
-
 function SeedStep2() {
 	const { dispatch } = useOnboarding();
 	useEffect(() => {
@@ -73,7 +56,7 @@ describe("Paso 2 reparto", () => {
 		jest.clearAllMocks();
 	});
 
-	it("muestra 02/04 y arranca en 50/30/20", async () => {
+	it("muestra 03/05 y arranca en 50/30/20", async () => {
 		await renderStep2();
 		expect(screen.getByText("TU SISTEMA · 03/05")).toBeTruthy();
 		expect(screen.getByText("Necesidades")).toBeTruthy();
@@ -82,7 +65,6 @@ describe("Paso 2 reparto", () => {
 		expect(screen.getByTestId("allocation-percent-needs").props.children).toBe("50%");
 		expect(screen.getByTestId("allocation-percent-wants").props.children).toBe("30%");
 		expect(screen.getByTestId("allocation-percent-savings").props.children).toBe("20%");
-		expect(screen.getByText("Suma 100%")).toBeTruthy();
 		expect(screen.getByTestId("probe-needs").props.children).toBe("50");
 		expect(screen.getByTestId("probe-wants").props.children).toBe("30");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("20");
@@ -90,14 +72,15 @@ describe("Paso 2 reparto", () => {
 
 	it("Volver al 50/30/20 resetea el reparto", async () => {
 		await renderStep2();
-		await setSlider("allocation-slider-needs", 60);
-		expect(screen.getByTestId("probe-needs").props.children).toBe("60");
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("allocation-increase-needs"));
+		});
+		expect(screen.getByTestId("probe-needs").props.children).toBe("55");
 		await act(async () => {
 			fireEvent.press(screen.getByText("Volver al 50/30/20"));
 		});
 		expect(screen.getByTestId("probe-needs").props.children).toBe("50");
 		expect(screen.getByTestId("probe-wants").props.children).toBe("30");
 		expect(screen.getByTestId("probe-savings").props.children).toBe("20");
-		expect(screen.getByText("Suma 100%")).toBeTruthy();
 	});
 });

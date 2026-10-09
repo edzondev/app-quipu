@@ -1,5 +1,10 @@
 import { settingsOverview } from "@/__fixtures__/settings-overview";
-import { presentSettings, profileInitial, repartoLabel } from "@/shared/lib/settings/model";
+import {
+	firstName,
+	presentSettings,
+	profileInitial,
+	repartoLabel,
+} from "@/shared/lib/settings/model";
 
 describe("presentSettings", () => {
 	it("arma reparto, plan y llaves", () => {
@@ -25,5 +30,18 @@ describe("presentSettings", () => {
 	it("con email nulo muestra solo el país y no el código crudo", () => {
 		expect(presentSettings(settingsOverview({ email: null })).meta).toBe("Perú");
 		expect(profileInitial("  ana")).toBe("A");
+	});
+});
+
+describe("firstName", () => {
+	it("se queda con el primer nombre aunque el usuario escriba nombre y apellidos", () => {
+		expect(firstName("Edzon Alberto Quispe Huamán")).toBe("Edzon");
+		expect(firstName("  Ana   María ")).toBe("Ana");
+	});
+
+	it("conserva un nombre simple y no inventa nada si está vacío", () => {
+		expect(firstName("Ana")).toBe("Ana");
+		expect(firstName("")).toBe("");
+		expect(firstName("   ")).toBe("");
 	});
 });

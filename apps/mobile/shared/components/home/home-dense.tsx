@@ -58,14 +58,12 @@ export function HomeDense({
 	profileName,
 	onOpenSettings,
 	onViewAllMovements,
-	onRegisterIncome,
 }: {
 	home: HomeModel;
 	profileInitial: string;
 	profileName: string;
 	onOpenSettings: () => void;
 	onViewAllMovements: () => void;
-	onRegisterIncome: () => void;
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
 	const statusClass = STATUS_TEXT[home.badgeTone];
@@ -77,12 +75,7 @@ export function HomeDense({
 			contentContainerClassName="pb-8"
 			showsVerticalScrollIndicator={false}
 		>
-			<HomeIdentity
-				initial={profileInitial}
-				title={profileName.trim() ? `Hola, ${profileName.trim()}` : "Hola"}
-				onOpenSettings={onOpenSettings}
-				onRegisterIncome={onRegisterIncome}
-			/>
+			<HomeIdentity initial={profileInitial} name={profileName} onOpenSettings={onOpenSettings} />
 			<View className="border-b border-line pb-6 pt-1">
 				<Text className="font-newsreader text-[22px] leading-[28px] tracking-tight text-foreground">
 					Hoy puedes gastar

@@ -64,6 +64,7 @@ jest.mock("@expo/ui", () => {
 		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
 			isPresented ? <View>{children}</View> : null,
 		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+		ScrollView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 	};
 });
 
@@ -111,7 +112,7 @@ describe("Inicio con ciclo cerrado", () => {
 	it("muestra el monto y que se suma al próximo ingreso, sin el dibujo de vacío", async () => {
 		const view = await renderHome();
 		expect(view.getByText("E")).toBeTruthy();
-		expect(view.getByText("Edzon")).toBeTruthy();
+		expect(view.getByText("Hola, Edzon")).toBeTruthy();
 		expect(view.getByText(WITH_SURPLUS)).toBeTruthy();
 		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
 		expect(view.queryByText("Aún no hay ciclo")).toBeNull();

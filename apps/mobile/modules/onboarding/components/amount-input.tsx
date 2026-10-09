@@ -4,6 +4,8 @@ import { MonoLabel } from "./mono-label";
 
 type AmountInputProps = {
 	label?: string;
+	/** Una línea que explica qué va en el campo, justo debajo. */
+	hint?: string;
 	testID?: string;
 	valueCents: number | null;
 	onChangeCents: (cents: number | null) => void;
@@ -15,6 +17,7 @@ function digitsFromCents(cents: number | null): string {
 
 export function AmountInput({
 	label,
+	hint,
 	testID = "amount-input",
 	valueCents,
 	onChangeCents,
@@ -40,6 +43,7 @@ export function AmountInput({
 					className="flex-1 font-newsreader text-[40px] text-foreground"
 				/>
 			</View>
+			{hint ? <Text className="font-hanken text-[13px] text-foreground/55">{hint}</Text> : null}
 		</View>
 	);
 }

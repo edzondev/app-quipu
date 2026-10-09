@@ -1,10 +1,11 @@
-import { BottomSheet, RNHostView } from "@expo/ui";
+import { RNHostView } from "@expo/ui";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
+import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
 import { X } from "@/shared/components/ui/reicon";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import { noteOfflineSignOut, SIGNED_OUT_HREF } from "@/shared/lib/auth/device-session";
@@ -117,8 +118,13 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					<Text className="font-hanken text-[15px] text-danger">Cerrar sesión</Text>
 				</Pressable>
 			</ScrollView>
-			<BottomSheet isPresented={confirming} onDismiss={dismissConfirm} contentPadding={0}>
-				<RNHostView>
+			<BottomSheet
+				isPresented={confirming}
+				onDismiss={dismissConfirm}
+				contentPadding={0}
+				containerColorClassName="accent-background"
+			>
+				<RNHostView matchContents>
 					{confirming ? (
 						<View className="bg-background px-5.5 pb-8 pt-3">
 							<View className="border-l-2 border-danger pl-3.5">

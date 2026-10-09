@@ -53,7 +53,7 @@ export function ExpenseSheetForm({
 	const remaining = dailyCents == null ? null : remainingAfterExpense(dailyCents, amountCents);
 
 	return (
-		<View className="flex-1 px-[22px] pt-1.5 pb-8">
+		<View className="px-[22px] pt-1.5 pb-8">
 			<View className="flex-row items-center justify-between">
 				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
 					NUEVO GASTO

@@ -2,7 +2,7 @@
 	"expo": {
 		"name": "quipu",
 		"slug": "quipu",
-		"version": "1.0.0",
+		"version": "0.0.1",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
 		"scheme": "quipu",
@@ -12,10 +12,10 @@
 		},
 		"android": {
 			"adaptiveIcon": {
-				"backgroundColor": "#E6F4FE",
-				"foregroundImage": "./assets/images/android-icon-foreground.png",
-				"backgroundImage": "./assets/images/android-icon-background.png",
-				"monochromeImage": "./assets/images/android-icon-monochrome.png"
+				"backgroundColor": "#FBFAF7",
+				"foregroundImage": "./assets/images/quipu-adaptive-foreground.png",
+				"backgroundImage": "./assets/images/quipu-adaptive-background.png",
+				"monochromeImage": "./assets/images/quipu-icon-mono.png"
 			},
 			"predictiveBackGestureEnabled": false,
 			"package": "com.quipu.finance"

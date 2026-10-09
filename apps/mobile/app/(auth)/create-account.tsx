@@ -1,7 +1,7 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
@@ -10,7 +10,6 @@ import AuthButton from "@/shared/components/auth/auth-button";
 import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { AuthNotice } from "@/shared/components/auth/auth-notice";
 import { EmailVerifyStep } from "@/shared/components/auth/email-verify-step";
-import FieldError from "@/shared/components/auth/field-error";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { Check, ChevronLeft } from "@/shared/components/ui/reicon";
 import { emailSchema } from "@/shared/lib/auth/email-schema";
@@ -191,19 +190,12 @@ export default function CreateAccountScreen() {
 									listeners={{ onChange: revalidateOnBlur }}
 								>
 									{(field) => (
-										<View className="gap-1">
-											<TextInput
-												value={field.state.value}
-												onChangeText={(value) => field.handleChange(value)}
-												onBlur={field.handleBlur}
-												autoCapitalize="words"
-												autoComplete="name"
-												accessibilityLabel="Nombre"
-												placeholder="Nombre"
-												className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
-											/>
-											<FieldError field={field} />
-										</View>
+										<AuthLabeledField
+											label="Nombre"
+											field={field}
+											autoCapitalize="words"
+											autoComplete="name"
+										/>
 									)}
 								</form.Field>
 

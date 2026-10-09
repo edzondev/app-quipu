@@ -39,7 +39,6 @@ export default function HomePage() {
 					profileName={model.profileName}
 					onOpenSettings={() => router.push("/ajustes")}
 					onViewAllMovements={() => router.push("/(tabs)/movements")}
-					onRegisterIncome={() => openCreate("income")}
 				/>
 			) : null}
 		</AppShell>

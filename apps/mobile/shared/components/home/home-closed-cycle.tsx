@@ -40,12 +40,7 @@ export function HomeClosedCycle({
 }) {
 	return (
 		<View className="flex-1">
-			<HomeIdentity
-				initial={initial}
-				title={name}
-				onOpenSettings={onOpenSettings}
-				onRegisterIncome={onRegisterIncome}
-			/>
+			<HomeIdentity initial={initial} name={name} onOpenSettings={onOpenSettings} />
 			<View className="mt-6 rounded-2xl border border-line px-5 py-5">
 				<Text className="font-hanken text-[15px] leading-6 text-foreground">
 					{closedCycleMessage(closedCycle, currencySymbol)}

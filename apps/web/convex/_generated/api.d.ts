@@ -33,6 +33,7 @@ import type * as lib_applyIncomeAllocation from "../lib/applyIncomeAllocation.js
 import type * as lib_authRateLimit from "../lib/authRateLimit.js";
 import type * as lib_billingSync from "../lib/billingSync.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
+import type * as lib_closedCycleSurplus from "../lib/closedCycleSurplus.js";
 import type * as lib_coachState from "../lib/coachState.js";
 import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_commitmentDueDate from "../lib/commitmentDueDate.js";
@@ -41,6 +42,7 @@ import type * as lib_commitmentReservation from "../lib/commitmentReservation.js
 import type * as lib_contentFlags from "../lib/contentFlags.js";
 import type * as lib_crisisPlan from "../lib/crisisPlan.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
+import type * as lib_cycleCarryover from "../lib/cycleCarryover.js";
 import type * as lib_cycleCloseReport from "../lib/cycleCloseReport.js";
 import type * as lib_cycleCorrection from "../lib/cycleCorrection.js";
 import type * as lib_cycleForecast from "../lib/cycleForecast.js";
@@ -48,6 +50,7 @@ import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
 import type * as lib_defaultAllocationPlan from "../lib/defaultAllocationPlan.js";
 import type * as lib_deployment from "../lib/deployment.js";
+import type * as lib_devCloudGuard from "../lib/devCloudGuard.js";
 import type * as lib_devSeedGuard from "../lib/devSeedGuard.js";
 import type * as lib_email_authEmailLayout from "../lib/email/authEmailLayout.js";
 import type * as lib_email_authEmailTokens from "../lib/email/authEmailTokens.js";
@@ -147,6 +150,7 @@ declare const fullApi: ApiFromModules<{
   "lib/authRateLimit": typeof lib_authRateLimit;
   "lib/billingSync": typeof lib_billingSync;
   "lib/budgetMath": typeof lib_budgetMath;
+  "lib/closedCycleSurplus": typeof lib_closedCycleSurplus;
   "lib/coachState": typeof lib_coachState;
   "lib/commitmentCoverage": typeof lib_commitmentCoverage;
   "lib/commitmentDueDate": typeof lib_commitmentDueDate;
@@ -155,6 +159,7 @@ declare const fullApi: ApiFromModules<{
   "lib/contentFlags": typeof lib_contentFlags;
   "lib/crisisPlan": typeof lib_crisisPlan;
   "lib/crisisResolution": typeof lib_crisisResolution;
+  "lib/cycleCarryover": typeof lib_cycleCarryover;
   "lib/cycleCloseReport": typeof lib_cycleCloseReport;
   "lib/cycleCorrection": typeof lib_cycleCorrection;
   "lib/cycleForecast": typeof lib_cycleForecast;
@@ -162,6 +167,7 @@ declare const fullApi: ApiFromModules<{
   "lib/dashboardMath": typeof lib_dashboardMath;
   "lib/defaultAllocationPlan": typeof lib_defaultAllocationPlan;
   "lib/deployment": typeof lib_deployment;
+  "lib/devCloudGuard": typeof lib_devCloudGuard;
   "lib/devSeedGuard": typeof lib_devSeedGuard;
   "lib/email/authEmailLayout": typeof lib_email_authEmailLayout;
   "lib/email/authEmailTokens": typeof lib_email_authEmailTokens;

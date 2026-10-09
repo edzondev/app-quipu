@@ -4,6 +4,7 @@ import TabLayout from "@/app/(tabs)/_layout";
 import { OFFLINE_BANNER_DEBOUNCE_MS } from "@/shared/components/offline/offline-banner";
 
 const mockConnectionState = jest.fn();
+const mockTabScreens: { name: string; options?: { popToTopOnBlur?: boolean } }[] = [];
 
 jest.mock("convex/react", () => ({
 	useConvexConnectionState: () => mockConnectionState(),
@@ -14,7 +15,10 @@ jest.mock("expo-router", () => {
 	function Tabs({ children }: { children?: unknown }) {
 		return <View testID="tabs-slot">{children}</View>;
 	}
-	Tabs.Screen = () => null;
+	Tabs.Screen = (props: { name: string; options?: { popToTopOnBlur?: boolean } }) => {
+		mockTabScreens.push(props);
+		return null;
+	};
 	return {
 		Tabs,
 		Redirect: () => null,
@@ -103,6 +107,16 @@ describe("franja offline en el layout de pestañas", () => {
 		});
 		expect(inset.props.mode).toBe("padding");
 		expect(view.getByLabelText("Sin conexión").props.style?.position).not.toBe("absolute");
+	});
+
+	it("Plan y Progreso vuelven a su pantalla raíz al salir de la pestaña", async () => {
+		mockTabScreens.length = 0;
+		await render(<TabLayout />);
+
+		const resetOnBlur = mockTabScreens
+			.filter((screen) => screen.options?.popToTopOnBlur)
+			.map((screen) => screen.name);
+		expect(resetOnBlur.sort()).toEqual(["envelopes", "savings"]);
 	});
 
 	it("no se monta en Inicio", async () => {

@@ -38,16 +38,12 @@ jest.mock("@/shared/components/ui/reicon", () => {
 	};
 });
 
-jest.mock("@expo/ui/community/slider", () => {
-	const { View } = require("react-native");
-	return { Slider: () => <View /> };
-});
-
 jest.mock("@expo/ui", () => {
 	const { View } = require("react-native");
 	return {
 		BottomSheet: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+		ScrollView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 	};
 });
 

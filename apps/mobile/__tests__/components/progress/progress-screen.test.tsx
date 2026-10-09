@@ -42,14 +42,12 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("MAY")).toBeTruthy();
 		expect(view.getByText("SEP")).toBeTruthy();
 		expect(view.getByText("MAYO")).toBeTruthy();
-		expect(view.getByText("AHORRADO TOTAL")).toBeTruthy();
+		expect(view.getByText("AHORRADO\nTOTAL")).toBeTruthy();
 		expect(view.getByText("S/ 4,320")).toBeTruthy();
-		expect(view.getByText("GASTOS REGISTRADOS").parent?.props.className ?? "").not.toContain(
-			"flex-1",
-		);
-		expect(view.getByText("GASTOS REGISTRADOS")).toBeTruthy();
+		expect(view.getByText("GASTOS\nREGISTRADOS").parent?.props.className ?? "").toContain("flex-1");
+		expect(view.getByText("GASTOS\nREGISTRADOS")).toBeTruthy();
 		expect(view.getByText("312")).toBeTruthy();
-		expect(view.getByText("DÍAS SIN SALTAR")).toBeTruthy();
+		expect(view.getByText("DÍAS SIN\nSALTAR")).toBeTruthy();
 		expect(view.getByText("46")).toBeTruthy();
 		expect(view.getByText("Primer ciclo cerrado")).toBeTruthy();
 		expect(view.getByText("RECOMPENSA")).toBeTruthy();
@@ -90,7 +88,9 @@ describe("ProgressScreen", () => {
 
 		expect(view.getByText("MAY")).toBeTruthy();
 		expect(view.getByText("SEP")).toBeTruthy();
-		expect(view.getByLabelText("Ciclo en curso")).toBeTruthy();
+		const current = view.getByLabelText("Ciclo en curso");
+		expect(current).toBeTruthy();
+		expect(current.props.className).toContain("bg-[#F7F5EF]");
 		expect(view.getByText("DESDE MAYO")).toBeTruthy();
 	});
 
