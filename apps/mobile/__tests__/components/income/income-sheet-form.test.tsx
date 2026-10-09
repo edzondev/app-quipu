@@ -116,5 +116,9 @@ describe("IncomeSheetForm", () => {
 		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
 		expect(view.getByText("Cierra este ciclo y empieza uno nuevo")).toBeTruthy();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
+		await fireEvent.press(view.getByRole("button", { name: "Extra" }));
+		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
+		await fireEvent.press(view.getByRole("button", { name: "Sueldo" }));
+		expect(view.getByText("Cierra este ciclo y empieza uno nuevo")).toBeTruthy();
 	});
 });

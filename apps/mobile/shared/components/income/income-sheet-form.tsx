@@ -1,5 +1,4 @@
 import { useForm, useStore } from "@tanstack/react-form";
-import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ExpenseKeypad, KeypadAmount } from "@/shared/components/expenses/expense-keypad";
 import { ErrorText } from "@/shared/components/forms/field-error";
@@ -29,7 +28,6 @@ type Props = {
 export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, onCancel }: Props) {
 	const kinds =
 		cycle === "none" ? INCOME_KINDS.filter((option) => option.kind === "habitual") : INCOME_KINDS;
-	const note = cycle === "none" ? NO_CYCLE_COPY : cycle === "pastEnd" ? PAST_END_COPY : null;
 	const form = useForm({
 		defaultValues: defaultIncomeDraft(),
 		onSubmit: ({ value }) =>
@@ -40,13 +38,6 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
 	const occurredAt = useStore(form.store, (state) => state.values.occurredAt);
-	const incomeKind = useStore(form.store, (state) => state.values.incomeKind);
-
-	useEffect(() => {
-		if (cycle === "none" && incomeKind === "extraordinary") {
-			form.setFieldValue("incomeKind", "habitual");
-		}
-	}, [cycle, form, incomeKind]);
 
 	return (
 		<View className="flex-1 px-[22px] pb-8">
@@ -66,40 +57,49 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 			</View>
 
 			<form.Field name="incomeKind">
-				{(field) => (
-					<View className="mt-4 gap-2">
-						<View className="flex-row gap-2">
-							{kinds.map((option) => {
-								const selected = field.state.value === option.kind;
-								return (
-									<Pressable
-										key={option.kind}
-										accessibilityRole="button"
-										accessibilityLabel={option.label}
-										accessibilityState={{ selected }}
-										onPress={() => field.handleChange(option.kind)}
-										className={`flex-1 items-center rounded-full border px-3 py-2.5 active:opacity-60 ${
-											selected ? "border-primary bg-primary/5" : "border-line"
-										}`}
-									>
-										<Text
-											className={
-												selected
-													? "font-hanken-semibold text-[13px] text-foreground"
-													: "font-hanken text-[13px] text-foreground/55"
-											}
+				{(field) => {
+					const kind = cycle === "none" ? "habitual" : field.state.value;
+					const note =
+						cycle === "none"
+							? NO_CYCLE_COPY
+							: cycle === "pastEnd" && kind === "habitual"
+								? PAST_END_COPY
+								: null;
+					return (
+						<View className="mt-4 gap-2">
+							<View className="flex-row gap-2">
+								{kinds.map((option) => {
+									const selected = kind === option.kind;
+									return (
+										<Pressable
+											key={option.kind}
+											accessibilityRole="button"
+											accessibilityLabel={option.label}
+											accessibilityState={{ selected }}
+											onPress={() => field.handleChange(option.kind)}
+											className={`flex-1 items-center rounded-full border px-3 py-2.5 active:opacity-60 ${
+												selected ? "border-primary bg-primary/5" : "border-line"
+											}`}
 										>
-											{option.label}
-										</Text>
-									</Pressable>
-								);
-							})}
+											<Text
+												className={
+													selected
+														? "font-hanken-semibold text-[13px] text-foreground"
+														: "font-hanken text-[13px] text-foreground/55"
+												}
+											>
+												{option.label}
+											</Text>
+										</Pressable>
+									);
+								})}
+							</View>
+							{note ? (
+								<Text className="font-hanken text-[13px] text-foreground/55">{note}</Text>
+							) : null}
 						</View>
-						{note ? (
-							<Text className="font-hanken text-[13px] text-foreground/55">{note}</Text>
-						) : null}
-					</View>
-				)}
+					);
+				}}
 			</form.Field>
 
 			<View className="mt-5">
