@@ -181,7 +181,6 @@ describe("presentClose", () => {
 			"Ahorro",
 			"Sobró",
 		]);
-		expect(model?.showMove).toBe(false);
 		expect(JSON.stringify(model)).not.toContain("%");
 		expect(JSON.stringify(model)).not.toContain("cycle-1");
 	});
@@ -240,7 +239,6 @@ describe("presentClose", () => {
 
 		expect(model?.title).toBe("Cerraste julio.");
 		expect(model?.surplusLabel).toBeNull();
-		expect(model?.showMove).toBe(false);
 	});
 
 	it("devuelve null sin reporte", () => {

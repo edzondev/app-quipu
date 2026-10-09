@@ -1,11 +1,8 @@
 import { api } from "@quipu/convex-api";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { ErrorText } from "@/shared/components/forms/field-error";
+import { Text, View } from "react-native";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
-import { readActionError } from "@/shared/lib/expenses/errors";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 
 export type ClosedCycleSurplus = FunctionReturnType<typeof api.savings.getClosedCycleSurplus>;
@@ -19,25 +16,8 @@ const ROWS = [
 export function ClosedCycleSurplusCard() {
 	const { isAuthReady } = useProfileGate();
 	const surplus = useQuery(api.savings.getClosedCycleSurplus, isAuthReady ? {} : "skip");
-	const moveToFund = useMutation(api.savings.moveClosedCycleSurplusToFund);
-	const [pending, setPending] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 
 	if (surplus == null || surplus.total === 0) return null;
-	const closedCycleId = surplus.closedCycleId;
-
-	async function onMove() {
-		if (pending) return;
-		setPending(true);
-		setError(null);
-		try {
-			await moveToFund({ closedCycleId });
-		} catch (caught) {
-			setError(readActionError(caught, "No se pudo mover el sobrante al Fondo."));
-		} finally {
-			setPending(false);
-		}
-	}
 
 	return (
 		<View className="mt-[22px]">
@@ -62,32 +42,6 @@ export function ClosedCycleSurplusCard() {
 					</View>
 				))}
 			</View>
-			{surplus.movedAt === null ? (
-				<>
-					<Pressable
-						accessibilityRole="button"
-						accessibilityLabel="Mover al Fondo"
-						accessibilityState={{ disabled: pending }}
-						disabled={pending}
-						onPress={() => void onMove()}
-						className={`mt-[22px] items-center rounded-[13px] bg-primary py-4 active:opacity-80 ${
-							pending ? "opacity-60" : ""
-						}`}
-					>
-						<Text className="font-hanken-semibold text-[15px] text-background">
-							{pending ? "Moviendo…" : "Mover al Fondo"}
-						</Text>
-					</Pressable>
-					{error ? <ErrorText message={error} /> : null}
-				</>
-			) : (
-				<Text
-					accessibilityLabel="Sobrante movido al Fondo"
-					className="mt-[22px] text-center font-hanken text-[14px] text-foreground/45"
-				>
-					Movido al Fondo
-				</Text>
-			)}
 		</View>
 	);
 }

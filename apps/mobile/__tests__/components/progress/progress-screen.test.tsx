@@ -175,6 +175,8 @@ describe("CloseScreen", () => {
 		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.queryByText("Mover S/ 210 al Fondo")).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
+		expect(view.queryByRole("button", { name: "Mover al Fondo" })).toBeNull();
 		expect(view.queryByText("Dejarlos en Gustos")).toBeNull();
 		expect(view.queryByText(/%/)).toBeNull();
 		expect(view.queryByText("cycle-1")).toBeNull();

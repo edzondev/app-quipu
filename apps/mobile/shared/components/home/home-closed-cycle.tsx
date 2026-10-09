@@ -13,9 +13,15 @@ function closedCycleMessage(cycle: ClosedCycleSummary, symbol: string): string {
 	const end = limaDayLabel(inclusiveEndDate(cycle.endDate));
 	const ended = `Tu ciclo del ${start} al ${end} terminó.`;
 	const kept = "Tus movimientos siguen guardados.";
-	if (cycle.surplusCents <= 0) return `${ended} ${kept}`;
-	const left = formatCentsTrimmed(cycle.surplusCents, symbol);
-	return `${ended} Te quedaron ${left} y se suman a tu próximo ingreso. ${kept}`;
+	if (cycle.surplusCents > 0) {
+		const left = formatCentsTrimmed(cycle.surplusCents, symbol);
+		return `${ended} Te quedaron ${left} y se suman a tu próximo ingreso. ${kept}`;
+	}
+	if (cycle.surplusCents < 0) {
+		const over = formatCentsTrimmed(Math.abs(cycle.surplusCents), symbol);
+		return `${ended} Te pasaste por ${over} y se descuenta de tu próximo ingreso. ${kept}`;
+	}
+	return `${ended} ${kept}`;
 }
 
 export function HomeClosedCycle({
