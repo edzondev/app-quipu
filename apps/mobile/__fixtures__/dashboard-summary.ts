@@ -145,4 +145,5 @@ export const summaryWithoutCycle: IdleSummary = {
 	coach: null,
 	movements: [],
 	isEarlyCycle: false,
+	closedCycle: null,
 } satisfies IdleSummary;

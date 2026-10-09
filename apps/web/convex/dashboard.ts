@@ -1,5 +1,10 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import {
+	dashboardClosedCycle,
+	findLatestClosedCycle,
+	loadClosedCycleSurplusAmounts,
+} from "./lib/closedCycleSurplus";
 import { resolveCoachPresentation } from "./lib/coachState";
 import {
 	computeCoverageProgressPercent,
@@ -69,6 +74,14 @@ export const getSummary = query({
 		const now = Date.now();
 
 		if (!activeCycle) {
+			const latestClosed = await findLatestClosedCycle(ctx, profile._id);
+			let surplusCents = 0;
+			if (latestClosed !== null) {
+				const amounts = await loadClosedCycleSurplusAmounts(ctx, latestClosed._id);
+				surplusCents = amounts.total;
+			}
+			const closedCycle = dashboardClosedCycle(latestClosed, surplusCents);
+
 			const emptyCommitments = sortCommitmentsByDue(
 				commitmentsRaw.map((commitment) => {
 					const nextDueAt = resolveCommitmentNextDueAt({
@@ -117,6 +130,7 @@ export const getSummary = query({
 				coach: null,
 				movements: [],
 				isEarlyCycle: false,
+				closedCycle,
 			};
 		}
 
