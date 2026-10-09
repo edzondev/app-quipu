@@ -46,6 +46,7 @@ export type MovementsListModel = {
 	groups: MovementDayGroup[];
 	isEmpty: boolean;
 	isFilterEmpty: boolean;
+	hasCycle: boolean;
 };
 
 export const MOVEMENT_FILTERS = [
@@ -96,11 +97,13 @@ export function presentMovementList(
 			matchesFilter(row.tone, options.filter) && matchesQuery(row.label, options.query),
 	);
 
+	const cycle = readCycle(data);
 	return {
-		cycleLine: formatCycleLine(readCycle(data), built.length),
+		cycleLine: formatCycleLine(cycle, built.length),
 		groups: groupByDay(visible, symbol, nowStamp.key, yesterdayKey),
 		isEmpty: built.length === 0,
 		isFilterEmpty: built.length > 0 && visible.length === 0,
+		hasCycle: cycle != null,
 	};
 }
 

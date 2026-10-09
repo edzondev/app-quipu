@@ -1,4 +1,7 @@
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { authClient } from "@/lib/auth-client";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { X } from "@/shared/components/ui/reicon";
@@ -60,8 +63,38 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 						<ListRow label="Reparto" value={model.repartoLabel} />
 						<ListRow label="Ciclo e ingresos" value={model.scheduleCopy} isLast />
 					</View>
+					<SignOutRow />
 				</ScrollView>
 			) : null}
 		</View>
+	);
+}
+
+function SignOutRow() {
+	const router = useRouter();
+	const [pending, setPending] = useState(false);
+
+	async function closeSession() {
+		if (pending) return;
+		setPending(true);
+		try {
+			await authClient.signOut();
+		} finally {
+			router.replace("/sign-in");
+		}
+	}
+
+	return (
+		<Pressable
+			accessibilityRole="button"
+			accessibilityState={{ disabled: pending }}
+			disabled={pending}
+			onPress={() => {
+				void closeSession().catch(() => {});
+			}}
+			className={`mt-4 border-t border-line py-3.5 active:opacity-60 ${pending ? "opacity-40" : ""}`}
+		>
+			<Text className="font-hanken text-[15px] text-foreground">Cerrar sesión</Text>
+		</Pressable>
 	);
 }

@@ -111,7 +111,12 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 				</View>
 			) : null}
 
-			{model?.isEmpty ? <EmptyState onCreate={onCreate} /> : null}
+			{model?.isEmpty ? (
+				<EmptyState
+					onCreate={onCreate}
+					label={model.hasCycle ? "Registrar gasto" : "Registrar ingreso"}
+				/>
+			) : null}
 			{model?.isFilterEmpty ? (
 				<Text className="py-10 text-center font-hanken text-[15px] text-foreground/55">
 					{FILTER_EMPTY}
@@ -241,7 +246,7 @@ function MovementRow({ row, onOpen }: { row: MovementListRow; onOpen: (id: strin
 	);
 }
 
-function EmptyState({ onCreate }: { onCreate: () => void }) {
+function EmptyState({ onCreate, label }: { onCreate: () => void; label: string }) {
 	return (
 		<View className="flex-1 items-center justify-center px-2 py-10">
 			<EmptyArt />
@@ -256,7 +261,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 				className="mt-6 rounded-xl bg-foreground px-[22px] py-3.5"
 				onPress={onCreate}
 			>
-				<Text className="font-hanken-semibold text-[14px] text-background">Registrar gasto</Text>
+				<Text className="font-hanken-semibold text-[14px] text-background">{label}</Text>
 			</Pressable>
 		</View>
 	);
