@@ -16,7 +16,7 @@ type WizardShellProps = {
 
 export function WizardShell({ stepNumber, children, footer, onBack }: WizardShellProps) {
 	const router = useRouter();
-	const { dispatch } = useOnboarding();
+	const { state, dispatch } = useOnboarding();
 
 	const goBack = () => {
 		if (onBack) {
@@ -31,7 +31,8 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 			}
 			return;
 		}
-		dispatch({ type: "SET_STEP", payload: (stepNumber - 1) as WizardStep });
+		const previous = stepNumber === 5 && state.commitmentsSaved ? 3 : stepNumber - 1;
+		dispatch({ type: "SET_STEP", payload: previous as WizardStep });
 	};
 
 	return (

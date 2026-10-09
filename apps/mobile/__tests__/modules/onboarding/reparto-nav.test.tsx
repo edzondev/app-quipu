@@ -63,6 +63,10 @@ function Harness() {
 			<SistemaWizard />
 			<Text testID="probe-step">{String(state.step)}</Text>
 			<Pressable testID="go-5" onPress={go(5)} />
+			<Pressable
+				testID="mark-saved"
+				onPress={() => dispatch({ type: "UPDATE", payload: { commitmentsSaved: true } })}
+			/>
 		</>
 	);
 }
@@ -139,5 +143,35 @@ describe("navegación del reparto", () => {
 		});
 		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
+	});
+
+	it("con compromisos ya guardados salta Compromisos al ir y al volver", async () => {
+		await render(
+			<OnboardingProvider>
+				<Harness />
+			</OnboardingProvider>,
+		);
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("mark-saved"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
+		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.queryByText("¿Qué pagas todos los meses?")).toBeNull();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("wizard-back"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getAllByText(REPARTO)).toHaveLength(1);
+		expect(screen.queryByText("¿Qué pagas todos los meses?")).toBeNull();
 	});
 });

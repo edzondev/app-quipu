@@ -32,7 +32,7 @@ export function Step3Allocation() {
 	};
 
 	const continueToCommitments = () => {
-		dispatch({ type: "SET_STEP", payload: 4 });
+		dispatch({ type: "SET_STEP", payload: state.commitmentsSaved ? 5 : 4 });
 	};
 
 	return (

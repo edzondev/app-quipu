@@ -52,7 +52,7 @@ describe("Step1IncomeProfile", () => {
 		jest.clearAllMocks();
 	});
 
-	it("arranca en 01/04 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
+	it("arranca en 01/05 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
 		await renderStep1();
 		expect(screen.getByText("TU SISTEMA · 01/05")).toBeTruthy();
 		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
