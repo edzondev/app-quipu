@@ -151,7 +151,7 @@ export const getSummary = query({
 
 		const cycleMetrics = computeCycleDayMetrics(activeCycle.startDate, activeCycle.endDate, now);
 
-		const compliance = evaluateCycleCompliance(envelopesRaw);
+		const compliance = evaluateCycleCompliance(envelopesRaw, activeCycle.isOpeningCycle === true);
 		const wantsEnvelope = envelopeByType.get("wants");
 		const needsEnvelope = envelopeByType.get("needs");
 		const savingsEnvelope = envelopeByType.get("savings");
@@ -396,6 +396,7 @@ export const getSummary = query({
 				unallocatedCents: activeCycle.unallocatedCents ?? 0,
 				carriedOverFromCycleId: activeCycle.carriedOverFromCycleId ?? null,
 				carriedOverExtraordinaryCents: activeCycle.carriedOverExtraordinaryCents ?? 0,
+				isOpeningCycle: activeCycle.isOpeningCycle === true,
 				...cycleMetrics,
 				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
 			},
