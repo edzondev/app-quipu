@@ -74,8 +74,6 @@ export type CloseScreenModel = {
 	surplusLabel: string | null;
 	segments: CloseSegmentView[];
 	rows: CloseRowView[];
-	/** El reporte no trae fromEnvelope. La acción de mover queda oculta. */
-	showMove: false;
 };
 
 export function presentProgress(
@@ -126,7 +124,6 @@ export function presentClose(
 		surplusLabel: surplusCents == null ? null : `SOBRÓ ${formatCentsTrimmed(surplusCents, symbol)}`,
 		segments: toSegments(report, spentCents, surplusCents),
 		rows: toRows(report.spendByEnvelope, symbol),
-		showMove: false,
 	};
 }
 

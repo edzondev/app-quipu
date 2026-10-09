@@ -1,5 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
+import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
@@ -22,6 +23,12 @@ export type HomeEnvelope = {
 	progress: number;
 	tone: "needs" | "wants" | "savings";
 	suffix: string;
+	/** Arrastre del ciclo anterior, tal como lo trae getSummary. */
+	carriedOverCents: number;
+	/** Ingreso de este ciclo en el sobre, tal como lo trae getSummary. */
+	incomeCents: number;
+	/** Total del sobre, tal como lo trae getSummary. */
+	carryTotalCents: number;
 };
 
 export type HomeMovement = {
@@ -137,10 +144,37 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 	};
 }
 
+const MINUS_SIGN = "\u2212";
+
+/** Línea de arrastre. Null si el ciclo anterior no dejó saldo. No suma los céntimos. */
+export function envelopeCarryLabel(
+	carriedOverCents: number,
+	incomeCents: number,
+	totalCents: number,
+	symbol: string,
+): string | null {
+	if (carriedOverCents === 0) return null;
+	const carried = formatCarryCents(carriedOverCents, symbol);
+	const income = formatCarryCents(incomeCents, symbol);
+	const total = formatCarryCents(totalCents, symbol);
+	return `Saldo que quedó ${carried} + Ingreso ${income} = ${total}`;
+}
+
+function formatCarryCents(cents: number, symbol: string): string {
+	if (cents < 0) return `${MINUS_SIGN}${formatCentsTrimmed(Math.abs(cents), symbol)}`;
+	return formatCentsTrimmed(cents, symbol);
+}
+
 export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
+	const carry = {
+		carriedOverCents: envelope.carriedOverCents,
+		incomeCents: envelope.incomeCents,
+		carryTotalCents: envelope.totalCents,
+	};
 	const type = readEnvelopeType(envelope.type);
 	if (type === "savings") {
 		return {
+			...carry,
 			label: ENVELOPE_LABEL.savings,
 			shortLabel: SHORT_ENVELOPE_LABEL.savings,
 			spentCents: envelope.allocatedAmount,
@@ -160,6 +194,7 @@ export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
 			: 0;
 
 	return {
+		...carry,
 		label: ENVELOPE_LABEL[type],
 		shortLabel: SHORT_ENVELOPE_LABEL[type],
 		spentCents,
