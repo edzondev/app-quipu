@@ -4,11 +4,12 @@ tags:
   - registrar
   - no-cycle
 ---
+# Antes: sin-ciclo-solo-sueldo.
 # Notion 3f486a7356a681daadc6eba893faea43
-# Solo cuando nunca hubo un ciclo: la hoja ofrece Sueldo y
-# «Tu sueldo empieza un ciclo nuevo». Extra no aparece.
-# Un ciclo vencido sigue ofreciendo Extra; este flujo no es ese caso.
+# Sin ningún ciclo solo se puede empezar uno. «Sumar al ciclo actual» no está.
+# El texto de ayuda, si lo hay, está por confirmar con Pixi.
 # No guarda, así que la cuenta sigue sin ciclo.
+# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
 #
 # devSeed:seedVerifiedAccount (PR #107) crea una cuenta sin perfil y cae
 # en el asistente. Esta cuenta tiene que tener perfil y ningún ciclo:
@@ -26,11 +27,9 @@ tags:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "^Sueldo$"
+    text: "¿Empieza un nuevo ciclo\\?"
     below: "REGISTRAR INGRESO"
-- assertVisible: "Tu sueldo empieza un ciclo nuevo"
-- assertNotVisible:
-    text: "^Extra$"
+- assertNotVisible: "Sumar al ciclo actual"
 - tapOn: "Cancelar"
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"

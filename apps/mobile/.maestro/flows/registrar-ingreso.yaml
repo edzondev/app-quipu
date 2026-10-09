@@ -4,13 +4,16 @@ tags:
   - registrar
 ---
 # Notion 3f486a7356a6815e9dfcf8f2dd7c1ce4
-# Ingreso extra con ciclo activo: se elige Extra y el ciclo no se cierra.
-# El detalle de fechas está en extra-no-cierra.yaml.
+# Con un ciclo que empezó antes de hoy se ven las dos opciones.
+# «Sumar al ciclo actual» no lo cierra. El rango se compara en sumar-no-cierra.
+# No uses la cuenta fija: cada corrida necesita la suya. Una semilla de hoy
+# no alcanza (ese día solo se ve «Sumar»). Depende de QUIPU_E2E_PRIOR_CYCLE_*.
+# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_PRIOR_CYCLE_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PRIOR_CYCLE_PASSWORD}
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
@@ -25,10 +28,10 @@ tags:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "^Sueldo$"
+    text: "¿Empieza un nuevo ciclo\\?"
     below: "REGISTRAR INGRESO"
 - assertVisible:
-    text: "^Extra$"
+    text: "Sumar al ciclo actual"
     below: "REGISTRAR INGRESO"
 - tapOn:
     text: "^Gasto$"
@@ -39,7 +42,7 @@ tags:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
 - tapOn:
-    text: "^Extra$"
+    text: "Sumar al ciclo actual"
     below: "REGISTRAR INGRESO"
 - tapOn:
     text: "^1$"

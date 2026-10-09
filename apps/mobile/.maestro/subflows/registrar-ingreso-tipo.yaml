@@ -1,7 +1,10 @@
 appId: com.quipu.finance
 ---
-# QUIPU_TIPO es Sueldo o Extra. Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
-# Espera arreglo pendiente (Pixi): el selector todavía no existe; hoy todo se guarda como Sueldo.
+# QUIPU_TIPO es el texto completo de la opción, como regex:
+# "¿Empieza un nuevo ciclo\\?" o "Sumar al ciclo actual".
+# Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
+# Espera arreglo pendiente (Pixi): en e54ad3d la hoja no pregunta.
+# Todo ingreso se manda como habitual y cierra el ciclo.
 - tapOn:
     text: "\\+ Ingreso"
 - extendedWaitUntil:

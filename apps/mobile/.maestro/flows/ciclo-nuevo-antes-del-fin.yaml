@@ -3,16 +3,18 @@ tags:
   - p0
   - registrar
 ---
+# Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
-# Un Sueldo varios días antes del fin cierra el ciclo. No hay ventana de 2 días.
-# La cuenta QUIPU_E2E_EMAIL tiene que tener un ciclo activo con varios días
-# por delante (más de 2). Cobro mañana no sirve: en d7bcb41 eso ya cierra.
-# Bloqueado hasta la semilla de ciclo activo de Nato. No uses una cuenta personal.
+# «¿Empieza un nuevo ciclo?» cierra el ciclo en cualquier fecha (#105).
+# El ciclo tiene que haber empezado antes de hoy y quedar a varios días del fin.
+# No sirve la cuenta fija ni una semilla de hoy: depende de una semilla futura,
+# una cuenta nueva por corrida (QUIPU_E2E_PRIOR_CYCLE_*). No uses una cuenta personal.
+# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_PRIOR_CYCLE_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PRIOR_CYCLE_PASSWORD}
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
@@ -29,7 +31,7 @@ tags:
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: Sueldo
+      QUIPU_TIPO: "¿Empieza un nuevo ciclo\\?"
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:

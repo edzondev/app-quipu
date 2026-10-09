@@ -2,26 +2,27 @@ appId: com.quipu.finance
 tags:
   - p0
   - progreso
-  - onboarding
 ---
 # Notion 3f486a7356a6817698dbdf13ffd7bd83
 # Notion 3f486a7356a6819d80b8f1b507a473e6
-# El primer ciclo cuenta en Progreso. Lo cierra un Sueldo, no el vencimiento.
-# Extra no cierra. Hace falta el seed de una cuenta nueva antes de correrlo.
-# Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
+# Bloqueado. Hace falta una cuenta cuyo ciclo de apertura empezó antes de hoy.
+# Ninguna semilla lo dice todavía: QUIPU_E2E_OPENING_PRIOR_* (Nato).
+# No uses la cuenta fija ni una semilla de hoy: ese día no se puede cerrar.
+# El cierre entra en el historial de Progreso. La racha no cambia.
+# No se afirma el número: si cuenta el ciclo de apertura está por confirmar.
+# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_OPENING_PRIOR_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_OPENING_PRIOR_PASSWORD}
 - extendedWaitUntil:
-    visible: "¿Cómo entra tu dinero?"
+    visible: "Hoy puedes gastar"
     timeout: 30000
-- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: Sueldo
+      QUIPU_TIPO: "¿Empieza un nuevo ciclo\\?"
 - tapOn:
     text: "^Progreso$"
 - extendedWaitUntil:

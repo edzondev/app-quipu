@@ -9,6 +9,9 @@ tags:
 # Registra el primer ingreso y deja la cuenta CON ciclo. Una sola corrida.
 # No se afirman S/ 1,500 ni «Día 1/15»: el largo del ciclo y el fallo M18
 # («Día 0») no son estables para Maestro.
+# Sin ciclo solo aparece «¿Empieza un nuevo ciclo?».
+# La etiqueta de la fila en Movimientos queda pendiente de Pixi. No se afirma.
+# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -22,11 +25,9 @@ tags:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "^Sueldo$"
+    text: "¿Empieza un nuevo ciclo\\?"
     below: "REGISTRAR INGRESO"
-- assertVisible: "Tu sueldo empieza un ciclo nuevo"
-- assertNotVisible:
-    text: "^Extra$"
+- assertNotVisible: "Sumar al ciclo actual"
 - tapOn:
     text: "^3$"
 - tapOn:
@@ -52,7 +53,7 @@ tags:
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
-    visible: "Sueldo"
+    visible: "CICLO .*"
     timeout: 15000
 - tapOn:
     text: "^Plan$"

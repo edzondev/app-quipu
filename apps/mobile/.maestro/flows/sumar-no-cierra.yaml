@@ -2,18 +2,24 @@ appId: com.quipu.finance
 tags:
   - p0
   - registrar
+  - onboarding
 ---
+# Antes: extra-no-cierra.
 # Notion 3f486a7356a681a482f5ee2d8b6e2702
-# Extra entra al ciclo activo y no lo cierra. Tampoco cierra un ciclo vencido;
-# ese caso pide un ciclo con pastEnd y el seed de hoy no lo crea.
+# «Sumar al ciclo actual» entra al ciclo y no lo cierra.
+# Cuenta nueva por corrida (pre-paso + asistente). El ciclo empieza hoy,
+# así que no hace falta uno de un día anterior.
+# El ciclo vencido queda para la semilla planeada de Nato. No hay flujo.
+# Espera arreglo pendiente (Pixi): la hoja todavía no pregunta.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
 - extendedWaitUntil:
-    visible: "Hoy puedes gastar"
+    visible: "¿Cómo entra tu dinero?"
     timeout: 30000
+- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
@@ -27,7 +33,7 @@ tags:
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: Extra
+      QUIPU_TIPO: "Sumar al ciclo actual"
 - tapOn:
     text: "^Movimientos$"
 - extendedWaitUntil:
