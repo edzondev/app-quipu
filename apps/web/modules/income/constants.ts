@@ -1,5 +1,6 @@
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
-import type { IncomeSource } from "./types";
+
+export { getIncomeSourceLabel, INCOME_SOURCE_OPTIONS } from "@/shared/lib/incomeSource";
 
 /** Máximo en céntimos para registrar ingreso. */
 export const INCOME_MAX_CENTS = 99_999_999;
@@ -117,23 +118,6 @@ export const INCOME_HELD_SUGGESTED = "Sugerido de compromisos sin cubrir";
 export const INCOME_IMPACT_GROSS_LABEL = "Bruto";
 export const INCOME_IMPACT_HELD_LABEL = "Apartado";
 export const INCOME_IMPACT_DISTRIBUTABLE_LABEL = "A repartir";
-
-export const INCOME_SOURCE_OPTIONS: ReadonlyArray<{
-	value: IncomeSource;
-	label: string;
-}> = [
-	{ value: "payroll", label: "Sueldo" },
-	{ value: "freelance", label: "Proyecto" },
-	{ value: "business", label: "Negocio" },
-	{ value: "gift", label: "Regalo" },
-	{ value: "refund", label: "Devolución" },
-	{ value: "investment", label: "Inversión" },
-	{ value: "other", label: "Otro" },
-];
-
-export function getIncomeSourceLabel(source: IncomeSource): string {
-	return INCOME_SOURCE_OPTIONS.find((option) => option.value === source)?.label ?? "Ingreso";
-}
 
 export const ENVELOPE_INCOME_STYLES = {
 	needs: {

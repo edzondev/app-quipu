@@ -10,21 +10,12 @@ const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 
 type Props = {
 	currencySymbol: string;
-	fieldError?: string | null;
 	formError?: string | null;
-	isSubmitting?: boolean;
-	onSubmit: (draft: IncomeDraft) => void;
+	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
 	onCancel: () => void;
 };
 
-export function IncomeSheetForm({
-	currencySymbol,
-	fieldError,
-	formError,
-	isSubmitting = false,
-	onSubmit,
-	onCancel,
-}: Props) {
+export function IncomeSheetForm({ currencySymbol, formError, onSubmit, onCancel }: Props) {
 	const form = useForm({
 		defaultValues: defaultIncomeDraft(),
 		onSubmit: ({ value }) => onSubmit(value),
@@ -52,7 +43,6 @@ export function IncomeSheetForm({
 			<View className="mt-5">
 				<KeypadAmount currencySymbol={currencySymbol} cents={amountCents} />
 			</View>
-			{fieldError ? <ErrorText message={fieldError} /> : null}
 
 			<ListRow
 				label="Fecha"
@@ -69,18 +59,23 @@ export function IncomeSheetForm({
 			</View>
 
 			{formError ? <ErrorText message={formError} /> : null}
-			<Pressable
-				accessibilityRole="button"
-				disabled={isSubmitting}
-				onPress={() => void form.handleSubmit()}
-				className={`mt-2 items-center rounded-[13px] bg-primary py-4 active:opacity-80 ${
-					isSubmitting ? "opacity-60" : ""
-				}`}
-			>
-				<Text className="font-hanken-semibold text-[15px] text-background">
-					{isSubmitting ? "Guardando…" : "Registrar ingreso"}
-				</Text>
-			</Pressable>
+			<form.Subscribe selector={(state) => state.isSubmitting}>
+				{(isSubmitting) => (
+					<Pressable
+						accessibilityRole="button"
+						accessibilityState={{ disabled: isSubmitting }}
+						disabled={isSubmitting}
+						onPress={() => form.handleSubmit()}
+						className={`mt-2 items-center rounded-[13px] bg-primary py-4 active:opacity-80 ${
+							isSubmitting ? "opacity-60" : ""
+						}`}
+					>
+						<Text className="font-hanken-semibold text-[15px] text-background">
+							{isSubmitting ? "Guardando…" : "Registrar ingreso"}
+						</Text>
+					</Pressable>
+				)}
+			</form.Subscribe>
 		</View>
 	);
 }

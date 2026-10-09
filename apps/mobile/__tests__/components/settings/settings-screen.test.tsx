@@ -2,6 +2,19 @@ import { act, fireEvent, render } from "@testing-library/react-native";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
+const mockReplace = jest.fn();
+const mockSignOut = jest.fn();
+
+jest.mock("expo-router", () => ({
+	useRouter: () => ({ replace: mockReplace }),
+}));
+
+jest.mock("@/lib/auth-client", () => ({
+	authClient: {
+		signOut: () => mockSignOut(),
+	},
+}));
+
 jest.mock("@/shared/components/ui/reicon", () => ({
 	X: () => null,
 	ChevronRight: () => null,
@@ -76,5 +89,38 @@ describe("SettingsScreen", () => {
 			fireEvent.press(view.getByRole("button", { name: "Seguridad y Passkeys" }));
 		});
 		expect(onOpenSecurity).toHaveBeenCalledTimes(1);
+	});
+
+	it("cerrar sesión llama a signOut, va a /sign-in y no acepta un segundo toque", async () => {
+		let release: () => void = () => undefined;
+		mockSignOut.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					release = resolve;
+				}),
+		);
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Cerrar sesión" }));
+		});
+		const button = view.getByRole("button", { name: "Cerrar sesión" });
+		expect(button.props.accessibilityState.disabled).toBe(true);
+		await act(async () => {
+			fireEvent.press(button);
+		});
+		expect(mockSignOut).toHaveBeenCalledTimes(1);
+
+		await act(async () => {
+			release();
+		});
+		expect(mockReplace).toHaveBeenCalledWith("/sign-in");
 	});
 });

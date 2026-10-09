@@ -1,7 +1,13 @@
 import { act, render } from "@testing-library/react-native";
-import { getFunctionName } from "convex/server";
+import { type FunctionReference, getFunctionName } from "convex/server";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
 import { limaStartOfDay } from "@/shared/lib/lima-date";
+
+function isFunctionReference(
+	value: unknown,
+): value is FunctionReference<"query" | "mutation" | "action"> {
+	return typeof value === "object" && value !== null;
+}
 
 const mockUseMutation = jest.fn();
 
@@ -13,9 +19,9 @@ const createMock = jest.fn();
 
 function installMutationMocks() {
 	mockUseMutation.mockImplementation((mutation: unknown) => {
-		const name = getFunctionName(mutation as Parameters<typeof getFunctionName>[0]);
-		if (name === "incomeEvents:createIncomeEvent") return createMock;
-		throw new Error(`useMutation inesperado: ${name}`);
+		if (!isFunctionReference(mutation)) throw new Error("useMutation inesperado");
+		if (getFunctionName(mutation) === "incomeEvents:createIncomeEvent") return createMock;
+		throw new Error("useMutation inesperado");
 	});
 }
 
@@ -45,8 +51,8 @@ describe("useIncomeActions", () => {
 		expect(createMock).toHaveBeenCalledTimes(1);
 		expect(createMock).toHaveBeenCalledWith({
 			amount: 350000,
-			source: "other",
-			description: "Ingreso",
+			source: "payroll",
+			description: "Sueldo",
 			occurredAt,
 			incomeKind: "habitual",
 		});

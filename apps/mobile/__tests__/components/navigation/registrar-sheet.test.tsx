@@ -1,7 +1,8 @@
-import { cleanup, render } from "@testing-library/react-native";
+import { cleanup, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
-import { useHomeModel } from "@/shared/hooks/use-dashboard";
+
+const mockUseHomeModel = jest.fn();
 
 jest.mock("@/shared/components/ui/reicon", () => ({
 	ChevronRight: () => null,
@@ -21,7 +22,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({
-	useHomeModel: jest.fn(),
+	useHomeModel: () => mockUseHomeModel(),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -36,7 +37,7 @@ jest.mock("@/shared/hooks/use-income-actions", () => ({
 	useIncomeActions: () => ({ register: jest.fn() }),
 }));
 
-const home = useHomeModel as jest.Mock;
+const home = mockUseHomeModel;
 
 describe("RegistrarSheet", () => {
 	afterEach(() => {
@@ -58,6 +59,28 @@ describe("RegistrarSheet", () => {
 			true,
 		);
 		expect(view.queryByText("NUEVO GASTO")).toBeNull();
+	});
+
+	it("sin ciclo no deja elegir Gasto ni abrir el detalle", async () => {
+		home.mockReturnValue({
+			status: "empty",
+			profileName: "Edzon",
+			profileInitial: "E",
+		});
+		const view = await render(
+			<RegistrarSheet
+				isPresented
+				session={{ nonce: 3, intent: "expense" }}
+				onDismiss={jest.fn()}
+			/>,
+		);
+
+		const gasto = view.getByRole("button", { name: "Gasto" });
+		expect(gasto.props.accessibilityState.disabled).toBe(true);
+		await fireEvent.press(gasto);
+		expect(view.queryByText("NUEVO GASTO")).toBeNull();
+		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
+		expect(view.getByText("Registrar ingreso")).toBeTruthy();
 	});
 
 	it("abre en Gasto cuando hay ciclo y el botón central no pide ingreso", async () => {
