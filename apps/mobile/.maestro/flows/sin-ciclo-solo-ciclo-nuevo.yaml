@@ -3,20 +3,19 @@ tags:
   - p0
   - registrar
   - no-cycle
+  - cuenta-nueva
 ---
 # Antes: sin-ciclo-solo-sueldo.
 # Notion 3f486a7356a681daadc6eba893faea43
 # Sin ningún ciclo solo está «Empieza un nuevo ciclo». «Sumar al ciclo actual» no está.
 # No guarda, así que la cuenta sigue sin ciclo.
 #
-# devSeed:seedVerifiedAccount (PR #107) crea una cuenta sin perfil y cae
-# en el asistente. Esta cuenta tiene que tener perfil y ningún ciclo:
-# QUIPU_E2E_NO_CYCLE_*. El seed todavía no arma ese estado.
+# Perfil sin ningún ciclo. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_NO_CYCLE_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_NO_CYCLE_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"
     timeout: 30000

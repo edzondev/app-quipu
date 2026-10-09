@@ -2,18 +2,19 @@ appId: com.quipu.finance
 tags:
   - p0
   - onboarding
+  - cuenta-nueva
 ---
 # Notion 3f486a7356a6811e875cd4a55d3340cd reparto (en el código es el paso 3)
 # Notion 3f486a7356a681c78c1be4c0e607cad5 compromisos completos
 # Notion 3f486a7356a68125aec2f56e21bd1d92 Paso 5: sin monto diario
 # Notion 3f486a7356a681f4a6e6d2b0add684ee solo la fecha de mañana, sin calendario
-# El pre-paso crea otra cuenta en QUIPU_E2E_FRESH_* antes de esta corrida.
+# Hace falta una cuenta sin perfil. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
 # wizard-back es la flecha de la app (paso 4 → 3). El atrás de Android es manual.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "¿Cómo entra tu dinero?"
     timeout: 30000

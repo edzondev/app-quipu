@@ -3,6 +3,7 @@ tags:
   - p0
   - home
   - no-cycle
+  - cuenta-nueva
 ---
 # Notion 3f486a7356a681a4a21fee156fe6858f Inicio sin ciclo (no registra el ingreso)
 # Notion 3f486a7356a681daadc6eba893faea43 selector Gasto apagado
@@ -10,13 +11,12 @@ tags:
 # Notion 3f486a7356a681ac94b3c24b072e1f06 Sobres sin ciclo
 # Notion 3f486a7356a681db83dacb9114e2cc0f Ahorro antes del primer ingreso
 # Notion 3f486a7356a6811c8f51e4b5febdaa1d Compromisos vacío
-# La cuenta no debe tener ciclo ni compromisos. El asistente actual siempre
-# llama a startFirstCycle, así que esta cuenta hay que prepararla aparte.
+# Perfil sin ningún ciclo. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_NO_CYCLE_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_NO_CYCLE_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"
     timeout: 30000

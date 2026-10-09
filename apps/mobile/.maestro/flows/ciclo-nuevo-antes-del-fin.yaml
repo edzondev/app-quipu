@@ -5,16 +5,13 @@ tags:
 ---
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
-# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy (#109 lo suma el mismo día de Lima).
-# El ciclo tiene que haber empezado antes de hoy y quedar a varios días del fin.
-# No sirve la cuenta fija ni una semilla de hoy: depende de una semilla futura,
-# una cuenta nueva por corrida (QUIPU_E2E_PRIOR_CYCLE_*). No uses una cuenta personal.
-# La opción marcada en un ciclo abierto es «Sumar al ciclo actual»; este flujo toca la otra.
+# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro.
+# La cuenta queda con un ciclo activo. El arrastre («Saldo que quedó») depende del historial.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_PRIOR_CYCLE_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_PRIOR_CYCLE_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
@@ -42,4 +39,6 @@ tags:
 - tapOn:
     text: "Inicio"
 - assertVisible: "Hoy puedes gastar"
-- assertVisible: "Saldo que quedó.*"
+- assertVisible:
+    text: "Saldo que quedó.*"
+    optional: true

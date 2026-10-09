@@ -4,20 +4,20 @@ tags:
   - home
   - no-cycle
   - one-shot
+  - cuenta-nueva
 ---
 # Notion 3f486a7356a681a4a21fee156fe6858f
 # Registra el primer ingreso y deja la cuenta CON ciclo. Una sola corrida.
 # No se afirman S/ 1,500 ni «Día 1/15»: el largo del ciclo y el fallo M18
 # («Día 0») no son estables para Maestro.
 # Sin ciclo solo aparece «Empieza un nuevo ciclo».
-# Cuenta propia por corrida. No uses QUIPU_E2E_NO_CYCLE_*: este flujo deja la cuenta con ciclo.
-# La fila de Movimientos no cambia: el monto es «+ S/ 3,000». El concepto sigue siendo «Sueldo».
-# Semilla pendiente (Nato): QUIPU_E2E_FIRST_INCOME_*.
+# Nunca tuvo ciclo: registra el primero y la deja con ciclo. Apunta QUIPU_E2E_EMAIL ahí.
+# No corre por defecto (one-shot y cuenta-nueva).
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_FIRST_INCOME_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_FIRST_INCOME_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"
     timeout: 30000

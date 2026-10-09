@@ -3,17 +3,18 @@ tags:
   - p1
   - onboarding
   - wip
+  - cuenta-nueva
 ---
 # Notion 3f486a7356a681d7a4eafd77e456b2e4
 # Paso 1. No llama a «Empezar mi ciclo».
-# Antes de este flujo, el pre-paso deja una cuenta nueva en QUIPU_E2E_FRESH_*.
+# Hace falta una cuenta sin perfil. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
 # La flecha (wizard-back) del paso 2 vuelve al paso 1. El atrás de Android es manual:
 # en el paso 1 debe volver a la Bienvenida.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "¿Cómo entra tu dinero?"
     timeout: 30000

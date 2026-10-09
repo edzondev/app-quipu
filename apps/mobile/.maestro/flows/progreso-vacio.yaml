@@ -3,19 +3,19 @@ tags:
   - p2
   - progreso
   - onboarding
+  - cuenta-nueva
 ---
 # Notion 3f486a7356a681278c46c8b9151e0828
-# Progreso vacío. Cuenta nueva por corrida: el ciclo de apertura sigue abierto
-# y todavía no entra al historial. No uses la cuenta fija: otro flujo puede
-# cerrarle un ciclo y esta pantalla deja de estar vacía.
+# Progreso vacío: cuenta sin perfil, el asistente abre el primer ciclo.
+# Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
 # «Cierre vacío» (Aún no hay un cierre. / Volver a Progreso) no tiene
 # un control en Progreso vacío: la ruta savings/cierre no se abre desde la UI.
 # En __DEV__ el selector «Datos reales» (progress-preview-live) se toca si está.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "¿Cómo entra tu dinero?"
     timeout: 30000

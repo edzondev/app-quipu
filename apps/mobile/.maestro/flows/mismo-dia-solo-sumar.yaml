@@ -4,6 +4,7 @@ tags:
   - registrar
   - onboarding
   - wip
+  - cuenta-nueva
 ---
 # M45, pendiente: el mismo día de Lima se ven las dos opciones. Tag wip para no contarlo
 # como fallo mientras ingeniería no lo cierre. «Empieza un nuevo ciclo» no lleva «¿?».
@@ -13,12 +14,13 @@ tags:
 # El cierre con arrastre está en ciclo-nuevo-antes-del-fin.
 # Las dos opciones se ven. #109 suma el habitual si el ciclo empezó hoy (día de Lima),
 # aunque se toque «Empieza un nuevo ciclo». La marcada es «Sumar al ciclo actual».
-# Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
+# El ciclo tiene que haber empezado hoy: hace falta una cuenta sin perfil.
+# Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
     visible: "¿Cómo entra tu dinero?"
     timeout: 30000
