@@ -28,6 +28,7 @@ const hero: Hero = {
 function summary(
 	overrides: {
 		hero?: Hero;
+		surplusCents?: number;
 		envelopes?: ActiveSummary["envelopes"];
 		movements?: ActiveSummary["movements"];
 		commitments?: ActiveSummary["commitments"];
@@ -57,6 +58,7 @@ function summary(
 			startedToday: false,
 		},
 		hero: overrides.hero ?? hero,
+		surplusCents: overrides.surplusCents ?? 154300,
 		liquidity: {
 			spendableCents: 0,
 			reservedCents: 0,
@@ -217,7 +219,6 @@ describe("mapDashboardHome", () => {
 				carryTotalCents: 0,
 			},
 		]);
-		expect(home?.envelopesBalanceCents).toBe(154300);
 	});
 
 	it("acota la barra si el sobre quedó en negativo", () => {
@@ -244,7 +245,31 @@ describe("mapDashboardHome", () => {
 			incomeCents: 0,
 			carryTotalCents: 0,
 		});
-		expect(home?.surplusCents).toBe(0);
+	});
+
+	it("«Sobra» llega tal cual del servidor y negativa no se acota a cero", () => {
+		const home = mapDashboardHome(
+			summary({
+				surplusCents: -500,
+				envelopes: [
+					{
+						type: "needs",
+						allocatedAmount: 1000,
+						remainingAmount: -500,
+						percentRemaining: 0,
+						...emptyEnvelopeCarry,
+					},
+					{
+						type: "wants",
+						allocatedAmount: 1000,
+						remainingAmount: 0,
+						percentRemaining: 0,
+						...emptyEnvelopeCarry,
+					},
+				],
+			}),
+		);
+		expect(home?.surplusCents).toBe(-500);
 	});
 
 	it("copia el arrastre del resumen sin sumar los céntimos", () => {

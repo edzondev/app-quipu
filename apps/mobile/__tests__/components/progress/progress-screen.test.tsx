@@ -69,6 +69,7 @@ describe("ProgressScreen", () => {
 								heightPx: 26,
 								cycleStart: MAY,
 								monthLabel: null,
+								countsForStreak: true,
 							},
 							{
 								id: SEP,
@@ -76,6 +77,7 @@ describe("ProgressScreen", () => {
 								heightPx: 26,
 								cycleStart: SEP,
 								monthLabel: "Setiembre",
+								countsForStreak: true,
 							},
 						],
 					} satisfies Overview,
@@ -111,6 +113,7 @@ describe("ProgressScreen", () => {
 								heightPx: 26,
 								cycleStart: SEP,
 								monthLabel: "Setiembre",
+								countsForStreak: true,
 							},
 						],
 						achievements: [],

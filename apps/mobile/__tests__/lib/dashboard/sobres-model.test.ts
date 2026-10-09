@@ -42,6 +42,7 @@ function summary(
 			pastEnd: false,
 			startedToday: false,
 		},
+		surplusCents: 0,
 		hero: {
 			dailyAvailableCents: 0,
 			displayDailyCents: 0,

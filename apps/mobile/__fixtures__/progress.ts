@@ -13,13 +13,21 @@ export const progressOverview = {
 	currentStreak: 3,
 	longestStreak: 3,
 	chartBars: [
-		{ id: -1, status: "empty" as const, heightPx: 0, cycleStart: null, monthLabel: null },
+		{
+			id: -1,
+			status: "empty" as const,
+			heightPx: 0,
+			cycleStart: null,
+			monthLabel: null,
+			countsForStreak: false,
+		},
 		{
 			id: MAY,
 			status: "compliant" as const,
 			heightPx: 26,
 			cycleStart: MAY,
 			monthLabel: "Mayo",
+			countsForStreak: true,
 		},
 		{
 			id: SEP,
@@ -27,6 +35,7 @@ export const progressOverview = {
 			heightPx: 22,
 			cycleStart: SEP,
 			monthLabel: "Setiembre",
+			countsForStreak: true,
 		},
 	],
 	achievements: [

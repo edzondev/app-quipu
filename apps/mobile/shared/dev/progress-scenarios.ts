@@ -31,7 +31,14 @@ function at(iso: string): number {
 }
 
 function bar(status: Exclude<Bar["status"], "empty">, iso: string, monthLabel: string): Bar {
-	return { id: at(iso), status, heightPx: 26, cycleStart: at(iso), monthLabel };
+	return {
+		id: at(iso),
+		status,
+		heightPx: 26,
+		cycleStart: at(iso),
+		monthLabel,
+		countsForStreak: status !== "current",
+	};
 }
 
 function done(id: Achievement["id"], title: string, iso: string): Achievement {

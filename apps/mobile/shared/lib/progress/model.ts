@@ -22,7 +22,8 @@ export type BarTone = ChartBar["status"];
 
 export type ProgressBarView = {
 	key: string;
-	tone: Exclude<BarTone, "empty">;
+	/** «neutral»: ciclo cerrado que no cuenta para la racha ni para «en verde». */
+	tone: Exclude<BarTone, "empty"> | "neutral";
 	/** Mes corto de Lima. Null si el ciclo no trae cycleStart. */
 	monthLabel: string | null;
 };
@@ -131,7 +132,13 @@ function toBars(chartBars: Overview["chartBars"]): ProgressBarView[] {
 	return chartBars.flatMap((bar: ChartBar) =>
 		bar.status === "empty"
 			? []
-			: [{ key: String(bar.id), tone: bar.status, monthLabel: barMonthLabel(bar.cycleStart) }],
+			: [
+					{
+						key: String(bar.id),
+						tone: bar.status === "current" || bar.countsForStreak ? bar.status : "neutral",
+						monthLabel: barMonthLabel(bar.cycleStart),
+					},
+				],
 	);
 }
 

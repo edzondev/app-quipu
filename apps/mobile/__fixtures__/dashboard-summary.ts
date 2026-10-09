@@ -116,6 +116,7 @@ export function summaryWithCycle(
 			rescueSuggestion: undefined,
 			awaitingRescueConfirmation: false,
 		},
+		surplusCents: 0,
 		commitments: overrides.commitments ?? [],
 		movements: [],
 		isEarlyCycle: false,
