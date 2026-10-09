@@ -7,7 +7,7 @@ type MinimalCycle = { _id: string; startDate: number; endDate: number };
 /** A Lima calendar day after today. Later today is allowed. */
 export const FUTURE_INCOME_DATE_MESSAGE = "La fecha del ingreso no puede ser futura.";
 
-export const EXTRA_BEFORE_CYCLE_MESSAGE =
+export const INCOME_BEFORE_CYCLE_MESSAGE =
 	"La fecha del ingreso no puede ser anterior al inicio del ciclo.";
 
 export const NO_ACTIVE_CYCLE_MESSAGE = "Registra primero tu sueldo para empezar un ciclo nuevo.";
@@ -38,16 +38,12 @@ export function rejectIncomeDateForKind(
 	}
 }
 
-export function rejectExtraordinaryBeforeCycleStart(
-	incomeKind: Doc<"incomeEvents">["incomeKind"],
-	occurredAt: number,
-	cycleStartDate: number,
-): void {
-	if (incomeKind !== "extraordinary") return;
+/** Create and edit share this. Any kind, compared by Lima day. */
+export function rejectIncomeBeforeCycleStart(occurredAt: number, cycleStartDate: number): void {
 	if (limaDayKey(occurredAt) >= limaDayKey(cycleStartDate)) return;
 	throw new ConvexError({
 		code: "VALIDATION_ERROR",
-		message: EXTRA_BEFORE_CYCLE_MESSAGE,
+		message: INCOME_BEFORE_CYCLE_MESSAGE,
 		data: { field: "occurredAt" },
 	});
 }

@@ -18,6 +18,15 @@ export function wantsWithinBudgetOnClose(
 	return (wants?.remainingAmount ?? 0) - carry >= 0;
 }
 
+export function cycleCountsForStreakAndGreen(input: {
+	isOpeningCycle: Doc<"financialCycles">["isOpeningCycle"];
+	startDate: number;
+	closeAt: number;
+}): boolean {
+	if (openingCycleSkipsStreak(input.isOpeningCycle)) return false;
+	return input.closeAt - input.startDate >= MS_PER_DAY;
+}
+
 export function streakAfterClose(input: {
 	isOpeningCycle: Doc<"financialCycles">["isOpeningCycle"];
 	startDate: number;
@@ -26,9 +35,15 @@ export function streakAfterClose(input: {
 	longestStreak: number;
 	compliance: Parameters<typeof computeNextStreak>[2];
 }): { currentStreak: number; longestStreak: number } | null {
-	if (openingCycleSkipsStreak(input.isOpeningCycle)) return null;
-	if (input.closeAt - input.startDate < MS_PER_DAY) return null;
+	if (!cycleCountsForStreakAndGreen(input)) return null;
 	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance);
+}
+
+/** «CICLOS CERRADOS EN VERDE» follows the same predicate as the streak. */
+export function closedGreenCountAfterClose(input: Parameters<typeof streakAfterClose>[0]): number {
+	if (!cycleCountsForStreakAndGreen(input)) return input.currentStreak;
+	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance)
+		.currentStreak;
 }
 
 export async function evaluateClosedCycle(

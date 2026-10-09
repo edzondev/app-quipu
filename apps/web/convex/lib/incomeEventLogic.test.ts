@@ -4,12 +4,12 @@ import { computeCycleCarryover } from "./cycleCarryover";
 import { isCyclePastEnd } from "./dashboardMath";
 import {
 	cycleStartedOnLimaDay,
-	EXTRA_BEFORE_CYCLE_MESSAGE,
 	FUTURE_INCOME_DATE_MESSAGE,
 	futureIncomeDateMessage,
+	INCOME_BEFORE_CYCLE_MESSAGE,
 	NO_ACTIVE_CYCLE_MESSAGE,
-	rejectExtraordinaryBeforeCycleStart,
 	rejectFutureIncomeDate,
+	rejectIncomeBeforeCycleStart,
 	rejectIncomeDateForKind,
 	resolveCycleForIncome,
 } from "./incomeEventLogic";
@@ -137,48 +137,79 @@ describe("resolveCycleForIncome kind", () => {
 				}),
 			).toBe("expired-active");
 			expect(() => rejectIncomeDateForKind("extraordinary", occurredAt, now)).not.toThrow();
-			expect(() =>
-				rejectExtraordinaryBeforeCycleStart("extraordinary", occurredAt, expired.startDate),
-			).not.toThrow();
+			expect(() => rejectIncomeBeforeCycleStart(occurredAt, expired.startDate)).not.toThrow();
 		}
 	});
 
-	it("accepts an extraordinary income earlier the same Lima day and rejects the previous Lima day", () => {
+	it("accepts an income earlier the same Lima day and rejects the previous Lima day", () => {
 		const cycleStart = Date.parse("2026-10-10T00:10:00-05:00");
 		const earlierSameDay = Date.parse("2026-10-10T00:01:00-05:00");
 		const previousLimaDay = Date.parse("2026-10-09T23:50:00-05:00");
+		const cycle = {
+			_id: "started-today",
+			startDate: cycleStart,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+			isOpeningCycle: true,
+		};
 		expect(earlierSameDay).toBeLessThan(cycleStart);
-		expect(() =>
-			rejectExtraordinaryBeforeCycleStart("extraordinary", earlierSameDay, cycleStart),
-		).not.toThrow();
-		const dayBefore = () =>
-			rejectExtraordinaryBeforeCycleStart("extraordinary", previousLimaDay, cycleStart);
-		expect(dayBefore).toThrow(ConvexError);
+		for (const occurredAt of [earlierSameDay, cycleStart]) {
+			expect(() => rejectIncomeBeforeCycleStart(occurredAt, cycleStart)).not.toThrow();
+		}
+		expect(
+			resolveCycleForIncome({
+				activeCycle: cycle,
+				occurredAt: earlierSameDay,
+				now: earlierSameDay,
+				incomeKind: "habitual",
+			}),
+		).toBe("started-today");
+
+		const yesterday = () => rejectIncomeBeforeCycleStart(previousLimaDay, cycleStart);
+		expect(yesterday).toThrow(ConvexError);
 		try {
-			dayBefore();
+			yesterday();
 		} catch (error) {
 			if (!(error instanceof ConvexError)) throw error;
 			expect(error.data).toMatchObject({
 				code: "VALIDATION_ERROR",
-				message: EXTRA_BEFORE_CYCLE_MESSAGE,
+				message: INCOME_BEFORE_CYCLE_MESSAGE,
 				data: { field: "occurredAt" },
 			});
 		}
+
 		const afternoonStart = Date.parse("2026-10-09T15:00:00-05:00");
-		expect(() =>
-			rejectExtraordinaryBeforeCycleStart(
-				"extraordinary",
-				Date.parse("2026-10-09T09:30:00-05:00"),
-				afternoonStart,
-			),
-		).not.toThrow();
+		const morning = Date.parse("2026-10-09T09:30:00-05:00");
+		const opening = {
+			_id: "opening",
+			startDate: afternoonStart,
+			endDate: Date.parse("2026-10-24T00:00:00-05:00"),
+			isOpeningCycle: true,
+		};
+		expect(() => rejectIncomeBeforeCycleStart(morning, afternoonStart)).not.toThrow();
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: morning,
+				now: morning,
+				incomeKind: "habitual",
+			}),
+		).toBe("opening");
+		const nextLimaDay = Date.parse("2026-10-10T09:00:00-05:00");
+		expect(() => rejectIncomeBeforeCycleStart(nextLimaDay, afternoonStart)).not.toThrow();
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: nextLimaDay,
+				now: nextLimaDay,
+				incomeKind: "habitual",
+			}),
+		).toBeNull();
 	});
 
-	it("rejects an extraordinary income dated before the active cycle start", () => {
+	it("rejects any income dated on a Lima day before the cycle start, on create and on edit", () => {
 		const day = 24 * 60 * 60 * 1000;
 		const startDate = now - 10 * day;
-		const beforeStart = () =>
-			rejectExtraordinaryBeforeCycleStart("extraordinary", startDate - day, startDate);
+		const beforeStart = () => rejectIncomeBeforeCycleStart(startDate - day, startDate);
 		expect(beforeStart).toThrow(ConvexError);
 		try {
 			beforeStart();
@@ -186,16 +217,11 @@ describe("resolveCycleForIncome kind", () => {
 			if (!(error instanceof ConvexError)) throw error;
 			expect(error.data).toMatchObject({
 				code: "VALIDATION_ERROR",
-				message: EXTRA_BEFORE_CYCLE_MESSAGE,
+				message: INCOME_BEFORE_CYCLE_MESSAGE,
 				data: { field: "occurredAt" },
 			});
 		}
-		expect(() =>
-			rejectExtraordinaryBeforeCycleStart("habitual", startDate - day, startDate),
-		).not.toThrow();
-		expect(() =>
-			rejectExtraordinaryBeforeCycleStart("extraordinary", startDate, startDate),
-		).not.toThrow();
+		expect(() => rejectIncomeBeforeCycleStart(startDate, startDate)).not.toThrow();
 	});
 
 	it("closes an expired active cycle on a habitual income and carries its envelopes", () => {

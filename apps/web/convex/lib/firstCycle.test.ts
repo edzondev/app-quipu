@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { computeCycleCarryover, envelopeWithCarry } from "./cycleCarryover";
 import { MS_PER_DAY } from "./dashboardMath";
 import {
+	closedGreenCountAfterClose,
+	cycleCountsForStreakAndGreen,
 	openingCycleSkipsStreak,
 	streakAfterClose,
 	wantsWithinBudgetOnClose,
@@ -138,6 +140,13 @@ describe("streakAfterClose", () => {
 		const openingStart = Date.parse("2026-10-09T15:30:00-05:00");
 		const closeAt = openingStart + MS_PER_DAY;
 		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: true,
+				startDate: openingStart,
+				closeAt,
+			}),
+		).toBe(false);
+		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
 				startDate: openingStart,
@@ -147,12 +156,83 @@ describe("streakAfterClose", () => {
 				compliance: "compliant",
 			}),
 		).toBeNull();
+		expect(
+			closedGreenCountAfterClose({
+				isOpeningCycle: true,
+				startDate: openingStart,
+				closeAt,
+				currentStreak: 2,
+				longestStreak: 4,
+				compliance: "compliant",
+			}),
+		).toBe(2);
 		const bars = buildCycleChartBars([
 			{ status: "compliant", evaluatedAt: closeAt, cycleStart: openingStart },
 		]);
 		expect(bars.some((bar) => bar.cycleStart === openingStart && bar.status === "compliant")).toBe(
 			true,
 		);
+	});
+
+	it("keeps a cycle under 24 hours in history and out of the green count", () => {
+		const startDate = Date.parse("2026-10-09T23:50:00-05:00");
+		const closeAt = Date.parse("2026-10-10T00:10:00-05:00");
+		expect(closeAt - startDate).toBe(20 * 60 * 1000);
+		expect(cycleCountsForStreakAndGreen({ isOpeningCycle: false, startDate, closeAt })).toBe(false);
+		expect(
+			streakAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBeNull();
+		expect(
+			closedGreenCountAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBe(3);
+		const bars = buildCycleChartBars([
+			{ status: "compliant", evaluatedAt: closeAt, cycleStart: startDate },
+		]);
+		expect(bars.some((bar) => bar.cycleStart === startDate && bar.status === "compliant")).toBe(
+			true,
+		);
+		const fullClose = startDate + MS_PER_DAY;
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: fullClose,
+			}),
+		).toBe(true);
+		expect(
+			closedGreenCountAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: fullClose,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBe(4);
+		expect(
+			streakAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: fullClose,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toEqual({ currentStreak: 4, longestStreak: 5 });
 	});
 
 	it("counts the opening cycle in progress like any other cycle and still skips the streak", () => {
