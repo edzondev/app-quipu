@@ -7,7 +7,7 @@ tags:
 # Notion 3f486a7356a6813797ddd1dade3b109b
 # Inicio con ciclo: datos y sumas (textos estables; los montos dependen de la cuenta)
 # Notion 3f486a7356a6817eb281ce598278a629
-# «Salir» no está en Inicio (el caso pendiente describe una UI que el código ya quitó)
+# Capi, 9 oct: Inicio no tiene «Salir». Se sale con «Cerrar sesión» en Ajustes.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:

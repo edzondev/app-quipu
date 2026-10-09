@@ -1,0 +1,11 @@
+appId: com.quipu.finance
+---
+# Espera arreglo pendiente (Pixi): «Puedes gastar hoy» del paso 5 es el de Inicio.
+# S/ 1,200 al 50/30/20 y cobro mañana (el picker no se toca): (600 + 360) / 1 = 960.
+# Con o sin Agua: no se restan compromisos. Hoy el paso 5 muestra S/ 28.66 o S/ 32
+# y el subtítulo dice «en 30 días».
+- copyTextFrom:
+    id: confirm-daily
+- evalScript: "${output.stepDaily = maestro.copiedText}"
+- assertTrue: "${output.stepDaily.indexOf('960') >= 0}"
+- assertNotVisible: "en 30 días."

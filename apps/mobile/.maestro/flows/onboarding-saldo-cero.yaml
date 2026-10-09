@@ -1,0 +1,54 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - onboarding
+---
+# sin caso aún
+# Dinero de hoy vacío = S/ 0 (Capi, 9 oct). Abre el ciclo con sobres en 0.
+# Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- assertNotVisible: "DÍA DE PAGO"
+- assertNotVisible: "El 1 de cada mes"
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cuándo cobras?"
+    timeout: 10000
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cómo repartes tu ingreso?"
+    timeout: 10000
+- tapOn:
+    id: allocation-reset
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Qué pagas todos los meses?"
+    timeout: 10000
+- tapOn:
+    id: commitments-skip
+- extendedWaitUntil:
+    visible: "Puedes gastar hoy"
+    timeout: 10000
+# Espera arreglo pendiente (Pixi + Capi): vacío es S/ 0, el mismo número en Inicio.
+# Hoy el paso 5 muestra «—» y «Anota el dinero que tienes hoy para ver tu número.»
+- copyTextFrom:
+    id: confirm-daily
+- evalScript: "${output.stepDaily = maestro.copiedText}"
+- assertTrue: "${output.stepDaily.indexOf('0.00') >= 0 || output.stepDaily.indexOf('S/ 0') >= 0}"
+- assertNotVisible: "Anota el dinero que tienes hoy para ver tu número."
+- tapOn: "Empezar mi ciclo"
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 40000
+- assertVisible: ${output.stepDaily}
+- assertVisible: "0.00"
+- assertNotVisible: "Saldo que quedó"
+- assertVisible: "Necesidades"
+- assertVisible: "Gustos"
+- assertVisible: "Ahorro"

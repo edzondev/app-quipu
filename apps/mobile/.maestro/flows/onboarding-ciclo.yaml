@@ -2,13 +2,13 @@ appId: com.quipu.finance
 tags:
   - p0
   - onboarding
-  - one-shot
 ---
 # Notion 3f486a7356a6811e875cd4a55d3340cd reparto (en el código es el paso 3)
 # Notion 3f486a7356a681c78c1be4c0e607cad5 compromisos completos
 # Notion 3f486a7356a68125aec2f56e21bd1d92 resumen
 # Notion 3f486a7356a681f4a6e6d2b0add684ee solo la fecha de mañana, sin calendario
-# Gasta la cuenta QUIPU_E2E_FRESH_*: el servidor no abre un segundo primer ciclo.
+# El pre-paso crea otra cuenta en QUIPU_E2E_FRESH_* antes de esta corrida.
+# wizard-back es la flecha de la app (paso 4 → 3). El atrás de Android es manual.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -43,8 +43,7 @@ tags:
 - assertVisible: "TU SISTEMA · 05/05"
 - assertVisible:
     id: confirm-daily
-- assertVisible: "S/ 28\\.66"
-- assertVisible: "Después de compromisos y ahorro, en 30 días."
+- runFlow: ../subflows/assert-paso5-960.yaml
 - assertVisible:
     id: confirm-income
 - assertVisible: "Próximo cobro"
@@ -66,7 +65,15 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 40000
 - assertVisible: "Inicio"
+- assertVisible: "960"
+- assertVisible: ${output.stepDaily}
+- assertNotVisible: "Saldo que quedó"
 - assertVisible: "Agua"
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
+- tapOn:
+    text: "^Movimientos$"
+- extendedWaitUntil:
+    visible: "Todavía no hay nada registrado en este ciclo."
+    timeout: 15000

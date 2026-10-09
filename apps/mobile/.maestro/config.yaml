@@ -10,6 +10,8 @@ executionOrder:
     - registrar-gasto-hoja
     - registrar-gasto-completo
     - registrar-ingreso
+    - extra-no-cierra
+    - sin-ciclo-solo-sueldo
     - movimientos
     - movimientos-editar-eliminar
     - compromisos
@@ -21,5 +23,8 @@ executionOrder:
     - onboarding-paso-1
     - onboarding-ciclo
     - onboarding-despues
+    - onboarding-saldo-cero
+    - sueldo-cierra-ciclo
+    - progreso-primer-cierre
     - home-vacio
     - home-primer-ingreso

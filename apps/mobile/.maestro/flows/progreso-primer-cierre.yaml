@@ -1,0 +1,29 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - progreso
+  - onboarding
+---
+# sin caso aún
+# El primer ciclo cuenta en Progreso. Se cierra el mismo día con un Sueldo.
+# Corre el pre-paso antes: cuenta nueva en QUIPU_E2E_FRESH_*.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_FRESH_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FRESH_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
+- runFlow:
+    file: ../subflows/registrar-ingreso-tipo.yaml
+    env:
+      QUIPU_TIPO: Sueldo
+- tapOn:
+    text: "^Progreso$"
+- extendedWaitUntil:
+    visible: "CICLOS CERRADOS EN VERDE"
+    timeout: 20000
+- assertVisible: "CICLO CERRADO"
+- assertNotVisible: "Aún no cierras un ciclo."
