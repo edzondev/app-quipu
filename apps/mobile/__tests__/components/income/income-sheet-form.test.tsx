@@ -13,13 +13,13 @@ jest.mock("@/shared/components/ui/reicon", () => ({
 }));
 
 const NOW = Date.parse("2026-10-10T02:30:00.000Z");
-const NEW_CYCLE = "Empieza un nuevo ciclo";
-const ADD_TO_CYCLE = "Sumar al ciclo actual";
+const NEW_CYCLE = "income-mode-new-cycle";
+const ADD_TO_CYCLE = "income-mode-add";
 
 type Rendered = Awaited<ReturnType<typeof render>>;
 
-function selected(view: Rendered, name: string) {
-	return view.getByRole("button", { name }).props.accessibilityState.selected === true;
+function selected(view: Rendered, testID: string) {
+	return view.getByTestId(testID).props.accessibilityState.selected === true;
 }
 
 function isIncomeDraft(value: unknown): value is IncomeDraft {
@@ -69,8 +69,8 @@ describe("IncomeSheetForm", () => {
 			<IncomeSheetForm currencySymbol="S/" cycle="open" onSubmit={onSubmit} onCancel={jest.fn()} />,
 		);
 
-		expect(view.getByRole("button", { name: NEW_CYCLE })).toBeTruthy();
-		expect(view.getByRole("button", { name: ADD_TO_CYCLE })).toBeTruthy();
+		expect(view.getByTestId(NEW_CYCLE)).toBeTruthy();
+		expect(view.getByTestId(ADD_TO_CYCLE)).toBeTruthy();
 		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
 		expect(selected(view, NEW_CYCLE)).toBe(false);
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
@@ -97,7 +97,7 @@ describe("IncomeSheetForm", () => {
 			<IncomeSheetForm currencySymbol="S/" cycle="open" onSubmit={onSubmit} onCancel={jest.fn()} />,
 		);
 
-		await fireEvent.press(view.getByRole("button", { name: NEW_CYCLE }));
+		await fireEvent.press(view.getByTestId(NEW_CYCLE));
 		expect(selected(view, NEW_CYCLE)).toBe(true);
 		await fireEvent.press(view.getByText("8"));
 		await fireEvent.press(view.getByText("Registrar ingreso"));
@@ -122,8 +122,8 @@ describe("IncomeSheetForm", () => {
 			/>,
 		);
 
-		expect(view.getByRole("button", { name: NEW_CYCLE })).toBeTruthy();
-		expect(view.getByRole("button", { name: ADD_TO_CYCLE })).toBeTruthy();
+		expect(view.getByTestId(NEW_CYCLE)).toBeTruthy();
+		expect(view.getByTestId(ADD_TO_CYCLE)).toBeTruthy();
 		expect(selected(view, NEW_CYCLE)).toBe(true);
 		expect(selected(view, ADD_TO_CYCLE)).toBe(false);
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
@@ -152,7 +152,7 @@ describe("IncomeSheetForm", () => {
 			/>,
 		);
 
-		await fireEvent.press(view.getByRole("button", { name: ADD_TO_CYCLE }));
+		await fireEvent.press(view.getByTestId(ADD_TO_CYCLE));
 		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
 		await fireEvent.press(view.getByText("6"));
 		await fireEvent.press(view.getByText("Registrar ingreso"));
@@ -172,9 +172,9 @@ describe("IncomeSheetForm", () => {
 			<IncomeSheetForm currencySymbol="S/" cycle="none" onSubmit={onSubmit} onCancel={jest.fn()} />,
 		);
 
-		expect(view.getByRole("button", { name: NEW_CYCLE })).toBeTruthy();
+		expect(view.getByTestId(NEW_CYCLE)).toBeTruthy();
 		expect(selected(view, NEW_CYCLE)).toBe(true);
-		expect(view.queryByRole("button", { name: ADD_TO_CYCLE })).toBeNull();
+		expect(view.queryByTestId(ADD_TO_CYCLE)).toBeNull();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 
@@ -207,10 +207,10 @@ describe("IncomeSheetForm", () => {
 			);
 		}
 		const view = await render(<Host />);
-		await fireEvent.press(view.getByRole("button", { name: ADD_TO_CYCLE }));
+		await fireEvent.press(view.getByTestId(ADD_TO_CYCLE));
 		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
 		await fireEvent.press(view.getByTestId("drop-cycle"));
-		expect(view.queryByRole("button", { name: ADD_TO_CYCLE })).toBeNull();
+		expect(view.queryByTestId(ADD_TO_CYCLE)).toBeNull();
 		expect(selected(view, NEW_CYCLE)).toBe(true);
 		await fireEvent.press(view.getByText("5"));
 		await fireEvent.press(view.getByText("Registrar ingreso"));

@@ -11,15 +11,22 @@ const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 const CYCLE_CHOICES = [
 	{
 		kind: "habitual",
+		testID: "income-mode-new-cycle",
 		label: "Empieza un nuevo ciclo",
 		hint: "Abre un período nuevo",
 	},
 	{
 		kind: "extraordinary",
+		testID: "income-mode-add",
 		label: "Sumar al ciclo actual",
 		hint: "Sin cerrar este período",
 	},
-] as const satisfies ReadonlyArray<{ kind: IncomeKind; label: string; hint: string }>;
+] as const satisfies ReadonlyArray<{
+	kind: IncomeKind;
+	testID: string;
+	label: string;
+	hint: string;
+}>;
 
 type SheetCycle = Exclude<IncomeCycleOffer, "loading">;
 
@@ -87,6 +94,7 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 								return (
 									<Pressable
 										key={option.kind}
+										testID={option.testID}
 										accessibilityRole="button"
 										accessibilityLabel={option.label}
 										accessibilityState={{ selected }}

@@ -93,8 +93,8 @@ describe("RegistrarSheet", () => {
 		expect(view.queryByText("NUEVO GASTO")).toBeNull();
 		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
 		expect(view.getByText("Registrar ingreso")).toBeTruthy();
-		expect(view.getByRole("button", { name: "Empieza un nuevo ciclo" })).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Sumar al ciclo actual" })).toBeNull();
+		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
+		expect(view.queryByTestId("income-mode-add")).toBeNull();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 	});
 
@@ -113,11 +113,9 @@ describe("RegistrarSheet", () => {
 			false,
 		);
 		await fireEvent.press(view.getByRole("button", { name: "Ingreso" }));
-		expect(view.getByRole("button", { name: "Empieza un nuevo ciclo" })).toBeTruthy();
-		expect(view.getByRole("button", { name: "Sumar al ciclo actual" })).toBeTruthy();
-		expect(
-			view.getByRole("button", { name: "Sumar al ciclo actual" }).props.accessibilityState.selected,
-		).toBe(true);
+		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add").props.accessibilityState.selected).toBe(true);
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 	});
@@ -132,12 +130,9 @@ describe("RegistrarSheet", () => {
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
 			false,
 		);
-		expect(view.getByRole("button", { name: "Empieza un nuevo ciclo" })).toBeTruthy();
-		expect(view.getByRole("button", { name: "Sumar al ciclo actual" })).toBeTruthy();
-		expect(
-			view.getByRole("button", { name: "Empieza un nuevo ciclo" }).props.accessibilityState
-				.selected,
-		).toBe(true);
+		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add")).toBeTruthy();
+		expect(view.getByTestId("income-mode-new-cycle").props.accessibilityState.selected).toBe(true);
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 	});
@@ -151,8 +146,8 @@ describe("RegistrarSheet", () => {
 		expect(view.getByText("Cargando…")).toBeTruthy();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
-		expect(view.queryByRole("button", { name: "Empieza un nuevo ciclo" })).toBeNull();
-		expect(view.queryByRole("button", { name: "Sumar al ciclo actual" })).toBeNull();
+		expect(view.queryByTestId("income-mode-new-cycle")).toBeNull();
+		expect(view.queryByTestId("income-mode-add")).toBeNull();
 		expect(view.queryByText("Registrar ingreso")).toBeNull();
 	});
 });
