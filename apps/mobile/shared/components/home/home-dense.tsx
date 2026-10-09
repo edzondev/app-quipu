@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { EnvelopeCarryLine } from "@/shared/components/envelope-carry-line";
 import { SectionLabel } from "@/shared/components/section-label";
 import {
 	type BadgeTone,
@@ -114,6 +115,7 @@ export function HomeDense({
 							envelope.incomeCents,
 							envelope.carryTotalCents,
 							home.currencySymbol,
+							home.isOpeningCycle,
 						);
 						return (
 							<View key={envelope.label}>
@@ -135,14 +137,7 @@ export function HomeDense({
 										{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
 									</Text>
 								</View>
-								{carry ? (
-									<Text
-										className="mt-1 font-hanken text-[12.5px] leading-[18px] text-foreground/55"
-										selectable
-									>
-										{carry}
-									</Text>
-								) : null}
+								{carry ? <EnvelopeCarryLine label={carry} /> : null}
 							</View>
 						);
 					})}

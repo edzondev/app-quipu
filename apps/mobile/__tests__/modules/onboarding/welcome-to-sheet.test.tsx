@@ -77,6 +77,7 @@ jest.mock("@expo/ui", () => {
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useHomeModel: () => ({ status: "empty", profileName: "Ana", profileInitial: "A" }),
+	useDashboardSummary: () => undefined,
 }));
 
 jest.mock("@/shared/hooks/use-expense-actions", () => ({
@@ -132,7 +133,9 @@ describe("Welcome → sistema → sheet", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.getByText("Empezar mi ciclo")).toBeTruthy();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
 
 		await act(async () => {
 			fireEvent.press(screen.getByText("Empezar mi ciclo"));
