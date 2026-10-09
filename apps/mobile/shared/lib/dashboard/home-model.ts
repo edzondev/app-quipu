@@ -63,7 +63,7 @@ export type HomeModel = {
 	currencySymbol: string;
 	envelopes: HomeEnvelope[];
 	envelopesBalanceCents: number;
-	/** Sum of remaining envelope balances, matching dashboard surplus projection. */
+	/** Suma de remainingAmount, cada sobre en ≥ 0, como computeSurplusProjection. */
 	surplusCents: number;
 	coachMessage: string | null;
 	commitments: HomeCommitment[];
