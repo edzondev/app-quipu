@@ -138,12 +138,14 @@ describe("MovementsList", () => {
 				onCreate={jest.fn()}
 			/>,
 		);
+		expect(view.getByText("Todos")).toBeTruthy();
+		expect(view.getByText("Necesidades")).toBeTruthy();
+		expect(view.queryByText("Ahorro")).toBeNull();
+		expect(view.queryByRole("button", { name: "Ahorro" })).toBeNull();
 		await press(view.getByText("Gustos"));
 		expect(view.getByText("Plaza Vea")).toBeTruthy();
 		expect(view.queryByText("Sueldo")).toBeNull();
 		expect(view.queryByText("Ningún movimiento con ese criterio.")).toBeNull();
-		await press(view.getByText("Ahorro"));
-		expect(view.getByText("Ningún movimiento con ese criterio.")).toBeTruthy();
 		expect(view.queryByText("—")).toBeNull();
 	});
 
