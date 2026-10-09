@@ -4,7 +4,7 @@ import { Text } from "react-native";
 import { summaryWithCycle, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
-import { mapDashboardHome, serverDailyCents } from "@/shared/lib/dashboard/home-model";
+import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import type { OnboardingState } from "@/shared/lib/onboarding/types";
 
 const mockSubmit = jest.fn(async () => true);
@@ -139,7 +139,7 @@ describe("StepConfirm — tu número", () => {
 		await renderConfirm(FULL_SEED);
 		const home = mapDashboardHome(summary);
 		if (!home) throw new Error("expected home");
-		expect(serverDailyCents(summary)).toBe(6400);
+		expect(summary.hero.displayDailyCents).toBe(6400);
 		expect(home.dailyCents).toBe(summary.hero.displayDailyCents);
 		expect(screen.queryByTestId("confirm-daily")).toBeNull();
 		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
@@ -150,7 +150,6 @@ describe("StepConfirm — tu número", () => {
 	it("sin hero de getSummary el paso 5 tampoco inventa un diario", async () => {
 		mockDashboardSummary.mockReturnValue(summaryWithoutCycle);
 		await renderConfirm(FULL_SEED);
-		expect(serverDailyCents(summaryWithoutCycle)).toBeNull();
 		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
 		expect(screen.queryByTestId("confirm-daily")).toBeNull();
 		expect(screen.queryByText("S/ 51.16")).toBeNull();

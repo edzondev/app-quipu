@@ -22,11 +22,18 @@ jest.mock("@/shared/components/ui/reicon", () => {
 	return { ChevronLeft: () => <View /> };
 });
 
-function Seed({ step }: { step: WizardStep }) {
+function Seed({
+	step,
+	commitmentsSaved = false,
+}: {
+	step: WizardStep;
+	commitmentsSaved?: boolean;
+}) {
 	const { dispatch } = useOnboarding();
 	useEffect(() => {
+		dispatch({ type: "UPDATE", payload: { commitmentsSaved } });
 		dispatch({ type: "SET_STEP", payload: step });
-	}, [dispatch, step]);
+	}, [commitmentsSaved, dispatch, step]);
 	return null;
 }
 
@@ -69,6 +76,40 @@ describe("WizardShell hardware back", () => {
 		});
 		expect(screen.getByTestId("probe-step").props.children).toBe("1");
 		expect(mockReplace).not.toHaveBeenCalled();
+	});
+
+	it("desde el paso 5 con compromisos guardados vuelve al paso 3", async () => {
+		await render(
+			<OnboardingProvider>
+				<Seed step={5} commitmentsSaved />
+				<Probe />
+				<WizardShell stepNumber={5}>
+					<Text>Confirmar</Text>
+				</WizardShell>
+			</OnboardingProvider>,
+		);
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
+		await act(async () => {
+			expect(pressHardwareBack()).toBe(true);
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+	});
+
+	it("quita el listener al desmontar", async () => {
+		const remove = jest.fn();
+		jest.mocked(BackHandler.addEventListener).mockImplementation(() => ({ remove }));
+		const view = await render(
+			<OnboardingProvider>
+				<WizardShell stepNumber={2}>
+					<Text>Reparto</Text>
+				</WizardShell>
+			</OnboardingProvider>,
+		);
+		expect(jest.mocked(BackHandler.addEventListener)).toHaveBeenCalled();
+		await act(async () => {
+			view.unmount();
+		});
+		expect(remove).toHaveBeenCalled();
 	});
 
 	it("en el paso 1 vuelve a Bienvenida", async () => {

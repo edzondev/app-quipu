@@ -106,7 +106,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 		router.push(`/expense/new?${query.toString()}`);
 	}
 
-	if (mode == null) {
+	if (offer === "loading" || mode == null) {
 		return (
 			<View className="flex-1 items-center justify-center">
 				<Text className="font-hanken text-[15px] text-foreground/55">Cargando…</Text>
@@ -132,7 +132,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 				<IncomeSheetForm
 					currencySymbol={currencySymbol}
 					formError={formError}
-					cycle={offer === "loading" ? "open" : offer}
+					cycle={offer}
 					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
 					onCancel={onDone}
 				/>

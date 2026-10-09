@@ -5,11 +5,7 @@ import {
 	emptyEnvelopeCarry,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
-import {
-	envelopeCarryLabel,
-	mapDashboardHome,
-	serverDailyCents,
-} from "@/shared/lib/dashboard/home-model";
+import { envelopeCarryLabel, mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
@@ -407,9 +403,9 @@ describe("envelopeCarryLabel", () => {
 				}),
 			],
 		});
-		expect(serverDailyCents(value)).toBe(6400);
+		expect(value.hero.displayDailyCents).toBe(6400);
 		expect(mapDashboardHome(value)?.dailyCents).toBe(6400);
-		expect(serverDailyCents(summaryWithoutCycle)).toBeNull();
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
 	});
 
 	it("pone el signo menos delante de S/ cuando el arrastre es negativo", () => {

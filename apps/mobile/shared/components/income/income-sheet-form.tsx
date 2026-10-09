@@ -1,4 +1,5 @@
 import { useForm, useStore } from "@tanstack/react-form";
+import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ExpenseKeypad, KeypadAmount } from "@/shared/components/expenses/expense-keypad";
 import { ErrorText } from "@/shared/components/forms/field-error";
@@ -39,6 +40,13 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
 	const occurredAt = useStore(form.store, (state) => state.values.occurredAt);
+	const incomeKind = useStore(form.store, (state) => state.values.incomeKind);
+
+	useEffect(() => {
+		if (cycle === "none" && incomeKind === "extraordinary") {
+			form.setFieldValue("incomeKind", "habitual");
+		}
+	}, [cycle, form, incomeKind]);
 
 	return (
 		<View className="flex-1 px-[22px] pb-8">

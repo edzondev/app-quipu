@@ -72,12 +72,6 @@ export type HomeModel = {
 	isOpeningCycle: boolean;
 };
 
-/** Diario de Inicio. Null si getSummary no trae hero (no hay ciclo activo). */
-export function serverDailyCents(summary: DashboardSummary | null | undefined): number | null {
-	if (!summary?.hero) return null;
-	return summary.hero.displayDailyCents;
-}
-
 const ENVELOPE_LABEL = {
 	needs: "Necesidades",
 	wants: "Gustos",
@@ -114,8 +108,8 @@ const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
 const LIMA = "America/Lima";
 
 export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
-	const dailyCents = serverDailyCents(summary);
-	if (!summary.cycle || dailyCents == null) return null;
+	if (!summary.cycle || !summary.hero) return null;
+	const dailyCents = summary.hero.displayDailyCents;
 
 	const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
 	const tone = readBadgeTone(summary.hero.statusBadge);
