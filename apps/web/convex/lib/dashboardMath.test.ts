@@ -8,6 +8,7 @@ import {
 	computeDisplayDailyCents,
 	daysUntilDueDay,
 	detectEarlyCycle,
+	isCyclePastEnd,
 	MS_PER_DAY,
 	mapComplianceToBadge,
 	mergeRecentMovements,
@@ -15,12 +16,25 @@ import {
 } from "./dashboardMath";
 
 describe("computeDailyAvailable", () => {
-	it("floors wants remaining over days remaining", () => {
-		expect(computeDailyAvailable(8250, 12)).toBe(687);
+	it("floors needs plus wants over days remaining", () => {
+		// S/ 50.00 + S/ 32.50 = S/ 82.50 over 12 days.
+		expect(computeDailyAvailable(50_00, 32_50, 12)).toBe(687);
 	});
 
 	it("uses at least 1 day to avoid division by zero", () => {
-		expect(computeDailyAvailable(5000, 0)).toBe(5000);
+		expect(computeDailyAvailable(30_00, 20_00, 0)).toBe(50_00);
+	});
+});
+
+describe("isCyclePastEnd", () => {
+	const endDate = Date.parse("2026-10-09T05:00:00.000Z");
+
+	it("is true when now reaches endDate", () => {
+		expect(isCyclePastEnd(endDate, endDate)).toBe(true);
+	});
+
+	it("is false one millisecond before endDate", () => {
+		expect(isCyclePastEnd(endDate, endDate - 1)).toBe(false);
 	});
 });
 
