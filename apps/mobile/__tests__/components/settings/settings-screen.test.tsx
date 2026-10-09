@@ -1,19 +1,36 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
+import type { ReactNode } from "react";
+import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
+import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
-const mockSignOut = jest.fn();
+const mockClear = jest.fn();
 
 jest.mock("expo-router", () => ({
-	useRouter: () => ({ replace: mockReplace }),
+	useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+	Redirect: () => null,
+	router: { replace: mockReplace },
+	useIsFocused: () => true,
 }));
 
-jest.mock("@/lib/auth-client", () => ({
-	authClient: {
-		signOut: () => mockSignOut(),
-	},
+jest.mock("@/shared/hooks/use-profile-gate", () => ({
+	useProfileGate: () => ({ isAuthReady: false, isLoading: false, profile: null }),
 }));
+
+jest.mock("@/lib/device-sign-out", () => ({
+	signOutAndClearLocalData: () => mockClear(),
+}));
+
+jest.mock("@expo/ui", () => {
+	const { View } = require("react-native");
+	return {
+		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
+			isPresented ? <View>{children}</View> : null,
+		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+	};
+});
 
 jest.mock("@/shared/components/ui/reicon", () => ({
 	X: () => null,
@@ -94,9 +111,36 @@ describe("SettingsScreen", () => {
 		expect(onOpenSecurity).toHaveBeenCalledTimes(1);
 	});
 
-	it("cerrar sesión llama a signOut, va a /sign-in y no acepta un segundo toque", async () => {
+	it("hay una sola opción de cerrar sesión y cancelar no sale", async () => {
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(1);
+		expect(view.queryByText("Salir")).toBeNull();
+
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Cerrar sesión" }));
+		});
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(view.getByText("Vas a salir de este teléfono.")).toBeTruthy();
+		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(1);
+
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Cancelar" }));
+		});
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		expect(view.queryByText("Vas a salir de este teléfono.")).toBeNull();
+	});
+
+	it("confirmar cierra sesión, limpia el teléfono y va a la entrada, una sola vez", async () => {
 		let release: () => void = () => undefined;
-		mockSignOut.mockImplementation(
+		mockClear.mockImplementation(
 			() =>
 				new Promise<void>((resolve) => {
 					release = resolve;
@@ -114,16 +158,64 @@ describe("SettingsScreen", () => {
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Cerrar sesión" }));
 		});
-		const button = view.getByRole("button", { name: "Cerrar sesión" });
-		expect(button.props.accessibilityState.disabled).toBe(true);
+		const confirm = view.getByRole("button", { name: "Confirmar cierre de sesión" });
 		await act(async () => {
-			fireEvent.press(button);
+			fireEvent.press(confirm);
 		});
-		expect(mockSignOut).toHaveBeenCalledTimes(1);
+		expect(view.getByText("Cerrando…")).toBeTruthy();
+		expect(confirm.props.accessibilityState.disabled).toBe(true);
+		await act(async () => {
+			fireEvent.press(confirm);
+		});
+		expect(mockClear).toHaveBeenCalledTimes(1);
 
 		await act(async () => {
 			release();
 		});
-		expect(mockReplace).toHaveBeenCalledWith("/sign-in");
+		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+	});
+
+	it("si el servidor no se entera, la Bienvenida avisa en español y no muestra el error crudo", async () => {
+		mockClear.mockResolvedValue({ serverNotified: false });
+		const ajustes = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		await act(async () => {
+			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+		});
+		await act(async () => {
+			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+		});
+		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		await ajustes.unmount();
+
+		const welcome = await render(<OnboardingIndexScreen />);
+		expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
+		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
+		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
+		expect(OFFLINE_SIGN_OUT_MESSAGE).toBe(
+			"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.",
+		);
+		expect(welcome.queryByText(/Network request failed|token secreto/)).toBeNull();
+		await welcome.unmount();
+	});
+
+	it("mientras carga sigue habiendo una sola opción de cerrar sesión", async () => {
+		const view = await render(
+			<SettingsScreen
+				status="loading"
+				model={null}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		expect(view.getByText("Cargando…")).toBeTruthy();
+		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(1);
+		expect(view.queryByText("EN ESTE TELÉFONO")).toBeNull();
 	});
 });

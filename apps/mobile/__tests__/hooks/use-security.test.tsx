@@ -6,7 +6,7 @@ const mockUseQuery = jest.fn();
 const mockUseMutation = jest.fn();
 const mockUseConvexAuth = jest.fn();
 const mockUseSession = jest.fn();
-const mockSignOut = jest.fn();
+const mockClearLocal = jest.fn();
 const mockAddPasskey = jest.fn();
 const mockDeletePasskey = jest.fn();
 
@@ -16,10 +16,13 @@ jest.mock("convex/react", () => ({
 	useConvexAuth: () => mockUseConvexAuth(),
 }));
 
+jest.mock("@/lib/device-sign-out", () => ({
+	signOutAndClearLocalData: (...args: unknown[]) => mockClearLocal(...args),
+}));
+
 jest.mock("@/lib/auth-client", () => ({
 	authClient: {
 		useSession: () => mockUseSession(),
-		signOut: (...args: unknown[]) => mockSignOut(...args),
 		passkey: {
 			addPasskey: (...args: unknown[]) => mockAddPasskey(...args),
 			deletePasskey: (...args: unknown[]) => mockDeletePasskey(...args),
@@ -70,49 +73,48 @@ describe("useSecurity", () => {
 			throw new Error(`useMutation inesperado: ${name}`);
 		});
 		revokeAllMock.mockResolvedValue({ success: true });
-		mockSignOut.mockResolvedValue({ data: { success: true }, error: null });
+		mockClearLocal.mockResolvedValue(undefined);
 		mockAddPasskey.mockResolvedValue({ data: { id: "pk" }, error: null });
 		mockDeletePasskey.mockResolvedValue({ data: { success: true }, error: null });
 		security = null;
 		await render(<Host />);
 	});
 
-	it("cerrar todas llama a revokeAllSessions y después a signOut", async () => {
+	it("cerrar todas revoca, limpia el teléfono y después navega", async () => {
 		const order: string[] = [];
-		const goToSignIn = jest.fn(() => {
-			order.push("sign-in");
+		const goToSignedOut = jest.fn(() => {
+			order.push("signed-out");
 		});
 		revokeAllMock.mockImplementation(async () => {
 			order.push("revoke");
 			return { success: true };
 		});
-		mockSignOut.mockImplementation(async () => {
-			order.push("signOut");
-			return { error: null };
+		mockClearLocal.mockImplementation(async () => {
+			order.push("clear");
 		});
 		await act(async () => {
-			await security?.revokeAllAndSignOut(goToSignIn);
+			await security?.revokeAllAndSignOut(goToSignedOut);
 		});
 		expect(revokeAllMock).toHaveBeenCalledWith({});
-		expect(mockSignOut).toHaveBeenCalledTimes(1);
-		expect(goToSignIn).toHaveBeenCalledTimes(1);
-		expect(order).toEqual(["revoke", "signOut", "sign-in"]);
+		expect(mockClearLocal).toHaveBeenCalledTimes(1);
+		expect(goToSignedOut).toHaveBeenCalledTimes(1);
+		expect(order).toEqual(["revoke", "clear", "signed-out"]);
 	});
 
-	it("si signOut falla, igual navega a /sign-in", async () => {
-		mockSignOut.mockRejectedValue(new Error("falló el cierre"));
-		const goToSignIn = jest.fn();
-		await expect(security?.revokeAllAndSignOut(goToSignIn)).rejects.toThrow("falló el cierre");
+	it("si el borrado local falla, igual navega a la entrada", async () => {
+		mockClearLocal.mockRejectedValue(new Error("falló el cierre"));
+		const goToSignedOut = jest.fn();
+		await expect(security?.revokeAllAndSignOut(goToSignedOut)).rejects.toThrow("falló el cierre");
 		expect(revokeAllMock).toHaveBeenCalledTimes(1);
-		expect(goToSignIn).toHaveBeenCalledTimes(1);
+		expect(goToSignedOut).toHaveBeenCalledTimes(1);
 	});
 
-	it("no hace signOut si revokeAllSessions falla", async () => {
+	it("no limpia el teléfono si revokeAllSessions falla", async () => {
 		revokeAllMock.mockRejectedValue(new Error("red"));
-		const goToSignIn = jest.fn();
-		await expect(security?.revokeAllAndSignOut(goToSignIn)).rejects.toThrow("red");
-		expect(mockSignOut).not.toHaveBeenCalled();
-		expect(goToSignIn).not.toHaveBeenCalled();
+		const goToSignedOut = jest.fn();
+		await expect(security?.revokeAllAndSignOut(goToSignedOut)).rejects.toThrow("red");
+		expect(mockClearLocal).not.toHaveBeenCalled();
+		expect(goToSignedOut).not.toHaveBeenCalled();
 	});
 
 	it("agrega sin name y borra por id, sin propagar el error de auth", async () => {
