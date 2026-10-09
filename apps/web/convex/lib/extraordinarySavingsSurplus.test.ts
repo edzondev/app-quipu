@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	balancesAfterClosedCycleSurplusMove,
 	computeAvailableExtraordinarySavingsForMove,
 	computeExtraordinarySavingsPoolCents,
 	sumExtraordinarySavingsAllocated,
@@ -66,6 +67,25 @@ describe("computeExtraordinarySavingsPoolCents", () => {
 				[{ fromEnvelope: "extraordinary", amount: 200_00 }],
 			),
 		).toBe(0);
+	});
+});
+
+describe("balancesAfterClosedCycleSurplusMove", () => {
+	it("lowers Needs, Wants, and extraordinary, and leaves regular Savings", () => {
+		// S/ 120 Needs, S/ 45 Wants, S/ 200 Savings of which S/ 50 is extraordinary.
+		const after = balancesAfterClosedCycleSurplusMove(
+			{
+				needsRemainingCents: 120_00,
+				wantsRemainingCents: 45_00,
+				savingsRemainingCents: 200_00,
+			},
+			{ needsCents: 120_00, wantsCents: 45_00, extraordinaryCents: 50_00 },
+		);
+		expect(after).toEqual({
+			needsRemainingCents: 0,
+			wantsRemainingCents: 0,
+			savingsRemainingCents: 150_00,
+		});
 	});
 });
 
