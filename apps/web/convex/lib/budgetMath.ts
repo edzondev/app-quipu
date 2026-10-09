@@ -61,10 +61,12 @@ export function shouldWarnWantsBurn(p: {
 
 export function evaluateCycleCompliance(
 	envelopes: EnvelopeCompliance[],
+	isOpeningCycle = false,
 ): "compliant" | "warning" | "failed" {
 	let hasWarning = false;
 	for (const envelope of envelopes) {
-		const carry = envelope.carriedOverCents ?? 0;
+		// Opening balance is this cycle's own money, not a leftover from a previous one.
+		const carry = isOpeningCycle ? 0 : (envelope.carriedOverCents ?? 0);
 		const remainingAmount = envelope.remainingAmount - carry;
 		const allocatedAmount = envelope.allocatedAmount - carry;
 		if (envelope.type === "savings" || remainingAmount >= 0) continue;

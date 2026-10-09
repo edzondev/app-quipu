@@ -1,8 +1,9 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { envelope, summaryWithCycle } from "@/__fixtures__/dashboard-summary";
 import HomePage from "@/app/(tabs)";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty } from "@/shared/components/home/home-empty";
-import type { HomeModel } from "@/shared/lib/dashboard/home-model";
+import { type HomeModel, mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 jest.mock("@/shared/components/app-shell", () => {
 	const { View } = require("react-native");
@@ -41,6 +42,9 @@ const mockHome: HomeModel = {
 			progress: 65,
 			tone: "needs",
 			suffix: "de 1,750",
+			carriedOverCents: 0,
+			incomeCents: 0,
+			carryTotalCents: 0,
 		},
 		{
 			label: "Gustos",
@@ -52,6 +56,9 @@ const mockHome: HomeModel = {
 			progress: 78,
 			tone: "wants",
 			suffix: "de 1,050",
+			carriedOverCents: 0,
+			incomeCents: 0,
+			carryTotalCents: 0,
 		},
 		{
 			label: "Ahorro",
@@ -63,6 +70,9 @@ const mockHome: HomeModel = {
 			progress: 100,
 			tone: "savings",
 			suffix: "apartado",
+			carriedOverCents: 0,
+			incomeCents: 0,
+			carryTotalCents: 0,
 		},
 	],
 	envelopesBalanceCents: 154300,
@@ -171,9 +181,54 @@ describe("Home 1d", () => {
 		expect(view.getByText("Menú del día")).toBeTruthy();
 		expect(view.getByText("− S/ 15.00")).toBeTruthy();
 		expect(view.queryByText("—")).toBeNull();
+		expect(view.queryByText(/Saldo que quedó/)).toBeNull();
 
 		await fireEvent.press(view.getByText("Ver todos"));
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
+	});
+
+	function renderCarry(carriedOverCents: number, incomeCents: number, totalCents: number) {
+		const home = mapDashboardHome(
+			summaryWithCycle({
+				envelopes: [
+					{
+						...envelope("needs", 61200, 175000),
+						carriedOverCents,
+						incomeCents,
+						totalCents,
+					},
+				],
+			}),
+		);
+		if (!home) throw new Error("expected home");
+		return render(
+			<HomeDense
+				home={home}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+				onRegisterIncome={jest.fn()}
+			/>,
+		);
+	}
+
+	it("muestra el arrastre positivo con los montos del resumen", async () => {
+		const view = await renderCarry(12000, 80000, 91000);
+		expect(view.getByText("Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910")).toBeTruthy();
+		expect(view.queryByText(/S\/ 920/)).toBeNull();
+	});
+
+	it("no muestra la línea cuando el arrastre es 0", async () => {
+		const view = await renderCarry(0, 80000, 80000);
+		expect(view.queryByText(/Saldo que quedó/)).toBeNull();
+	});
+
+	it("muestra el arrastre negativo con el signo menos delante de S/", async () => {
+		const view = await renderCarry(-5000, 80000, 75000);
+		expect(view.getByText("Saldo que quedó \u2212S/ 50 + Ingreso S/ 800 = S/ 750")).toBeTruthy();
+		expect(view.queryByText(/-S\//)).toBeNull();
+		expect(view.queryByText(/S\/ -/)).toBeNull();
 	});
 
 	it("no inventa filas cuando el ciclo no tiene compromisos ni movimientos", async () => {

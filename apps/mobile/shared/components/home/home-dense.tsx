@@ -1,6 +1,11 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SectionLabel } from "@/shared/components/section-label";
-import type { BadgeTone, HomeModel, HomeTone } from "@/shared/lib/dashboard/home-model";
+import {
+	type BadgeTone,
+	envelopeCarryLabel,
+	type HomeModel,
+	type HomeTone,
+} from "@/shared/lib/dashboard/home-model";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 import { HomeIdentity } from "./home-identity";
 
@@ -103,26 +108,44 @@ export function HomeDense({
 			<View className="border-b border-line pb-4 pt-5">
 				<SectionLabel>Sobres · queda</SectionLabel>
 				<View className="mt-3.5 gap-3">
-					{home.envelopes.map((envelope) => (
-						<View key={envelope.label} className="flex-row items-center gap-3">
-							<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
-								{envelope.shortLabel}
-							</Text>
-							<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
-								<View
-									className={`h-full rounded-full ${TONE_FILL[envelope.tone]}`}
-									style={{ width: `${envelope.remainingPercent}%` }}
-								/>
+					{home.envelopes.map((envelope) => {
+						const carry = envelopeCarryLabel(
+							envelope.carriedOverCents,
+							envelope.incomeCents,
+							envelope.carryTotalCents,
+							home.currencySymbol,
+						);
+						return (
+							<View key={envelope.label}>
+								<View className="flex-row items-center gap-3">
+									<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
+										{envelope.shortLabel}
+									</Text>
+									<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
+										<View
+											className={`h-full rounded-full ${TONE_FILL[envelope.tone]}`}
+											style={{ width: `${envelope.remainingPercent}%` }}
+										/>
+									</View>
+									<Text
+										className="w-[78px] text-right font-hanken text-[13.5px] text-foreground"
+										style={{ fontVariant: ["tabular-nums"] }}
+										selectable
+									>
+										{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
+									</Text>
+								</View>
+								{carry ? (
+									<Text
+										className="mt-1 font-hanken text-[12.5px] leading-[18px] text-foreground/55"
+										selectable
+									>
+										{carry}
+									</Text>
+								) : null}
 							</View>
-							<Text
-								className="w-[78px] text-right font-hanken text-[13.5px] text-foreground"
-								style={{ fontVariant: ["tabular-nums"] }}
-								selectable
-							>
-								{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
-							</Text>
-						</View>
-					))}
+						);
+					})}
 				</View>
 			</View>
 
