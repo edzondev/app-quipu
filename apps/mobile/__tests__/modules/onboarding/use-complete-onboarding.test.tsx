@@ -14,14 +14,14 @@ jest.mock("convex/react", () => ({
 
 const createProfileMock = jest.fn();
 const createBulkMock = jest.fn();
+const startFirstCycleMock = jest.fn();
 
 function installMutationMocks() {
 	mockUseMutation.mockImplementation((mutation: unknown) => {
 		const name = getFunctionName(mutation as Parameters<typeof getFunctionName>[0]);
 		if (name === "profiles:createProfile") return createProfileMock;
-		if (name === "fixedCommitments:createCommitmentsBulk") {
-			return createBulkMock;
-		}
+		if (name === "fixedCommitments:createCommitmentsBulk") return createBulkMock;
+		if (name === "firstCycle:startFirstCycle") return startFirstCycleMock;
 		throw new Error(`useMutation inesperado en el test: ${name}`);
 	});
 }
@@ -58,10 +58,13 @@ async function submitInAct() {
 	return result;
 }
 
+const NOW = Date.parse("2026-10-09T15:30:00-05:00");
+
 const BASE_SEED: Partial<OnboardingState> = {
 	incomeModel: "fixed",
 	payFrequency: "monthly",
 	referenceIncomeCents: 350000,
+	nextPayDate: "2026-10-20",
 	allocationNeeds: 50,
 	allocationWants: 30,
 	allocationSavings: 20,
@@ -70,11 +73,17 @@ const BASE_SEED: Partial<OnboardingState> = {
 describe("useCompleteOnboarding", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		jest.spyOn(Date, "now").mockReturnValue(NOW);
 		installMutationMocks();
 		createProfileMock.mockResolvedValue("p1");
 		createBulkMock.mockResolvedValue(null);
+		startFirstCycleMock.mockResolvedValue({ cycleId: "cycle_1" });
 		captured = null;
 		currentState = null;
+	});
+
+	afterEach(() => {
+		jest.restoreAllMocks();
 	});
 
 	it("llama createProfile con el payload correcto (sin referenceIncomeCents) y no cambia de paso", async () => {
@@ -89,6 +98,11 @@ describe("useCompleteOnboarding", () => {
 		expect(payload.allocationNeeds).toBe(50);
 		expect(payload.allocationWants).toBe(30);
 		expect(payload.allocationSavings).toBe(20);
+		expect(payload).not.toHaveProperty("nextPayDate");
+		expect(startFirstCycleMock).toHaveBeenCalledWith({
+			openingBalanceCents: 350000,
+			nextPayDate: "2026-10-20",
+		});
 		expect(currentState?.step).toBe(4);
 	});
 
@@ -133,7 +147,52 @@ describe("useCompleteOnboarding", () => {
 		await runWithSeed(BASE_SEED);
 		await submitInAct();
 		expect(createBulkMock).not.toHaveBeenCalled();
+		expect(startFirstCycleMock).toHaveBeenCalledTimes(1);
 		expect(currentState?.step).toBe(4);
+	});
+
+	it("sin referencia envía saldo cero", async () => {
+		await runWithSeed({ ...BASE_SEED, referenceIncomeCents: null });
+		await expect(submitInAct()).resolves.toBe(true);
+		expect(startFirstCycleMock).toHaveBeenCalledWith({
+			openingBalanceCents: 0,
+			nextPayDate: "2026-10-20",
+		});
+	});
+
+	it("fecha fuera de rango no llama al backend y marca el campo", async () => {
+		await runWithSeed({ ...BASE_SEED, nextPayDate: "2026-10-09" });
+		await expect(submitInAct()).resolves.toBe(false);
+		expect(createProfileMock).not.toHaveBeenCalled();
+		expect(startFirstCycleMock).not.toHaveBeenCalled();
+		expect(currentState?.cycleFieldErrors.nextPayDate).toBe(
+			"Tu próxima fecha de cobro debe estar entre mañana y los próximos 31 días.",
+		);
+	});
+
+	it("VALIDATION_ERROR de saldo queda en ese campo", async () => {
+		startFirstCycleMock.mockRejectedValue({
+			data: {
+				code: "VALIDATION_ERROR",
+				message: "El saldo debe ser un entero de céntimos mayor o igual a cero.",
+				data: { field: "openingBalanceCents" },
+			},
+		});
+		await runWithSeed(BASE_SEED);
+		await expect(submitInAct()).resolves.toBe(false);
+		expect(captured?.error).toBeNull();
+		expect(currentState?.cycleFieldErrors.openingBalanceCents).toBe(
+			"El saldo debe ser un entero de céntimos mayor o igual a cero.",
+		);
+	});
+
+	it("ALREADY_EXISTS cuenta como ciclo listo", async () => {
+		startFirstCycleMock.mockRejectedValue({
+			data: { code: "ALREADY_EXISTS", message: "Tu primer ciclo ya está creado." },
+		});
+		await runWithSeed(BASE_SEED);
+		await expect(submitInAct()).resolves.toBe(true);
+		expect(captured?.error).toBeNull();
 	});
 
 	it("error de createProfile → mensaje en español y no abre el flujo de éxito", async () => {

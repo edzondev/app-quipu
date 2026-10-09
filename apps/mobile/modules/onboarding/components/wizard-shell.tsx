@@ -5,7 +5,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
-import type { WizardStep } from "@/shared/lib/onboarding/types";
+import { WIZARD_STEPS, type WizardStep } from "@/shared/lib/onboarding/types";
 
 type WizardShellProps = {
 	stepNumber: number;
@@ -16,7 +16,7 @@ type WizardShellProps = {
 
 export function WizardShell({ stepNumber, children, footer, onBack }: WizardShellProps) {
 	const router = useRouter();
-	const { dispatch } = useOnboarding();
+	const { state, dispatch } = useOnboarding();
 
 	const goBack = () => {
 		if (onBack) {
@@ -31,7 +31,8 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 			}
 			return;
 		}
-		dispatch({ type: "SET_STEP", payload: (stepNumber - 1) as WizardStep });
+		const previous = stepNumber === 5 && state.commitmentsSaved ? 3 : stepNumber - 1;
+		dispatch({ type: "SET_STEP", payload: previous as WizardStep });
 	};
 
 	return (
@@ -44,9 +45,9 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 				</View>
 
 				<View className="gap-4">
-					<MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/04`}</MonoLabel>
+					<MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/${String(WIZARD_STEPS.length).padStart(2, "0")}`}</MonoLabel>
 					<View className="flex-row gap-1.5">
-						{[1, 2, 3, 4].map((segment) => (
+						{WIZARD_STEPS.map((segment) => (
 							<View
 								key={segment}
 								testID={`wizard-progress-${segment}`}

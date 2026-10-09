@@ -4,6 +4,7 @@ import { MonoLabel } from "./mono-label";
 
 type AmountInputProps = {
 	label?: string;
+	testID?: string;
 	valueCents: number | null;
 	onChangeCents: (cents: number | null) => void;
 };
@@ -12,7 +13,12 @@ function digitsFromCents(cents: number | null): string {
 	return cents != null ? String(Math.floor(cents / 100)) : "";
 }
 
-export function AmountInput({ label, valueCents, onChangeCents }: AmountInputProps) {
+export function AmountInput({
+	label,
+	testID = "amount-input",
+	valueCents,
+	onChangeCents,
+}: AmountInputProps) {
 	const digits = digitsFromCents(valueCents);
 
 	const handleChange = (raw: string) => {
@@ -26,7 +32,7 @@ export function AmountInput({ label, valueCents, onChangeCents }: AmountInputPro
 			<View className="flex-row items-baseline gap-2 border-b border-line pb-2">
 				<Text className="font-newsreader text-[24px] text-foreground/45">S/</Text>
 				<TextInput
-					testID="amount-input"
+					testID={testID}
 					value={formatIntegerEs(digits)}
 					onChangeText={handleChange}
 					keyboardType="number-pad"

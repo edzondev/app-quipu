@@ -62,7 +62,11 @@ function Harness() {
 		<>
 			<SistemaWizard />
 			<Text testID="probe-step">{String(state.step)}</Text>
-			<Pressable testID="go-4" onPress={go(4)} />
+			<Pressable testID="go-5" onPress={go(5)} />
+			<Pressable
+				testID="mark-saved"
+				onPress={() => dispatch({ type: "UPDATE", payload: { commitmentsSaved: true } })}
+			/>
 		</>
 	);
 }
@@ -75,24 +79,30 @@ describe("navegación del reparto", () => {
 			</OnboardingProvider>,
 		);
 
-		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 01/05")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByText("TU SISTEMA · 02/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 02/05")).toBeTruthy();
+		expect(screen.getByText("¿Cuándo cobras?")).toBeTruthy();
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByText("TU SISTEMA · 03/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 03/05")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("TU SISTEMA · 04/05")).toBeTruthy();
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 05/05")).toBeTruthy();
 		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
 	});
 
-	it("desde el paso 2 Continuar va a Compromisos, y atrás es 4→3→2", async () => {
+	it("después del cobro, Continuar va al reparto y atrás es 5→4→3", async () => {
 		await render(
 			<OnboardingProvider>
 				<Harness />
@@ -102,13 +112,16 @@ describe("navegación del reparto", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
 		expect(screen.getAllByText(REPARTO)).toHaveLength(1);
-		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
 
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
 		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
 		expect(screen.queryByText(REPARTO)).toBeNull();
@@ -116,11 +129,11 @@ describe("navegación del reparto", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
 		expect(screen.getAllByText(REPARTO)).toHaveLength(1);
 
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("go-4"));
+			fireEvent.press(screen.getByTestId("go-5"));
 		});
 		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
 		expect(screen.queryByText("Todo listo")).toBeNull();
@@ -128,7 +141,37 @@ describe("navegación del reparto", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
+	});
+
+	it("con compromisos ya guardados salta Compromisos al ir y al volver", async () => {
+		await render(
+			<OnboardingProvider>
+				<Harness />
+			</OnboardingProvider>,
+		);
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("mark-saved"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
+		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.queryByText("¿Qué pagas todos los meses?")).toBeNull();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("wizard-back"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getAllByText(REPARTO)).toHaveLength(1);
+		expect(screen.queryByText("¿Qué pagas todos los meses?")).toBeNull();
 	});
 });

@@ -52,9 +52,9 @@ describe("Step1IncomeProfile", () => {
 		jest.clearAllMocks();
 	});
 
-	it("arranca en 01/04 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
+	it("arranca en 01/05 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
 		await renderStep1();
-		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 01/05")).toBeTruthy();
 		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
 		expect(screen.getByTestId("option-fixed").props.accessibilityState).toMatchObject({
 			selected: true,
@@ -238,6 +238,69 @@ describe("Step1IncomeProfile", () => {
 			fireEvent.press(screen.getByTestId("option-mixed"));
 		});
 		expect(screen.getByTestId("amount-input").props.value).toContain("800");
+	});
+
+	it("Fijo pregunta el dinero de hoy y lo guarda como saldo", async () => {
+		await renderStep1();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "1500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-reference").props.children).toBe("150000");
+	});
+
+	it("Mixto pregunta el dinero de hoy además de la parte fija", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		expect(screen.getByText("PARTE FIJA")).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("opening-balance-input"), "1200");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-reference").props.children).toBe("120000");
+		expect(screen.getByTestId("probe-mixed").props.children).toBe("80000");
+	});
+
+	it("Variable pregunta el dinero de hoy antes de seguir", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("opening-balance-input"), "500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("cycle-pill-15"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+		expect(screen.getByTestId("probe-reference").props.children).toBe("50000");
 	});
 
 	it("el back en paso 1 navega hacia atrás en el stack", async () => {
