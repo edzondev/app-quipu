@@ -11,6 +11,7 @@ const SOLID_BAR: Record<Exclude<ProgressBarView["tone"], "current">, string> = {
 	compliant: "bg-savings",
 	warning: "bg-warning",
 	failed: "bg-foreground/30",
+	neutral: "bg-foreground/15",
 };
 
 type Props = {

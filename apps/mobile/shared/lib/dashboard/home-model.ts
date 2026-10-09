@@ -62,8 +62,7 @@ export type HomeModel = {
 	heroSubtitle: string;
 	currencySymbol: string;
 	envelopes: HomeEnvelope[];
-	envelopesBalanceCents: number;
-	/** Suma de remainingAmount, cada sobre en ≥ 0, como computeSurplusProjection. */
+	/** «Sobra», tal como lo trae getSummary. Negativo si el ciclo se pasó. */
 	surplusCents: number;
 	coachMessage: string | null;
 	commitments: HomeCommitment[];
@@ -128,14 +127,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
 		currencySymbol: symbol,
 		envelopes,
-		envelopesBalanceCents: envelopes.reduce(
-			(acc, envelope) => acc + Math.max(0, envelope.remainingCents),
-			0,
-		),
-		surplusCents: summary.envelopes.reduce(
-			(acc: number, envelope: SummaryEnvelope) => acc + Math.max(0, envelope.remainingAmount),
-			0,
-		),
+		surplusCents: summary.surplusCents,
 		coachMessage: summary.coach?.message ?? null,
 		commitments: mapCommitments(summary.commitments),
 		recentMovements: summary.movements.map((movement: SummaryMovement) => ({

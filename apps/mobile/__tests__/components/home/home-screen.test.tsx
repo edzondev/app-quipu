@@ -75,7 +75,6 @@ const mockHome: HomeModel = {
 			carryTotalCents: 0,
 		},
 	],
-	envelopesBalanceCents: 154300,
 	surplusCents: 154300,
 	coachMessage: "Vas bien.",
 	commitments: [
@@ -200,6 +199,25 @@ describe("Home 1d", () => {
 
 		await fireEvent.press(view.getByText("Ver todos"));
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
+	});
+
+	it("con «Sobra» negativa dice cuánto se pasó, no S/ 0", async () => {
+		const home = mapDashboardHome({
+			...summaryWithCycle({ envelopes: [envelope("needs", -50000, 175000)] }),
+			surplusCents: -50000,
+		});
+		if (!home) throw new Error("expected home");
+		const view = await render(
+			<HomeDense
+				home={home}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+			/>,
+		);
+		expect(view.getByText(/Te pasaste por S\/ 500/)).toBeTruthy();
+		expect(view.queryByText(/Sobra/)).toBeNull();
 	});
 
 	function renderCarry(carriedOverCents: number, incomeCents: number, totalCents: number) {

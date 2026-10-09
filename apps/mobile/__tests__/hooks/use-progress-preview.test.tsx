@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render } from "@testing-library/react-native";
+import { getFunctionName } from "convex/server";
 import { ProgressPreviewPicker } from "@/shared/components/progress/progress-preview-picker";
 import { PROGRESS_SCENARIO_IDS } from "@/shared/dev/progress-scenarios";
 import { useProgress } from "@/shared/hooks/use-progress";
@@ -44,6 +45,17 @@ describe("escenarios de prueba de Progreso", () => {
 		await render(<Probe />);
 		expect(progress().status).toBe("loading");
 		expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), {});
+	});
+
+	it("getOverview lleva el día de Lima como llave de caché y las demás consultas no", async () => {
+		await render(<Probe />);
+		const argsByQuery = new Map(
+			mockUseQuery.mock.calls.map((call) => [getFunctionName(call[0]), call[1]]),
+		);
+		expect(argsByQuery.get("progress:getOverview")).toEqual({
+			limaDay: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+		});
+		expect(argsByQuery.get("progress:getRewards")).toEqual({});
 	});
 
 	it("con un escenario no consulta a Convex y entrega modelo listo", async () => {

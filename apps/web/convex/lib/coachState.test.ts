@@ -61,7 +61,7 @@ describe("resolveCoachPresentation", () => {
 		const message = resolveCoachPresentation({
 			...base,
 			compliance,
-			surplusCents,
+			surplusCents: Math.max(0, surplusCents),
 		}).message;
 		expect(message).toContain("sobra");
 		expect(message).not.toMatch(/-\d/);

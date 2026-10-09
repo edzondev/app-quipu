@@ -7,7 +7,7 @@ import {
 	type HomeModel,
 	type HomeTone,
 } from "@/shared/lib/dashboard/home-model";
-import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
+import { formatCents, formatCentsTrimmed, overspentByLabel } from "@/shared/lib/money";
 import { HomeIdentity } from "./home-identity";
 
 const TONE_FILL: Record<"needs" | "wants" | "savings", string> = {
@@ -94,8 +94,10 @@ export function HomeDense({
 					<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
 						{home.cycleStatusLabel}
 					</Text>
-					{" · Sobra "}
-					{formatCentsTrimmed(home.surplusCents, home.currencySymbol)}
+					{" · "}
+					{home.surplusCents < 0
+						? overspentByLabel(home.surplusCents, home.currencySymbol)
+						: `Sobra ${formatCentsTrimmed(home.surplusCents, home.currencySymbol)}`}
 				</Text>
 			</View>
 

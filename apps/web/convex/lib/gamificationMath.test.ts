@@ -39,8 +39,8 @@ describe("buildCycleChartBars", () => {
 		const july = Date.parse("2026-07-15T12:00:00-05:00");
 		const august = Date.parse("2026-08-15T12:00:00-05:00");
 		const bars = buildCycleChartBars([
-			{ status: "warning", evaluatedAt: 1, cycleStart: july },
-			{ status: "compliant", evaluatedAt: 2, cycleStart: august },
+			{ status: "warning", evaluatedAt: 1, cycleStart: july, countsForStreak: true },
+			{ status: "compliant", evaluatedAt: 2, cycleStart: august, countsForStreak: true },
 		]);
 		expect(bars).toHaveLength(12);
 		expect(bars.filter((b) => b.status === "empty")).toHaveLength(10);
@@ -63,6 +63,7 @@ describe("buildCycleChartBars", () => {
 					status: "compliant",
 					evaluatedAt: 2,
 					cycleStart: Date.parse("2026-08-15T12:00:00-05:00"),
+					countsForStreak: true,
 				},
 			],
 			{ cycleStart: september },
@@ -78,7 +79,9 @@ describe("buildCycleChartBars", () => {
 	});
 
 	it("omits the month when the closed cycle has no start date", () => {
-		const bars = buildCycleChartBars([{ status: "failed", evaluatedAt: 5, cycleStart: null }]);
+		const bars = buildCycleChartBars([
+			{ status: "failed", evaluatedAt: 5, cycleStart: null, countsForStreak: false },
+		]);
 		expect(bars.at(-1)?.status).toBe("failed");
 		expect(bars.at(-1)?.cycleStart).toBeNull();
 		expect(bars.at(-1)?.monthLabel).toBeNull();
