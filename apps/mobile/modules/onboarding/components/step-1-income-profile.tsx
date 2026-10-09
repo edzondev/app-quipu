@@ -133,7 +133,7 @@ export function Step1IncomeProfile() {
 			<View className="gap-1">
 				<Text className="font-newsreader text-[28px] text-foreground">¿Cómo entra tu dinero?</Text>
 				<Text className="font-hanken text-[14px] text-foreground/55">
-					Fijo y mensual ya están listos. Si aplica, escribe el monto.
+					Fijo y mensual ya están listos. Anota el dinero que tienes hoy, no tu sueldo.
 				</Text>
 			</View>
 
@@ -222,7 +222,7 @@ export function Step1IncomeProfile() {
 					>
 						{(field) => (
 							<AmountInput
-								label={incomeModel === "mixed" ? "PARTE FIJA" : "MONTO DE REFERENCIA"}
+								label={incomeModel === "mixed" ? "PARTE FIJA" : "¿Cuánto dinero tienes hoy?"}
 								valueCents={centsFromDigits(field.state.value)}
 								onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
 							/>

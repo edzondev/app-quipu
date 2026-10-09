@@ -125,7 +125,7 @@ describe("Empezar mi ciclo", () => {
 		});
 		expect(mockCreateProfile).toHaveBeenCalledTimes(1);
 		expect(mockRegisterIncome).not.toHaveBeenCalled();
-		expect(screen.getByText("¿Cuánto tienes hoy para este ciclo?")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
 		expect(screen.getByText("3500.00")).toBeTruthy();
 		expect(screen.queryByText("Todo listo")).toBeNull();
 	});

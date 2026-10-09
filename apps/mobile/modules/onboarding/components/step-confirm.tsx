@@ -14,7 +14,7 @@ import {
 	formatSoles,
 } from "@/shared/lib/onboarding/daily";
 
-const INCOME_PROMPT = "¿Cuánto tienes hoy para este ciclo?";
+const INCOME_PROMPT = "¿Cuánto dinero tienes hoy?";
 const COMMITMENTS_NOTE = "También puedes agregarlos después desde Plan.";
 
 function SummaryRow({ label, value, testID }: { label: string; value: string; testID?: string }) {
@@ -107,14 +107,14 @@ export function StepConfirm() {
 						</Text>
 						<Text className="font-hanken text-[14px] text-foreground/55">
 							{dailyCents == null
-								? "Registra el ingreso de este ciclo para ver tu número."
+								? "Anota el dinero que tienes hoy para ver tu número."
 								: `Después de compromisos y ahorro, en ${cycleDays} días.`}
 						</Text>
 					</View>
 
 					<View className="gap-3">
 						<SummaryRow
-							label="Ingreso de referencia"
+							label="Dinero de hoy"
 							testID="confirm-income"
 							value={referenceCents == null ? "—" : formatSoles(referenceCents)}
 						/>

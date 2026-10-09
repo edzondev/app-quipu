@@ -110,7 +110,7 @@ describe("StepConfirm — tu número", () => {
 		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
 		expect(screen.getByTestId("confirm-daily").props.children).toBe("S/ 51.16");
 		expect(screen.getByText("Después de compromisos y ahorro, en 30 días.")).toBeTruthy();
-		expect(screen.getByText("Ingreso de referencia")).toBeTruthy();
+		expect(screen.getByText("Dinero de hoy")).toBeTruthy();
 		expect(screen.getByTestId("confirm-income").props.children).toBe("S/ 3,500");
 		expect(screen.getByTestId("confirm-envelope-needs").props.children).toBe("50% · S/ 1,750");
 		expect(screen.getByTestId("confirm-envelope-wants").props.children).toBe("30% · S/ 1,050");
@@ -129,7 +129,7 @@ describe("StepConfirm — tu número", () => {
 			referenceIncomeCents: null,
 		});
 		expect(screen.getByTestId("confirm-daily").props.children).toBe("—");
-		expect(screen.getByText("Registra el ingreso de este ciclo para ver tu número.")).toBeTruthy();
+		expect(screen.getByText("Anota el dinero que tienes hoy para ver tu número.")).toBeTruthy();
 		expect(screen.getByTestId("confirm-income").props.children).toBe("—");
 		expect(screen.getByTestId("confirm-envelope-needs").props.children).toBe("50%");
 	});
@@ -140,7 +140,7 @@ describe("StepConfirm — tu número", () => {
 			fireEvent.press(screen.getByText("Empezar mi ciclo"));
 		});
 		expect(mockSubmit).toHaveBeenCalledTimes(1);
-		expect(screen.getByText("¿Cuánto tienes hoy para este ciclo?")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
 		expect(screen.getByText("3500.00")).toBeTruthy();
 		expect(screen.getByRole("button", { name: "Ingreso" }).props.accessibilityState.selected).toBe(
 			true,

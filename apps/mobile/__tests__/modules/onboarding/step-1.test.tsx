@@ -55,6 +55,7 @@ describe("Step1IncomeProfile", () => {
 	it("arranca en 01/04 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
 		await renderStep1();
 		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
 		expect(screen.getByTestId("option-fixed").props.accessibilityState).toMatchObject({
 			selected: true,
 		});

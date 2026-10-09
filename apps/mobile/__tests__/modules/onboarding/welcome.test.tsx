@@ -17,6 +17,9 @@ describe("Welcome", () => {
 		expect(screen.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
 		expect(screen.getByText("EJEMPLO · PUEDES GASTAR HOY")).toBeTruthy();
 		expect(screen.getByText("S/ 42.30")).toBeTruthy();
+		expect(
+			screen.getByText("Es un ejemplo. Tu número sale del dinero que tienes hoy."),
+		).toBeTruthy();
 		expect(screen.getByText("Crear cuenta")).toBeTruthy();
 		expect(screen.getByLabelText("Ya tengo cuenta")).toBeTruthy();
 	});
