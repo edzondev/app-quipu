@@ -164,25 +164,133 @@ describe("Step4Commitments — compromisos", () => {
 		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 1,265");
 	});
 
-	it("con filas a medio llenar, Continuar solo guarda las válidas", async () => {
+	async function fill(index: number, amount: string, day: string) {
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId(`commitment-amount-${index}`), amount);
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId(`commitment-day-${index}`), day);
+		});
+	}
+
+	async function pressContinue() {
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+	}
+
+	it("una fila a medio llenar no se descarta en silencio: marca qué falta y no avanza", async () => {
 		await renderStep4();
 		await pressChip("Agua");
-		await act(async () => {
-			fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "1100");
-		});
-		await act(async () => {
-			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "5");
-		});
+		await fill(0, "1100", "5");
 		await pressChip("Celular");
 		await act(async () => {
 			fireEvent.changeText(screen.getByTestId("commitment-amount-1"), "96");
 		});
+
+		await pressContinue();
+
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(screen.getByTestId("commitment-error-dueDay-1").props.children).toBe(
+			"Indica el día del mes en que vence.",
+		);
+		expect(screen.queryByTestId("commitment-error-amountRaw-1")).toBeNull();
+		expect(screen.queryByTestId("commitment-error-dueDay-0")).toBeNull();
+		expect(screen.getByTestId("commitments-blocked")).toBeTruthy();
+		expect(getCommitments()).toHaveLength(0);
+	});
+
+	it("completar la fila pendiente quita los errores y deja continuar con todo guardado", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await fill(0, "1100", "5");
+		await pressChip("Celular");
+		await fill(1, "96", "");
+		await pressContinue();
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+
 		await act(async () => {
-			fireEvent.press(screen.getByText("Continuar"));
+			fireEvent.changeText(screen.getByTestId("commitment-day-1"), "10");
 		});
+		expect(screen.queryByTestId("commitment-error-dueDay-1")).toBeNull();
+		expect(screen.queryByTestId("commitments-blocked")).toBeNull();
+
+		await pressContinue();
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
+		expect(getCommitments()).toHaveLength(2);
+		expect(getCommitments()[0]).toMatchObject({ name: "Agua", amountCents: 110000, dueDay: 5 });
+		expect(getCommitments()[1]).toMatchObject({ name: "Celular", amountCents: 9600, dueDay: 10 });
+	});
+
+	it("un día fuera de 1–31 se marca apenas se escribe y bloquea Continuar", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await fill(0, "1100", "32");
+
+		expect(screen.getByTestId("commitment-error-dueDay-0").props.children).toBe(
+			"El día de vencimiento va del 1 al 31.",
+		);
+		expect(screen.queryByTestId("commitment-ready-0")).toBeNull();
+		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
+
+		await pressContinue();
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+		expect(getCommitments()).toHaveLength(0);
+
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-day-0"), "31");
+		});
+		expect(screen.queryByTestId("commitment-error-dueDay-0")).toBeNull();
+		await pressContinue();
+		expect(screen.getByTestId("probe-step").props.children).toBe("5");
+		expect(getCommitments()[0]).toMatchObject({ dueDay: 31 });
+	});
+
+	it("el día 0 y el monto 0 también son inválidos", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await fill(0, "0", "0");
+		expect(screen.getByTestId("commitment-error-amountRaw-0").props.children).toBe(
+			"El monto debe ser mayor a cero.",
+		);
+		expect(screen.getByTestId("commitment-error-dueDay-0").props.children).toBe(
+			"El día de vencimiento va del 1 al 31.",
+		);
+	});
+
+	it("sin nombre ni monto ni día, Continuar lo pide todo", async () => {
+		await renderStep4();
+		await pressChip("Otro");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("commitment-name-0"), "   ");
+		});
+		await pressContinue();
+		expect(screen.getByTestId("commitment-error-name-0").props.children).toBe("Ponle un nombre.");
+		expect(screen.getByTestId("commitment-error-amountRaw-0").props.children).toBe(
+			"Indica cuánto pagas.",
+		);
+		expect(screen.getByTestId("commitment-error-dueDay-0")).toBeTruthy();
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+	});
+
+	it("una fila completa muestra su marca de listo; quitar la fila con errores desbloquea", async () => {
+		await renderStep4();
+		await pressChip("Agua");
+		await fill(0, "1100", "5");
+		expect(screen.getByTestId("commitment-ready-0")).toBeTruthy();
+
+		await pressChip("Celular");
+		expect(screen.queryByTestId("commitment-ready-1")).toBeNull();
+		await pressContinue();
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
+
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("remove-commitment-1"));
+		});
+		expect(screen.queryByTestId("commitments-blocked")).toBeNull();
+		await pressContinue();
 		expect(screen.getByTestId("probe-step").props.children).toBe("5");
 		expect(getCommitments()).toHaveLength(1);
-		expect(getCommitments()[0]).toMatchObject({ name: "Agua", amountCents: 110000, dueDay: 5 });
 	});
 
 	it("'Después' no llama a createCommitmentsBulk y no guarda filas", async () => {

@@ -3,7 +3,13 @@ import { Text } from "react-native";
 import { onboardingVariableSources } from "@/__fixtures__/onboarding";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
-import { FIXED_FREQ_OPTIONS, INCOME_MODEL_OPTIONS } from "@/shared/lib/onboarding/defaults";
+import {
+	CYCLE_DURATION_COPY,
+	FIXED_FREQ_OPTIONS,
+	INCOME_AMOUNT_COPY,
+	INCOME_MODEL_OPTIONS,
+	INCOME_SOURCES_COPY,
+} from "@/shared/lib/onboarding/defaults";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
@@ -150,7 +156,7 @@ describe("Step1IncomeProfile", () => {
 		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 	});
 
-	it("Mixto exige parte fija y al menos una fuente", async () => {
+	it("Mixto exige sueldo base y al menos una fuente", async () => {
 		await renderStep1();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("option-mixed"));
@@ -228,7 +234,7 @@ describe("Step1IncomeProfile", () => {
 		expect(screen.getByTestId("probe-step").props.children).toBe("1");
 	});
 
-	it("volver a tocar Mixto no borra la parte fija", async () => {
+	it("volver a tocar Mixto no borra el sueldo base", async () => {
 		await renderStep1();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("option-mixed"));
@@ -254,13 +260,35 @@ describe("Step1IncomeProfile", () => {
 		expect(screen.getByTestId("probe-reference").props.children).toBe("150000");
 	});
 
-	it("Mixto pregunta el dinero de hoy además de la parte fija", async () => {
+	it("explica en cada campo qué va dentro, sin jerga como «parte fija»", async () => {
+		await renderStep1();
+		expect(screen.getByText("¿CADA CUÁNTO TE PAGAN?")).toBeTruthy();
+		expect(screen.getByText(INCOME_AMOUNT_COPY.today.hint)).toBeTruthy();
+
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByText("TU SUELDO BASE")).toBeTruthy();
+		expect(screen.getByText(INCOME_AMOUNT_COPY.base.hint)).toBeTruthy();
+		expect(screen.getByText(INCOME_AMOUNT_COPY.today.hint)).toBeTruthy();
+		expect(screen.getByText(INCOME_SOURCES_COPY.hint)).toBeTruthy();
+		expect(screen.queryByText(/parte fija/i)).toBeNull();
+
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		expect(screen.queryByText("¿CADA CUÁNTO TE PAGAN?")).toBeNull();
+		expect(screen.getByText(CYCLE_DURATION_COPY.hint)).toBeTruthy();
+		expect(screen.getByText(INCOME_SOURCES_COPY.hint)).toBeTruthy();
+	});
+
+	it("Mixto pregunta el dinero de hoy además del sueldo base", async () => {
 		await renderStep1();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("option-mixed"));
 		});
 		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
-		expect(screen.getByText("PARTE FIJA")).toBeTruthy();
+		expect(screen.getByText("TU SUELDO BASE")).toBeTruthy();
 		await act(async () => {
 			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
 		});

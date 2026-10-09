@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useEffect } from "react";
-import { Text } from "react-native";
+import { Platform, Text } from "react-native";
 import { StepPayDate } from "@/modules/onboarding/components/step-pay-date";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { payDateToPickerDate, pickerDateToPayDate } from "@/shared/lib/onboarding/pay-date";
@@ -75,6 +75,65 @@ describe("¿Cuándo cobras?", () => {
 		});
 		expect(screen.getByTestId("probe-date").props.children).toBe("2026-11-09");
 		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+	});
+
+	it("en iOS la fecha es una fila con el selector compacto nativo, sin calendario a la vista", async () => {
+		await render(
+			<OnboardingProvider>
+				<StepPayDate />
+			</OnboardingProvider>,
+		);
+		const picker = screen.getByTestId("pay-date-picker");
+		expect(picker.props.display).toBe("compact");
+		expect(picker.props.presentation).toBeUndefined();
+		expect(screen.getByText("Próximo cobro")).toBeTruthy();
+		expect(screen.queryByTestId("pay-date-field")).toBeNull();
+	});
+
+	it("en Android tocar la fila abre el diálogo nativo y elegir un día lo cierra", async () => {
+		jest.replaceProperty(Platform, "OS", "android");
+		await render(
+			<OnboardingProvider>
+				<Probe />
+				<StepPayDate />
+			</OnboardingProvider>,
+		);
+		expect(screen.queryByTestId("pay-date-picker")).toBeNull();
+		expect(screen.getByText("10 oct 2026")).toBeTruthy();
+
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("pay-date-field"));
+		});
+		const picker = screen.getByTestId("pay-date-picker");
+		expect(picker.props.presentation).toBe("dialog");
+
+		await act(async () => {
+			picker.props.onValueChange({}, payDateToPickerDate("2026-10-20"));
+		});
+		expect(screen.queryByTestId("pay-date-picker")).toBeNull();
+		expect(screen.getByText("20 oct 2026")).toBeTruthy();
+
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-date").props.children).toBe("2026-10-20");
+	});
+
+	it("en Android cancelar el diálogo conserva la fecha", async () => {
+		jest.replaceProperty(Platform, "OS", "android");
+		await render(
+			<OnboardingProvider>
+				<StepPayDate />
+			</OnboardingProvider>,
+		);
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("pay-date-field"));
+		});
+		await act(async () => {
+			screen.getByTestId("pay-date-picker").props.onDismiss();
+		});
+		expect(screen.queryByTestId("pay-date-picker")).toBeNull();
+		expect(screen.getByText("10 oct 2026")).toBeTruthy();
 	});
 
 	it("un día fuera de rango deshabilita Continuar y un día válido lo reactiva", async () => {

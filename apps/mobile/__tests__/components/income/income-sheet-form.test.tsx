@@ -83,8 +83,8 @@ describe("IncomeSheetForm", () => {
 
 		expect(submittedArgs(onSubmit)).toEqual({
 			amount: 5,
-			source: "payroll",
-			description: "Sueldo",
+			source: "other",
+			description: "Extra",
 			occurredAt: limaStartOfDay(Date.now()),
 			incomeKind: extraKind,
 			extraordinaryType: "custom",
@@ -165,6 +165,134 @@ describe("IncomeSheetForm", () => {
 			extraordinaryType: "custom",
 			extraordinaryLabel: "Extra",
 			distributionPolicy: "profile_default",
+		});
+	});
+
+	describe("extraordinarios según el modelo de ingreso", () => {
+		const PAYROLL_CHIPS = [
+			"gratification_july",
+			"gratification_december",
+			"cts",
+			"corporate_bonus",
+			"profit_sharing",
+			"custom",
+		] as const;
+
+		function renderFor(incomeModel: "fixed" | "variable" | "mixed" | null, onSubmit = jest.fn()) {
+			return render(
+				<IncomeSheetForm
+					currencySymbol="S/"
+					cycle="open"
+					incomeModel={incomeModel}
+					onSubmit={onSubmit}
+					onCancel={jest.fn()}
+				/>,
+			);
+		}
+
+		it("un dependiente elige qué recibió: gratificaciones, CTS, bono, utilidades u otro", async () => {
+			const view = await renderFor("fixed");
+
+			expect(view.getByText("¿QUÉ RECIBISTE?")).toBeTruthy();
+			for (const type of PAYROLL_CHIPS) {
+				expect(view.getByTestId(`income-extra-${type}`)).toBeTruthy();
+			}
+			expect(view.getByText("Grati. julio")).toBeTruthy();
+			expect(view.getByText("Grati. diciembre")).toBeTruthy();
+			expect(selected(view, "income-extra-custom")).toBe(true);
+			// Con chips el formulario crece: el submit queda anclado y siempre alcanzable.
+			expect(view.getByTestId("income-submit")).toBeTruthy();
+			expect(view.getByText("Registrar ingreso")).toBeTruthy();
+		});
+
+		it("registrar la CTS manda su tipo, sin etiqueta, y el botón lo dice", async () => {
+			const onSubmit = jest.fn();
+			const view = await renderFor("fixed", onSubmit);
+
+			await fireEvent.press(view.getByTestId("income-extra-cts"));
+			expect(selected(view, "income-extra-cts")).toBe(true);
+			expect(selected(view, "income-extra-custom")).toBe(false);
+			expect(view.getByText("Registrar CTS")).toBeTruthy();
+			expect(view.queryByText("Registrar ingreso")).toBeNull();
+
+			await fireEvent.press(view.getByText("9"));
+			await fireEvent.press(view.getByText("Registrar CTS"));
+
+			const args = submittedArgs(onSubmit);
+			expect(args).toMatchObject({
+				amount: 9,
+				incomeKind: extraKind,
+				extraordinaryType: "cts",
+				description: "CTS",
+				distributionPolicy: "profile_default",
+			});
+			expect(args).not.toHaveProperty("extraordinaryLabel");
+		});
+
+		it("la gratificación de julio pone su nombre en el botón", async () => {
+			const view = await renderFor("fixed");
+			await fireEvent.press(view.getByTestId("income-extra-gratification_july"));
+			expect(view.getByText("Registrar gratificación")).toBeTruthy();
+		});
+
+		it("empezar un ciclo nuevo es un sueldo: no pregunta qué recibió", async () => {
+			const onSubmit = jest.fn();
+			const view = await renderFor("fixed", onSubmit);
+
+			await fireEvent.press(view.getByTestId("income-extra-cts"));
+			await fireEvent.press(view.getByTestId(NEW_CYCLE));
+			expect(view.queryByTestId("income-extra-types")).toBeNull();
+			expect(view.getByText("Registrar ingreso")).toBeTruthy();
+
+			await fireEvent.press(view.getByText("7"));
+			await fireEvent.press(view.getByText("Registrar ingreso"));
+			const args = submittedArgs(onSubmit);
+			expect(args).toMatchObject({ incomeKind: sueldoKind });
+			expect(args).not.toHaveProperty("extraordinaryType");
+		});
+
+		it.each(["variable", "mixed", null] as const)(
+			"con ingreso %s todo extra es simplemente «Extra», sin tipos que elegir",
+			async (model) => {
+				const onSubmit = jest.fn();
+				const view = await renderFor(model, onSubmit);
+
+				expect(view.queryByTestId("income-extra-types")).toBeNull();
+				expect(view.queryByText("¿QUÉ RECIBISTE?")).toBeNull();
+				expect(view.queryByTestId("income-extra-cts")).toBeNull();
+
+				await fireEvent.press(view.getByText("3"));
+				await fireEvent.press(view.getByText("Registrar ingreso"));
+				expect(submittedArgs(onSubmit)).toMatchObject({
+					amount: 3,
+					incomeKind: extraKind,
+					extraordinaryType: "custom",
+					extraordinaryLabel: "Extra",
+				});
+			},
+		);
+
+		it("si el perfil llega después y deja de ser dependiente, el tipo elegido vuelve a «Extra»", async () => {
+			const onSubmit = jest.fn();
+			const view = await renderFor("fixed", onSubmit);
+			await fireEvent.press(view.getByTestId("income-extra-cts"));
+
+			await view.rerender(
+				<IncomeSheetForm
+					currencySymbol="S/"
+					cycle="open"
+					incomeModel="variable"
+					onSubmit={onSubmit}
+					onCancel={jest.fn()}
+				/>,
+			);
+			expect(view.queryByTestId("income-extra-types")).toBeNull();
+			await fireEvent.press(view.getByText("2"));
+			await fireEvent.press(view.getByText("Registrar ingreso"));
+			expect(submittedArgs(onSubmit)).toMatchObject({
+				extraordinaryType: "custom",
+				extraordinaryLabel: "Extra",
+			});
 		});
 	});
 

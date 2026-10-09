@@ -9,14 +9,19 @@ import AuthButton from "@/shared/components/auth/auth-button";
 import { Check } from "@/shared/components/ui/reicon";
 import { cyclePreview } from "@/shared/lib/onboarding/cycle";
 import {
+	CYCLE_DURATION_COPY,
 	type FixedPayFrequency,
 	FREQ_DRIFT_COPY,
+	INCOME_AMOUNT_COPY,
 	INCOME_MODEL_OPTIONS,
+	INCOME_SOURCES_COPY,
+	PAY_FREQUENCY_LABEL,
 } from "@/shared/lib/onboarding/defaults";
 import type { IncomeModel, OnboardingState } from "@/shared/lib/onboarding/types";
 
 export const INCOME_FIELD_DEBOUNCE_MS = 300;
 const SOURCE_MAX_LENGTH = 30;
+const { base, today } = INCOME_AMOUNT_COPY;
 
 type IncomeDraft = {
 	incomeModel: IncomeModel;
@@ -44,7 +49,7 @@ function incomeFieldErrors(value: IncomeDraft): Record<string, string> | undefin
 	}
 	if (value.incomeModel === "mixed") {
 		if (centsFromDigits(value.mixedAmountRaw) == null) {
-			fields.mixedAmountRaw = "Indica la parte fija.";
+			fields.mixedAmountRaw = base.missing;
 		}
 		if (value.sources.length < 1) fields.sources = "Agrega al menos una fuente.";
 	}
@@ -137,7 +142,8 @@ export function Step1IncomeProfile() {
 			<View className="gap-1">
 				<Text className="font-newsreader text-[28px] text-foreground">¿Cómo entra tu dinero?</Text>
 				<Text className="font-hanken text-[14px] text-foreground/55">
-					Fijo y mensual ya están listos. Anota el dinero que tienes hoy, no tu sueldo.
+					Elige cómo recibes tu dinero. Ya dejamos marcado Fijo y mensual; cámbialo si no es tu
+					caso.
 				</Text>
 			</View>
 
@@ -184,10 +190,13 @@ export function Step1IncomeProfile() {
 
 			{asksPayday ? (
 				<View className="mt-6 gap-4">
-					<FrequencyPicker
-						value={payFrequency}
-						onChange={(frequency) => form.setFieldValue("payFrequency", frequency)}
-					/>
+					<View className="gap-2">
+						<MonoLabel>{PAY_FREQUENCY_LABEL}</MonoLabel>
+						<FrequencyPicker
+							value={payFrequency}
+							onChange={(frequency) => form.setFieldValue("payFrequency", frequency)}
+						/>
+					</View>
 					<View className="gap-2">
 						<Text className="font-hanken text-[13px] text-foreground/55">
 							{FREQ_DRIFT_COPY[payFrequency]}
@@ -219,7 +228,8 @@ export function Step1IncomeProfile() {
 					>
 						{(field) => (
 							<AmountInput
-								label={incomeModel === "mixed" ? "PARTE FIJA" : "¿Cuánto dinero tienes hoy?"}
+								label={incomeModel === "mixed" ? base.label : today.label}
+								hint={incomeModel === "mixed" ? base.hint : today.hint}
 								valueCents={centsFromDigits(field.state.value)}
 								onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
 							/>
@@ -232,7 +242,12 @@ export function Step1IncomeProfile() {
 						Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca
 						sobre lo que esperas recibir.
 					</Text>
-					<MonoLabel>DURACIÓN DEL CICLO</MonoLabel>
+					<View className="gap-1">
+						<MonoLabel>{CYCLE_DURATION_COPY.label}</MonoLabel>
+						<Text className="font-hanken text-[13px] text-foreground/55">
+							{CYCLE_DURATION_COPY.hint}
+						</Text>
+					</View>
 					<View className="flex-row gap-2">
 						{([15, 30] as const).map((days) => {
 							const isActive = cycleDays === days;
@@ -261,7 +276,12 @@ export function Step1IncomeProfile() {
 
 			{incomeModel === "variable" || incomeModel === "mixed" ? (
 				<View className="mt-6 gap-3">
-					<MonoLabel>¿DE DÓNDE LLEGA TU DINERO?</MonoLabel>
+					<View className="gap-1">
+						<MonoLabel>{INCOME_SOURCES_COPY.label}</MonoLabel>
+						<Text className="font-hanken text-[13px] text-foreground/55">
+							{INCOME_SOURCES_COPY.hint}
+						</Text>
+					</View>
 					<form.Field name="sourceDraft">
 						{(field) => (
 							<View className="flex-row items-center gap-2">
@@ -325,7 +345,8 @@ export function Step1IncomeProfile() {
 					{(field) => (
 						<View className="mt-6">
 							<AmountInput
-								label="¿Cuánto dinero tienes hoy?"
+								label={today.label}
+								hint={today.hint}
 								testID="opening-balance-input"
 								valueCents={centsFromDigits(field.state.value)}
 								onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}

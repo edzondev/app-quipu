@@ -13,7 +13,7 @@ export const ENVELOPE_LABELS: Record<EnvelopeKey, string> = {
 };
 
 export const ENVELOPE_HINT: Record<EnvelopeKey, string> = {
-	needs: "Lo que sostiene el mes.",
-	wants: "Ya está presupuestado.",
-	savings: "Se aparta primero.",
+	needs: "Renta, comida, transporte y servicios: lo que sostiene tu mes.",
+	wants: "Salidas, compras y antojos: lo que disfrutas sin culpa.",
+	savings: "Lo que queda. Se aparta primero, antes de gastar.",
 };

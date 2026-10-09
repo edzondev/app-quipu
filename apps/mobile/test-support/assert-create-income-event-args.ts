@@ -73,6 +73,9 @@ export function assertCreateIncomeEventArgs(
 		) {
 			throw new Error("createIncomeEvent: falta extraordinaryLabel");
 		}
+	} else if ("extraordinaryLabel" in value) {
+		// Convex: «La etiqueta personalizada solo aplica a "Otro extraordinario"».
+		throw new Error("createIncomeEvent: extraordinaryLabel solo aplica a custom");
 	}
 	if (
 		typeof value.distributionPolicy !== "string" ||

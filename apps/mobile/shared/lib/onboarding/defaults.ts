@@ -38,6 +38,31 @@ export const INCOME_MODEL_OPTIONS = INCOME_MODELS.map((value) => ({
 	...INCOME_COPY[value],
 }));
 
+/** Cada campo de monto del paso 1: qué es y qué va dentro, sin jerga. */
+export const INCOME_AMOUNT_COPY = {
+	/** `mixedFixedAmount` en Convex: lo que llega seguro con cada pago. */
+	base: {
+		label: "TU SUELDO BASE",
+		hint: "Lo que recibes seguro en cada pago, sin contar los extras.",
+		missing: "Indica tu sueldo base.",
+	},
+	/** Saldo con el que abre el primer ciclo. */
+	today: {
+		label: "¿Cuánto dinero tienes hoy?",
+		hint: "Suma lo que tienes ahora en cuentas y efectivo. Desde aquí empieza tu ciclo.",
+	},
+} as const;
+
+export const PAY_FREQUENCY_LABEL = "¿CADA CUÁNTO TE PAGAN?";
+export const CYCLE_DURATION_COPY = {
+	label: "DURACIÓN DEL CICLO",
+	hint: "Un ciclo es el periodo en que repartes tu dinero. Elige cada cuántos días lo reiniciamos.",
+} as const;
+export const INCOME_SOURCES_COPY = {
+	label: "¿DE DÓNDE LLEGA TU DINERO?",
+	hint: "Escribe cada fuente y toca Agregar. Por ejemplo: recibos por honorarios o ventas.",
+} as const;
+
 export const ONBOARDING_DEFAULTS: OnboardingState = {
 	step: 1,
 	incomeModel: "fixed",

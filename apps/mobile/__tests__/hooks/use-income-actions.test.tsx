@@ -67,12 +67,18 @@ describe("useIncomeActions", () => {
 	it("reenvía incomeKind extraordinary cuando el ingreso es extra", async () => {
 		const occurredAt = limaStartOfDay(NOW);
 		await act(async () => {
-			await actions?.register({ amountCents: 50000, occurredAt, incomeKind: extraKind });
+			await actions?.register({
+				amountCents: 50000,
+				occurredAt,
+				incomeKind: extraKind,
+				extraordinaryType: "custom",
+			});
 		});
 		const expected = toCreateIncomeEventArgs({
 			amountCents: 50000,
 			occurredAt,
 			incomeKind: extraKind,
+			extraordinaryType: "custom",
 		});
 		assertCreateIncomeEventArgs(expected);
 		expect(expected).toMatchObject({
@@ -83,5 +89,21 @@ describe("useIncomeActions", () => {
 		});
 		expect(createMock).toHaveBeenCalledWith(expected);
 		assertCreateIncomeEventArgs(createMock.mock.calls[0]?.[0]);
+	});
+
+	it("reenvía el tipo de un extraordinario de planilla, como la CTS", async () => {
+		const occurredAt = limaStartOfDay(NOW);
+		await act(async () => {
+			await actions?.register({
+				amountCents: 120000,
+				occurredAt,
+				incomeKind: extraKind,
+				extraordinaryType: "cts",
+			});
+		});
+		const sent = createMock.mock.calls[0]?.[0];
+		assertCreateIncomeEventArgs(sent);
+		expect(sent).toMatchObject({ incomeKind: "extraordinary", extraordinaryType: "cts" });
+		expect(sent).not.toHaveProperty("extraordinaryLabel");
 	});
 });

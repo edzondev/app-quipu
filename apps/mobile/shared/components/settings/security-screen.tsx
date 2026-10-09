@@ -1,9 +1,10 @@
-import { BottomSheet, RNHostView } from "@expo/ui";
+import { RNHostView } from "@expo/ui";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
+import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
@@ -150,8 +151,13 @@ export function SecurityScreen({
 				</ScrollView>
 			) : null}
 
-			<BottomSheet isPresented={confirm != null} onDismiss={dismissConfirm} contentPadding={0}>
-				<RNHostView>
+			<BottomSheet
+				isPresented={confirm != null}
+				onDismiss={dismissConfirm}
+				contentPadding={0}
+				containerColorClassName="accent-background"
+			>
+				<RNHostView matchContents>
 					{confirm ? (
 						<ConfirmSheet
 							confirm={confirm}

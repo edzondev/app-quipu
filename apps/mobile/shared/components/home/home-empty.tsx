@@ -39,12 +39,7 @@ export function HomeEmpty({
 }) {
 	return (
 		<View className="flex-1">
-			<HomeIdentity
-				initial={initial}
-				title={name}
-				onOpenSettings={onOpenSettings}
-				onRegisterIncome={onRegisterIncome}
-			/>
+			<HomeIdentity initial={initial} name={name} onOpenSettings={onOpenSettings} />
 			<View className="flex-1 items-center justify-center px-4">
 				<EmptyIllustration />
 				<Text className="text-center font-hanken-semibold text-[18px] text-foreground">

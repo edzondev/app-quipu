@@ -28,19 +28,13 @@ jest.mock("@/shared/components/ui/reicon", () => {
 	};
 });
 
-jest.mock("@expo/ui/community/slider", () => {
-	const { View } = require("react-native");
-	return {
-		Slider: () => <View />,
-	};
-});
-
 jest.mock("@expo/ui", () => {
 	const { View } = require("react-native");
 	return {
 		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
 			isPresented ? <View>{children}</View> : null,
 		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+		ScrollView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 	};
 });
 
@@ -66,7 +60,7 @@ jest.mock("@/modules/onboarding/use-complete-onboarding", () => ({
 	}),
 }));
 
-const REPARTO = "¿Cómo repartes tu ingreso?";
+const REPARTO = "¿Cómo repartes tu dinero?";
 
 function Harness() {
 	const { state, dispatch } = useOnboarding();

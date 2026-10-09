@@ -135,9 +135,9 @@ describe("Home 1d", () => {
 		expect(
 			view.getByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
 		).toBeTruthy();
-		expect(view.getByText("Edzon")).toBeTruthy();
+		expect(view.getByText("Hola, Edzon")).toBeTruthy();
 		expect(view.getByText("E")).toBeTruthy();
-		expect(view.getByText("+ Ingreso")).toBeTruthy();
+		expect(view.queryByText("+ Ingreso")).toBeNull();
 		expect(view.getByText("Registrar ingreso")).toBeTruthy();
 		expect(view.queryByText("Salir")).toBeNull();
 		expect(view.queryByText("—")).toBeNull();
@@ -149,6 +149,21 @@ describe("Home 1d", () => {
 		expect(onRegisterIncome).toHaveBeenCalledTimes(1);
 	});
 
+	it("saluda solo con el primer nombre para que uno largo no tape la cabecera", async () => {
+		const view = await render(
+			<HomeDense
+				home={mockHome}
+				profileInitial="E"
+				profileName="Edzon Alberto Quispe Huamán"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+			/>,
+		);
+		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.queryByText(/Quispe/)).toBeNull();
+		expect(view.queryByText("+ Ingreso")).toBeNull();
+	});
+
 	it("muestra el ciclo denso con datos vivos y sin placeholders", async () => {
 		const onViewAllMovements = jest.fn();
 		const view = await render(
@@ -158,7 +173,6 @@ describe("Home 1d", () => {
 				profileName="Edzon"
 				onOpenSettings={jest.fn()}
 				onViewAllMovements={onViewAllMovements}
-				onRegisterIncome={jest.fn()}
 			/>,
 		);
 
@@ -209,7 +223,6 @@ describe("Home 1d", () => {
 				profileName="Edzon"
 				onOpenSettings={jest.fn()}
 				onViewAllMovements={jest.fn()}
-				onRegisterIncome={jest.fn()}
 			/>,
 		);
 	}
@@ -246,7 +259,6 @@ describe("Home 1d", () => {
 				profileName="Edzon"
 				onOpenSettings={jest.fn()}
 				onViewAllMovements={jest.fn()}
-				onRegisterIncome={jest.fn()}
 			/>,
 		);
 		expect(view.queryByText(/Saldo que quedó/)).toBeNull();
@@ -272,7 +284,6 @@ describe("Home 1d", () => {
 				profileName="Edzon"
 				onOpenSettings={jest.fn()}
 				onViewAllMovements={jest.fn()}
-				onRegisterIncome={jest.fn()}
 			/>,
 		);
 		expect(view.getByText("Sin compromisos próximos.")).toBeTruthy();
@@ -285,12 +296,10 @@ describe("Home 1d", () => {
 		const view = await render(<HomePage />);
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Hola, Edzon")).toBeTruthy();
-		expect(view.getByText("+ Ingreso")).toBeTruthy();
+		expect(view.queryByText("+ Ingreso")).toBeNull();
 		expect(view.queryByText("Salir")).toBeNull();
 		expect(view.queryByText("Cerrar sesión")).toBeNull();
 		await fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
 		expect(mockPush).toHaveBeenCalledWith("/ajustes");
-		await fireEvent.press(view.getByText("+ Ingreso"));
-		expect(mockOpenCreate).toHaveBeenCalledWith("income");
 	});
 });

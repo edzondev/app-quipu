@@ -5,7 +5,7 @@ import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
 import AuthButton from "@/shared/components/auth/auth-button";
-import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
+import { isCommitmentValid, validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
 import { formatSoles } from "@/shared/lib/onboarding/daily";
 import { formatPayDate } from "@/shared/lib/onboarding/pay-date";
 
@@ -41,6 +41,7 @@ export function StepConfirm() {
 	const showRetry = Boolean(error) || Boolean(balanceError) || Boolean(payDateError);
 
 	const referenceCents = state.referenceIncomeCents;
+	const validCommitments = state.commitments.filter(isCommitmentValid);
 	const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
 
 	const envelopeAmount = (pct: number) =>
@@ -124,6 +125,20 @@ export function StepConfirm() {
 						testID="confirm-commitments"
 						value={formatSoles(commitmentsTotalCents)}
 					/>
+					{validCommitments.map((commitment, index) => (
+						<View
+							key={commitment.id}
+							testID={`confirm-commitment-${index}`}
+							className="flex-row items-center justify-between pl-3"
+						>
+							<Text className="font-hanken text-[13px] text-foreground/55">
+								{`${commitment.name.trim()} · día ${commitment.dueDay}`}
+							</Text>
+							<Text className="font-hanken text-[13px] text-foreground/55">
+								{formatSoles(commitment.amountCents)}
+							</Text>
+						</View>
+					))}
 				</View>
 
 				{error ? (

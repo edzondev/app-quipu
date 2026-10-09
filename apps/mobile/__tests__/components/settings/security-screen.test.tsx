@@ -9,6 +9,7 @@ jest.mock("@expo/ui", () => {
 		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
 			isPresented ? <View>{children}</View> : null,
 		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+		ScrollView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 	};
 });
 

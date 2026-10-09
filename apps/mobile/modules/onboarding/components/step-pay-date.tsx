@@ -1,6 +1,6 @@
-import DateTimePicker from "@expo/ui/community/datetime-picker";
 import { useForm, useStore } from "@tanstack/react-form";
 import { Text, View } from "react-native";
+import { PayDateField } from "@/modules/onboarding/components/pay-date-field";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
@@ -8,8 +8,6 @@ import {
 	isAllowedPayDate,
 	NEXT_PAY_DATE_MESSAGE,
 	payDateBounds,
-	payDateToPickerDate,
-	pickerDateToPayDate,
 } from "@/shared/lib/onboarding/pay-date";
 
 export function StepPayDate() {
@@ -49,7 +47,8 @@ export function StepPayDate() {
 			<View className="gap-1">
 				<Text className="font-newsreader text-[28px] text-foreground">¿Cuándo cobras?</Text>
 				<Text className="font-hanken text-[14px] text-foreground/55">
-					Elige el próximo día de cobro, entre mañana y los próximos 31 días.
+					Toca la fecha y elige tu próximo día de cobro. Puede ser desde mañana hasta dentro de 31
+					días.
 				</Text>
 			</View>
 			<form.Field name="nextPayDate">
@@ -59,19 +58,13 @@ export function StepPayDate() {
 						state.cycleFieldErrors.nextPayDate ?? (outOfRange ? NEXT_PAY_DATE_MESSAGE : undefined);
 					return (
 						<View className="mt-6 gap-3">
-							<DateTimePicker
-								testID="pay-date-picker"
-								value={payDateToPickerDate(field.state.value)}
-								mode="date"
-								display="inline"
-								presentation="inline"
-								minimumDate={payDateToPickerDate(bounds.earliest)}
-								maximumDate={payDateToPickerDate(bounds.latest)}
-								onValueChange={(_event, selected) => {
-									if (!selected) return;
-									const day = pickerDateToPayDate(selected);
-									if (!isAllowedPayDate(day, Date.now())) return;
-									field.handleChange(day);
+							<PayDateField
+								value={field.state.value}
+								earliest={bounds.earliest}
+								latest={bounds.latest}
+								invalid={message != null}
+								onChange={(day) => {
+									if (isAllowedPayDate(day, Date.now())) field.handleChange(day);
 								}}
 							/>
 							{message ? (
@@ -81,7 +74,12 @@ export function StepPayDate() {
 								>
 									{message}
 								</Text>
-							) : null}
+							) : (
+								<Text className="font-hanken text-[13px] text-foreground/55">
+									Si tu pago real llega antes o después, el ciclo se ajusta cuando registres tu
+									ingreso.
+								</Text>
+							)}
 						</View>
 					);
 				}}

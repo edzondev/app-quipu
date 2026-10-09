@@ -21,6 +21,11 @@ export function profileInitial(name: string): string {
 	return first ? first.toLocaleUpperCase("es-PE") : "";
 }
 
+/** Primer nombre para saludar: un nombre largo no debe empujar nada en la cabecera. */
+export function firstName(name: string): string {
+	return name.trim().split(/\s+/)[0] ?? "";
+}
+
 export function repartoLabel(settings: SettingsOverview): string {
 	const { needs, wants, savings } = settings.allocations;
 	return `${needs} / ${wants} / ${savings}`;

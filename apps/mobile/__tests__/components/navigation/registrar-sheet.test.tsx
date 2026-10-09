@@ -16,6 +16,7 @@ jest.mock("@expo/ui", () => {
 		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
 			isPresented ? <View>{children}</View> : null,
 		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+		ScrollView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 	};
 });
 
@@ -28,8 +29,10 @@ jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useDashboardSummary: () => mockSummary(),
 }));
 
+const mockProfile = jest.fn();
+
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
-	useProfileGate: () => ({ profile: { currencyCode: "PEN" } }),
+	useProfileGate: () => ({ profile: mockProfile() }),
 }));
 
 jest.mock("@/shared/hooks/use-expense-actions", () => ({
@@ -50,8 +53,34 @@ const readyHome = {
 };
 
 describe("RegistrarSheet", () => {
+	beforeEach(() => {
+		mockProfile.mockReturnValue({ currencyCode: "PEN" });
+	});
+
 	afterEach(() => {
 		cleanup();
+	});
+
+	it("un perfil dependiente ofrece los extraordinarios de planilla", async () => {
+		mockSummary.mockReturnValue(summaryWithCycle());
+		home.mockReturnValue(readyHome);
+		mockProfile.mockReturnValue({ currencyCode: "PEN", incomeModel: "fixed" });
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 6, intent: "income" }} onDismiss={jest.fn()} />,
+		);
+		expect(view.getByTestId("income-extra-cts")).toBeTruthy();
+		expect(view.getByTestId("income-extra-gratification_december")).toBeTruthy();
+	});
+
+	it("un perfil variable solo tiene «Extra», sin tipos que elegir", async () => {
+		mockSummary.mockReturnValue(summaryWithCycle());
+		home.mockReturnValue(readyHome);
+		mockProfile.mockReturnValue({ currencyCode: "PEN", incomeModel: "variable" });
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 7, intent: "income" }} onDismiss={jest.fn()} />,
+		);
+		expect(view.getByTestId("income-mode-add")).toBeTruthy();
+		expect(view.queryByTestId("income-extra-types")).toBeNull();
 	});
 
 	it("abre en Ingreso cuando no hay ciclo", async () => {

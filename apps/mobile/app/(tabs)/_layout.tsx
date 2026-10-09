@@ -86,6 +86,7 @@ export default function TabLayout() {
 									options={{
 										title: "Plan",
 										tabBarLabel: "Plan",
+										popToTopOnBlur: true,
 										tabBarIcon: ({ focused }) => (
 											<Envelope size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
 										),
@@ -96,6 +97,7 @@ export default function TabLayout() {
 									options={{
 										title: "Progreso",
 										tabBarLabel: "Progreso",
+										popToTopOnBlur: true,
 										tabBarIcon: ({ focused }) => (
 											<ChartBar size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
 										),

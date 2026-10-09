@@ -41,6 +41,7 @@ jest.mock("@expo/ui", () => {
 		BottomSheet: ({ isPresented, children }: { isPresented: boolean; children: ReactNode }) =>
 			isPresented ? <View>{children}</View> : null,
 		RNHostView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
+		ScrollView: ({ children }: { children: ReactNode }) => <View>{children}</View>,
 	};
 });
 
@@ -126,6 +127,10 @@ describe("StepConfirm — tu número", () => {
 		expect(screen.getByTestId("confirm-envelope-savings").props.children).toBe("20% · S/ 700");
 		expect(screen.getByText("Compromisos")).toBeTruthy();
 		expect(screen.getByTestId("confirm-commitments").props.children).toBe("S/ 1,265");
+		expect(screen.getByText("Agua · día 5")).toBeTruthy();
+		expect(screen.getByText("S/ 1,100")).toBeTruthy();
+		expect(screen.getByText("Celular · día 10")).toBeTruthy();
+		expect(screen.getByText("S/ 165")).toBeTruthy();
 		expect(screen.queryByText("Todo listo")).toBeNull();
 		expect(screen.queryByText("Tu sistema está listo")).toBeNull();
 		expect(screen.queryByText("Ajustar algo")).toBeNull();

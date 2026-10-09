@@ -4,8 +4,20 @@ import { ExpenseKeypad, KeypadAmount } from "@/shared/components/expenses/expens
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
 import { formatExpenseWhen } from "@/shared/lib/expenses/present";
-import { type IncomeCycleOffer } from "@/shared/lib/income/cycle-offer";
-import { defaultIncomeDraft, type IncomeDraft, type IncomeKind } from "@/shared/lib/income/draft";
+import type { IncomeCycleOffer } from "@/shared/lib/income/cycle-offer";
+import {
+	defaultIncomeFormValues,
+	type IncomeDraft,
+	type IncomeKind,
+	incomeDraftFromForm,
+} from "@/shared/lib/income/draft";
+import {
+	EXTRA_COPY,
+	type ExtraordinaryType,
+	extraTypesFor,
+	GENERIC_EXTRA,
+} from "@/shared/lib/income/extra-types";
+import type { IncomeModel } from "@/shared/lib/onboarding/types";
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 const CYCLE_CHOICES = [
@@ -46,29 +58,59 @@ function resolveIncomeKind(cycle: SheetCycle, chosen: IncomeKind): IncomeKind {
 	return chosen;
 }
 
+/** Un tipo que ya no se ofrece (el perfil cargó después) vuelve al genérico. */
+function resolveExtraType(
+	offered: readonly ExtraordinaryType[],
+	chosen: ExtraordinaryType,
+): ExtraordinaryType {
+	return offered.includes(chosen) ? chosen : GENERIC_EXTRA;
+}
+
 type Props = {
 	currencySymbol: string;
 	formError?: string | null;
 	cycle: SheetCycle;
+	/** Define qué extraordinarios se ofrecen; sin perfil cargado solo el genérico. */
+	incomeModel?: IncomeModel | null;
 	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
 	onCancel: () => void;
 };
 
-export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, onCancel }: Props) {
+export function IncomeSheetForm({
+	currencySymbol,
+	formError,
+	cycle,
+	incomeModel,
+	onSubmit,
+	onCancel,
+}: Props) {
 	const choices = choicesFor(cycle);
+	const extraTypes = extraTypesFor(incomeModel);
 	const form = useForm({
-		defaultValues: { ...defaultIncomeDraft(), incomeKind: initialIncomeKind(cycle) },
+		defaultValues: { ...defaultIncomeFormValues(), incomeKind: initialIncomeKind(cycle) },
 		onSubmit: ({ value }) =>
-			onSubmit({
-				...value,
-				incomeKind: resolveIncomeKind(cycle, value.incomeKind),
-			}),
+			onSubmit(
+				incomeDraftFromForm({
+					...value,
+					incomeKind: resolveIncomeKind(cycle, value.incomeKind),
+					extraordinaryType: resolveExtraType(extraTypes, value.extraordinaryType),
+				}),
+			),
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
 	const occurredAt = useStore(form.store, (state) => state.values.occurredAt);
+	const incomeKind = useStore(form.store, (state) =>
+		resolveIncomeKind(cycle, state.values.incomeKind),
+	);
+	const extraType = useStore(form.store, (state) =>
+		resolveExtraType(extraTypes, state.values.extraordinaryType),
+	);
+	const asksExtraType = incomeKind === "extraordinary" && extraTypes.length > 1;
+	const submitLabel =
+		incomeKind === "extraordinary" ? EXTRA_COPY[extraType].submit : "Registrar ingreso";
 
 	return (
-		<View className="flex-1 px-[22px] pb-8">
+		<View className="px-[22px] pb-8">
 			<View className="mt-4 flex-row items-center justify-between">
 				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
 					REGISTRAR INGRESO
@@ -122,6 +164,40 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 				}}
 			</form.Field>
 
+			{asksExtraType ? (
+				<View testID="income-extra-types" className="mt-4 gap-2">
+					<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
+						¿QUÉ RECIBISTE?
+					</Text>
+					<View className="flex-row flex-wrap gap-2">
+						{extraTypes.map((type) => {
+							const selected = extraType === type;
+							return (
+								<Pressable
+									key={type}
+									testID={`income-extra-${type}`}
+									accessibilityRole="button"
+									accessibilityLabel={EXTRA_COPY[type].title}
+									accessibilityState={{ selected }}
+									onPress={() => form.setFieldValue("extraordinaryType", type)}
+									className={`rounded-full border px-3.5 py-2 active:opacity-60 ${
+										selected ? "border-primary bg-primary/5" : "border-line"
+									}`}
+								>
+									<Text
+										className={`text-[13px] text-foreground ${
+											selected ? "font-hanken-semibold" : "font-hanken"
+										}`}
+									>
+										{EXTRA_COPY[type].chip}
+									</Text>
+								</Pressable>
+							);
+						})}
+					</View>
+				</View>
+			) : null}
+
 			<View className="mt-5">
 				<KeypadAmount currencySymbol={currencySymbol} cents={amountCents} />
 			</View>
@@ -144,6 +220,7 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 			<form.Subscribe selector={(state) => state.isSubmitting}>
 				{(isSubmitting) => (
 					<Pressable
+						testID="income-submit"
 						accessibilityRole="button"
 						accessibilityState={{ disabled: isSubmitting }}
 						disabled={isSubmitting}
@@ -153,7 +230,7 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 						}`}
 					>
 						<Text className="font-hanken-semibold text-[15px] text-background">
-							{isSubmitting ? "Guardando…" : "Registrar ingreso"}
+							{isSubmitting ? "Guardando…" : submitLabel}
 						</Text>
 					</Pressable>
 				)}
