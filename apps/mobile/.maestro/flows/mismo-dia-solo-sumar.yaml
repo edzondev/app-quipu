@@ -31,17 +31,19 @@ tags:
 - tapOn:
     text: "Inicio"
 - tapOn:
-    text: "\\+ Ingreso"
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
 - extendedWaitUntil:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
-- assertVisible: "Empieza un nuevo ciclo"
 - assertVisible:
-    text: "Sumar al ciclo actual"
+    id: income-mode-new-cycle
+- assertVisible:
+    id: income-mode-add
     selected: true
 - tapOn:
-    text: "Empieza un nuevo ciclo"
-    below: "(?-i)REGISTRAR INGRESO"
+    id: income-mode-new-cycle
 - tapOn:
     text: "1"
 - tapOn:
@@ -51,8 +53,13 @@ tags:
 - tapOn:
     text: "0"
 - assertVisible: "10\\.00"
+- scrollUntilVisible:
+    element:
+      id: income-submit
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    text: "(?-i)Registrar ingreso"
+    id: income-submit
     enabled: true
 - extendedWaitUntil:
     notVisible: "(?-i)REGISTRAR INGRESO"

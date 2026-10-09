@@ -28,14 +28,12 @@ tags:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "Empieza un nuevo ciclo"
-    below: "(?-i)REGISTRAR INGRESO"
+    id: income-mode-new-cycle
 - assertVisible:
-    text: "Sumar al ciclo actual"
-    below: "(?-i)REGISTRAR INGRESO"
+    id: income-mode-add
 # Ciclo abierto, no vencido: viene marcada «Sumar al ciclo actual».
 - assertVisible:
-    text: "Sumar al ciclo actual"
+    id: income-mode-add
     selected: true
 - tapOn:
     text: "Gasto"
@@ -46,8 +44,19 @@ tags:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - tapOn:
-    text: "Sumar al ciclo actual"
-    below: "(?-i)REGISTRAR INGRESO"
+    id: income-mode-add
+- runFlow:
+    when:
+      visible:
+        id: income-extra-types
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: income-extra-custom
+          direction: DOWN
+          timeout: 10000
+      - tapOn:
+          id: income-extra-custom
 - tapOn:
     text: "1"
 - tapOn:
@@ -57,8 +66,13 @@ tags:
 - tapOn:
     text: "0"
 - assertVisible: "10\\.00"
+- scrollUntilVisible:
+    element:
+      id: income-submit
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    text: "(?-i)Registrar ingreso"
+    id: income-submit
     enabled: true
 - extendedWaitUntil:
     notVisible: "(?-i)REGISTRAR INGRESO"

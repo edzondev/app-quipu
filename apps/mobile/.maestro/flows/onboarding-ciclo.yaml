@@ -20,7 +20,7 @@ tags:
 - runFlow: ../subflows/onboarding-hasta-paso-4.yaml
 - tapOn:
     id: wizard-back
-- assertVisible: "¿Cómo repartes tu ingreso?"
+- assertVisible: "¿Cómo repartes tu dinero?"
 - tapOn: "Continuar"
 - extendedWaitUntil:
     visible: "¿Qué pagas todos los meses?"

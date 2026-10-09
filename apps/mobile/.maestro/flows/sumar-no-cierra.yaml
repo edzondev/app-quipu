@@ -33,7 +33,7 @@ tags:
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: "Sumar al ciclo actual"
+      QUIPU_MODE_ID: income-mode-add
 - tapOn:
     text: "Movimientos"
 - extendedWaitUntil:

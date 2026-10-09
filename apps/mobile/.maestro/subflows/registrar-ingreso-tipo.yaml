@@ -1,18 +1,30 @@
 appId: com.quipu.finance
 ---
-# QUIPU_TIPO es el texto completo de la opción:
-# "Empieza un nuevo ciclo" o "Sumar al ciclo actual".
-# En b70a12f la hoja usa esos textos (sin ¿) y los testID income-mode-new-cycle / income-mode-add.
+# QUIPU_MODE_ID es income-mode-new-cycle o income-mode-add.
 # Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
-# (?-i) separa el título «REGISTRAR INGRESO» del botón «Registrar ingreso».
+# Si el perfil es de planilla, «Sumar» muestra los tipos (income-extra-*). Se elige Otro.
+# La hoja scrollea: el envío puede quedar abajo.
 - tapOn:
-    text: "\\+ Ingreso"
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
 - extendedWaitUntil:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - tapOn:
-    text: ${QUIPU_TIPO}
-    below: "(?-i)REGISTRAR INGRESO"
+    id: ${QUIPU_MODE_ID}
+- runFlow:
+    when:
+      visible:
+        id: income-extra-types
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: income-extra-custom
+          direction: DOWN
+          timeout: 10000
+      - tapOn:
+          id: income-extra-custom
 - tapOn:
     text: "1"
 - tapOn:
@@ -22,8 +34,13 @@ appId: com.quipu.finance
 - tapOn:
     text: "0"
 - assertVisible: "10\\.00"
+- scrollUntilVisible:
+    element:
+      id: income-submit
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    text: "(?-i)Registrar ingreso"
+    id: income-submit
     enabled: true
 - extendedWaitUntil:
     notVisible: "(?-i)REGISTRAR INGRESO"

@@ -2,7 +2,7 @@
 
 Flujos E2E de la app móvil. No se ejecutan en CI: no hay emulador ni APK en este cambio. Donde no hay `testID` se usa el texto visible o el `accessibilityLabel`.
 
-Los flujos están sobre `b70a12f` (#107, #109 y #111, más #106 y #108). La hoja dice «Empieza un nuevo ciclo» y «Sumar al ciclo actual». `config.yaml` excluye `one-shot`, `wip` y `blocked`. `pnpm maestro:smoke` sigue usando `--include-tags=smoke`, que tiene prioridad.
+Los flujos están sobre `4bb73db`. La hoja usa `income-mode-new-cycle` y `income-mode-add`. El reparto del asistente es con botones de más y menos. `config.yaml` excluye `one-shot`, `wip` y `blocked`. `pnpm maestro:smoke` sigue usando `--include-tags=smoke`, que tiene prioridad.
 
 ## Cómo correrlos
 
@@ -100,7 +100,9 @@ La contraseña incorrecta del flujo de entrar es el literal `clave-incorrecta`. 
 
 Nombres viejos, de cuando la hoja decía «Sueldo» y «Extra»: `sueldo-cierra-ciclo` es `mismo-dia-solo-sumar`, `sueldo-antes-del-fin` es `ciclo-nuevo-antes-del-fin`, `extra-no-cierra` es `sumar-no-cierra`, `sin-ciclo-solo-sueldo` es `sin-ciclo-solo-ciclo-nuevo`.
 
-La hoja dice «Empieza un nuevo ciclo» y «Sumar al ciclo actual» (sin ¿). Maestro no distingue mayúsculas: el título «REGISTRAR INGRESO» y el botón «Registrar ingreso» se separan con `"(?-i)…"`. Lo mismo con «REGISTRAR GASTO».
+La hoja dice «Empieza un nuevo ciclo» y «Sumar al ciclo actual». Los flujos tocan `income-mode-new-cycle`, `income-mode-add` e `income-submit`. Si el perfil es de planilla y se suma al ciclo, aparecen los tipos (`income-extra-*`); se elige `income-extra-custom` («Otro»). Inicio con ciclo ya no tiene «+ Ingreso»: se entra por la pestaña «Registrar». El saludo es «Hola» o «Hola, » más el primer nombre.
+
+El paso 2 deja la fecha que ya viene (mañana) y solo toca «Continuar». Esa fecha se muestra como `9 oct 2026` (`formatPayDate`), no con el idioma del teléfono. El diálogo nativo de Android (`pay-date-field`, botones «Listo» y «Cancelar» puestos en el código) no se abre. El paso 3 usa `allocation-increase-needs`, `allocation-decrease-*` y `allocation-reset`; ya no hay sliders ni «Suma 100%».
 
 La cuenta fija `QUIPU_E2E_EMAIL` acumula gastos y compromisos (`registrar-gasto-*`, `movimientos`, `compromisos`). «Hoy puedes gastar» baja. No hay `onFlowComplete` para eso: si el flujo falla antes de crear la fila, borrar al final tumbaría la corrida. `movimientos-editar-eliminar` sí borra el gasto que crea. `ahorro-metas` y `home-primer-ingreso` usan cuenta propia.
 
@@ -134,7 +136,7 @@ El mismo día de Lima, las dos opciones se ven. El servidor suma el ingreso habi
 
 ## Qué no está aquí
 
-Passkeys, código de correo, sin internet, medianoche, rotación, accesibilidad, doble toque y elegir en el calendario un día que no sea mañana. El paso 2 deja la fecha que el picker trae (mañana) y solo toca «Continuar».
+Passkeys, código de correo, sin internet, medianoche, rotación, accesibilidad, doble toque y confirmar el diálogo nativo de la fecha de cobro. El paso 2 deja mañana y solo toca «Continuar».
 
 El atrás de Android en el asistente es manual (Capi: pasos 2 a 5 vuelven al paso anterior; el paso 1 vuelve a la Bienvenida). Los flujos solo usan la flecha de la app (`wizard-back`), que ya va al paso anterior.
 
@@ -199,7 +201,7 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `sign-in-email` | Entrar | propuesto, Pixi. Hoy el campo y la etiqueta comparten «Correo» | campo Correo | `entrar`, `sign-in` |
 | `sign-in-password` | Entrar | propuesto, Pixi | campo Contraseña | los mismos |
 | `sign-in-submit` | Entrar | propuesto, Pixi | «Entrar» | los mismos |
-| `income-submit` | Hoja de ingreso | propuesto, Pixi | «Registrar ingreso» | `registrar-ingreso`, `registrar-ingreso-tipo`, `home-primer-ingreso`, `mismo-dia-solo-sumar` |
+| `income-submit` | Hoja de ingreso | ya está en `income-sheet-form.tsx`; los flujos lo usan | «Registrar ingreso» o el del tipo de extra | ingreso |
 | `expense-submit` | Hoja de gasto | propuesto, Pixi | «Registrar gasto» | `registrar-gasto-hoja` |
 | `expense-save` | Gasto completo | propuesto, Pixi | «Registrar gasto» / «Guardar» | `registrar-gasto-completo`, editar |
 | `income-sheet` | Hoja de ingreso | propuesto, Pixi | contenedor de la hoja | registrar ingreso |

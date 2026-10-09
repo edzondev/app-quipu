@@ -23,8 +23,7 @@ tags:
 - assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
-- assertVisible:
-    text: "\\+ Ingreso"
+- assertNotVisible: "\\+ Ingreso"
 - assertNotVisible: "Salir"
 - tapOn: "Ajustes"
 - extendedWaitUntil:
@@ -38,15 +37,17 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 10000
 - tapOn:
-    text: "\\+ Ingreso"
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "Ingreso"
+    id: income-mode-add
 - tapOn: "Cancelar"
 - extendedWaitUntil:
-    notVisible: "REGISTRAR INGRESO"
+    notVisible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - tapOn: "Ver todos"
 - extendedWaitUntil:
@@ -55,3 +56,4 @@ tags:
 - tapOn:
     text: "Inicio"
 - assertVisible: "Hoy puedes gastar"
+- assertVisible: "Hola.*"

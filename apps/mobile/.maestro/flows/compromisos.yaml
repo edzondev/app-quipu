@@ -5,6 +5,7 @@ tags:
 ---
 # Notion 3f486a7356a681f8b73ee3d543a5dcf6 agregar
 # Notion 3f486a7356a68130b200fbcebc4fd595 validaciones (sin el doble toque)
+# Errores de toCreateCommitment: nombre obligatorio, monto mayor a cero, día del 1 al 31.
 # El texto de vencimiento depende del día de Lima; se afirma «Se repite cada mes.» y «MENSUAL» o un estado.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -25,11 +26,14 @@ tags:
     timeout: 15000
 - tapOn: "Agregar compromiso"
 - extendedWaitUntil:
-    visible: "NUEVO COMPROMISO"
+    visible: "(?-i)NUEVO COMPROMISO"
+    timeout: 10000
+- scrollUntilVisible:
+    element: "Agregar compromiso"
+    direction: DOWN
     timeout: 10000
 - tapOn:
     text: "Agregar compromiso"
-    below: "NUEVO COMPROMISO"
 - assertVisible: "El nombre del compromiso es obligatorio."
 - assertVisible: "El monto debe ser mayor a cero."
 - tapOn:

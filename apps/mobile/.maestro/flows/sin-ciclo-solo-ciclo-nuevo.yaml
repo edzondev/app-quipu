@@ -25,9 +25,9 @@ tags:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "Empieza un nuevo ciclo"
-    below: "(?-i)REGISTRAR INGRESO"
-- assertNotVisible: "Sumar al ciclo actual"
+    id: income-mode-new-cycle
+- assertNotVisible:
+    id: income-mode-add
 - tapOn: "Cancelar"
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"

@@ -22,7 +22,7 @@ tags:
     timeout: 10000
 - tapOn: "Continuar"
 - extendedWaitUntil:
-    visible: "¿Cómo repartes tu ingreso?"
+    visible: "¿Cómo repartes tu dinero?"
     timeout: 10000
 - tapOn:
     id: allocation-reset
