@@ -14,6 +14,11 @@ const mockUseQuery = jest.fn();
 jest.mock("convex/react", () => ({
 	useQuery: (...args: unknown[]) => mockUseQuery(...args),
 	useConvexAuth: () => ({ isAuthenticated: true, isLoading: false }),
+	useConvexConnectionState: () => ({
+		isWebSocketConnected: true,
+		hasEverConnected: true,
+		connectionRetries: 0,
+	}),
 }));
 
 jest.mock("@/shared/hooks/use-expense-actions", () => ({
