@@ -1,5 +1,5 @@
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
-import { LIMA_MONTHS, type LimaStamp, limaStamp } from "@/shared/lib/lima-date";
+import { inclusiveEndDate, LIMA_MONTHS, type LimaStamp, limaStamp } from "@/shared/lib/lima-date";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
@@ -314,7 +314,7 @@ function formatCycleLine(
 
 function cycleRange(startDate: number, endDate: number): string {
 	const start = limaStamp(startDate);
-	const end = limaStamp(endDate - 1);
+	const end = limaStamp(inclusiveEndDate(endDate));
 	const startMonth = LIMA_MONTHS[start.monthIndex] ?? "";
 	const endMonth = LIMA_MONTHS[end.monthIndex] ?? "";
 	if (start.monthIndex === end.monthIndex) {

@@ -51,7 +51,7 @@ function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => 
 	const { register: registerIncome } = useIncomeActions();
 	const home = useHomeModel();
 	const { profile } = useProfileGate();
-	const noCycle = home.status === "empty";
+	const noCycle = home.status === "empty" || home.status === "closed";
 	const hasCycle = home.status === "ready";
 	const [picked, setPicked] = useState<RegistrarMode | null>(null);
 	const mode =
