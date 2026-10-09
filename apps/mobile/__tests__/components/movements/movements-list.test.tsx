@@ -162,7 +162,6 @@ describe("MovementsList", () => {
 							label: "Fondo",
 							amount: 1000,
 							timestamp: Date.parse("2026-08-10T12:00:00-05:00"),
-							envelopeType: "savings" as const,
 							envelopeLabel: "Ahorro",
 						},
 					],
