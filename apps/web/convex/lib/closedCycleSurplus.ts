@@ -23,29 +23,64 @@ export type LatestClosedCycleSlice = Pick<
 
 type SurplusContributionSlice = Pick<
 	Doc<"surplusContributions">,
-	"amount" | "createdAt" | "contributionKind"
+	"amount" | "createdAt" | "contributionKind" | "fromEnvelope"
 >;
 
+export type ClosedCycleSurplusBreakdown = {
+	needs: number;
+	wants: number;
+	extraordinary: number;
+	total: number;
+};
+
+function isCloseSurplusMoveRow(
+	row: Pick<SurplusContributionSlice, "createdAt" | "contributionKind">,
+	movedAt: number,
+): boolean {
+	return row.contributionKind === "additional" && row.createdAt === movedAt;
+}
+
 /**
- * Sobrante del ciclo cerrado. Si ya se movió, es la suma de las
- * surplusContributions additional creadas en closeSurplusMovedAt.
- * Si no, es necesidades + gustos + extraordinario todavía disponible.
+ * Antes del move: Needs, Wants y extraordinario vivos.
+ * Después: las surplusContributions additional con createdAt === closeSurplusMovedAt,
+ * agrupadas por fromEnvelope. Esas filas suman el total.
  */
-export function closedCycleSurplusCents(input: {
+export function closedCycleSurplusBreakdown(input: {
 	closeSurplusMovedAt: Doc<"financialCycles">["closeSurplusMovedAt"];
 	needs: number;
 	wants: number;
 	extraordinary: number;
 	surplusContributions: ReadonlyArray<SurplusContributionSlice>;
-}): number {
+}): ClosedCycleSurplusBreakdown {
 	const movedAt = input.closeSurplusMovedAt;
 	if (movedAt === undefined) {
-		return input.needs + input.wants + input.extraordinary;
+		return {
+			needs: input.needs,
+			wants: input.wants,
+			extraordinary: input.extraordinary,
+			total: input.needs + input.wants + input.extraordinary,
+		};
 	}
-	return input.surplusContributions.reduce((sum, row) => {
-		if (row.contributionKind !== "additional" || row.createdAt !== movedAt) return sum;
-		return sum + row.amount;
-	}, 0);
+
+	const parts: ClosedCycleSurplusBreakdown = {
+		needs: 0,
+		wants: 0,
+		extraordinary: 0,
+		total: 0,
+	};
+	for (const row of input.surplusContributions) {
+		if (!isCloseSurplusMoveRow(row, movedAt)) continue;
+		parts[row.fromEnvelope] += row.amount;
+	}
+	parts.total = parts.needs + parts.wants + parts.extraordinary;
+	return parts;
+}
+
+/** Total del desglose. Misma regla, sin repetir el filtro de las filas. */
+export function closedCycleSurplusCents(
+	input: Parameters<typeof closedCycleSurplusBreakdown>[0],
+): number {
+	return closedCycleSurplusBreakdown(input).total;
 }
 
 export async function findLatestClosedCycle(
@@ -101,18 +136,19 @@ export async function loadClosedCycleSurplusAmounts(
 		})),
 		savingsEnvelopeRemainingCents: Math.max(0, savingsEnvelope?.remainingAmount ?? 0),
 	});
-
-	return {
+	const breakdown = closedCycleSurplusBreakdown({
+		closeSurplusMovedAt,
 		needs,
 		wants,
 		extraordinary,
-		total: closedCycleSurplusCents({
-			closeSurplusMovedAt,
-			needs,
-			wants,
-			extraordinary,
-			surplusContributions,
-		}),
+		surplusContributions,
+	});
+
+	return {
+		needs: breakdown.needs,
+		wants: breakdown.wants,
+		extraordinary: breakdown.extraordinary,
+		total: breakdown.total,
 		needsEnvelope,
 		wantsEnvelope,
 		savingsEnvelope,
