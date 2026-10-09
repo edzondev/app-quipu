@@ -54,6 +54,13 @@ export function computeCycleCarryover(input: {
 	};
 }
 
+/** Signed sum carried onto the next cycle's envelopes, negatives included. */
+export function signedCycleSurplusCents(
+	carry: Pick<ReturnType<typeof computeCycleCarryover>, "needs" | "wants" | "savings">,
+): number {
+	return carry.needs + carry.wants + carry.savings;
+}
+
 export function envelopeWithCarry(distributionCents: number, carriedOverCents: number) {
 	const totalCents = distributionCents + carriedOverCents;
 	return {

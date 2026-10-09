@@ -6,6 +6,7 @@ import {
 	computeCycleProgress,
 	computeDailyAvailable,
 	computeDisplayDailyCents,
+	computeSurplusProjection,
 	daysUntilDueDay,
 	detectEarlyCycle,
 	isCyclePastEnd,
@@ -35,6 +36,38 @@ describe("isCyclePastEnd", () => {
 
 	it("is false one millisecond before endDate", () => {
 		expect(isCyclePastEnd(endDate, endDate - 1)).toBe(false);
+	});
+});
+
+describe("computeSurplusProjection", () => {
+	const envelope = (type: "needs" | "wants" | "savings", remainingAmount: number) => ({
+		type,
+		remainingAmount,
+		allocatedAmount: 0,
+	});
+
+	it("clamps each envelope at zero for the coach projection", () => {
+		expect(
+			computeSurplusProjection([
+				envelope("needs", -100),
+				envelope("wants", 50),
+				envelope("savings", 0),
+			]),
+		).toBe(50);
+		expect(
+			computeSurplusProjection([
+				envelope("needs", 0),
+				envelope("wants", 0),
+				envelope("savings", 0),
+			]),
+		).toBe(0);
+		expect(
+			computeSurplusProjection([
+				envelope("needs", -80),
+				envelope("wants", -20),
+				envelope("savings", 0),
+			]),
+		).toBe(0);
 	});
 });
 

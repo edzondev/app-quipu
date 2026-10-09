@@ -47,6 +47,29 @@ describe("assertNextPayDate", () => {
 		});
 	});
 
+	it("keeps tomorrow valid at 23:30 Lima, when UTC is already the next day", () => {
+		const beforeLimaMidnight = Date.parse("2026-10-10T04:30:00Z");
+		expect(assertNextPayDate("2026-10-10", beforeLimaMidnight)).toBe(endMs("2026-10-10"));
+		expect(payDateError("2026-10-09", beforeLimaMidnight)).toMatchObject({
+			code: "VALIDATION_ERROR",
+			data: { field: "nextPayDate" },
+		});
+		expect(payDateError("2026-11-10", beforeLimaMidnight)).toMatchObject({
+			code: "VALIDATION_ERROR",
+			data: { field: "nextPayDate" },
+		});
+	});
+
+	it("rolls today forward at 00:30 Lima, just after Lima midnight", () => {
+		const afterLimaMidnight = Date.parse("2026-10-10T05:30:00Z");
+		expect(payDateError("2026-10-10", afterLimaMidnight)).toMatchObject({
+			code: "VALIDATION_ERROR",
+			data: { field: "nextPayDate" },
+		});
+		expect(assertNextPayDate("2026-10-11", afterLimaMidnight)).toBe(endMs("2026-10-11"));
+		expect(assertNextPayDate("2026-11-10", afterLimaMidnight)).toBe(endMs("2026-11-10"));
+	});
+
 	it("rejects malformed and impossible calendar days", () => {
 		for (const nextPayDate of [
 			"",

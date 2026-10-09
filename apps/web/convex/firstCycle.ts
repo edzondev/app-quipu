@@ -6,6 +6,7 @@ import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCove
 import {
 	assertFirstCycleAvailable,
 	assertOpeningBalanceCents,
+	firstCycleOnboardingRetry,
 	openingEnvelopes,
 } from "./lib/firstCycle";
 import { assertNextPayDate } from "./lib/firstCycleDates";
@@ -30,7 +31,17 @@ export const startFirstCycle = mutation({
 			.query("financialCycles")
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id))
 			.first();
-		assertFirstCycleAvailable(existingCycle !== null);
+		const retry = firstCycleOnboardingRetry({
+			hasCycle: existingCycle !== null,
+			onboardingComplete: profile.onboardingComplete,
+		});
+		if (existingCycle !== null && retry.action === "complete_existing") {
+			await ctx.db.patch(profile._id, { onboardingComplete: true });
+			return { cycleId: existingCycle._id };
+		}
+		if (retry.action === "already_exists") {
+			assertFirstCycleAvailable(true);
+		}
 
 		const cycleId = await ctx.db.insert("financialCycles", {
 			profileId: profile._id,
@@ -61,6 +72,7 @@ export const startFirstCycle = mutation({
 		);
 
 		await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycleId, now);
+		await ctx.db.patch(profile._id, { onboardingComplete: true });
 
 		return { cycleId };
 	},

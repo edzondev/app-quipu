@@ -1,6 +1,7 @@
 import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { computeCycleCarryover, signedCycleSurplusCents } from "./cycleCarryover";
 import { computeAvailableExtraordinarySavingsForMove } from "./extraordinarySavingsSurplus";
 
 const dashboardClosedCycleValidator = v.union(
@@ -39,6 +40,11 @@ export type ClosedCycleSurplusBreakdown = {
 	extraordinary: number;
 	total: number;
 };
+
+/** Money that can move to the Fund. A negative envelope cannot. */
+export function movableEnvelopeCents(remainingAmount: number | undefined): number {
+	return Math.max(0, remainingAmount ?? 0);
+}
 
 function isCloseSurplusMoveRow(
 	row: Pick<SurplusContributionSlice, "createdAt" | "contributionKind">,
@@ -105,6 +111,7 @@ export async function loadClosedCycleSurplusAmounts(
 	ctx: QueryCtx | MutationCtx,
 	cycleId: Id<"financialCycles">,
 	closeSurplusMovedAt: Doc<"financialCycles">["closeSurplusMovedAt"],
+	carriedOverToCycleId?: string,
 ) {
 	const [needsEnvelope, wantsEnvelope, savingsEnvelope, incomeEvents, surplusContributions] =
 		await Promise.all([
@@ -130,8 +137,8 @@ export async function loadClosedCycleSurplusAmounts(
 				.collect(),
 		]);
 
-	const needs = Math.max(0, needsEnvelope?.remainingAmount ?? 0);
-	const wants = Math.max(0, wantsEnvelope?.remainingAmount ?? 0);
+	const needs = movableEnvelopeCents(needsEnvelope?.remainingAmount);
+	const wants = movableEnvelopeCents(wantsEnvelope?.remainingAmount);
 	const extraordinary = computeAvailableExtraordinarySavingsForMove({
 		incomeEvents: incomeEvents.map((event) => ({
 			incomeKind: event.incomeKind,
@@ -141,7 +148,7 @@ export async function loadClosedCycleSurplusAmounts(
 			fromEnvelope: row.fromEnvelope,
 			amount: row.amount,
 		})),
-		savingsEnvelopeRemainingCents: Math.max(0, savingsEnvelope?.remainingAmount ?? 0),
+		savingsEnvelopeRemainingCents: movableEnvelopeCents(savingsEnvelope?.remainingAmount),
 	});
 	const breakdown = closedCycleSurplusBreakdown({
 		closeSurplusMovedAt,
@@ -150,12 +157,24 @@ export async function loadClosedCycleSurplusAmounts(
 		extraordinary,
 		surplusContributions,
 	});
+	const envelopes = [needsEnvelope, wantsEnvelope, savingsEnvelope].flatMap((envelope) =>
+		envelope ? [envelope] : [],
+	);
 
 	return {
 		needs: breakdown.needs,
 		wants: breakdown.wants,
 		extraordinary: breakdown.extraordinary,
 		total: breakdown.total,
+		signedSurplusCents: signedCycleSurplusCents(
+			computeCycleCarryover({
+				envelopes,
+				closeSurplusMovedAt,
+				carriedOverToCycleId,
+				surplusContributions,
+				incomeEvents,
+			}),
+		),
 	};
 }
 
