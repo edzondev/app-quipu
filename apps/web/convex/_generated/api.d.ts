@@ -20,6 +20,7 @@ import type * as cycleReport from "../cycleReport.js";
 import type * as dashboard from "../dashboard.js";
 import type * as expenses from "../expenses.js";
 import type * as feedback from "../feedback.js";
+import type * as firstCycle from "../firstCycle.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as forecast from "../forecast.js";
 import type * as http from "../http.js";
@@ -61,6 +62,8 @@ import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentC
 import type * as lib_extraordinaryIncome from "../lib/extraordinaryIncome.js";
 import type * as lib_extraordinaryRules from "../lib/extraordinaryRules.js";
 import type * as lib_extraordinarySavingsSurplus from "../lib/extraordinarySavingsSurplus.js";
+import type * as lib_firstCycle from "../lib/firstCycle.js";
+import type * as lib_firstCycleDates from "../lib/firstCycleDates.js";
 import type * as lib_gamificationMath from "../lib/gamificationMath.js";
 import type * as lib_incomeAllocation from "../lib/incomeAllocation.js";
 import type * as lib_incomeDeleteReverse from "../lib/incomeDeleteReverse.js";
@@ -129,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   expenses: typeof expenses;
   feedback: typeof feedback;
+  firstCycle: typeof firstCycle;
   fixedCommitments: typeof fixedCommitments;
   forecast: typeof forecast;
   http: typeof http;
@@ -170,6 +174,8 @@ declare const fullApi: ApiFromModules<{
   "lib/extraordinaryIncome": typeof lib_extraordinaryIncome;
   "lib/extraordinaryRules": typeof lib_extraordinaryRules;
   "lib/extraordinarySavingsSurplus": typeof lib_extraordinarySavingsSurplus;
+  "lib/firstCycle": typeof lib_firstCycle;
+  "lib/firstCycleDates": typeof lib_firstCycleDates;
   "lib/gamificationMath": typeof lib_gamificationMath;
   "lib/incomeAllocation": typeof lib_incomeAllocation;
   "lib/incomeDeleteReverse": typeof lib_incomeDeleteReverse;

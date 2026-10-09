@@ -27,7 +27,7 @@ import {
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
-import { rejectFutureIncomeDate, resolveCycleForEvent } from "./lib/incomeEventLogic";
+import { rejectFutureIncomeDate, resolveCycleForIncome } from "./lib/incomeEventLogic";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 import { reverseIncomeAllocationLedger } from "./lib/reverseIncomeAllocationLedger";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
@@ -219,16 +219,18 @@ export const createIncomeEvent = mutation({
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "active"))
 			.unique();
 
-		const resolvedId = resolveCycleForEvent({
+		const resolvedId = resolveCycleForIncome({
 			activeCycle: activeCycle
 				? {
 						_id: activeCycle._id,
 						startDate: activeCycle.startDate,
 						endDate: activeCycle.endDate,
+						isOpeningCycle: activeCycle.isOpeningCycle,
 					}
 				: null,
 			occurredAt: args.occurredAt,
 			now,
+			incomeKind,
 		});
 
 		let cycleId: Id<"financialCycles">;

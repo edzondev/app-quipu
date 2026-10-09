@@ -8,6 +8,7 @@ export const emptyEnvelopeCarry = { carriedOverCents: 0, incomeCents: 0, totalCe
 export const emptyCycleCarry = {
 	carriedOverFromCycleId: null,
 	carriedOverExtraordinaryCents: 0,
+	isOpeningCycle: false,
 };
 type ActiveSummary = Extract<DashboardSummary, { cycle: { startDate: number } }>;
 type IdleSummary = Extract<DashboardSummary, { cycle: null }>;

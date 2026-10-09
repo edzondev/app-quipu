@@ -4,6 +4,21 @@ import { evaluateCycleCompliance } from "./budgetMath";
 import { computeNextStreak } from "./gamificationMath";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
+/** El ciclo de apertura no entra al historial ni a la racha. */
+export function openingCycleSkipsProgress(isOpeningCycle: boolean | undefined): boolean {
+	return isOpeningCycle === true;
+}
+
+export function streakAfterClose(input: {
+	isOpeningCycle: boolean | undefined;
+	currentStreak: number;
+	longestStreak: number;
+	compliance: Parameters<typeof computeNextStreak>[2];
+}): { currentStreak: number; longestStreak: number } | null {
+	if (openingCycleSkipsProgress(input.isOpeningCycle)) return null;
+	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance);
+}
+
 export async function evaluateClosedCycle(
 	ctx: MutationCtx,
 	profileId: Id<"profiles">,
@@ -11,7 +26,7 @@ export async function evaluateClosedCycle(
 	now: number,
 ) {
 	const cycle = await ctx.db.get("financialCycles", cycleId);
-	if (!cycle) return;
+	if (!cycle || openingCycleSkipsProgress(cycle.isOpeningCycle)) return;
 
 	const profile = await ctx.db.get("profiles", profileId);
 	const closedAtPremium = profile?.plan === "premium";
@@ -60,7 +75,13 @@ export async function evaluateClosedCycle(
 
 	const currentStreak = streakRow?.currentStreak ?? 0;
 	const longestStreak = streakRow?.longestStreak ?? 0;
-	const next = computeNextStreak(currentStreak, longestStreak, compliance);
+	const next = streakAfterClose({
+		isOpeningCycle: cycle.isOpeningCycle,
+		currentStreak,
+		longestStreak,
+		compliance,
+	});
+	if (next === null) return;
 
 	if (streakRow) {
 		await ctx.db.patch(streakRow._id, {
