@@ -142,6 +142,9 @@ export const appTables = {
 		// Legacy cycles without incomeAllocationLines need user review (not silent invent).
 		needsReview: v.optional(v.boolean()),
 		closeSurplusMovedAt: v.optional(v.number()),
+		carriedOverFromCycleId: v.optional(v.id("financialCycles")),
+		carriedOverToCycleId: v.optional(v.id("financialCycles")),
+		carriedOverExtraordinaryCents: v.optional(v.number()),
 	}).index("by_profile_status", ["profileId", "status"]),
 
 	// SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -151,6 +154,7 @@ export const appTables = {
 		type: v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
 		allocatedAmount: v.number(),
 		remainingAmount: v.number(), // Saldo vivo mutable modificado por gastos en tiempo real
+		carriedOverCents: v.optional(v.number()),
 		frozenUntil: v.optional(v.number()),
 	})
 		.index("by_cycle_type", ["cycleId", "type"])

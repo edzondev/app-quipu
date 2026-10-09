@@ -32,13 +32,12 @@ describe("dashboardClosedCycle", () => {
 		expect(dashboardClosedCycle(null, SURPLUS_CENTS)).toBeNull();
 	});
 
-	it("returns the latest closed cycle with its surplus destined to the emergency fund", () => {
+	it("returns the latest closed cycle and its surplus", () => {
 		expect(dashboardClosedCycle(closedNotMoved, SURPLUS_CENTS)).toEqual({
 			cycleId: CYCLE_ID,
 			startDate: START,
 			endDate: END,
 			surplusCents: SURPLUS_CENTS,
-			surplusDestination: "emergency_fund",
 			surplusMovedAt: null,
 		});
 	});
@@ -49,7 +48,6 @@ describe("dashboardClosedCycle", () => {
 			startDate: START,
 			endDate: END,
 			surplusCents: SURPLUS_CENTS,
-			surplusDestination: "emergency_fund",
 			surplusMovedAt: MOVED_AT,
 		});
 	});

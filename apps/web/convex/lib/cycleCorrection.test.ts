@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildCycleCorrectionTransfers, computeLiquidTotal } from "./cycleCorrection";
+import { evaluateCycleCompliance } from "./budgetMath";
+import {
+	buildCycleCorrectionTransfers,
+	computeLiquidTotal,
+	envelopeAmountsAfterCorrection,
+} from "./cycleCorrection";
 
 describe("cycleCorrection", () => {
 	it("conserves liquid when redistributing without contributions", () => {
@@ -125,5 +130,24 @@ describe("cycleCorrection", () => {
 				},
 			}),
 		).toThrow(/saldo bancario|declarado/i);
+	});
+
+	it("clears a carry that the rewritten envelope no longer contains", () => {
+		const incomeCents = 10_000;
+		const corrected = envelopeAmountsAfterCorrection({
+			allocatedAmount: 12_000,
+			remainingAmount: 12_000,
+			targetRemaining: 500,
+		});
+		expect(corrected).toEqual({
+			allocatedAmount: 500,
+			remainingAmount: 500,
+			carriedOverCents: 0,
+		});
+		expect(corrected.carriedOverCents + incomeCents).toBe(incomeCents);
+		expect(
+			evaluateCycleCompliance([{ type: "wants", ...corrected, carriedOverCents: 2_000 }]),
+		).toBe("failed");
+		expect(evaluateCycleCompliance([{ type: "wants", ...corrected }])).toBe("compliant");
 	});
 });

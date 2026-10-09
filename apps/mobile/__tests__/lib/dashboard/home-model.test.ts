@@ -1,5 +1,10 @@
 import { fixtureId } from "@/__fixtures__/convex-id";
-import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
+import {
+	commitment,
+	emptyCycleCarry,
+	emptyEnvelopeCarry,
+	summaryWithoutCycle,
+} from "@/__fixtures__/dashboard-summary";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
@@ -43,6 +48,7 @@ function summary(
 			endDate: AUGUST_START,
 			needsReview: false,
 			unallocatedCents: 0,
+			...emptyCycleCarry,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
@@ -62,18 +68,21 @@ function summary(
 				allocatedAmount: 175000,
 				remainingAmount: 61200,
 				percentRemaining: 35,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "wants" as const,
 				allocatedAmount: 105000,
 				remainingAmount: 23100,
 				percentRemaining: 22,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "savings" as const,
 				allocatedAmount: 70000,
 				remainingAmount: 70000,
 				percentRemaining: 100,
+				...emptyEnvelopeCarry,
 			},
 		],
 		coach: {
@@ -210,6 +219,7 @@ describe("mapDashboardHome", () => {
 						allocatedAmount: 1000,
 						remainingAmount: -500,
 						percentRemaining: 0,
+						...emptyEnvelopeCarry,
 					},
 				],
 			}),

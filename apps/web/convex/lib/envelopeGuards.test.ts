@@ -82,4 +82,17 @@ describe("canReverseDistributionApplied", () => {
 			),
 		).toBe(true);
 	});
+
+	it("does not let a negative carryover block reversing this cycle's income", () => {
+		expect(
+			canReverseDistributionApplied(
+				[
+					{ type: "needs", remainingAmount: 5_000, carriedOverCents: -5_000 },
+					{ type: "wants", remainingAmount: 6_000, carriedOverCents: 0 },
+					{ type: "savings", remainingAmount: 4_000 },
+				],
+				{ needs: 10_000, wants: 6_000, savings: 4_000 },
+			),
+		).toBe(true);
+	});
 });

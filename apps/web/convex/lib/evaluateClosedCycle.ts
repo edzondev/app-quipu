@@ -36,7 +36,8 @@ export async function evaluateClosedCycle(
 
 	const compliance = evaluateCycleCompliance(envelopes);
 	const wantsEnvelope = envelopes.find((env) => env.type === "wants");
-	const wantsWithinBudget = (wantsEnvelope?.remainingAmount ?? 0) >= 0;
+	const wantsWithinBudget =
+		(wantsEnvelope?.remainingAmount ?? 0) - (wantsEnvelope?.carriedOverCents ?? 0) >= 0;
 
 	const coverageContext = await loadCycleCoverageById(ctx, profileId, cycleId, now);
 	const commitments = coverageContext?.commitments ?? [];

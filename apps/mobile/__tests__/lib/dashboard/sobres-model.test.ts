@@ -1,5 +1,10 @@
 import { fixtureId } from "@/__fixtures__/convex-id";
-import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
+import {
+	commitment,
+	emptyCycleCarry,
+	emptyEnvelopeCarry,
+	summaryWithoutCycle,
+} from "@/__fixtures__/dashboard-summary";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
 
 type Summary = NonNullable<Parameters<typeof mapSobresScreen>[0]>;
@@ -28,6 +33,7 @@ function summary(
 			endDate: AUGUST_START,
 			needsReview: false,
 			unallocatedCents: 0,
+			...emptyCycleCarry,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
@@ -56,18 +62,21 @@ function summary(
 				allocatedAmount: 175_000,
 				remainingAmount: 113_800,
 				percentRemaining: 65,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "wants" as const,
 				allocatedAmount: 105_000,
 				remainingAmount: 23_100,
 				percentRemaining: 22,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "savings" as const,
 				allocatedAmount: 70_000,
 				remainingAmount: 70_000,
 				percentRemaining: 100,
+				...emptyEnvelopeCarry,
 			},
 		],
 		commitments: overrides.commitments ?? [
@@ -184,6 +193,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 105_000,
 						remainingAmount: 90_000,
 						percentRemaining: 86,
+						...emptyEnvelopeCarry,
 					},
 				],
 			}),
@@ -204,6 +214,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 30_000,
 						remainingAmount: 1_500,
 						percentRemaining: 5,
+						...emptyEnvelopeCarry,
 					},
 				],
 				commitments: [
@@ -235,6 +246,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 1_000,
 						remainingAmount: -500,
 						percentRemaining: 0,
+						...emptyEnvelopeCarry,
 					},
 				],
 				commitments: [],
@@ -259,6 +271,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 70_000,
 						remainingAmount: 35_000,
 						percentRemaining: 50,
+						...emptyEnvelopeCarry,
 					},
 				],
 			}),

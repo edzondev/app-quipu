@@ -2,7 +2,11 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
-import { buildCycleCorrectionTransfers, type CycleCorrectionPlan } from "./lib/cycleCorrection";
+import {
+	buildCycleCorrectionTransfers,
+	type CycleCorrectionPlan,
+	envelopeAmountsAfterCorrection,
+} from "./lib/cycleCorrection";
 import { allowsOutboundTransfer } from "./lib/envelopeGuards";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import { planInferredSavingsAnnulment } from "./lib/inferredSavingsAnnulment";
@@ -187,11 +191,14 @@ export const correctActiveCycleAllocation = mutation({
 						message: `El sobre ${type} está congelado. No puedes reducir su saldo todavía.`,
 					});
 				}
-				const spent = Math.max(0, envelope.allocatedAmount - envelope.remainingAmount);
-				await ctx.db.patch(envelope._id, {
-					remainingAmount: targetRemaining,
-					allocatedAmount: spent + targetRemaining,
-				});
+				await ctx.db.patch(
+					envelope._id,
+					envelopeAmountsAfterCorrection({
+						allocatedAmount: envelope.allocatedAmount,
+						remainingAmount: envelope.remainingAmount,
+						targetRemaining,
+					}),
+				);
 			}),
 		);
 

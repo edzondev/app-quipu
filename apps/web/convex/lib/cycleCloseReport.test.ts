@@ -71,7 +71,7 @@ describe("buildCycleCloseReport", () => {
 		expect(result.hasExtraordinaryIncome).toBe(false);
 	});
 
-	it("is identical before and after a surplus move that leaves remaining in place", () => {
+	it("stays the same when leftover is carried or moved without changing remaining", () => {
 		const input: CycleCloseReportInput = {
 			cycleStartDate: Date.UTC(2026, 6, 1),
 			incomeEvents: [{ amount: 3_500_00, incomeKind: "habitual" }],
@@ -84,9 +84,23 @@ describe("buildCycleCloseReport", () => {
 			streak: 2,
 		};
 		const before = buildCycleCloseReport(input);
-		const after = buildCycleCloseReport(input);
+		const withCarryNoted = buildCycleCloseReport({
+			...input,
+			envelopes: input.envelopes.map((envelope) => ({
+				...envelope,
+				carriedOverCents: envelope.remainingAmount,
+			})),
+		});
+		const ifRemainingDropped = buildCycleCloseReport({
+			...input,
+			envelopes: input.envelopes.map((envelope) => ({
+				...envelope,
+				remainingAmount: 0,
+			})),
+		});
 
-		expect(after).toEqual(before);
+		expect(withCarryNoted).toEqual(before);
+		expect(ifRemainingDropped).not.toEqual(before);
 		expect(before.spendByEnvelope).toEqual([
 			{ type: "needs", label: "Necesidades", spentCents: 1_500_00 },
 			{ type: "wants", label: "Gustos", spentCents: 650_00 },

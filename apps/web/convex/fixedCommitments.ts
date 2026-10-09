@@ -324,7 +324,7 @@ export const getCommitment = query({
 			createdAt: commitment._creationTime,
 		});
 		if (activeCycle) {
-			const [incomeEvents, reservationRows] = await Promise.all([
+			const [incomeEvents, reservationRows, envelopes] = await Promise.all([
 				ctx.db
 					.query("incomeEvents")
 					.withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
@@ -333,6 +333,10 @@ export const getCommitment = query({
 					.query("commitmentReservations")
 					.withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
 					.collect(),
+				ctx.db
+					.query("envelopes")
+					.withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+					.collect(),
 			]);
 			const coverageById = buildCoverageByIdFromCycleDocs(
 				{
@@ -340,6 +344,7 @@ export const getCommitment = query({
 					commitments: [commitment],
 					incomeEvents,
 					reservationRows,
+					envelopes,
 				},
 				now,
 			);
