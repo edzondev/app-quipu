@@ -396,6 +396,7 @@ export const getSummary = query({
 				unallocatedCents: activeCycle.unallocatedCents ?? 0,
 				carriedOverFromCycleId: activeCycle.carriedOverFromCycleId ?? null,
 				carriedOverExtraordinaryCents: activeCycle.carriedOverExtraordinaryCents ?? 0,
+				isOpeningCycle: activeCycle.isOpeningCycle === true,
 				...cycleMetrics,
 				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
 			},
