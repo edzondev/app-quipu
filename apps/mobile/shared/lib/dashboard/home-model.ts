@@ -68,6 +68,8 @@ export type HomeModel = {
 	coachMessage: string | null;
 	commitments: HomeCommitment[];
 	recentMovements: HomeMovement[];
+	/** Primer ciclo: getSummary.cycle.isOpeningCycle. El dinero de hoy no es arrastre. */
+	isOpeningCycle: boolean;
 };
 
 const ENVELOPE_LABEL = {
@@ -107,6 +109,7 @@ const LIMA = "America/Lima";
 
 export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 	if (!summary.cycle || !summary.hero) return null;
+	const dailyCents = summary.hero.displayDailyCents;
 
 	const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
 	const tone = readBadgeTone(summary.hero.statusBadge);
@@ -121,7 +124,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		badgeLabel: BADGE_LABEL[tone],
 		badgeTone: tone,
 		cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
-		dailyCents: summary.hero.displayDailyCents,
+		dailyCents,
 		heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
 		currencySymbol: symbol,
 		envelopes,
@@ -141,6 +144,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 			amountCents: movement.amount,
 			tone: movementTone(movement.kind, movement.envelopeLabel),
 		})),
+		isOpeningCycle: summary.cycle.isOpeningCycle,
 	};
 }
 
@@ -152,8 +156,9 @@ export function envelopeCarryLabel(
 	incomeCents: number,
 	totalCents: number,
 	symbol: string,
+	isOpeningCycle = false,
 ): string | null {
-	if (carriedOverCents === 0) return null;
+	if (isOpeningCycle || carriedOverCents === 0) return null;
 	const carried = formatCarryCents(carriedOverCents, symbol);
 	const income = formatCarryCents(incomeCents, symbol);
 	const total = formatCarryCents(totalCents, symbol);

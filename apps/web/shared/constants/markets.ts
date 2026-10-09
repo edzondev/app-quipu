@@ -15,6 +15,8 @@ export type SupportedMarket = {
 	label: string;
 	/** Nombre de la moneda en preferencias. */
 	currencyLabel: string;
+	/** Nombre corto en el selector de onboarding. */
+	shortLabel: string;
 };
 
 export const SUPPORTED_MARKETS: readonly SupportedMarket[] = [
@@ -26,6 +28,7 @@ export const SUPPORTED_MARKETS: readonly SupportedMarket[] = [
 		locale: "es-PE",
 		label: "Perú",
 		currencyLabel: "Sol peruano",
+		shortLabel: "Sol",
 	},
 	{
 		id: "es",
@@ -35,6 +38,7 @@ export const SUPPORTED_MARKETS: readonly SupportedMarket[] = [
 		locale: "es-ES",
 		label: "España",
 		currencyLabel: "Euro",
+		shortLabel: "Euro",
 	},
 	{
 		id: "us",
@@ -44,6 +48,7 @@ export const SUPPORTED_MARKETS: readonly SupportedMarket[] = [
 		locale: "en-US",
 		label: "Estados Unidos",
 		currencyLabel: "Dólar estadounidense",
+		shortLabel: "Dólar",
 	},
 ] as const;
 
@@ -55,6 +60,7 @@ export const DEFAULT_MARKET: SupportedMarket = {
 	locale: "es-PE",
 	label: "Perú",
 	currencyLabel: "Sol peruano",
+	shortLabel: "Sol",
 };
 
 /** @deprecated Prefer DEFAULT_MARKET; se mantiene por call sites existentes. */

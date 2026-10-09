@@ -44,6 +44,19 @@ jest.mock("@expo/ui", () => {
 	};
 });
 
+jest.mock("@/shared/hooks/use-dashboard", () => ({
+	useHomeModel: () => ({ status: "empty", profileName: "Ana", profileInitial: "A" }),
+	useDashboardSummary: () => undefined,
+}));
+
+jest.mock("@/shared/hooks/use-expense-actions", () => ({
+	useExpenseActions: () => ({ register: jest.fn() }),
+}));
+
+jest.mock("@/shared/hooks/use-income-actions", () => ({
+	useIncomeActions: () => ({ register: jest.fn() }),
+}));
+
 jest.mock("@/modules/onboarding/use-complete-onboarding", () => ({
 	useCompleteOnboarding: () => ({
 		submit: jest.fn(async () => true),
@@ -99,7 +112,9 @@ describe("navegación del reparto", () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
 		expect(screen.getByText("TU SISTEMA · 05/05")).toBeTruthy();
-		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.getByText("Empezar mi ciclo")).toBeTruthy();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
 	});
 
 	it("después del cobro, Continuar va al reparto y atrás es 5→4→3", async () => {
@@ -135,7 +150,9 @@ describe("navegación del reparto", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("go-5"));
 		});
-		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.getByText("Empezar mi ciclo")).toBeTruthy();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
 		expect(screen.queryByText("Todo listo")).toBeNull();
 		expect(screen.queryByText("Tu sistema está listo")).toBeNull();
 		await act(async () => {
@@ -165,7 +182,9 @@ describe("navegación del reparto", () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
 		expect(screen.getByTestId("probe-step").props.children).toBe("5");
-		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
+		expect(screen.getByText("Empezar mi ciclo")).toBeTruthy();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
 		expect(screen.queryByText("¿Qué pagas todos los meses?")).toBeNull();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));

@@ -387,6 +387,28 @@ describe("envelopeCarryLabel", () => {
 		expect(envelopeCarryLabel(0, 80000, 80000, "S/")).toBeNull();
 	});
 
+	it("no arma línea en el ciclo de apertura aunque haya arrastre", () => {
+		expect(envelopeCarryLabel(12000, 80000, 91000, "S/", true)).toBeNull();
+	});
+
+	it("el diario de Inicio es displayDailyCents, sin restar compromisos", () => {
+		const value = summary({
+			hero: { ...hero, displayDailyCents: 6400, dailyAvailableCents: 9000 },
+			commitments: [
+				commitment({
+					id: "rent",
+					name: "Alquiler",
+					amount: 110000,
+					daysUntilDue: 1,
+					paymentStatus: "pending",
+				}),
+			],
+		});
+		expect(value.hero.displayDailyCents).toBe(6400);
+		expect(mapDashboardHome(value)?.dailyCents).toBe(6400);
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
+	});
+
 	it("pone el signo menos delante de S/ cuando el arrastre es negativo", () => {
 		expect(envelopeCarryLabel(-5000, 80000, 75000, "S/")).toBe(
 			"Saldo que quedó \u2212S/ 50 + Ingreso S/ 800 = S/ 750",

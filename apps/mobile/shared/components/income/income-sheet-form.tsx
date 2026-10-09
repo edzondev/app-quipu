@@ -4,21 +4,37 @@ import { ExpenseKeypad, KeypadAmount } from "@/shared/components/expenses/expens
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
 import { formatExpenseWhen } from "@/shared/lib/expenses/present";
-import { defaultIncomeDraft, type IncomeDraft } from "@/shared/lib/income/draft";
+import { type IncomeCycleOffer } from "@/shared/lib/income/cycle-offer";
+import { defaultIncomeDraft, type IncomeDraft, type IncomeKind } from "@/shared/lib/income/draft";
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+const NO_CYCLE_COPY = "Tu sueldo empieza un ciclo nuevo";
+const PAST_END_COPY = "Cierra este ciclo y empieza uno nuevo";
+const INCOME_KINDS = [
+	{ kind: "habitual", label: "Sueldo" },
+	{ kind: "extraordinary", label: "Extra" },
+] as const satisfies ReadonlyArray<{ kind: IncomeKind; label: string }>;
+
+type SheetCycle = Exclude<IncomeCycleOffer, "loading">;
 
 type Props = {
 	currencySymbol: string;
 	formError?: string | null;
+	cycle: SheetCycle;
 	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
 	onCancel: () => void;
 };
 
-export function IncomeSheetForm({ currencySymbol, formError, onSubmit, onCancel }: Props) {
+export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, onCancel }: Props) {
+	const kinds =
+		cycle === "none" ? INCOME_KINDS.filter((option) => option.kind === "habitual") : INCOME_KINDS;
 	const form = useForm({
 		defaultValues: defaultIncomeDraft(),
-		onSubmit: ({ value }) => onSubmit(value),
+		onSubmit: ({ value }) =>
+			onSubmit({
+				...value,
+				incomeKind: cycle === "none" ? "habitual" : value.incomeKind,
+			}),
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
 	const occurredAt = useStore(form.store, (state) => state.values.occurredAt);
@@ -39,6 +55,52 @@ export function IncomeSheetForm({ currencySymbol, formError, onSubmit, onCancel 
 					<Text className="font-hanken-semibold text-[13px] text-foreground/45">Cancelar</Text>
 				</Pressable>
 			</View>
+
+			<form.Field name="incomeKind">
+				{(field) => {
+					const kind = cycle === "none" ? "habitual" : field.state.value;
+					const note =
+						cycle === "none"
+							? NO_CYCLE_COPY
+							: cycle === "pastEnd" && kind === "habitual"
+								? PAST_END_COPY
+								: null;
+					return (
+						<View className="mt-4 gap-2">
+							<View className="flex-row gap-2">
+								{kinds.map((option) => {
+									const selected = kind === option.kind;
+									return (
+										<Pressable
+											key={option.kind}
+											accessibilityRole="button"
+											accessibilityLabel={option.label}
+											accessibilityState={{ selected }}
+											onPress={() => field.handleChange(option.kind)}
+											className={`flex-1 items-center rounded-full border px-3 py-2.5 active:opacity-60 ${
+												selected ? "border-primary bg-primary/5" : "border-line"
+											}`}
+										>
+											<Text
+												className={
+													selected
+														? "font-hanken-semibold text-[13px] text-foreground"
+														: "font-hanken text-[13px] text-foreground/55"
+												}
+											>
+												{option.label}
+											</Text>
+										</Pressable>
+									);
+								})}
+							</View>
+							{note ? (
+								<Text className="font-hanken text-[13px] text-foreground/55">{note}</Text>
+							) : null}
+						</View>
+					);
+				}}
+			</form.Field>
 
 			<View className="mt-5">
 				<KeypadAmount currencySymbol={currencySymbol} cents={amountCents} />
