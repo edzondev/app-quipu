@@ -31,6 +31,7 @@ import {
 	resolveHeroStatusBadge,
 	sortCommitmentsByDue,
 } from "./lib/dashboardMath";
+import { cycleStartedOnLimaDay } from "./lib/incomeEventLogic";
 import { buildCoverageByIdFromCycleDocs } from "./lib/loadCycleCoverageContext";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
@@ -400,6 +401,7 @@ export const getSummary = query({
 				isOpeningCycle: activeCycle.isOpeningCycle === true,
 				...cycleMetrics,
 				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
+				startedToday: cycleStartedOnLimaDay(activeCycle, now),
 			},
 			hero,
 			liquidity: {

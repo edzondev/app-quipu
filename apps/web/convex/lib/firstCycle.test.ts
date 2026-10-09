@@ -17,7 +17,7 @@ import {
 	openingEnvelopes,
 } from "./firstCycle";
 import { buildCycleChartBars } from "./gamificationMath";
-import { resolveCycleForIncome } from "./incomeEventLogic";
+import { cycleStartedOnLimaDay, resolveCycleForIncome } from "./incomeEventLogic";
 
 const WEIGHTS = {
 	allocationNeeds: 50,
@@ -107,11 +107,16 @@ describe("assertFirstCycleAvailable", () => {
 });
 
 describe("streakAfterClose", () => {
+	const longStart = Date.parse("2026-10-01T12:00:00-05:00");
+	const longClose = longStart + MS_PER_DAY;
+
 	it("neither adds to nor breaks the streak for an opening cycle", () => {
 		expect(openingCycleSkipsStreak(true)).toBe(true);
 		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
+				startDate: longStart,
+				closeAt: longClose,
 				currentStreak: 3,
 				longestStreak: 5,
 				compliance: "failed",
@@ -120,6 +125,8 @@ describe("streakAfterClose", () => {
 		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
+				startDate: longStart,
+				closeAt: longClose,
 				currentStreak: 3,
 				longestStreak: 5,
 				compliance: "compliant",
@@ -149,6 +156,8 @@ describe("streakAfterClose", () => {
 		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
+				startDate: longStart,
+				closeAt: longClose,
 				currentStreak: 3,
 				longestStreak: 5,
 				compliance: "compliant",
@@ -162,6 +171,8 @@ describe("streakAfterClose", () => {
 		expect(
 			streakAfterClose({
 				isOpeningCycle: undefined,
+				startDate: longStart,
+				closeAt: longClose,
 				currentStreak: 3,
 				longestStreak: 5,
 				compliance: "compliant",
@@ -170,11 +181,49 @@ describe("streakAfterClose", () => {
 		expect(
 			streakAfterClose({
 				isOpeningCycle: false,
+				startDate: longStart,
+				closeAt: longClose,
 				currentStreak: 3,
 				longestStreak: 5,
 				compliance: "failed",
 			}),
 		).toEqual({ currentStreak: 0, longestStreak: 5 });
+	});
+
+	it("does not count a cycle from 23:50 to 00:10 Lima and counts exactly 24 hours", () => {
+		const startDate = Date.parse("2026-10-09T23:50:00-05:00");
+		const twentyMinutesLater = Date.parse("2026-10-10T00:10:00-05:00");
+		expect(twentyMinutesLater - startDate).toBe(20 * 60 * 1000);
+		expect(
+			streakAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: twentyMinutesLater,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBeNull();
+		expect(
+			streakAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: startDate + MS_PER_DAY,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toEqual({ currentStreak: 4, longestStreak: 5 });
+		expect(
+			streakAfterClose({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: startDate + MS_PER_DAY - 1,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBeNull();
 	});
 });
 
@@ -195,6 +244,29 @@ describe("income against the opening cycle", () => {
 			incomeEvents: [],
 		});
 	}
+
+	it("adds a habitual income on the opening cycle's Lima day and leaves the streak", () => {
+		const laterSameDay = Date.parse("2026-10-09T23:50:00-05:00");
+		expect(cycleStartedOnLimaDay(opening, laterSameDay)).toBe(true);
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: laterSameDay,
+				now: laterSameDay,
+				incomeKind: "habitual",
+			}),
+		).toBe("opening");
+		expect(
+			streakAfterClose({
+				isOpeningCycle: true,
+				startDate,
+				closeAt: laterSameDay,
+				currentStreak: 4,
+				longestStreak: 4,
+				compliance: "failed",
+			}),
+		).toBeNull();
+	});
 
 	it("closes on a habitual income at any date, including 10 days before payday", () => {
 		for (const occurredAt of [endDate - 10 * MS_PER_DAY, endDate - 3 * MS_PER_DAY, endDate]) {

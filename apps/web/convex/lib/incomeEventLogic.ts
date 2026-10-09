@@ -51,10 +51,18 @@ export function rejectExtraordinaryBeforeCycleStart(
 	});
 }
 
+/** True when `at` falls on the same Lima calendar day as the cycle start. */
+export function cycleStartedOnLimaDay(
+	cycle: Pick<Doc<"financialCycles">, "startDate">,
+	at: number,
+): boolean {
+	return limaDayKey(cycle.startDate) === limaDayKey(at);
+}
+
 /**
- * Kind decides. An expired cycle stays active until a habitual income closes
- * it. Extraordinary income always stays on that active cycle. NO_ACTIVE_CYCLE
- * is only when the profile has no active cycle at all.
+ * Kind decides, never source or description. Extraordinary income stays on
+ * the active cycle. Habitual income closes it unless that cycle started on
+ * the same Lima day as the income. NO_ACTIVE_CYCLE only when none is active.
  */
 export function resolveCycleForIncome(input: {
 	activeCycle: (MinimalCycle & { isOpeningCycle?: boolean }) | null;
@@ -62,13 +70,19 @@ export function resolveCycleForIncome(input: {
 	now: number;
 	incomeKind: Doc<"incomeEvents">["incomeKind"];
 }): string | null {
-	if (input.incomeKind !== "extraordinary") return null;
 	if (input.activeCycle === null) {
+		if (input.incomeKind !== "extraordinary") return null;
 		throw new ConvexError({
 			code: "NO_ACTIVE_CYCLE",
 			message: NO_ACTIVE_CYCLE_MESSAGE,
 			data: { field: "incomeKind" },
 		});
 	}
-	return input.activeCycle._id;
+	if (
+		input.incomeKind === "extraordinary" ||
+		cycleStartedOnLimaDay(input.activeCycle, input.occurredAt)
+	) {
+		return input.activeCycle._id;
+	}
+	return null;
 }

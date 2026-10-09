@@ -83,6 +83,7 @@ export function summaryWithCycle(
 			daysElapsed: 15,
 			progressPercent: 50,
 			pastEnd: false,
+			startedToday: false,
 		},
 		hero: {
 			dailyAvailableCents: 0,
