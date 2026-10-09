@@ -2,7 +2,7 @@ import { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
 import { Pressable, Text, View } from "react-native";
 import { inclusiveEndDate, limaDayLabel } from "@/shared/lib/lima-date";
-import { formatCentsTrimmed } from "@/shared/lib/money";
+import { formatCentsTrimmed, overspentByLabel } from "@/shared/lib/money";
 import { HomeIdentity } from "./home-identity";
 
 type Summary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
@@ -18,8 +18,7 @@ function closedCycleMessage(cycle: ClosedCycleSummary, symbol: string): string {
 		return `${ended} Te quedaron ${left} y se suman a tu próximo ingreso. ${kept}`;
 	}
 	if (cycle.surplusCents < 0) {
-		const over = formatCentsTrimmed(Math.abs(cycle.surplusCents), symbol);
-		return `${ended} Te pasaste por ${over} y se descuenta de tu próximo ingreso. ${kept}`;
+		return `${ended} ${overspentByLabel(cycle.surplusCents, symbol)} y se descuenta de tu próximo ingreso. ${kept}`;
 	}
 	return `${ended} ${kept}`;
 }

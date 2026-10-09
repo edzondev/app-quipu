@@ -113,9 +113,9 @@ describe("StepConfirm — tu número", () => {
 	it("muestra el paso 05 y el resumen, sin la línea del diario", async () => {
 		await renderConfirm(FULL_SEED);
 		expect(screen.getByText("TU SISTEMA · 05/05")).toBeTruthy();
+		expect(screen.getByText("Anota el dinero que tienes hoy para ver tu número.")).toBeTruthy();
 		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
 		expect(screen.queryByTestId("confirm-daily")).toBeNull();
-		expect(screen.queryByText("Anota el dinero que tienes hoy para ver tu número.")).toBeNull();
 		expect(screen.queryByText("S/ 51.16")).toBeNull();
 		expect(screen.queryByText(/en 30 días/)).toBeNull();
 		expect(screen.getByText("Dinero de hoy")).toBeTruthy();

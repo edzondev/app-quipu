@@ -1,6 +1,7 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import {
+	dashboardClosedCycle,
 	findLatestClosedCycle,
 	loadClosedCycleSurplusAmounts,
 	summaryClosedCycle,
@@ -31,6 +32,7 @@ import {
 	resolveHeroStatusBadge,
 	sortCommitmentsByDue,
 } from "./lib/dashboardMath";
+import { cycleStartedOnLimaDay } from "./lib/incomeEventLogic";
 import { buildCoverageByIdFromCycleDocs } from "./lib/loadCycleCoverageContext";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
@@ -151,6 +153,7 @@ export const getSummary = query({
 		}
 
 		const cycleMetrics = computeCycleDayMetrics(activeCycle.startDate, activeCycle.endDate, now);
+		const pastEnd = isCyclePastEnd(activeCycle.endDate, now);
 
 		const compliance = evaluateCycleCompliance(envelopesRaw, activeCycle.isOpeningCycle === true);
 		const wantsEnvelope = envelopeByType.get("wants");
@@ -399,7 +402,8 @@ export const getSummary = query({
 				carriedOverExtraordinaryCents: activeCycle.carriedOverExtraordinaryCents ?? 0,
 				isOpeningCycle: activeCycle.isOpeningCycle === true,
 				...cycleMetrics,
-				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
+				pastEnd,
+				startedToday: cycleStartedOnLimaDay(activeCycle, now),
 			},
 			hero,
 			liquidity: {
@@ -413,7 +417,19 @@ export const getSummary = query({
 			coach,
 			movements,
 			isEarlyCycle,
-			closedCycle: summaryClosedCycle(true, null, 0),
+			closedCycle: pastEnd
+				? dashboardClosedCycle(
+						activeCycle,
+						(
+							await loadClosedCycleSurplusAmounts(
+								ctx,
+								activeCycle._id,
+								activeCycle.closeSurplusMovedAt,
+								activeCycle.carriedOverToCycleId,
+							)
+						).signedSurplusCents,
+					)
+				: summaryClosedCycle(true, null, 0),
 		};
 	},
 });

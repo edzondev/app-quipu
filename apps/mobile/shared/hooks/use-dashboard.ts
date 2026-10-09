@@ -17,6 +17,15 @@ export function useHomeModel() {
 	const profileName = summary?.profile.name ?? "";
 	const initial = profileInitial(profileName);
 	if (!summary) return { status: "empty" as const, profileName, profileInitial: initial };
+	if (summary.cycle?.pastEnd && summary.closedCycle) {
+		return {
+			status: "closed" as const,
+			closedCycle: summary.closedCycle,
+			profileName,
+			profileInitial: initial,
+			currencySymbol: currencySymbol(summary.profile.currencyCode),
+		};
+	}
 	const home = mapDashboardHome(summary);
 	if (home) {
 		return { status: "ready" as const, home, profileName, profileInitial: initial };

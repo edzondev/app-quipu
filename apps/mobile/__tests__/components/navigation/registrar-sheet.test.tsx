@@ -93,9 +93,9 @@ describe("RegistrarSheet", () => {
 		expect(view.queryByText("NUEVO GASTO")).toBeNull();
 		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
 		expect(view.getByText("Registrar ingreso")).toBeTruthy();
-		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Extra" })).toBeNull();
-		expect(view.getByText("Tu sueldo empieza un ciclo nuevo")).toBeTruthy();
+		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
+		expect(view.queryByTestId("income-mode-add")).toBeNull();
+		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 	});
 
 	it("abre en Gasto cuando hay ciclo y el botón central no pide ingreso", async () => {
@@ -113,25 +113,49 @@ describe("RegistrarSheet", () => {
 			false,
 		);
 		await fireEvent.press(view.getByRole("button", { name: "Ingreso" }));
-		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
-		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
+		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add").props.accessibilityState.selected).toBe(true);
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 	});
 
-	it("con ciclo vencido ofrece Gasto, Sueldo y Extra, y el sueldo cierra el ciclo", async () => {
+	it("con ciclo vencido ofrece Gasto y deja empezar un ciclo nuevo", async () => {
 		const open = summaryWithCycle();
-		mockSummary.mockReturnValue({ ...open, cycle: { ...open.cycle, pastEnd: true } });
-		home.mockReturnValue(readyHome);
+		mockSummary.mockReturnValue({
+			...open,
+			cycle: { ...open.cycle, pastEnd: true },
+			closedCycle: {
+				cycleId: open.cycle.id,
+				startDate: open.cycle.startDate,
+				endDate: open.cycle.endDate,
+				surplusCents: -1_500,
+				surplusMovedAt: null,
+			},
+		});
+		home.mockReturnValue({
+			status: "closed",
+			profileName: "Edzon",
+			profileInitial: "E",
+			currencySymbol: "S/",
+			closedCycle: {
+				cycleId: open.cycle.id,
+				startDate: open.cycle.startDate,
+				endDate: open.cycle.endDate,
+				surplusCents: -1_500,
+				surplusMovedAt: null,
+			},
+		});
 		const view = await render(
 			<RegistrarSheet isPresented session={{ nonce: 4, intent: "income" }} onDismiss={jest.fn()} />,
 		);
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
 			false,
 		);
-		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
-		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
-		expect(view.getByText("Cierra este ciclo y empieza uno nuevo")).toBeTruthy();
+		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add")).toBeTruthy();
+		expect(view.getByTestId("income-mode-new-cycle").props.accessibilityState.selected).toBe(true);
+		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 	});
 
@@ -144,7 +168,8 @@ describe("RegistrarSheet", () => {
 		expect(view.getByText("Cargando…")).toBeTruthy();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
-		expect(view.queryByRole("button", { name: "Sueldo" })).toBeNull();
-		expect(view.queryByRole("button", { name: "Extra" })).toBeNull();
+		expect(view.queryByTestId("income-mode-new-cycle")).toBeNull();
+		expect(view.queryByTestId("income-mode-add")).toBeNull();
+		expect(view.queryByText("Registrar ingreso")).toBeNull();
 	});
 });

@@ -90,6 +90,9 @@ export function StepConfirm() {
 			}
 		>
 			<View className="gap-6">
+				<Text className="font-hanken text-[14px] text-foreground/55">
+					Anota el dinero que tienes hoy para ver tu número.
+				</Text>
 				<View className="gap-3">
 					<SummaryRow
 						label="Dinero de hoy"

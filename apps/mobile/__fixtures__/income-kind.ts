@@ -5,8 +5,8 @@ type IncomeKind = NonNullable<
 	FunctionArgs<typeof api.incomeEvents.createIncomeEvent>["incomeKind"]
 >;
 
-/** Sueldo. El servidor asume este valor si el cliente no manda incomeKind. */
+/** «Empieza un nuevo ciclo». El servidor asume este valor si el cliente no manda incomeKind. */
 export const sueldoKind = "habitual" satisfies IncomeKind;
 
-/** Extra. No existe el literal "extra". */
+/** «Sumar al ciclo actual». No existe el literal "extra". */
 export const extraKind = "extraordinary" satisfies IncomeKind;
