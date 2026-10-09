@@ -4,6 +4,11 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { findLatestClosedCycle, loadClosedCycleSurplusAmounts } from "./lib/closedCycleSurplus";
 import {
+	assertSurplusNotCarriedOver,
+	savingsContributionExcludingCarry,
+	surplusWasCarriedOver,
+} from "./lib/cycleCarryover";
+import {
 	buildCycleSavingsContextLabel,
 	computeCycleSavingsBreakdown,
 } from "./lib/cycleSavingsBreakdown";
@@ -119,7 +124,7 @@ async function buildSavingsOverview(ctx: QueryCtx) {
 				.unique(),
 		]);
 		savingsEnvelopeRemaining = Math.max(0, savingsEnvelope?.remainingAmount ?? 0);
-		cycleContributionCents = Math.max(0, savingsEnvelope?.allocatedAmount ?? 0);
+		cycleContributionCents = savingsContributionExcludingCarry(savingsEnvelope);
 		needsEnvelopeAllocated = Math.max(0, needsEnvelope?.allocatedAmount ?? 0);
 	}
 
@@ -1075,7 +1080,8 @@ export const getClosedCycleSurplus = query({
 		if (!profile) return null;
 
 		const closedCycle = await findLatestClosedCycle(ctx, profile._id);
-		if (closedCycle === null) return null;
+		if (closedCycle === null || surplusWasCarriedOver(closedCycle.carriedOverToCycleId))
+			return null;
 
 		const amounts = await loadClosedCycleSurplusAmounts(
 			ctx,
@@ -1130,6 +1136,7 @@ export const moveClosedCycleSurplusToFund = mutation({
 				message: "Solo puedes mover el sobrante del último ciclo cerrado.",
 			});
 		}
+		assertSurplusNotCarriedOver(cycle.carriedOverToCycleId);
 		if (cycle.closeSurplusMovedAt !== undefined) {
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
