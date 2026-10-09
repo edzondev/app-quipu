@@ -17,6 +17,8 @@
 			--color-primary: oklch(0.5423 0.0712 176.41);
 			--color-secondary: oklch(0.4934 0.0735 251.4);
 			--color-warning: oklch(0.7164 0.1241 81.96);
+			/* Ámbar del token warning: 6.09:1 sobre bg-warning/12. #8A6620 cae a 2.95:1. */
+			--color-warning-foreground: #ca9b3b;
 			--color-danger: oklch(0.6004 0.1019 31.23);
 
 			/* Finance */
@@ -34,6 +36,8 @@
 			--color-primary: oklch(0.5423 0.0712 176.41);
 			--color-secondary: oklch(0.4934 0.0735 251.4);
 			--color-warning: oklch(0.7164 0.1241 81.96);
+			/* Ámbar oscuro del diseño 2e: 4.56:1 sobre bg-warning/12. */
+			--color-warning-foreground: #8a6620;
 			--color-danger: oklch(0.6004 0.1019 31.23);
 
 			/* Finance */

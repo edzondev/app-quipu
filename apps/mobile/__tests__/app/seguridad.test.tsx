@@ -45,7 +45,7 @@ describe("SeguridadPage", () => {
 		});
 	});
 
-	it("si signOut falla, igual navega a /sign-in", async () => {
+	it("si el cierre falla, igual navega a la entrada", async () => {
 		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: () => void) => {
 			try {
 				throw new Error("falló el cierre");
@@ -55,6 +55,6 @@ describe("SeguridadPage", () => {
 		});
 		await render(<SeguridadPage />);
 		await expect(onRevokeAll?.()).rejects.toThrow("falló el cierre");
-		expect(mockReplace).toHaveBeenCalledWith("/sign-in");
+		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
 	});
 });
