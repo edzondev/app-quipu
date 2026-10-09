@@ -1,9 +1,9 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import {
-	dashboardClosedCycle,
 	findLatestClosedCycle,
 	loadClosedCycleSurplusAmounts,
+	summaryClosedCycle,
 } from "./lib/closedCycleSurplus";
 import { resolveCoachPresentation } from "./lib/coachState";
 import {
@@ -77,10 +77,14 @@ export const getSummary = query({
 			const latestClosed = await findLatestClosedCycle(ctx, profile._id);
 			let surplusCents = 0;
 			if (latestClosed !== null) {
-				const amounts = await loadClosedCycleSurplusAmounts(ctx, latestClosed._id);
+				const amounts = await loadClosedCycleSurplusAmounts(
+					ctx,
+					latestClosed._id,
+					latestClosed.closeSurplusMovedAt,
+				);
 				surplusCents = amounts.total;
 			}
-			const closedCycle = dashboardClosedCycle(latestClosed, surplusCents);
+			const closedCycle = summaryClosedCycle(false, latestClosed, surplusCents);
 
 			const emptyCommitments = sortCommitmentsByDue(
 				commitmentsRaw.map((commitment) => {
@@ -394,6 +398,7 @@ export const getSummary = query({
 			coach,
 			movements,
 			isEarlyCycle,
+			closedCycle: summaryClosedCycle(true, null, 0),
 		};
 	},
 });

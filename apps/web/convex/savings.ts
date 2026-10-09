@@ -1077,7 +1077,11 @@ export const getClosedCycleSurplus = query({
 		const closedCycle = await findLatestClosedCycle(ctx, profile._id);
 		if (closedCycle === null) return null;
 
-		const amounts = await loadClosedCycleSurplusAmounts(ctx, closedCycle._id);
+		const amounts = await loadClosedCycleSurplusAmounts(
+			ctx,
+			closedCycle._id,
+			closedCycle.closeSurplusMovedAt,
+		);
 		return {
 			closedCycleId: closedCycle._id,
 			needs: amounts.needs,
@@ -1133,7 +1137,7 @@ export const moveClosedCycleSurplusToFund = mutation({
 			});
 		}
 
-		const amounts = await loadClosedCycleSurplusAmounts(ctx, cycle._id);
+		const amounts = await loadClosedCycleSurplusAmounts(ctx, cycle._id, cycle.closeSurplusMovedAt);
 		if (amounts.total === 0) {
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",

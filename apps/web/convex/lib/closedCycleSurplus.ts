@@ -21,6 +21,33 @@ export type LatestClosedCycleSlice = Pick<
 	"startDate" | "endDate" | "closeSurplusMovedAt"
 >;
 
+type SurplusContributionSlice = Pick<
+	Doc<"surplusContributions">,
+	"amount" | "createdAt" | "contributionKind"
+>;
+
+/**
+ * Sobrante del ciclo cerrado. Si ya se movió, es la suma de las
+ * surplusContributions additional creadas en closeSurplusMovedAt.
+ * Si no, es necesidades + gustos + extraordinario todavía disponible.
+ */
+export function closedCycleSurplusCents(input: {
+	closeSurplusMovedAt: Doc<"financialCycles">["closeSurplusMovedAt"];
+	needs: number;
+	wants: number;
+	extraordinary: number;
+	surplusContributions: ReadonlyArray<SurplusContributionSlice>;
+}): number {
+	const movedAt = input.closeSurplusMovedAt;
+	if (movedAt === undefined) {
+		return input.needs + input.wants + input.extraordinary;
+	}
+	return input.surplusContributions.reduce((sum, row) => {
+		if (row.contributionKind !== "additional" || row.createdAt !== movedAt) return sum;
+		return sum + row.amount;
+	}, 0);
+}
+
 export async function findLatestClosedCycle(
 	ctx: QueryCtx | MutationCtx,
 	profileId: Id<"profiles">,
@@ -35,6 +62,7 @@ export async function findLatestClosedCycle(
 export async function loadClosedCycleSurplusAmounts(
 	ctx: QueryCtx | MutationCtx,
 	cycleId: Id<"financialCycles">,
+	closeSurplusMovedAt: Doc<"financialCycles">["closeSurplusMovedAt"],
 ) {
 	const [needsEnvelope, wantsEnvelope, savingsEnvelope, incomeEvents, surplusContributions] =
 		await Promise.all([
@@ -74,7 +102,18 @@ export async function loadClosedCycleSurplusAmounts(
 		savingsEnvelopeRemainingCents: Math.max(0, savingsEnvelope?.remainingAmount ?? 0),
 	});
 
-	return { needs, wants, extraordinary, total: needs + wants + extraordinary };
+	return {
+		needs,
+		wants,
+		extraordinary,
+		total: closedCycleSurplusCents({
+			closeSurplusMovedAt,
+			needs,
+			wants,
+			extraordinary,
+			surplusContributions,
+		}),
+	};
 }
 
 /** Presenta el último ciclo cerrado para el dashboard. Null si nunca hubo uno. */
@@ -90,4 +129,14 @@ export function dashboardClosedCycle(
 		surplusDestination: "emergency_fund",
 		surplusMovedAt: latestClosed.closeSurplusMovedAt ?? null,
 	};
+}
+
+/** Con ciclo activo el resumen siempre lleva closedCycle presente y null. */
+export function summaryClosedCycle(
+	hasActiveCycle: boolean,
+	latestClosed: LatestClosedCycleSlice | null,
+	surplusCents: number,
+): DashboardClosedCycle {
+	if (hasActiveCycle) return null;
+	return dashboardClosedCycle(latestClosed, surplusCents);
 }
