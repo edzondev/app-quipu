@@ -46,14 +46,14 @@ describe("computeSurplusProjection", () => {
 		allocatedAmount: 0,
 	});
 
-	it("keeps a mixed, zero, and negative active-cycle sobra signed", () => {
+	it("clamps each envelope at zero for the coach projection", () => {
 		expect(
 			computeSurplusProjection([
 				envelope("needs", -100),
 				envelope("wants", 50),
 				envelope("savings", 0),
 			]),
-		).toBe(-50);
+		).toBe(50);
 		expect(
 			computeSurplusProjection([
 				envelope("needs", 0),
@@ -67,7 +67,7 @@ describe("computeSurplusProjection", () => {
 				envelope("wants", -20),
 				envelope("savings", 0),
 			]),
-		).toBe(-100);
+		).toBe(0);
 	});
 });
 

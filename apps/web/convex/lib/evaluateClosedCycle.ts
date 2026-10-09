@@ -5,12 +5,8 @@ import { computeNextStreak } from "./gamificationMath";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
 /** La racha ignora el ciclo de apertura. Progreso lo cuenta igual que cualquier otro. */
-export function openingCycleSkipsProgress(isOpeningCycle: boolean | undefined): boolean {
+export function openingCycleSkipsStreak(isOpeningCycle: boolean | undefined): boolean {
 	return isOpeningCycle === true;
-}
-
-export function includeOpeningCycleInProgress(isOpeningCycle: boolean | undefined): boolean {
-	return isOpeningCycle === true || isOpeningCycle === false || isOpeningCycle === undefined;
 }
 
 export function wantsWithinBudgetOnClose(
@@ -27,7 +23,7 @@ export function streakAfterClose(input: {
 	longestStreak: number;
 	compliance: Parameters<typeof computeNextStreak>[2];
 }): { currentStreak: number; longestStreak: number } | null {
-	if (openingCycleSkipsProgress(input.isOpeningCycle)) return null;
+	if (openingCycleSkipsStreak(input.isOpeningCycle)) return null;
 	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance);
 }
 
@@ -38,7 +34,7 @@ export async function evaluateClosedCycle(
 	now: number,
 ) {
 	const cycle = await ctx.db.get("financialCycles", cycleId);
-	if (!cycle || !includeOpeningCycleInProgress(cycle.isOpeningCycle)) return;
+	if (!cycle) return;
 
 	const profile = await ctx.db.get("profiles", profileId);
 	const closedAtPremium = profile?.plan === "premium";

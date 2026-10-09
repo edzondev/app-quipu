@@ -27,7 +27,11 @@ import {
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
-import { rejectIncomeDateForKind, resolveCycleForIncome } from "./lib/incomeEventLogic";
+import {
+	rejectExtraordinaryBeforeCycleStart,
+	rejectIncomeDateForKind,
+	resolveCycleForIncome,
+} from "./lib/incomeEventLogic";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 import { reverseIncomeAllocationLedger } from "./lib/reverseIncomeAllocationLedger";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
@@ -218,6 +222,9 @@ export const createIncomeEvent = mutation({
 			.query("financialCycles")
 			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "active"))
 			.unique();
+		if (activeCycle !== null) {
+			rejectExtraordinaryBeforeCycleStart(incomeKind, args.occurredAt, activeCycle.startDate);
+		}
 
 		const resolvedId = resolveCycleForIncome({
 			activeCycle: activeCycle
@@ -597,6 +604,7 @@ export const updateIncomeEvent = mutation({
 
 		const now = Date.now();
 		rejectIncomeDateForKind(incomeKind, args.occurredAt, now);
+		rejectExtraordinaryBeforeCycleStart(incomeKind, args.occurredAt, cycle.startDate);
 
 		const weights = {
 			allocationNeeds: profile.allocationNeeds,

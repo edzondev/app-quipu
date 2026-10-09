@@ -1,15 +1,19 @@
 import { ConvexError } from "convex/values";
+import { limaDayKey } from "../../shared/lib/date";
 import type { Doc } from "../_generated/dataModel";
 
 type MinimalCycle = { _id: string; startDate: number; endDate: number };
 
-/** Edit already rejects `occurredAt > now`. Create uses the same rule. */
+/** A Lima calendar day after today. Later today is allowed. */
 export const FUTURE_INCOME_DATE_MESSAGE = "La fecha del ingreso no puede ser futura.";
+
+export const EXTRA_BEFORE_CYCLE_MESSAGE =
+	"La fecha del ingreso no puede ser anterior al inicio del ciclo.";
 
 export const NO_ACTIVE_CYCLE_MESSAGE = "Registra primero tu sueldo para empezar un ciclo nuevo.";
 
 export function futureIncomeDateMessage(occurredAt: number, now: number): string | null {
-	if (occurredAt > now) return FUTURE_INCOME_DATE_MESSAGE;
+	if (limaDayKey(occurredAt) > limaDayKey(now)) return FUTURE_INCOME_DATE_MESSAGE;
 	return null;
 }
 
@@ -23,14 +27,28 @@ export function rejectFutureIncomeDate(occurredAt: number, now: number): void {
 	});
 }
 
-/** A date never rejects or reroutes an extraordinary income. */
+/** Both kinds: a Lima day after today is future. */
 export function rejectIncomeDateForKind(
 	incomeKind: Doc<"incomeEvents">["incomeKind"],
 	occurredAt: number,
 	now: number,
 ): void {
-	if (incomeKind === "extraordinary") return;
-	rejectFutureIncomeDate(occurredAt, now);
+	if (incomeKind === "extraordinary" || incomeKind === "habitual" || incomeKind === undefined) {
+		rejectFutureIncomeDate(occurredAt, now);
+	}
+}
+
+export function rejectExtraordinaryBeforeCycleStart(
+	incomeKind: Doc<"incomeEvents">["incomeKind"],
+	occurredAt: number,
+	cycleStartDate: number,
+): void {
+	if (incomeKind !== "extraordinary" || occurredAt >= cycleStartDate) return;
+	throw new ConvexError({
+		code: "VALIDATION_ERROR",
+		message: EXTRA_BEFORE_CYCLE_MESSAGE,
+		data: { field: "occurredAt" },
+	});
 }
 
 /**

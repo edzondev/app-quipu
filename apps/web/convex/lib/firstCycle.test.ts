@@ -3,8 +3,7 @@ import { describe, expect, it } from "vitest";
 import { computeCycleCarryover, envelopeWithCarry } from "./cycleCarryover";
 import { MS_PER_DAY } from "./dashboardMath";
 import {
-	includeOpeningCycleInProgress,
-	openingCycleSkipsProgress,
+	openingCycleSkipsStreak,
 	streakAfterClose,
 	wantsWithinBudgetOnClose,
 } from "./evaluateClosedCycle";
@@ -109,7 +108,7 @@ describe("assertFirstCycleAvailable", () => {
 
 describe("streakAfterClose", () => {
 	it("neither adds to nor breaks the streak for an opening cycle", () => {
-		expect(openingCycleSkipsProgress(true)).toBe(true);
+		expect(openingCycleSkipsStreak(true)).toBe(true);
 		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
@@ -129,32 +128,12 @@ describe("streakAfterClose", () => {
 	});
 
 	it("counts the opening cycle in progress like any other cycle and still skips the streak", () => {
-		expect(includeOpeningCycleInProgress(true)).toBe(true);
-		expect(includeOpeningCycleInProgress(false)).toBe(true);
-		expect(includeOpeningCycleInProgress(undefined)).toBe(true);
 		const openingStart = Date.parse("2026-10-09T15:30:00-05:00");
 		const laterStart = Date.parse("2026-11-09T15:30:00-05:00");
-		const rows = [
-			{
-				isOpeningCycle: true,
-				status: "compliant" as const,
-				evaluatedAt: 1,
-				cycleStart: openingStart,
-			},
-			{
-				isOpeningCycle: false,
-				status: "warning" as const,
-				evaluatedAt: 2,
-				cycleStart: laterStart,
-			},
-		].filter((row) => includeOpeningCycleInProgress(row.isOpeningCycle));
-		const bars = buildCycleChartBars(
-			rows.map((row) => ({
-				status: row.status,
-				evaluatedAt: row.evaluatedAt,
-				cycleStart: row.cycleStart,
-			})),
-		);
+		const bars = buildCycleChartBars([
+			{ status: "compliant", evaluatedAt: 1, cycleStart: openingStart },
+			{ status: "warning", evaluatedAt: 2, cycleStart: laterStart },
+		]);
 		expect(bars.some((bar) => bar.cycleStart === openingStart && bar.status === "compliant")).toBe(
 			true,
 		);
@@ -178,8 +157,8 @@ describe("streakAfterClose", () => {
 	});
 
 	it("still updates the streak for a regular closed cycle", () => {
-		expect(openingCycleSkipsProgress(undefined)).toBe(false);
-		expect(openingCycleSkipsProgress(false)).toBe(false);
+		expect(openingCycleSkipsStreak(undefined)).toBe(false);
+		expect(openingCycleSkipsStreak(false)).toBe(false);
 		expect(
 			streakAfterClose({
 				isOpeningCycle: undefined,
