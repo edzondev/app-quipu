@@ -2,10 +2,7 @@ import { useConvexConnectionState } from "convex/react";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOut } from "react-native-reanimated";
-import { WifiOff as ReiconWifiOff } from "reicon-react-native/icons/WifiOff";
-import { withUniwind } from "uniwind";
-
-const WifiOff = withUniwind(ReiconWifiOff);
+import { WifiOff } from "@/shared/components/ui/reicon";
 
 export const OFFLINE_BANNER_DEBOUNCE_MS = 500;
 
@@ -51,10 +48,10 @@ export function OfflineBanner() {
 				accessibilityLabel="Sin conexión"
 				accessibilityLiveRegion="polite"
 				accessibilityRole="text"
-				className="mb-5 flex-row items-center gap-2.5 rounded-xl bg-warning/12 px-3.5 py-2.5"
+				className="flex-row items-center gap-2.5 rounded-xl bg-warning/12 px-3.5 py-2.5"
 			>
-				<WifiOff colorClassName="text-warning" size={15} strokeWidth={1.8} />
-				<Text className="font-hanken-semibold text-[12.5px] leading-[16px] text-warning">
+				<WifiOff colorClassName="accent-warning-foreground" size={15} strokeWidth={1.8} />
+				<Text className="font-hanken-semibold text-[12.5px] leading-[16px] text-warning-foreground">
 					Sin conexión
 				</Text>
 			</View>

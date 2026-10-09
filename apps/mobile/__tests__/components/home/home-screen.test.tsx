@@ -109,14 +109,6 @@ jest.mock("@/shared/components/navigation/registrar-context", () => ({
 	useRegistrar: () => ({ openCreate: mockOpenCreate, openEdit: jest.fn() }),
 }));
 
-jest.mock("convex/react", () => ({
-	useConvexConnectionState: () => ({
-		isWebSocketConnected: true,
-		hasEverConnected: true,
-		connectionRetries: 0,
-	}),
-}));
-
 jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useHomeModel: () => ({
 		status: "ready",

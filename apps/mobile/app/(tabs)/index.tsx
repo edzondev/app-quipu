@@ -4,7 +4,6 @@ import { HomeClosedCycle } from "@/shared/components/home/home-closed-cycle";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty, HomeLoading } from "@/shared/components/home/home-empty";
 import { useRegistrar } from "@/shared/components/navigation/registrar-context";
-import { OfflineBanner } from "@/shared/components/offline/offline-banner";
 import { useHomeModel } from "@/shared/hooks/use-dashboard";
 
 export default function HomePage() {
@@ -14,7 +13,6 @@ export default function HomePage() {
 
 	return (
 		<AppShell>
-			<OfflineBanner />
 			{model.status === "loading" ? <HomeLoading /> : null}
 			{model.status === "empty" ? (
 				<HomeEmpty
