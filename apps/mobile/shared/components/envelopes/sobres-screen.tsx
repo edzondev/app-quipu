@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { EnvelopeCarryLine } from "@/shared/components/envelope-carry-line";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type {
@@ -145,6 +146,7 @@ function EnvelopeBlock({
 					{envelope.budgetLabel}
 				</Text>
 			</View>
+			{envelope.carryLabel ? <EnvelopeCarryLine label={envelope.carryLabel} /> : null}
 
 			<View
 				accessibilityRole="progressbar"

@@ -72,6 +72,8 @@ describe("Step1IncomeProfile", () => {
 			expect(screen.getAllByText(option.label).length).toBeGreaterThan(0);
 		}
 		expect(screen.queryByTestId("freq-option-variable")).toBeNull();
+		expect(screen.queryByText("DÍA DE PAGO")).toBeNull();
+		expect(screen.queryByText("El 1 de cada mes")).toBeNull();
 	});
 
 	it("con Fijo y con Mixto el selector de frecuencia no ofrece Variable", async () => {

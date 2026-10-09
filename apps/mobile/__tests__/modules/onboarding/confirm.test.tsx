@@ -1,12 +1,15 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { type ReactNode, useEffect } from "react";
 import { Text } from "react-native";
+import { summaryWithCycle, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
+import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import type { OnboardingState } from "@/shared/lib/onboarding/types";
 
 const mockSubmit = jest.fn(async () => true);
 const mockReplace = jest.fn();
+const mockDashboardSummary = jest.fn();
 
 const hookState = {
 	submit: mockSubmit,
@@ -43,6 +46,7 @@ jest.mock("@expo/ui", () => {
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useHomeModel: () => ({ status: "empty", profileName: "Ana", profileInitial: "A" }),
+	useDashboardSummary: () => mockDashboardSummary(),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -98,6 +102,7 @@ const FULL_SEED: Partial<OnboardingState> = {
 describe("StepConfirm — tu número", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		mockDashboardSummary.mockReturnValue(undefined);
 		hookState.submit = mockSubmit;
 		hookState.isSubmitting = false;
 		hookState.error = null;
@@ -105,12 +110,14 @@ describe("StepConfirm — tu número", () => {
 		mockSubmit.mockResolvedValue(true);
 	});
 
-	it("muestra el paso 04, el número del día y el resumen", async () => {
+	it("muestra el paso 05 y el resumen, sin la línea del diario", async () => {
 		await renderConfirm(FULL_SEED);
 		expect(screen.getByText("TU SISTEMA · 05/05")).toBeTruthy();
-		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
-		expect(screen.getByTestId("confirm-daily").props.children).toBe("S/ 51.16");
-		expect(screen.getByText("Después de compromisos y ahorro, en 30 días.")).toBeTruthy();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
+		expect(screen.queryByText("Anota el dinero que tienes hoy para ver tu número.")).toBeNull();
+		expect(screen.queryByText("S/ 51.16")).toBeNull();
+		expect(screen.queryByText(/en 30 días/)).toBeNull();
 		expect(screen.getByText("Dinero de hoy")).toBeTruthy();
 		expect(screen.getByTestId("confirm-income").props.children).toBe("S/ 3,500");
 		expect(screen.getByTestId("confirm-pay-date").props.children).toBe("20 oct 2026");
@@ -124,14 +131,39 @@ describe("StepConfirm — tu número", () => {
 		expect(screen.queryByText("Ajustar algo")).toBeNull();
 	});
 
-	it("sin referencia de ingreso muestra — y no inventa un número", async () => {
+	it("no muestra el diario del paso 5; Inicio sigue leyendo displayDailyCents", async () => {
+		const summary = summaryWithCycle();
+		summary.hero.displayDailyCents = 6400;
+		summary.hero.dailyAvailableCents = 6400;
+		mockDashboardSummary.mockReturnValue(summary);
+		await renderConfirm(FULL_SEED);
+		const home = mapDashboardHome(summary);
+		if (!home) throw new Error("expected home");
+		expect(summary.hero.displayDailyCents).toBe(6400);
+		expect(home.dailyCents).toBe(summary.hero.displayDailyCents);
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
+		expect(screen.queryByText("S/ 64")).toBeNull();
+		expect(screen.queryByText("S/ 51.16")).toBeNull();
+	});
+
+	it("sin hero de getSummary el paso 5 tampoco inventa un diario", async () => {
+		mockDashboardSummary.mockReturnValue(summaryWithoutCycle);
+		await renderConfirm(FULL_SEED);
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
+		expect(screen.queryByText("S/ 51.16")).toBeNull();
+		expect(screen.queryByText(/en \d+ días/)).toBeNull();
+	});
+
+	it("sin referencia de ingreso no inventa el diario y deja el ingreso en —", async () => {
 		await renderConfirm({
 			incomeModel: "variable",
 			cycleDurationDays: 30,
 			referenceIncomeCents: null,
 		});
-		expect(screen.getByTestId("confirm-daily").props.children).toBe("—");
-		expect(screen.getByText("Anota el dinero que tienes hoy para ver tu número.")).toBeTruthy();
+		expect(screen.queryByTestId("confirm-daily")).toBeNull();
+		expect(screen.queryByText("Puedes gastar hoy")).toBeNull();
 		expect(screen.getByTestId("confirm-income").props.children).toBe("—");
 		expect(screen.getByTestId("confirm-envelope-needs").props.children).toBe("50%");
 	});

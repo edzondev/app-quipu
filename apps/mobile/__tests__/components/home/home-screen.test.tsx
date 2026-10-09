@@ -95,6 +95,7 @@ const mockHome: HomeModel = {
 			tone: "wants",
 		},
 	],
+	isOpeningCycle: false,
 };
 
 const mockPush = jest.fn();
@@ -215,8 +216,40 @@ describe("Home 1d", () => {
 
 	it("muestra el arrastre positivo con los montos del resumen", async () => {
 		const view = await renderCarry(12000, 80000, 91000);
-		expect(view.getByText("Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910")).toBeTruthy();
+		const line = view.getByText("Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910");
+		expect(line).toBeTruthy();
+		expect(line.props.className).toContain("tabular-nums");
 		expect(view.queryByText(/S\/ 920/)).toBeNull();
+	});
+
+	it("no muestra el arrastre en el ciclo de apertura", async () => {
+		const base = summaryWithCycle({
+			envelopes: [
+				{
+					...envelope("needs", 61200, 175000),
+					carriedOverCents: 12000,
+					incomeCents: 80000,
+					totalCents: 91000,
+				},
+			],
+		});
+		const home = mapDashboardHome({
+			...base,
+			cycle: { ...base.cycle, isOpeningCycle: true },
+		});
+		if (!home) throw new Error("expected home");
+		expect(home.isOpeningCycle).toBe(true);
+		const view = await render(
+			<HomeDense
+				home={home}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+				onRegisterIncome={jest.fn()}
+			/>,
+		);
+		expect(view.queryByText(/Saldo que quedó/)).toBeNull();
 	});
 
 	it("no muestra la línea cuando el arrastre es 0", async () => {

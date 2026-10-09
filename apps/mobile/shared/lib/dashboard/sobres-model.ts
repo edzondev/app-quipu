@@ -1,5 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
+import { envelopeCarryLabel } from "@/shared/lib/dashboard/home-model";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
@@ -25,6 +26,8 @@ export type SobresEnvelopeView = {
 	footLeft: string | null;
 	footRight: string | null;
 	footRightTone: SobresStatusTone;
+	/** Null en el ciclo de apertura o cuando no hubo arrastre. */
+	carryLabel: string | null;
 };
 
 export type SobresScreenModel = {
@@ -61,7 +64,15 @@ export function mapSobresScreen(
 			const envelope = byType.get(tone);
 			if (!envelope) return [];
 			return [
-				toEnvelopeView(envelope, tone, symbol, summary.cycle, summary.commitments, savingsLine),
+				toEnvelopeView(
+					envelope,
+					tone,
+					symbol,
+					summary.cycle,
+					summary.commitments,
+					savingsLine,
+					summary.cycle.isOpeningCycle,
+				),
 			];
 		}),
 	};
@@ -89,7 +100,15 @@ function toEnvelopeView(
 	cycle: NonNullable<DashboardSummary["cycle"]>,
 	commitments: DashboardSummary["commitments"],
 	savingsLine: string | null,
+	isOpeningCycle: boolean,
 ): SobresEnvelopeView {
+	const carryLabel = envelopeCarryLabel(
+		envelope.carriedOverCents,
+		envelope.incomeCents,
+		envelope.totalCents,
+		symbol,
+		isOpeningCycle,
+	);
 	const allocated = envelope.allocatedAmount;
 	const remaining = envelope.remainingAmount;
 	const spent = Math.max(0, allocated - remaining);
@@ -115,6 +134,7 @@ function toEnvelopeView(
 			footLeft: savingsLine,
 			footRight: allocated > 0 ? `${progress}%` : null,
 			footRightTone: CALM,
+			carryLabel,
 		};
 	}
 
@@ -134,6 +154,7 @@ function toEnvelopeView(
 		footLeft: `GASTADO ${formatCentsTrimmed(spent, symbol)}`,
 		footRight: fast ? alcanzaLabel(budgetDays ?? 0) : pending,
 		footRightTone: fast ? FAST : CALM,
+		carryLabel,
 	};
 }
 
