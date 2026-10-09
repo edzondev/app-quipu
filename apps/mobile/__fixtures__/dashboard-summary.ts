@@ -151,7 +151,6 @@ export const closedCycleOnSummary = {
 	startDate: Date.UTC(2026, 7, 1, 5, 0, 0),
 	endDate: Date.UTC(2026, 7, 31, 5, 0, 0),
 	surplusCents: 21000,
-	surplusDestination: "emergency_fund",
 	surplusMovedAt: null,
 } satisfies NonNullable<IdleSummary["closedCycle"]>;
 
