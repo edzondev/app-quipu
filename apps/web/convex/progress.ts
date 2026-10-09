@@ -7,6 +7,7 @@ import {
 	appearanceThemeValidator,
 	appIconVariantValidator,
 } from "./lib/appearanceValidators";
+import { cycleCountsForStreakAndGreen } from "./lib/evaluateClosedCycle";
 import {
 	type AchievementId,
 	achievementIdValidator,
@@ -136,6 +137,13 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 					status: row.status,
 					evaluatedAt: row.evaluatedAt,
 					cycleStart: cycle === null ? null : cycle.startDate,
+					countsForStreak:
+						cycle !== null &&
+						cycleCountsForStreakAndGreen({
+							isOpeningCycle: cycle.isOpeningCycle,
+							startDate: cycle.startDate,
+							closeAt: row.evaluatedAt,
+						}),
 				};
 			}),
 		),
@@ -198,7 +206,8 @@ const progressOverviewValidator = v.nullable(
 );
 
 export const getOverview = query({
-	args: {},
+	// Cache key only. The server reads the clock; a new Lima day re-subscribes the client.
+	args: { limaDay: v.optional(v.string()) },
 	returns: progressOverviewValidator,
 	handler: async (ctx): Promise<Infer<typeof progressOverviewValidator>> => {
 		const bundle = await getAuthenticatedProgressBundle(ctx);

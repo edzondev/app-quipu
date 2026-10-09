@@ -160,8 +160,9 @@ export function computeEnvelopePercentRemaining(
 	return Math.round((remainingAmount / allocatedAmount) * 100);
 }
 
+/** Signed: an overspent envelope subtracts. «Sobra» is negative when the cycle overspends. */
 export function computeSurplusProjection(envelopes: EnvelopeSlice[]): number {
-	return envelopes.reduce((acc, envelope) => acc + Math.max(0, envelope.remainingAmount), 0);
+	return envelopes.reduce((acc, envelope) => acc + envelope.remainingAmount, 0);
 }
 
 export function buildValidationCopy(statusBadge: StatusBadge): string {

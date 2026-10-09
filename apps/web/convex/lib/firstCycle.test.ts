@@ -167,7 +167,12 @@ describe("streakAfterClose", () => {
 			}),
 		).toBe(2);
 		const bars = buildCycleChartBars([
-			{ status: "compliant", evaluatedAt: closeAt, cycleStart: openingStart },
+			{
+				status: "compliant",
+				evaluatedAt: closeAt,
+				cycleStart: openingStart,
+				countsForStreak: false,
+			},
 		]);
 		expect(bars.some((bar) => bar.cycleStart === openingStart && bar.status === "compliant")).toBe(
 			true,
@@ -200,7 +205,12 @@ describe("streakAfterClose", () => {
 			}),
 		).toBe(3);
 		const bars = buildCycleChartBars([
-			{ status: "compliant", evaluatedAt: closeAt, cycleStart: startDate },
+			{
+				status: "compliant",
+				evaluatedAt: closeAt,
+				cycleStart: startDate,
+				countsForStreak: true,
+			},
 		]);
 		expect(bars.some((bar) => bar.cycleStart === startDate && bar.status === "compliant")).toBe(
 			true,
@@ -239,8 +249,8 @@ describe("streakAfterClose", () => {
 		const openingStart = Date.parse("2026-10-09T15:30:00-05:00");
 		const laterStart = Date.parse("2026-11-09T15:30:00-05:00");
 		const bars = buildCycleChartBars([
-			{ status: "compliant", evaluatedAt: 1, cycleStart: openingStart },
-			{ status: "warning", evaluatedAt: 2, cycleStart: laterStart },
+			{ status: "compliant", evaluatedAt: 1, cycleStart: openingStart, countsForStreak: false },
+			{ status: "warning", evaluatedAt: 2, cycleStart: laterStart, countsForStreak: true },
 		]);
 		expect(bars.some((bar) => bar.cycleStart === openingStart && bar.status === "compliant")).toBe(
 			true,
