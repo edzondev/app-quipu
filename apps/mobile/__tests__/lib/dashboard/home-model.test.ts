@@ -5,7 +5,11 @@ import {
 	emptyEnvelopeCarry,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
-import { envelopeCarryLabel, mapDashboardHome } from "@/shared/lib/dashboard/home-model";
+import {
+	envelopeCarryLabel,
+	homeSurplusLabel,
+	mapDashboardHome,
+} from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
@@ -243,7 +247,15 @@ describe("mapDashboardHome", () => {
 			incomeCents: 0,
 			carryTotalCents: 0,
 		});
-		expect(home?.surplusCents).toBe(0);
+		expect(home?.surplusCents).toBe(-500);
+		expect(homeSurplusLabel(-500, "S/")).toBe("Te pasaste por S/ 5");
+		expect(homeSurplusLabel(-500, "S/")).not.toMatch(/S\/\s*-|-\s*S\//);
+	});
+
+	it("conserva la sobra positiva que manda el servidor", () => {
+		const home = mapDashboardHome(summary());
+		expect(home?.surplusCents).toBe(154300);
+		expect(homeSurplusLabel(154300, "S/")).toBe("Sobra S/ 1,543");
 	});
 
 	it("copia el arrastre del resumen sin sumar los céntimos", () => {

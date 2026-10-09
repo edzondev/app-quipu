@@ -24,3 +24,8 @@ export function formatCentsTrimmed(cents: number, symbol = "S/"): string {
 	const body = fraction === 0 ? grouped : `${grouped}.${String(fraction).padStart(2, "0")}`;
 	return `${negative ? "-" : ""}${symbol} ${body}`;
 }
+
+/** «Te pasaste por S/ X». El monto va en positivo: el signo no se pega al número. */
+export function overspentByLabel(cents: number, symbol = "S/"): string {
+	return `Te pasaste por ${formatCentsTrimmed(Math.abs(cents), symbol)}`;
+}
