@@ -6,6 +6,7 @@ import { computeAvailableExtraordinarySavingsForMove } from "./extraordinarySavi
 const dashboardClosedCycleValidator = v.union(
 	v.null(),
 	v.object({
+		cycleId: v.id("financialCycles"),
 		startDate: v.number(),
 		endDate: v.number(),
 		surplusCents: v.number(),
@@ -18,8 +19,15 @@ export type DashboardClosedCycle = Infer<typeof dashboardClosedCycleValidator>;
 
 export type LatestClosedCycleSlice = Pick<
 	Doc<"financialCycles">,
-	"startDate" | "endDate" | "closeSurplusMovedAt"
+	"_id" | "startDate" | "endDate" | "closeSurplusMovedAt"
 >;
+
+type ClosedCycleSource<TId extends string> = {
+	_id: TId;
+	startDate: number;
+	endDate: number;
+	closeSurplusMovedAt?: number;
+};
 
 type SurplusContributionSlice = Pick<
 	Doc<"surplusContributions">,
@@ -149,19 +157,24 @@ export async function loadClosedCycleSurplusAmounts(
 		wants: breakdown.wants,
 		extraordinary: breakdown.extraordinary,
 		total: breakdown.total,
-		needsEnvelope,
-		wantsEnvelope,
-		savingsEnvelope,
 	};
 }
 
 /** Presenta el último ciclo cerrado para el dashboard. Null si nunca hubo uno. */
-export function dashboardClosedCycle(
-	latestClosed: LatestClosedCycleSlice | null,
+export function dashboardClosedCycle<TId extends string>(
+	latestClosed: ClosedCycleSource<TId> | null,
 	surplusCents: number,
-): DashboardClosedCycle {
+): null | {
+	cycleId: TId;
+	startDate: number;
+	endDate: number;
+	surplusCents: number;
+	surplusDestination: "emergency_fund";
+	surplusMovedAt: number | null;
+} {
 	if (latestClosed === null) return null;
 	return {
+		cycleId: latestClosed._id,
 		startDate: latestClosed.startDate,
 		endDate: latestClosed.endDate,
 		surplusCents,
@@ -171,11 +184,11 @@ export function dashboardClosedCycle(
 }
 
 /** Con ciclo activo el resumen siempre lleva closedCycle presente y null. */
-export function summaryClosedCycle(
+export function summaryClosedCycle<TId extends string>(
 	hasActiveCycle: boolean,
-	latestClosed: LatestClosedCycleSlice | null,
+	latestClosed: ClosedCycleSource<TId> | null,
 	surplusCents: number,
-): DashboardClosedCycle {
+) {
 	if (hasActiveCycle) return null;
 	return dashboardClosedCycle(latestClosed, surplusCents);
 }

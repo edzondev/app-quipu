@@ -4,26 +4,28 @@ import {
 	closedCycleSurplusBreakdown,
 	closedCycleSurplusCents,
 	dashboardClosedCycle,
-	type LatestClosedCycleSlice,
 	summaryClosedCycle,
 } from "./closedCycleSurplus";
-import { balancesAfterClosedCycleSurplusMove } from "./extraordinarySavingsSurplus";
 
 const START = Date.UTC(2026, 7, 1);
 const END = Date.UTC(2026, 7, 31);
 const MOVED_AT = Date.UTC(2026, 8, 2);
 const SURPLUS_CENTS = 18_450;
 
+const CYCLE_ID = "cycle-closed";
+
 const closedNotMoved = {
+	_id: CYCLE_ID,
 	startDate: START,
 	endDate: END,
-} satisfies LatestClosedCycleSlice;
+};
 
 const closedMoved = {
+	_id: CYCLE_ID,
 	startDate: START,
 	endDate: END,
 	closeSurplusMovedAt: MOVED_AT,
-} satisfies LatestClosedCycleSlice;
+};
 
 describe("dashboardClosedCycle", () => {
 	it("returns null when the user has never closed a cycle", () => {
@@ -32,6 +34,7 @@ describe("dashboardClosedCycle", () => {
 
 	it("returns the latest closed cycle with its surplus destined to the emergency fund", () => {
 		expect(dashboardClosedCycle(closedNotMoved, SURPLUS_CENTS)).toEqual({
+			cycleId: CYCLE_ID,
 			startDate: START,
 			endDate: END,
 			surplusCents: SURPLUS_CENTS,
@@ -42,6 +45,7 @@ describe("dashboardClosedCycle", () => {
 
 	it("keeps surplusMovedAt when the surplus was already moved", () => {
 		expect(dashboardClosedCycle(closedMoved, SURPLUS_CENTS)).toEqual({
+			cycleId: CYCLE_ID,
 			startDate: START,
 			endDate: END,
 			surplusCents: SURPLUS_CENTS,
@@ -62,7 +66,6 @@ const NEEDS = 1_100;
 const WANTS = 2_200;
 const EXTRAORDINARY = 4_400;
 const TOTAL = 7_700;
-const REGULAR_SAVINGS = 5_000;
 
 type ContributionSlice = Pick<
 	Doc<"surplusContributions">,
@@ -121,19 +124,5 @@ describe("closedCycleSurplusBreakdown", () => {
 			total: TOTAL,
 		});
 		expect(after.needs + after.wants + after.extraordinary).toBe(after.total);
-
-		const envelopes = balancesAfterClosedCycleSurplusMove(
-			{
-				needsRemainingCents: NEEDS,
-				wantsRemainingCents: WANTS,
-				savingsRemainingCents: EXTRAORDINARY + REGULAR_SAVINGS,
-			},
-			{ needsCents: NEEDS, wantsCents: WANTS, extraordinaryCents: EXTRAORDINARY },
-		);
-		expect(envelopes).toEqual({
-			needsRemainingCents: 0,
-			wantsRemainingCents: 0,
-			savingsRemainingCents: REGULAR_SAVINGS,
-		});
 	});
 });

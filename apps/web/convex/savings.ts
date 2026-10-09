@@ -7,10 +7,7 @@ import {
 	buildCycleSavingsContextLabel,
 	computeCycleSavingsBreakdown,
 } from "./lib/cycleSavingsBreakdown";
-import {
-	balancesAfterClosedCycleSurplusMove,
-	computeAvailableExtraordinarySavingsForMove,
-} from "./lib/extraordinarySavingsSurplus";
+import { computeAvailableExtraordinarySavingsForMove } from "./lib/extraordinarySavingsSurplus";
 import {
 	buildSavingsAssignPlan,
 	SAVINGS_ASSIGN_RATIONALES,
@@ -1158,33 +1155,6 @@ export const moveClosedCycleSurplusToFund = mutation({
 		}
 
 		const now = Date.now();
-		const nextBalances = balancesAfterClosedCycleSurplusMove(
-			{
-				needsRemainingCents: amounts.needsEnvelope?.remainingAmount ?? 0,
-				wantsRemainingCents: amounts.wantsEnvelope?.remainingAmount ?? 0,
-				savingsRemainingCents: amounts.savingsEnvelope?.remainingAmount ?? 0,
-			},
-			{
-				needsCents: amounts.needs,
-				wantsCents: amounts.wants,
-				extraordinaryCents: amounts.extraordinary,
-			},
-		);
-		if (amounts.needsEnvelope && amounts.needs > 0) {
-			await ctx.db.patch(amounts.needsEnvelope._id, {
-				remainingAmount: nextBalances.needsRemainingCents,
-			});
-		}
-		if (amounts.wantsEnvelope && amounts.wants > 0) {
-			await ctx.db.patch(amounts.wantsEnvelope._id, {
-				remainingAmount: nextBalances.wantsRemainingCents,
-			});
-		}
-		if (amounts.savingsEnvelope && amounts.extraordinary > 0) {
-			await ctx.db.patch(amounts.savingsEnvelope._id, {
-				remainingAmount: nextBalances.savingsRemainingCents,
-			});
-		}
 		await ctx.db.patch(fund._id, { currentAmount: fund.currentAmount + amounts.total });
 
 		const origins: Array<{

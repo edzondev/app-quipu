@@ -40,33 +40,6 @@ export function computeExtraordinarySavingsPoolCents(
 	return Math.max(0, allocated - moved);
 }
 
-export type ClosedCycleEnvelopeBalances = {
-	needsRemainingCents: number;
-	wantsRemainingCents: number;
-	savingsRemainingCents: number;
-};
-
-export type ClosedCycleSurplusMoved = {
-	needsCents: number;
-	wantsCents: number;
-	extraordinaryCents: number;
-};
-
-/**
- * Balances after «Mover al Fondo». Needs, Wants, and the extraordinary slice
- * of Savings drop by exactly what moved. Regular Savings stays in the envelope.
- */
-export function balancesAfterClosedCycleSurplusMove(
-	before: ClosedCycleEnvelopeBalances,
-	moved: ClosedCycleSurplusMoved,
-): ClosedCycleEnvelopeBalances {
-	return {
-		needsRemainingCents: before.needsRemainingCents - moved.needsCents,
-		wantsRemainingCents: before.wantsRemainingCents - moved.wantsCents,
-		savingsRemainingCents: before.savingsRemainingCents - moved.extraordinaryCents,
-	};
-}
-
 /** Amount the user can move when source is "extraordinary" (pool capped by savings envelope remaining). */
 export function computeAvailableExtraordinarySavingsForMove(input: {
 	incomeEvents: ReadonlyArray<ExtraordinarySavingsIncomeSlice>;
