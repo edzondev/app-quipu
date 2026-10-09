@@ -71,6 +71,8 @@ describe("IncomeSheetForm", () => {
 
 		expect(view.getByTestId(NEW_CYCLE)).toBeTruthy();
 		expect(view.getByTestId(ADD_TO_CYCLE)).toBeTruthy();
+		expect(view.getByTestId(NEW_CYCLE).props.accessibilityHint).toBe("Abre un período nuevo");
+		expect(view.getByTestId(ADD_TO_CYCLE).props.accessibilityHint).toBe("Sin cerrar este período");
 		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
 		expect(selected(view, NEW_CYCLE)).toBe(false);
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();

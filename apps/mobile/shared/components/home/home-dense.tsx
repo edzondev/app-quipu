@@ -6,7 +6,6 @@ import {
 	envelopeCarryLabel,
 	type HomeModel,
 	type HomeTone,
-	homeSurplusLabel,
 } from "@/shared/lib/dashboard/home-model";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 import { HomeIdentity } from "./home-identity";
@@ -102,8 +101,8 @@ export function HomeDense({
 					<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
 						{home.cycleStatusLabel}
 					</Text>
-					{" · "}
-					{homeSurplusLabel(home.surplusCents, home.currencySymbol)}
+					{" · Sobra "}
+					{formatCentsTrimmed(home.surplusCents, home.currencySymbol)}
 				</Text>
 			</View>
 

@@ -97,6 +97,7 @@ export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, on
 										testID={option.testID}
 										accessibilityRole="button"
 										accessibilityLabel={option.label}
+										accessibilityHint={option.hint}
 										accessibilityState={{ selected }}
 										onPress={() => field.handleChange(option.kind)}
 										className={`rounded-[13px] border px-3.5 py-3 active:opacity-60 ${

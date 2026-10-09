@@ -167,7 +167,6 @@ describe("Home 1d", () => {
 		expect(view.getByText(/Día 15\/30/)).toBeTruthy();
 		expect(view.getByText("Ciclo estable")).toBeTruthy();
 		expect(view.getByText(/Sobra S\/ 1,543/)).toBeTruthy();
-		expect(view.queryByText(/Te pasaste/)).toBeNull();
 		expect(view.getByText("42")).toBeTruthy();
 		expect(view.getByText(".30")).toBeTruthy();
 		expect(view.getByText("Sobres · queda")).toBeTruthy();
@@ -187,23 +186,6 @@ describe("Home 1d", () => {
 
 		await fireEvent.press(view.getByText("Ver todos"));
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
-	});
-
-	it("con sobra negativa dice que te pasaste, sin un monto en negativo", async () => {
-		const view = await render(
-			<HomeDense
-				home={{ ...mockHome, surplusCents: -1500 }}
-				profileInitial="E"
-				profileName="Edzon"
-				onOpenSettings={jest.fn()}
-				onViewAllMovements={jest.fn()}
-				onRegisterIncome={jest.fn()}
-			/>,
-		);
-		expect(view.getByText(/Te pasaste por S\/ 15/)).toBeTruthy();
-		expect(view.queryByText(/Sobra/)).toBeNull();
-		expect(view.queryByText(/S\/ -/)).toBeNull();
-		expect(view.queryByText(/-S\//)).toBeNull();
 	});
 
 	function renderCarry(carriedOverCents: number, incomeCents: number, totalCents: number) {

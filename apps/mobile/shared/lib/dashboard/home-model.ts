@@ -1,6 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
-import { formatCentsTrimmed, overspentByLabel } from "@/shared/lib/money";
+import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
@@ -63,7 +63,7 @@ export type HomeModel = {
 	currencySymbol: string;
 	envelopes: HomeEnvelope[];
 	envelopesBalanceCents: number;
-	/** Sum of remaining envelope balances, matching dashboard surplus projection. */
+	/** Suma de remainingAmount, cada sobre en ≥ 0, como computeSurplusProjection. */
 	surplusCents: number;
 	coachMessage: string | null;
 	commitments: HomeCommitment[];
@@ -133,7 +133,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 			0,
 		),
 		surplusCents: summary.envelopes.reduce(
-			(acc: number, envelope: SummaryEnvelope) => acc + envelope.remainingAmount,
+			(acc: number, envelope: SummaryEnvelope) => acc + Math.max(0, envelope.remainingAmount),
 			0,
 		),
 		coachMessage: summary.coach?.message ?? null,
@@ -146,12 +146,6 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		})),
 		isOpeningCycle: summary.cycle.isOpeningCycle,
 	};
-}
-
-/** Sobra positiva, o «Te pasaste por S/ X» si el saldo firmado es negativo. */
-export function homeSurplusLabel(cents: number, symbol: string): string {
-	if (cents < 0) return overspentByLabel(cents, symbol);
-	return `Sobra ${formatCentsTrimmed(cents, symbol)}`;
 }
 
 const MINUS_SIGN = "\u2212";
