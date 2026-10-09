@@ -2,8 +2,8 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import SignOutButton from "@/shared/components/auth/sign-out-button";
 import { SectionLabel } from "@/shared/components/section-label";
 import type { BadgeTone, HomeModel, HomeTone } from "@/shared/lib/dashboard/home-model";
-import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
+import { HomeIdentity } from "./home-identity";
 
 const TONE_FILL: Record<"needs" | "wants" | "savings", string> = {
 	needs: "bg-needs",
@@ -50,13 +50,17 @@ function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 export function HomeDense({
 	home,
 	profileInitial,
+	profileName,
 	onOpenSettings,
 	onViewAllMovements,
+	onRegisterIncome,
 }: {
 	home: HomeModel;
 	profileInitial: string;
+	profileName: string;
 	onOpenSettings: () => void;
 	onViewAllMovements: () => void;
+	onRegisterIncome: () => void;
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
 	const statusClass = STATUS_TEXT[home.badgeTone];
@@ -68,17 +72,12 @@ export function HomeDense({
 			contentContainerClassName="pb-8"
 			showsVerticalScrollIndicator={false}
 		>
-			<View className="mb-2 flex-row justify-end">
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Ajustes"
-					hitSlop={HIT_SLOP}
-					onPress={onOpenSettings}
-					className="size-8 items-center justify-center rounded-full bg-line active:opacity-60"
-				>
-					<Text className="font-newsreader text-[16px] text-primary">{profileInitial}</Text>
-				</Pressable>
-			</View>
+			<HomeIdentity
+				initial={profileInitial}
+				title={profileName.trim() ? `Hola, ${profileName.trim()}` : "Hola"}
+				onOpenSettings={onOpenSettings}
+				onRegisterIncome={onRegisterIncome}
+			/>
 			<View className="border-b border-line pb-6 pt-1">
 				<Text className="font-newsreader text-[22px] leading-[28px] tracking-tight text-foreground">
 					Hoy puedes gastar

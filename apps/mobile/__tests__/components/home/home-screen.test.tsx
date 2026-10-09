@@ -93,19 +93,49 @@ jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: mockPush }),
 }));
 
+const mockOpenCreate = jest.fn();
+
+jest.mock("@/shared/components/navigation/registrar-context", () => ({
+	useRegistrar: () => ({ openCreate: mockOpenCreate, openEdit: jest.fn() }),
+}));
+
 jest.mock("@/shared/hooks/use-dashboard", () => ({
-	useHomeModel: () => ({ status: "ready", profileInitial: "E", home: mockHome }),
+	useHomeModel: () => ({
+		status: "ready",
+		profileInitial: "E",
+		profileName: "Edzon",
+		home: mockHome,
+	}),
 }));
 
 describe("Home 1d", () => {
 	it("centra el vacío cuando no hay ciclo y no pinta filas con raya", async () => {
-		const view = await render(<HomeEmpty />);
+		const onOpenSettings = jest.fn();
+		const onRegisterIncome = jest.fn();
+		const view = await render(
+			<HomeEmpty
+				name="Edzon"
+				initial="E"
+				onOpenSettings={onOpenSettings}
+				onRegisterIncome={onRegisterIncome}
+			/>,
+		);
 		expect(view.getByText("Aún no hay ciclo")).toBeTruthy();
 		expect(
 			view.getByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
 		).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
+		expect(view.getByText("E")).toBeTruthy();
+		expect(view.getByText("+ Ingreso")).toBeTruthy();
+		expect(view.getByText("Registrar ingreso")).toBeTruthy();
+		expect(view.queryByText("Salir")).toBeNull();
 		expect(view.queryByText("—")).toBeNull();
 		expect(view.queryByText("Necesid.")).toBeNull();
+
+		await fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
+		expect(onOpenSettings).toHaveBeenCalledTimes(1);
+		await fireEvent.press(view.getByText("Registrar ingreso"));
+		expect(onRegisterIncome).toHaveBeenCalledTimes(1);
 	});
 
 	it("muestra el ciclo denso con datos vivos y sin placeholders", async () => {
@@ -114,8 +144,10 @@ describe("Home 1d", () => {
 			<HomeDense
 				home={mockHome}
 				profileInitial="E"
+				profileName="Edzon"
 				onOpenSettings={jest.fn()}
 				onViewAllMovements={onViewAllMovements}
+				onRegisterIncome={jest.fn()}
 			/>,
 		);
 
@@ -140,7 +172,7 @@ describe("Home 1d", () => {
 		expect(view.getByText("− S/ 15.00")).toBeTruthy();
 		expect(view.queryByText("—")).toBeNull();
 
-		fireEvent.press(view.getByText("Ver todos"));
+		await fireEvent.press(view.getByText("Ver todos"));
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
 	});
 
@@ -149,8 +181,10 @@ describe("Home 1d", () => {
 			<HomeDense
 				home={{ ...mockHome, commitments: [], recentMovements: [] }}
 				profileInitial="E"
+				profileName="Edzon"
 				onOpenSettings={jest.fn()}
 				onViewAllMovements={jest.fn()}
+				onRegisterIncome={jest.fn()}
 			/>,
 		);
 		expect(view.getByText("Sin compromisos próximos.")).toBeTruthy();
@@ -162,8 +196,12 @@ describe("Home 1d", () => {
 		mockPush.mockClear();
 		const view = await render(<HomePage />);
 		expect(view.getByText("E")).toBeTruthy();
+		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("+ Ingreso")).toBeTruthy();
 		expect(view.getByText("Salir")).toBeTruthy();
-		fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
+		await fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
 		expect(mockPush).toHaveBeenCalledWith("/ajustes");
+		await fireEvent.press(view.getByText("+ Ingreso"));
+		expect(mockOpenCreate).toHaveBeenCalledWith("income");
 	});
 });

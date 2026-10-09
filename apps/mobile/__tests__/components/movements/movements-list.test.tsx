@@ -105,6 +105,29 @@ describe("MovementsList", () => {
 		expect(onCreate).toHaveBeenCalledTimes(1);
 	});
 
+	it("sin ciclo ofrece registrar ingreso", async () => {
+		const onCreate = jest.fn();
+		const view = await render(
+			<MovementsList
+				status="ready"
+				data={{
+					currencyCode: "PEN",
+					cycle: null,
+					movements: [],
+				}}
+				now={NOW}
+				onOpenExpense={jest.fn()}
+				onCreate={onCreate}
+			/>,
+		);
+
+		expect(view.getByText("Registrar ingreso")).toBeTruthy();
+		expect(view.queryByText("Registrar gasto")).toBeNull();
+		expect(view.queryByText("—")).toBeNull();
+		await press(view.getByText("Registrar ingreso"));
+		expect(onCreate).toHaveBeenCalledTimes(1);
+	});
+
 	it("filtra por gustos desde los chips", async () => {
 		const view = await render(
 			<MovementsList

@@ -1,17 +1,26 @@
 import { BottomSheet, RNHostView } from "@expo/ui";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
+import { IncomeSheetForm } from "@/shared/components/income/income-sheet-form";
 import { useHomeModel } from "@/shared/hooks/use-dashboard";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
+import { useIncomeActions } from "@/shared/hooks/use-income-actions";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import type { ExpenseDraftInput } from "@/shared/lib/expenses/draft";
 import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
+import {
+	type RegistrarIntent,
+	type RegistrarMode,
+	resolveRegistrarMode,
+} from "@/shared/lib/navigation/registrar-mode";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
 type Session = {
 	nonce: number;
+	intent: RegistrarIntent;
 };
 
 type Props = {
@@ -30,17 +39,25 @@ export default function RegistrarSheet({ isPresented, session, onDismiss }: Prop
 			containerColor="#FBFAF7"
 		>
 			<RNHostView>
-				<SheetBody key={session.nonce} onDone={onDismiss} />
+				<SheetBody key={session.nonce} intent={session.intent} onDone={onDismiss} />
 			</RNHostView>
 		</BottomSheet>
 	);
 }
 
-function SheetBody({ onDone }: { onDone: () => void }) {
+function SheetBody({ intent, onDone }: { intent: RegistrarIntent; onDone: () => void }) {
 	const router = useRouter();
 	const { register } = useExpenseActions();
+	const { register: registerIncome } = useIncomeActions();
 	const home = useHomeModel();
 	const { profile } = useProfileGate();
+	const hasCycle = home.status === "ready";
+	const [picked, setPicked] = useState<RegistrarMode | null>(null);
+	const mode =
+		picked ??
+		(intent === "auto" && home.status === "loading"
+			? null
+			: resolveRegistrarMode(intent, hasCycle));
 	const [fieldError, setFieldError] = useState<{
 		field: ExpenseValidationError["field"];
 		message: string;
@@ -55,18 +72,18 @@ function SheetBody({ onDone }: { onDone: () => void }) {
 				)?.currencySymbol ?? "S/");
 	const dailyCents = home.status === "ready" ? home.home.dailyCents : null;
 
-	async function submit(input: ExpenseDraftInput) {
+	async function guard(work: () => Promise<unknown>, fallback: string) {
 		setFieldError(null);
 		setFormError(null);
 		setSubmitting(true);
 		try {
-			await register(input);
+			await work();
 			onDone();
 		} catch (error) {
 			if (error instanceof ExpenseValidationError) {
 				setFieldError({ field: error.field, message: error.message });
 			} else {
-				setFormError(readActionError(error, "No se pudo guardar el gasto."));
+				setFormError(readActionError(error, fallback));
 			}
 		} finally {
 			setSubmitting(false);
@@ -83,18 +100,83 @@ function SheetBody({ onDone }: { onDone: () => void }) {
 		router.push(`/expense/new?${query.toString()}`);
 	}
 
+	if (mode == null) {
+		return (
+			<View className="flex-1 items-center justify-center">
+				<Text className="font-hanken text-[15px] text-foreground/55">Cargando…</Text>
+			</View>
+		);
+	}
+
 	return (
-		<ExpenseSheetForm
-			currencySymbol={currencySymbol}
-			dailyCents={dailyCents}
-			fieldError={fieldError}
-			formError={formError}
-			isSubmitting={isSubmitting}
-			onSubmit={(input) => {
-				void submit(input);
-			}}
-			onCancel={onDone}
-			onOpenDetail={openDetail}
-		/>
+		<View className="flex-1">
+			<View className="px-[22px] pt-1.5">
+				<ModeSwitch
+					value={mode}
+					onChange={(next) => {
+						setPicked(next);
+						setFieldError(null);
+						setFormError(null);
+					}}
+				/>
+			</View>
+			{mode === "income" ? (
+				<IncomeSheetForm
+					currencySymbol={currencySymbol}
+					formError={formError}
+					isSubmitting={isSubmitting}
+					onSubmit={(draft) =>
+						void guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")
+					}
+					onCancel={onDone}
+				/>
+			) : (
+				<ExpenseSheetForm
+					currencySymbol={currencySymbol}
+					dailyCents={dailyCents}
+					fieldError={fieldError}
+					formError={formError}
+					isSubmitting={isSubmitting}
+					onSubmit={(input) => void guard(() => register(input), "No se pudo guardar el gasto.")}
+					onCancel={onDone}
+					onOpenDetail={openDetail}
+				/>
+			)}
+		</View>
+	);
+}
+
+const MODES = [
+	["expense", "Gasto"],
+	["income", "Ingreso"],
+] as const;
+
+function ModeSwitch({
+	value,
+	onChange,
+}: {
+	value: RegistrarMode;
+	onChange: (mode: RegistrarMode) => void;
+}) {
+	return (
+		<View className="flex-row rounded-xl bg-foreground/5 p-1">
+			{MODES.map(([id, label]) => {
+				const selected = value === id;
+				const tone = selected
+					? "font-hanken-semibold text-[13.5px] text-foreground"
+					: "font-hanken text-[13.5px] text-foreground/45";
+				return (
+					<Pressable
+						key={id}
+						accessibilityRole="button"
+						accessibilityState={{ selected }}
+						onPress={() => onChange(id)}
+						className={`flex-1 items-center rounded-lg py-2.5 active:opacity-60 ${selected ? "bg-background" : ""}`}
+					>
+						<Text className={tone}>{label}</Text>
+					</Pressable>
+				);
+			})}
+		</View>
 	);
 }

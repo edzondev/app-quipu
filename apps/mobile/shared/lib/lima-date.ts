@@ -58,3 +58,9 @@ export function limaDayLabel(ms: number): string {
 	const stamp = limaStamp(ms);
 	return `${stamp.day} ${LIMA_MONTHS[stamp.monthIndex] ?? ""}`.trim();
 }
+
+/** Medianoche en Lima (UTC−5, sin horario de verano). */
+export function limaStartOfDay(ms: number): number {
+	const [year, month, day] = limaStamp(ms).key.split("-").map(Number);
+	return Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1, 5, 0, 0, 0);
+}

@@ -14,11 +14,16 @@ export function useHomeModel() {
 	const summary = useDashboardSummary();
 	if (summary === undefined) return { status: "loading" as const };
 	const home = summary ? mapDashboardHome(summary) : null;
-	if (!home || !summary) return { status: "empty" as const };
+	const profileName = summary?.profile.name ?? "";
+	const initial = profileInitial(profileName);
+	if (!home || !summary) {
+		return { status: "empty" as const, profileName, profileInitial: initial };
+	}
 	return {
 		status: "ready" as const,
 		home,
-		profileInitial: profileInitial(summary.profile.name),
+		profileName,
+		profileInitial: initial,
 	};
 }
 

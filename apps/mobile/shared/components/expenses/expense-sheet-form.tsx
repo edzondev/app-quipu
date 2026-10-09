@@ -3,10 +3,10 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { Camera } from "reicon-react-native/icons/Camera";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
-import { formatKeypadAmount, keypadFigures } from "@/shared/lib/expenses/keypad";
+import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
 import { remainingAfterExpense, sheetRemainingLabel } from "@/shared/lib/expenses/present";
 import { EnvelopeChoices } from "./envelope-choices";
-import { ExpenseKeypad } from "./expense-keypad";
+import { ExpenseKeypad, KeypadAmount } from "./expense-keypad";
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 
@@ -50,7 +50,6 @@ export function ExpenseSheetForm({
 		onSubmit: ({ value }) => onSubmit(toDraft(value)),
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
-	const figures = keypadFigures(amountCents);
 	const remaining = dailyCents == null ? null : remainingAfterExpense(dailyCents, amountCents);
 
 	return (
@@ -70,17 +69,8 @@ export function ExpenseSheetForm({
 				</Pressable>
 			</View>
 
-			<View className="mt-5 flex-row items-end gap-2">
-				<Text className="mb-2 font-newsreader text-[22px] text-foreground/55">
-					{currencySymbol}
-				</Text>
-				<Text
-					accessibilityLabel="Monto"
-					className="font-newsreader text-[56px] leading-[64px] tracking-tight text-foreground"
-				>
-					{`${figures.major}.${figures.minor}`}
-				</Text>
-				<View className="mb-2 h-11 w-0.5 rounded-sm bg-stable" />
+			<View className="mt-5">
+				<KeypadAmount currencySymbol={currencySymbol} cents={amountCents} />
 			</View>
 			{fieldError?.field === "amount" ? <ErrorText message={fieldError.message} /> : null}
 

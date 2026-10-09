@@ -11,7 +11,7 @@ import RegistrarTabButton from "@/shared/components/navigation/registrar-tab-but
 
 function OpenRegistrarButton(props: BottomTabBarButtonProps) {
 	const { openCreate } = useRegistrar();
-	return <RegistrarTabButton {...props} onPress={openCreate} />;
+	return <RegistrarTabButton {...props} onPress={() => openCreate()} />;
 }
 
 export default function TabLayout() {

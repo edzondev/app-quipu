@@ -1,5 +1,5 @@
-import { Text, View } from "react-native";
-import SignOutButton from "@/shared/components/auth/sign-out-button";
+import { Pressable, Text, View } from "react-native";
+import { HomeIdentity } from "./home-identity";
 
 function EmptyIllustration() {
 	return (
@@ -26,18 +26,42 @@ export function HomeLoading() {
 	);
 }
 
-export function HomeEmpty() {
+export function HomeEmpty({
+	name,
+	initial,
+	onOpenSettings,
+	onRegisterIncome,
+}: {
+	name: string;
+	initial: string;
+	onOpenSettings: () => void;
+	onRegisterIncome: () => void;
+}) {
 	return (
-		<View className="flex-1 items-center justify-center px-4">
-			<EmptyIllustration />
-			<Text className="text-center font-hanken-semibold text-[18px] text-foreground">
-				Aún no hay ciclo
-			</Text>
-			<Text className="mt-2 max-w-[280px] text-center font-hanken text-[14px] leading-5 text-foreground/55">
-				Registra tu primer ingreso para ver cuánto puedes gastar hoy.
-			</Text>
-			<View className="mt-8">
-				<SignOutButton />
+		<View className="flex-1">
+			<HomeIdentity
+				initial={initial}
+				title={name}
+				onOpenSettings={onOpenSettings}
+				onRegisterIncome={onRegisterIncome}
+			/>
+			<View className="flex-1 items-center justify-center px-4">
+				<EmptyIllustration />
+				<Text className="text-center font-hanken-semibold text-[18px] text-foreground">
+					Aún no hay ciclo
+				</Text>
+				<Text className="mt-2 max-w-[280px] text-center font-hanken text-[14px] leading-5 text-foreground/55">
+					Registra tu primer ingreso para ver cuánto puedes gastar hoy.
+				</Text>
+				<Pressable
+					accessibilityRole="button"
+					onPress={onRegisterIncome}
+					className="mt-8 rounded-xl bg-foreground px-[22px] py-3.5 active:opacity-80"
+				>
+					<Text className="font-hanken-semibold text-[14px] text-background">
+						Registrar ingreso
+					</Text>
+				</Pressable>
 			</View>
 		</View>
 	);
