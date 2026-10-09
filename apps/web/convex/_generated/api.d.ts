@@ -16,7 +16,6 @@ import type * as coachEngine from "../coachEngine.js";
 import type * as crons from "../crons.js";
 import type * as crons_contentReviewScan from "../crons/contentReviewScan.js";
 import type * as cycleCorrection from "../cycleCorrection.js";
-import type * as cycleExpiry from "../cycleExpiry.js";
 import type * as cycleReport from "../cycleReport.js";
 import type * as dashboard from "../dashboard.js";
 import type * as devSeed from "../devSeed.js";
@@ -132,7 +131,6 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   "crons/contentReviewScan": typeof crons_contentReviewScan;
   cycleCorrection: typeof cycleCorrection;
-  cycleExpiry: typeof cycleExpiry;
   cycleReport: typeof cycleReport;
   dashboard: typeof dashboard;
   devSeed: typeof devSeed;

@@ -1,6 +1,6 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
-import { assertDevSeedAllowed } from "./devSeedGuard";
+import { assertDevSeedAllowed, devSeedPassword } from "./devSeedGuard";
 
 const DEV_URL = "https://perceptive-elk-229.convex.cloud";
 const PROD_URL = "https://patient-chihuahua-640.convex.cloud";
@@ -26,5 +26,16 @@ describe("assertDevSeedAllowed", () => {
 
 	it("allows the seed only when the flag is set and the cloud url is dev", () => {
 		expect(() => assertDevSeedAllowed({ allowDevSeed: "true", cloudUrl: DEV_URL })).not.toThrow();
+	});
+});
+
+describe("devSeedPassword", () => {
+	it("throws when the env password is missing", () => {
+		expect(() => devSeedPassword(undefined)).toThrow(ConvexError);
+		expect(() => devSeedPassword("   ")).toThrow(ConvexError);
+	});
+
+	it("returns the configured password", () => {
+		expect(devSeedPassword("  secreto-maestro  ")).toBe("secreto-maestro");
 	});
 });

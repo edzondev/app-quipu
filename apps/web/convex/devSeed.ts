@@ -2,11 +2,8 @@ import { hashPassword } from "better-auth/crypto";
 import { ConvexError, v } from "convex/values";
 import { components } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
-import { assertDevSeedAllowed } from "./lib/devSeedGuard";
+import { assertDevSeedAllowed, devSeedPassword } from "./lib/devSeedGuard";
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
-
-/** Password for Maestro sign-in. Email + this password, already verified. */
-export const DEV_SEED_PASSWORD = "QuipuMaestro229";
 
 function readCreatedId(created: unknown): string {
 	if (typeof created === "string" && created.length > 0) return created;
@@ -61,7 +58,7 @@ export const seedVerifiedAccount = internalMutation({
 		}
 
 		const now = Date.now();
-		const password = await hashPassword(DEV_SEED_PASSWORD);
+		const password = await hashPassword(devSeedPassword(process.env.DEV_SEED_PASSWORD));
 		const created = await ctx.runMutation(components.betterAuth.adapter.create, {
 			input: {
 				model: "user",

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import {
 	closedCycleOnSummary,
 	summaryAfterClose,
+	summaryWithCycle,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
 import HomePage from "@/app/(tabs)";
@@ -13,7 +14,6 @@ const mockUseQuery = jest.fn();
 
 jest.mock("convex/react", () => ({
 	useQuery: (...args: unknown[]) => mockUseQuery(...args),
-	useMutation: () => jest.fn(async () => ({ closed: false })),
 	useConvexAuth: () => ({ isAuthenticated: true, isLoading: false }),
 }));
 
@@ -77,7 +77,12 @@ function summaryFor(surplusCents: number) {
 	return summaryAfterClose({ ...closedCycleOnSummary, surplusCents });
 }
 
-function mockSummary(summary: ReturnType<typeof summaryAfterClose> | typeof summaryWithoutCycle) {
+function mockSummary(
+	summary:
+		| ReturnType<typeof summaryAfterClose>
+		| typeof summaryWithoutCycle
+		| ReturnType<typeof summaryWithCycle>,
+) {
 	mockUseQuery.mockImplementation((query: unknown) => {
 		const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
 		if (name === "dashboard:getSummary") return summary;
@@ -149,6 +154,19 @@ describe("Inicio con ciclo cerrado", () => {
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
 			true,
 		);
+	});
+
+	it("muestra la tarjeta en Inicio cuando pastEnd es true y el ciclo sigue activo", async () => {
+		const live = summaryWithCycle();
+		mockSummary({
+			...live,
+			cycle: { ...live.cycle, pastEnd: true },
+			closedCycle: { ...closedCycleOnSummary, surplusCents: -12_345 },
+		});
+		const view = await renderHome();
+		expect(view.getByText(/Te pasaste por S\/ 123\.45/)).toBeTruthy();
+		expect(view.queryByText("Ciclo agosto")).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 
 	it("muestra la tarjeta de ciclo cerrado en Inicio cuando el ciclo ya venció", async () => {

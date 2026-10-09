@@ -17,7 +17,7 @@ import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
-import { splitExpiredActiveCycle } from "./lib/cycleExpiry";
+import { pastEndClosedCard } from "./lib/cycleExpiry";
 import {
 	buildEarlyCycleHeroBody,
 	buildValidationCopy,
@@ -60,7 +60,7 @@ export const getSummary = query({
 			.unique();
 		if (!profile) return null;
 
-		const [commitmentsRaw, loadedActiveCycle] = await Promise.all([
+		const [commitmentsRaw, activeCycle] = await Promise.all([
 			ctx.db
 				.query("fixedCommitments")
 				.withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
@@ -74,10 +74,9 @@ export const getSummary = query({
 		]);
 
 		const now = Date.now();
-		const { active: activeCycle, expired } = splitExpiredActiveCycle(loadedActiveCycle, now);
 
 		if (!activeCycle) {
-			const latestClosed = expired ?? (await findLatestClosedCycle(ctx, profile._id));
+			const latestClosed = await findLatestClosedCycle(ctx, profile._id);
 			let surplusCents = 0;
 			if (latestClosed !== null) {
 				const amounts = await loadClosedCycleSurplusAmounts(
@@ -152,6 +151,7 @@ export const getSummary = query({
 		}
 
 		const cycleMetrics = computeCycleDayMetrics(activeCycle.startDate, activeCycle.endDate, now);
+		const pastEnd = isCyclePastEnd(activeCycle.endDate, now);
 
 		const compliance = evaluateCycleCompliance(envelopesRaw, activeCycle.isOpeningCycle === true);
 		const wantsEnvelope = envelopeByType.get("wants");
@@ -400,7 +400,7 @@ export const getSummary = query({
 				carriedOverExtraordinaryCents: activeCycle.carriedOverExtraordinaryCents ?? 0,
 				isOpeningCycle: activeCycle.isOpeningCycle === true,
 				...cycleMetrics,
-				pastEnd: isCyclePastEnd(activeCycle.endDate, now),
+				pastEnd,
 			},
 			hero,
 			liquidity: {
@@ -414,7 +414,18 @@ export const getSummary = query({
 			coach,
 			movements,
 			isEarlyCycle,
-			closedCycle: summaryClosedCycle(true, null, 0),
+			closedCycle: pastEnd
+				? pastEndClosedCard({
+						pastEnd,
+						cycle: activeCycle,
+						envelopes: envelopesRaw,
+						incomeEvents: incomesForCycle,
+						surplusContributions: await ctx.db
+							.query("surplusContributions")
+							.withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+							.collect(),
+					})
+				: summaryClosedCycle(true, null, 0),
 		};
 	},
 });

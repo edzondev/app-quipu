@@ -18,3 +18,15 @@ export function assertDevSeedAllowed(env: {
 	}
 	assertDevCloudOnly(env.cloudUrl);
 }
+
+/** Password comes from the dev deployment env. Nothing fixed in the repo. */
+export function devSeedPassword(value: string | undefined): string {
+	const password = value?.trim() ?? "";
+	if (password.length === 0) {
+		throw new ConvexError({
+			code: "FORBIDDEN",
+			message: "DEV_SEED_PASSWORD no está configurada.",
+		});
+	}
+	return password;
+}
