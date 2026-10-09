@@ -17,6 +17,7 @@ import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
+import { splitExpiredActiveCycle } from "./lib/cycleExpiry";
 import {
 	buildEarlyCycleHeroBody,
 	buildValidationCopy,
@@ -59,7 +60,7 @@ export const getSummary = query({
 			.unique();
 		if (!profile) return null;
 
-		const [commitmentsRaw, activeCycle] = await Promise.all([
+		const [commitmentsRaw, loadedActiveCycle] = await Promise.all([
 			ctx.db
 				.query("fixedCommitments")
 				.withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
@@ -73,9 +74,10 @@ export const getSummary = query({
 		]);
 
 		const now = Date.now();
+		const { active: activeCycle, expired } = splitExpiredActiveCycle(loadedActiveCycle, now);
 
 		if (!activeCycle) {
-			const latestClosed = await findLatestClosedCycle(ctx, profile._id);
+			const latestClosed = expired ?? (await findLatestClosedCycle(ctx, profile._id));
 			let surplusCents = 0;
 			if (latestClosed !== null) {
 				const amounts = await loadClosedCycleSurplusAmounts(

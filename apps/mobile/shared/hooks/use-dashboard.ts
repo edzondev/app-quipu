@@ -1,5 +1,6 @@
 import { api } from "@quipu/convex-api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useEffect, useRef } from "react";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
 import { currencySymbol } from "@/shared/lib/money";
@@ -11,8 +12,19 @@ export function useDashboardSummary() {
 	return useQuery(api.dashboard.getSummary, isAuthReady ? {} : "skip");
 }
 
+function useCloseExpiredCycle(enabled: boolean) {
+	const closeExpired = useMutation(api.cycleExpiry.closeExpired);
+	const started = useRef(false);
+	useEffect(() => {
+		if (!enabled || started.current) return;
+		started.current = true;
+		void Promise.resolve(closeExpired({})).catch(() => undefined);
+	}, [closeExpired, enabled]);
+}
+
 export function useHomeModel() {
 	const summary = useDashboardSummary();
+	useCloseExpiredCycle(summary != null);
 	if (summary === undefined) return { status: "loading" as const };
 	const profileName = summary?.profile.name ?? "";
 	const initial = profileInitial(profileName);

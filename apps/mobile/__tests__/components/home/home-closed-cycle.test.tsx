@@ -13,6 +13,7 @@ const mockUseQuery = jest.fn();
 
 jest.mock("convex/react", () => ({
 	useQuery: (...args: unknown[]) => mockUseQuery(...args),
+	useMutation: () => jest.fn(async () => ({ closed: false })),
 	useConvexAuth: () => ({ isAuthenticated: true, isLoading: false }),
 }));
 
@@ -148,6 +149,30 @@ describe("Inicio con ciclo cerrado", () => {
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
 			true,
 		);
+	});
+
+	it("muestra la tarjeta de ciclo cerrado en Inicio cuando el ciclo ya venció", async () => {
+		mockSummary(summaryAfterClose(closedCycleOnSummary));
+		const view = await renderHome();
+		expect(view.getByText(/Tu ciclo del 1 AGO al 30 AGO terminó/)).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
+		expect(view.queryByText("Ciclo agosto")).toBeNull();
+	});
+
+	it("pinta el arrastre positivo que manda el servidor", async () => {
+		mockSummary(summaryFor(12_345));
+		const view = await renderHome();
+		expect(view.getByText(/Te quedaron S\/ 123\.45/)).toBeTruthy();
+		expect(view.queryByText(/Te pasaste/)).toBeNull();
+	});
+
+	it("pinta el arrastre negativo que manda el servidor", async () => {
+		mockSummary(summaryFor(-12_345));
+		const view = await renderHome();
+		expect(view.getByText(/Te pasaste por S\/ 123\.45/)).toBeTruthy();
+		expect(view.queryByText(/Te quedaron/)).toBeNull();
+		expect(view.queryByText(/-S\//)).toBeNull();
 	});
 
 	it("muestra el dibujo de vacío cuando no hay ciclo ni ciclo cerrado", async () => {
