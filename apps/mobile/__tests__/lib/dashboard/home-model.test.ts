@@ -106,6 +106,7 @@ function summary(
 			},
 		],
 		isEarlyCycle: false,
+		closedCycle: null,
 	};
 }
 

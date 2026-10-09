@@ -102,6 +102,7 @@ export function summaryWithCycle(
 		commitments: overrides.commitments ?? [],
 		movements: [],
 		isEarlyCycle: false,
+		closedCycle: null,
 	} satisfies ActiveSummary;
 	return summary;
 }
@@ -146,4 +147,5 @@ export const summaryWithoutCycle: IdleSummary = {
 	coach: null,
 	movements: [],
 	isEarlyCycle: false,
+	closedCycle: null,
 } satisfies IdleSummary;
