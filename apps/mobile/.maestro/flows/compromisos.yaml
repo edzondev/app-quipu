@@ -15,7 +15,7 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - extendedWaitUntil:
     visible: "Compromisos"
     timeout: 10000
@@ -28,11 +28,9 @@ tags:
     visible: "NUEVO COMPROMISO"
     timeout: 10000
 - tapOn:
-    text: "^Agregar compromiso$"
+    text: "Agregar compromiso"
     below: "NUEVO COMPROMISO"
-- extendedWaitUntil:
-    visible: "El nombre del compromiso es obligatorio."
-    timeout: 5000
+- assertVisible: "El nombre del compromiso es obligatorio."
 - assertVisible: "El monto debe ser mayor a cero."
 - tapOn:
     text: "\\+ Celular"
@@ -40,22 +38,18 @@ tags:
 - inputText: "0"
 - hideKeyboard
 - tapOn:
-    text: "^Agregar compromiso$"
+    text: "Agregar compromiso"
     below: "NUEVO COMPROMISO"
 - assertVisible: "El monto debe ser mayor a cero."
 - tapOn:
-    text: "^Día de vencimiento$"
+    text: "Día de vencimiento"
 - inputText: "0"
 - hideKeyboard
-- extendedWaitUntil:
-    visible: "El día de vencimiento va del 1 al 31."
-    timeout: 5000
+- assertVisible: "El día de vencimiento va del 1 al 31."
 - eraseText
 - inputText: "32"
 - hideKeyboard
-- extendedWaitUntil:
-    visible: "El día de vencimiento va del 1 al 31."
-    timeout: 5000
+- assertVisible: "El día de vencimiento va del 1 al 31."
 - eraseText
 - inputText: "15"
 - hideKeyboard
@@ -65,27 +59,12 @@ tags:
 - inputText: "50"
 - hideKeyboard
 - tapOn:
-    text: "^Agregar compromiso$"
+    text: "Agregar compromiso"
+    enabled: true
     below: "NUEVO COMPROMISO"
 - extendedWaitUntil:
     notVisible: "NUEVO COMPROMISO"
     timeout: 20000
 - assertVisible: "Celular"
 - assertVisible: "S/ 50"
-- runFlow:
-    when:
-            notVisible: ".*MENSUAL"
-    commands:
-      - runFlow:
-          when:
-            notVisible: "Cubierto"
-          commands:
-            - runFlow:
-                when:
-                  notVisible: "Parcial"
-                commands:
-                  - runFlow:
-                      when:
-                        notVisible: "Sin cubrir"
-                      commands:
-                        - assertVisible: "VENCE.*"
+- assertVisible: "(.*MENSUAL|Cubierto|Parcial|Sin cubrir|VENCE.*)"

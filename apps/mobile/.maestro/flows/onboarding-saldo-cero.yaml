@@ -37,11 +37,13 @@ tags:
     timeout: 10000
 - assertVisible: "Dinero de hoy"
 - assertNotVisible: "Puedes gastar hoy"
-# Espera arreglo pendiente (Pixi, sin PR): #106 lo quitó. Pixi lo va a devolver.
+# El texto está en step-confirm.tsx en b70a12f.
 - assertVisible: "Anota el dinero que tienes hoy para ver tu número\\."
 - assertNotVisible:
     id: confirm-daily
-- tapOn: "Empezar mi ciclo"
+- tapOn:
+    text: "Empezar mi ciclo"
+    enabled: true
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 40000

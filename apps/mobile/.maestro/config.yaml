@@ -1,31 +1,9 @@
 # Flujos ejecutables. subflows/ solo se llama con runFlow.
+# Sin executionOrder: cada flujo entra solo. --include-tags del CLI tiene prioridad,
+# así que maestro:smoke sigue corriendo solo el tag smoke.
 flows:
   - "flows/*"
-executionOrder:
-  continueOnFailure: true
-  flowsOrder:
-    - welcome
-    - sign-in
-    - home-ciclo
-    - registrar-gasto-hoja
-    - registrar-gasto-completo
-    - registrar-ingreso
-    - sumar-no-cierra
-    - sin-ciclo-solo-ciclo-nuevo
-    - movimientos
-    - movimientos-editar-eliminar
-    - compromisos
-    - ahorro-metas
-    - plan-sobres
-    - controles-escondidos
-    - progreso-vacio
-    - ajustes-cerrar-sesion
-    - onboarding-paso-1
-    - onboarding-ciclo
-    - onboarding-despues
-    - onboarding-saldo-cero
-    - ciclo-nuevo-antes-del-fin
-    - mismo-dia-solo-sumar
-    - progreso-primer-cierre
-    - home-vacio
-    - home-primer-ingreso
+excludeTags:
+  - one-shot
+  - wip
+  - blocked

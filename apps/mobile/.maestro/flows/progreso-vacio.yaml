@@ -20,7 +20,7 @@ tags:
     timeout: 30000
 - runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - tapOn:
-    text: "^Progreso$"
+    text: "Progreso"
 - extendedWaitUntil:
     visible: "Aún no cierras un ciclo."
     timeout: 15000
@@ -30,4 +30,4 @@ tags:
     visible: "Dónde está tu dinero antes de que lo gastes."
     timeout: 10000
 - assertVisible:
-    text: "^Plan$"
+    text: "Plan"

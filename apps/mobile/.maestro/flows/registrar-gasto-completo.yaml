@@ -16,52 +16,52 @@ tags:
     timeout: 30000
 - evalScript: "${output.merchant = 'Mercado' + Date.now()}"
 - tapOn:
-    text: "^Registrar$"
+    text: "Registrar"
 - extendedWaitUntil:
     visible: "NUEVO GASTO"
     timeout: 10000
 - tapOn:
-    text: "^1$"
+    text: "1"
 - tapOn:
-    text: "^5$"
+    text: "5"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^Comercio$"
+    text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
 - tapOn:
-    text: "^Gustos$"
+    text: "Gustos"
     below: "NUEVO GASTO"
 - tapOn: "Abrir detalle del gasto"
 - extendedWaitUntil:
-    visible: "REGISTRAR GASTO"
+    visible: "(?-i)REGISTRAR GASTO"
     timeout: 10000
 - assertVisible: ${output.merchant}
 - assertVisible: "HOY QUEDARÍA.*"
 - assertNotVisible:
-    text: "^Nota$"
+    text: "Nota"
 - assertNotVisible: "Adjuntar boleta"
 - tapOn: "Monto"
 - eraseText
 - inputText: "1.234"
 - hideKeyboard
 - tapOn: "Registrar gasto"
-- extendedWaitUntil:
-    visible: "Ingresa un monto mayor a cero."
-    timeout: 5000
+- assertVisible: "Ingresa un monto mayor a cero."
 - tapOn: "Monto"
 - eraseText
 - inputText: "15.50"
 - hideKeyboard
-- tapOn: "Registrar gasto"
+- tapOn:
+    text: "(?-i)Registrar gasto"
+    enabled: true
 - extendedWaitUntil:
-    notVisible: "REGISTRAR GASTO"
+    notVisible: "(?-i)REGISTRAR GASTO"
     timeout: 20000
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000

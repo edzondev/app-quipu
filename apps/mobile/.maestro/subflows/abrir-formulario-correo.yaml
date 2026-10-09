@@ -14,7 +14,7 @@ appId: com.quipu.finance
     visible: "Entrar con correo"
     timeout: 10000
 - tapOn:
-    text: "^Entrar con correo$"
+    text: "Entrar con correo"
 - extendedWaitUntil:
     visible: "Entra con tu respaldo."
     timeout: 10000

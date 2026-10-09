@@ -5,11 +5,11 @@ tags:
 ---
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
-# «¿Empieza un nuevo ciclo?» cierra el ciclo en cualquier fecha (#105).
+# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy (#109 lo suma el mismo día de Lima).
 # El ciclo tiene que haber empezado antes de hoy y quedar a varios días del fin.
 # No sirve la cuenta fija ni una semilla de hoy: depende de una semilla futura,
 # una cuenta nueva por corrida (QUIPU_E2E_PRIOR_CYCLE_*). No uses una cuenta personal.
-# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
+# La opción marcada en un ciclo abierto es «Sumar al ciclo actual»; este flujo toca la otra.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -19,7 +19,7 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: "CICLO .*"
     timeout: 15000
@@ -27,19 +27,19 @@ tags:
     text: "CICLO .*"
 - evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
 - tapOn:
-    text: "^Inicio$"
+    text: "Inicio"
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: "¿Empieza un nuevo ciclo\\?"
+      QUIPU_TIPO: "Empieza un nuevo ciclo"
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: ".*10\\.00"
     timeout: 20000
 - assertNotVisible: "${output.cycleBefore} · .*"
 - assertVisible: "CICLO .*"
 - tapOn:
-    text: "^Inicio$"
+    text: "Inicio"
 - assertVisible: "Hoy puedes gastar"
 - assertVisible: "Saldo que quedó.*"

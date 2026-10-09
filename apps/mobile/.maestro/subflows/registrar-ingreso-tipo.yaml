@@ -1,28 +1,30 @@
 appId: com.quipu.finance
 ---
-# QUIPU_TIPO es el texto completo de la opción, como regex:
-# "¿Empieza un nuevo ciclo\\?" o "Sumar al ciclo actual".
+# QUIPU_TIPO es el texto completo de la opción:
+# "Empieza un nuevo ciclo" o "Sumar al ciclo actual".
+# En b70a12f la hoja usa esos textos (sin ¿) y los testID income-mode-new-cycle / income-mode-add.
 # Monto S/ 10.00. Inicio con ciclo, «+ Ingreso» a la vista.
-# En f98b65b la hoja dice «Sueldo» / «Extra» (viene marcado «Sueldo»).
-# Los textos nuevos esperan la rama de Pixi feature/mobile-income-cycle-choice.
+# (?-i) separa el título «REGISTRAR INGRESO» del botón «Registrar ingreso».
 - tapOn:
     text: "\\+ Ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - tapOn:
     text: ${QUIPU_TIPO}
-    below: "REGISTRAR INGRESO"
+    below: "(?-i)REGISTRAR INGRESO"
 - tapOn:
-    text: "^1$"
+    text: "1"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - assertVisible: "10\\.00"
-- tapOn: "Registrar ingreso"
+- tapOn:
+    text: "(?-i)Registrar ingreso"
+    enabled: true
 - extendedWaitUntil:
-    notVisible: "REGISTRAR INGRESO"
+    notVisible: "(?-i)REGISTRAR INGRESO"
     timeout: 20000

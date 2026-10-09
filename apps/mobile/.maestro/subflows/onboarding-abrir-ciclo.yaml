@@ -15,7 +15,9 @@ appId: com.quipu.finance
 - assertNotVisible:
     id: confirm-daily
 - assertNotVisible: "Después de compromisos y ahorro, en .* días\\."
-- tapOn: "Empezar mi ciclo"
+- tapOn:
+    text: "Empezar mi ciclo"
+    enabled: true
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 40000

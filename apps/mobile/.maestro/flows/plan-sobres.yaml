@@ -15,7 +15,7 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - extendedWaitUntil:
     visible: "Dónde está tu dinero antes de que lo gastes."
     timeout: 10000
@@ -26,7 +26,7 @@ tags:
 - assertVisible: "Ahorro y metas"
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
-    text: "^Sobres$"
+    text: "Sobres"
 - extendedWaitUntil:
     visible: "Tu sueldo ya está dividido. Esto es lo que queda."
     timeout: 15000
@@ -35,16 +35,7 @@ tags:
 - assertVisible: "Ahorro"
 - assertVisible: "GASTADO.*"
 - assertVisible: "apartado este ciclo"
-- assertNotVisible:
-    text: "^Mover dinero$"
-- runFlow:
-    when:
-      notVisible: "Al día"
-    commands:
-      - runFlow:
-          when:
-            notVisible: "Va rápido"
-          commands:
-            - assertVisible: "Intacto"
+- assertNotVisible: "Mover dinero"
+- assertVisible: "(Al día|Va rápido|Intacto)"
 - tapOn: "Volver"
 - assertVisible: "Ahorro y metas"

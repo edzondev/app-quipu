@@ -15,31 +15,31 @@ tags:
     timeout: 30000
 - evalScript: "${output.merchant = 'Taller' + Date.now()}"
 - tapOn:
-    text: "^Registrar$"
+    text: "Registrar"
 - extendedWaitUntil:
     visible: "NUEVO GASTO"
     timeout: 10000
 - tapOn:
-    text: "^2$"
+    text: "2"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^Comercio$"
+    text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
 - tapOn:
-    text: "^Gustos$"
+    text: "Gustos"
     below: "NUEVO GASTO"
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"
     timeout: 20000
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000
@@ -52,7 +52,9 @@ tags:
 - eraseText
 - inputText: "30"
 - hideKeyboard
-- tapOn: "Guardar"
+- tapOn:
+    text: "Guardar"
+    enabled: true
 - extendedWaitUntil:
     notVisible: "EDITAR GASTO"
     timeout: 20000
@@ -64,21 +66,17 @@ tags:
     visible: "Eliminar"
     timeout: 10000
 - tapOn: "Eliminar"
-- extendedWaitUntil:
-    visible: "Eliminar gasto"
-    timeout: 5000
+- assertVisible: "Eliminar gasto"
 - assertVisible: "El monto vuelve al sobre."
 - tapOn:
-    text: "^Cancelar$"
+    text: "Cancelar"
     below: "El monto vuelve al sobre."
 - assertNotVisible: "El monto vuelve al sobre."
 - assertVisible: "EDITAR GASTO"
 - tapOn: "Eliminar"
-- extendedWaitUntil:
-    visible: "El monto vuelve al sobre."
-    timeout: 5000
+- assertVisible: "El monto vuelve al sobre."
 - tapOn:
-    text: "^Eliminar$"
+    text: "Eliminar"
     below: "El monto vuelve al sobre."
 - extendedWaitUntil:
     notVisible: "EDITAR GASTO"

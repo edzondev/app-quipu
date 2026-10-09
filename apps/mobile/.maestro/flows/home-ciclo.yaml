@@ -19,8 +19,7 @@ tags:
 - assertVisible: "Inicio"
 - assertVisible: "Día .*"
 - assertVisible: ".*Sobra .*"
-# El nodo dice «Sobres · queda»; la clase uppercase puede leerse «SOBRES · QUEDA».
-- assertVisible: "(?i)Sobres · queda"
+- assertVisible: "Sobres · queda"
 - assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
@@ -32,9 +31,9 @@ tags:
     visible: "Cerrar sesión"
     timeout: 10000
 - assertVisible:
-    text: "^Ajustes$"
+    text: "Ajustes"
 - tapOn:
-    text: "^Cerrar$"
+    text: "Cerrar"
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 10000
@@ -44,7 +43,7 @@ tags:
     visible: "REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "^Ingreso$"
+    text: "Ingreso"
 - tapOn: "Cancelar"
 - extendedWaitUntil:
     notVisible: "REGISTRAR INGRESO"
@@ -54,5 +53,5 @@ tags:
     visible: "Movimientos"
     timeout: 10000
 - tapOn:
-    text: "^Inicio$"
+    text: "Inicio"
 - assertVisible: "Hoy puedes gastar"

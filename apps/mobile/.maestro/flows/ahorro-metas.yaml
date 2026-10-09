@@ -6,17 +6,18 @@ tags:
 # Notion 3f486a7356a68151890de99f4fa8e495
 # Ahorro: crear metas. El nombre de 41 caracteres lo corta maxLength={40}
 # antes de llegar al mensaje del servidor: no se puede afirmar ese error.
+# Cuenta propia por corrida (QUIPU_E2E_GOALS_*). No hay cómo borrar la meta en la UI.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_GOALS_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_GOALS_PASSWORD}
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - evalScript: "${output.goal = 'Viaje' + String(Date.now()).slice(-6)}"
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - tapOn: "Ahorro y metas"
 - extendedWaitUntil:
     visible: "Fondo de Emergencia"
@@ -26,35 +27,32 @@ tags:
     when:
       visible: "Crear mi primera meta"
     commands:
-      - tapOn:
-          text: "^Crear mi primera meta$"
+      - tapOn: "Crear mi primera meta"
 - runFlow:
     when:
-      notVisible: "NUEVA META"
+      visible: "\\+ Nueva meta"
     commands:
       - tapOn:
           text: "\\+ Nueva meta"
 - extendedWaitUntil:
-    visible: "NUEVA META"
+    visible: "(?-i)NUEVA META"
     timeout: 10000
 - tapOn: "Crear meta"
-- extendedWaitUntil:
-    visible: "El nombre de la meta es obligatorio."
-    timeout: 5000
+- assertVisible: "El nombre de la meta es obligatorio."
 - tapOn: "Nombre de la meta"
 - inputText: ${output.goal}
 - tapOn: "Meta"
 - inputText: "0"
 - hideKeyboard
 - tapOn: "Crear meta"
-- extendedWaitUntil:
-    visible: "La meta debe ser mayor a cero."
-    timeout: 5000
+- assertVisible: "La meta debe ser mayor a cero."
 - tapOn: "Meta"
 - eraseText
 - inputText: "2000"
 - hideKeyboard
-- tapOn: "Crear meta"
+- tapOn:
+    text: "Crear meta"
+    enabled: true
 - extendedWaitUntil:
     visible: ${output.goal}
     timeout: 20000
@@ -62,13 +60,7 @@ tags:
 - assertVisible: ".*de 2,000"
 - runFlow:
     when:
-      visible: "Crear mi primera meta"
-    commands:
-      - tapOn:
-          text: "^Crear mi primera meta$"
-- runFlow:
-    when:
-      notVisible: "NUEVA META"
+      visible: "\\+ Nueva meta"
     commands:
       - tapOn:
           text: "\\+ Nueva meta"

@@ -6,9 +6,9 @@ tags:
 # Notion 3f486a7356a6815e9dfcf8f2dd7c1ce4
 # Con un ciclo que empezó antes de hoy se ven las dos opciones.
 # «Sumar al ciclo actual» no lo cierra. El rango se compara en sumar-no-cierra.
-# No uses la cuenta fija: cada corrida necesita la suya. Una semilla de hoy
-# no alcanza (ese día solo se ve «Sumar»). Depende de QUIPU_E2E_PRIOR_CYCLE_*.
-# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
+# No uses la cuenta fija: cada corrida necesita la suya. Depende de QUIPU_E2E_PRIOR_CYCLE_*.
+# El ciclo tiene que haber empezado antes de hoy para que «Empieza un nuevo ciclo» lo cierre.
+# (?-i) separa el título «REGISTRAR INGRESO» del botón «Registrar ingreso».
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -18,51 +18,53 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - tapOn:
-    text: "^Registrar$"
+    text: "Registrar"
 - extendedWaitUntil:
     visible: "NUEVO GASTO"
     timeout: 10000
 - tapOn:
-    text: "^Ingreso$"
+    text: "Ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "¿Empieza un nuevo ciclo\\?"
-    below: "REGISTRAR INGRESO"
+    text: "Empieza un nuevo ciclo"
+    below: "(?-i)REGISTRAR INGRESO"
 - assertVisible:
     text: "Sumar al ciclo actual"
-    below: "REGISTRAR INGRESO"
-# Cuando llegue feature/mobile-income-cycle-choice. Sin pastEnd, «Sumar» viene marcada.
+    below: "(?-i)REGISTRAR INGRESO"
+# Ciclo abierto, no vencido: viene marcada «Sumar al ciclo actual».
 - assertVisible:
     text: "Sumar al ciclo actual"
     selected: true
 - tapOn:
-    text: "^Gasto$"
+    text: "Gasto"
 - assertVisible: "NUEVO GASTO"
 - tapOn:
-    text: "^Ingreso$"
+    text: "Ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - tapOn:
     text: "Sumar al ciclo actual"
-    below: "REGISTRAR INGRESO"
+    below: "(?-i)REGISTRAR INGRESO"
 - tapOn:
-    text: "^1$"
+    text: "1"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - assertVisible: "10\\.00"
-- tapOn: "Registrar ingreso"
+- tapOn:
+    text: "(?-i)Registrar ingreso"
+    enabled: true
 - extendedWaitUntil:
-    notVisible: "REGISTRAR INGRESO"
+    notVisible: "(?-i)REGISTRAR INGRESO"
     timeout: 20000
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: ".*10\\.00"
     timeout: 15000

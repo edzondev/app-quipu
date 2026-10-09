@@ -16,7 +16,7 @@ tags:
     timeout: 30000
 - runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - tapOn: "Compromisos"
 - extendedWaitUntil:
     visible: "SIN COMPROMISOS"

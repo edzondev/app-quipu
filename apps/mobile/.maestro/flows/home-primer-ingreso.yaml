@@ -9,40 +9,42 @@ tags:
 # Registra el primer ingreso y deja la cuenta CON ciclo. Una sola corrida.
 # No se afirman S/ 1,500 ni «Día 1/15»: el largo del ciclo y el fallo M18
 # («Día 0») no son estables para Maestro.
-# Sin ciclo solo aparece «¿Empieza un nuevo ciclo?».
-# La fila de Movimientos no cambia: concepto y monto. El monto es «+ S/ 3,000».
-# El concepto se confirma cuando se vea la rama de Pixi. En f98b65b es «Sueldo».
-# Espera arreglo pendiente (Pixi): la hoja todavía dice «Sueldo» / «Extra».
+# Sin ciclo solo aparece «Empieza un nuevo ciclo».
+# Cuenta propia por corrida. No uses QUIPU_E2E_NO_CYCLE_*: este flujo deja la cuenta con ciclo.
+# La fila de Movimientos no cambia: el monto es «+ S/ 3,000». El concepto sigue siendo «Sueldo».
+# Semilla pendiente (Nato): QUIPU_E2E_FIRST_INCOME_*.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
-      QUIPU_EMAIL: ${QUIPU_E2E_NO_CYCLE_EMAIL}
-      QUIPU_PASSWORD: ${QUIPU_E2E_NO_CYCLE_PASSWORD}
+      QUIPU_EMAIL: ${QUIPU_E2E_FIRST_INCOME_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_FIRST_INCOME_PASSWORD}
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"
     timeout: 30000
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "¿Empieza un nuevo ciclo\\?"
-    below: "REGISTRAR INGRESO"
+    text: "Empieza un nuevo ciclo"
+    below: "(?-i)REGISTRAR INGRESO"
 - assertNotVisible: "Sumar al ciclo actual"
 - tapOn:
-    text: "^3$"
+    text: "3"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - tapOn:
-    text: "^0$"
+    text: "0"
 - assertVisible: "3000\\.00"
-- tapOn: "Registrar ingreso"
+- tapOn:
+    text: "(?-i)Registrar ingreso"
+    enabled: true
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
@@ -52,15 +54,15 @@ tags:
 - assertVisible: "Ahorro"
 - assertVisible: ".*Sobra .*"
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: "CICLO .*"
     timeout: 15000
 - assertVisible: "\\+ S/ 3,000"
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - tapOn:
-    text: "^Sobres$"
+    text: "Sobres"
 - extendedWaitUntil:
     visible: "Necesidades"
     timeout: 15000

@@ -61,7 +61,9 @@ tags:
     id: confirm-envelope-savings
 - assertVisible:
     id: confirm-commitments
-- tapOn: "Empezar mi ciclo"
+- tapOn:
+    text: "Empezar mi ciclo"
+    enabled: true
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 40000
@@ -73,7 +75,7 @@ tags:
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: "Todavía no hay nada registrado en este ciclo."
     timeout: 15000

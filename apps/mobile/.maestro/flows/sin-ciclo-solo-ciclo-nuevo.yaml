@@ -6,10 +6,8 @@ tags:
 ---
 # Antes: sin-ciclo-solo-sueldo.
 # Notion 3f486a7356a681daadc6eba893faea43
-# Sin ningún ciclo solo se puede empezar uno. «Sumar al ciclo actual» no está.
-# El texto de ayuda, si lo hay, está por confirmar con Pixi.
+# Sin ningún ciclo solo está «Empieza un nuevo ciclo». «Sumar al ciclo actual» no está.
 # No guarda, así que la cuenta sigue sin ciclo.
-# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
 #
 # devSeed:seedVerifiedAccount (PR #107) crea una cuenta sin perfil y cae
 # en el asistente. Esta cuenta tiene que tener perfil y ningún ciclo:
@@ -24,11 +22,11 @@ tags:
     timeout: 30000
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertVisible:
-    text: "¿Empieza un nuevo ciclo\\?"
-    below: "REGISTRAR INGRESO"
+    text: "Empieza un nuevo ciclo"
+    below: "(?-i)REGISTRAR INGRESO"
 - assertNotVisible: "Sumar al ciclo actual"
 - tapOn: "Cancelar"
 - extendedWaitUntil:

@@ -2,6 +2,7 @@ appId: com.quipu.finance
 tags:
   - p0
   - progreso
+  - blocked
 ---
 # Notion 3f486a7356a6817698dbdf13ffd7bd83
 # Notion 3f486a7356a6819d80b8f1b507a473e6
@@ -9,7 +10,7 @@ tags:
 # Ninguna semilla lo dice todavía: QUIPU_E2E_OPENING_PRIOR_* (Nato).
 # No uses la cuenta fija ni una semilla de hoy: ese día no se puede cerrar.
 # El cierre entra en el historial de Progreso. No cuenta en «CICLOS CERRADOS EN VERDE» ni en la racha.
-# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
+# La racha cuenta 24 horas reales entre el inicio y el cierre, y nunca el ciclo de apertura.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -21,14 +22,14 @@ tags:
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
-      QUIPU_TIPO: "¿Empieza un nuevo ciclo\\?"
+      QUIPU_TIPO: "Empieza un nuevo ciclo"
 - tapOn:
-    text: "^Progreso$"
+    text: "Progreso"
 - extendedWaitUntil:
     visible: "CICLOS CERRADOS EN VERDE"
     timeout: 20000
 - assertVisible: "CICLO CERRADO · .*"
 - assertVisible:
-    text: "^0$"
+    text: "0"
     below: "CICLOS CERRADOS EN VERDE"
 - assertNotVisible: "Aún no cierras un ciclo."

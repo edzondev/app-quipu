@@ -10,7 +10,7 @@ tags:
 # Cuenta nueva por corrida (pre-paso + asistente). El ciclo empieza hoy,
 # así que no hace falta uno de un día anterior.
 # El ciclo vencido queda para la semilla planeada de Nato. No hay flujo.
-# Espera arreglo pendiente (Pixi): en f98b65b la hoja dice «Sueldo» / «Extra». Los textos nuevos esperan feature/mobile-income-cycle-choice.
+# «Sumar al ciclo actual» es la opción marcada cuando el ciclo está abierto.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -21,7 +21,7 @@ tags:
     timeout: 30000
 - runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: "CICLO .*"
     timeout: 15000
@@ -29,17 +29,17 @@ tags:
     text: "CICLO .*"
 - evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
 - tapOn:
-    text: "^Inicio$"
+    text: "Inicio"
 - runFlow:
     file: ../subflows/registrar-ingreso-tipo.yaml
     env:
       QUIPU_TIPO: "Sumar al ciclo actual"
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: "${output.cycleBefore} · .*"
     timeout: 20000
 - assertVisible: ".*10\\.00"
 - tapOn:
-    text: "^Inicio$"
+    text: "Inicio"
 - assertVisible: "Hoy puedes gastar"

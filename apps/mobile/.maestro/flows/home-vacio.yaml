@@ -24,32 +24,32 @@ tags:
 - assertVisible: "Registrar ingreso"
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - tapOn:
-    text: "^Gasto$"
-- assertVisible: "REGISTRAR INGRESO"
+    text: "Gasto"
+- assertVisible: "(?-i)REGISTRAR INGRESO"
 - assertNotVisible: "NUEVO GASTO"
 - assertNotVisible: "Abrir detalle del gasto"
 - tapOn: "Cancelar"
 - tapOn:
-    text: "^Registrar$"
+    text: "Registrar"
 - extendedWaitUntil:
-    visible: "REGISTRAR INGRESO"
+    visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
 - assertNotVisible: "NUEVO GASTO"
 - tapOn: "Cancelar"
 - tapOn:
-    text: "^Movimientos$"
+    text: "Movimientos"
 - extendedWaitUntil:
     visible: "Todavía no hay nada registrado en este ciclo."
     timeout: 15000
 - assertVisible: "Cada gasto que registres aparecerá aquí, ordenado por día y con su sobre."
 - assertVisible: "Registrar ingreso"
 - assertNotVisible:
-    text: "^Todos$"
+    text: "Todos"
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - extendedWaitUntil:
     visible: "Dónde está tu dinero antes de que lo gastes."
     timeout: 10000
@@ -61,7 +61,7 @@ tags:
 - assertVisible: "Aún no registras tus pagos fijos."
 - tapOn: "Volver"
 - tapOn:
-    text: "^Sobres$"
+    text: "Sobres"
 - extendedWaitUntil:
     visible: "Todavía no hay sobres en el ciclo activo."
     timeout: 10000

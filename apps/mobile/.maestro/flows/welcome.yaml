@@ -19,9 +19,9 @@ tags:
 - assertVisible: "S/ 42\\.30"
 - assertVisible: "Es un ejemplo. Tu número sale del dinero que tienes hoy."
 - assertVisible:
-    text: "^Crear cuenta$"
+    text: "Crear cuenta"
 - tapOn:
-    text: "^Crear cuenta$"
+    text: "Crear cuenta"
 - extendedWaitUntil:
     visible: "Crea tu cuenta."
     timeout: 10000

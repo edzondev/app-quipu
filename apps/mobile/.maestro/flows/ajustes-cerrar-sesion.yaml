@@ -15,8 +15,9 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - tapOn: "Ajustes"
+- runScript: ../scripts/escape-email.js
 - extendedWaitUntil:
-    visible: ".*${QUIPU_E2E_EMAIL}.*"
+    visible: ".*${output.emailRe}.*"
     timeout: 15000
 - assertVisible: "Seguridad y Passkeys"
 - assertVisible: "Cerrar sesión"
@@ -30,21 +31,17 @@ tags:
     visible: "Cerrar sesión"
     timeout: 10000
 - tapOn: "Cerrar sesión"
-- extendedWaitUntil:
-    visible: "Vas a salir de este teléfono."
-    timeout: 5000
+- assertVisible: "Vas a salir de este teléfono."
 - assertVisible: "Se cierra tu sesión y se borra lo que quedó guardado aquí."
 - tapOn: "Cancelar"
 - assertNotVisible: "Vas a salir de este teléfono."
 - assertVisible:
-    text: "^Ajustes$"
+    text: "Ajustes"
 - tapOn: "Cerrar sesión"
-- extendedWaitUntil:
-    visible: "Confirmar cierre de sesión"
-    timeout: 5000
+- assertVisible: "Confirmar cierre de sesión"
 - tapOn: "Confirmar cierre de sesión"
 - extendedWaitUntil:
     visible: "Ya tengo cuenta"
     timeout: 20000
-- assertNotVisible: ".*${QUIPU_E2E_EMAIL}.*"
+- assertNotVisible: ".*${output.emailRe}.*"
 - assertVisible: "S/ 42\\.30"

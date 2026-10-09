@@ -21,23 +21,23 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - tapOn:
-    text: "^Plan$"
+    text: "Plan"
 - extendedWaitUntil:
     visible: "Ahorro y metas"
     timeout: 10000
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
-    text: "^Sobres$"
+    text: "Sobres"
 - extendedWaitUntil:
     visible: "Tu sueldo ya está dividido. Esto es lo que queda."
     timeout: 15000
 - assertNotVisible:
-    text: "^Mover dinero$"
+    text: "Mover dinero"
 - tapOn: "Volver"
 - tapOn:
-    text: "^Inicio$"
+    text: "Inicio"
 - tapOn:
-    text: "^Registrar$"
+    text: "Registrar"
 - extendedWaitUntil:
     visible: "NUEVO GASTO"
     timeout: 10000
@@ -46,7 +46,7 @@ tags:
     visible: "REGISTRAR GASTO"
     timeout: 10000
 - assertNotVisible:
-    text: "^Nota$"
+    text: "Nota"
 - assertNotVisible: "Adjuntar boleta"
 - tapOn: "Volver"
 - tapOn: "Ajustes"
@@ -56,7 +56,7 @@ tags:
 - assertNotVisible: "Perfil y datos"
 - assertNotVisible: "Plan y suscripción"
 - assertNotVisible:
-    text: "^Reparto$"
+    text: "Reparto"
 - assertNotVisible: "Ciclo e ingresos"
 - tapOn:
-    text: "^Cerrar$"
+    text: "Cerrar"
