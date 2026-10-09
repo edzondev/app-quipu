@@ -6,6 +6,7 @@ import {
 	computeCycleCarryover,
 	envelopeWithCarry,
 	savingsContributionExcludingCarry,
+	signedCycleSurplusCents,
 	surplusWasCarriedOver,
 } from "./cycleCarryover";
 
@@ -107,6 +108,12 @@ describe("computeCycleCarryover", () => {
 			remainingAmount: 8_500,
 			carriedOverCents: 500,
 		});
+	});
+
+	it("returns the signed net: mixed, zero, and negative", () => {
+		expect(signedCycleSurplusCents(carry({ needs: -100, wants: 50, savings: 0 }))).toBe(-50);
+		expect(signedCycleSurplusCents(carry({ needs: 0, wants: 0, savings: 0 }))).toBe(0);
+		expect(signedCycleSurplusCents(carry({ needs: -80, wants: -20, savings: 0 }))).toBe(-100);
 	});
 
 	it("returns zeros once carriedOverToCycleId is set", () => {

@@ -596,15 +596,25 @@ export const updateIncomeEvent = mutation({
 		}
 
 		const now = Date.now();
-
-		if (args.occurredAt < cycle.startDate) {
+		rejectFutureIncomeDate(args.occurredAt, now);
+		const attachedCycleId = resolveCycleForIncome({
+			activeCycle: {
+				_id: cycle._id,
+				startDate: cycle.startDate,
+				endDate: cycle.endDate,
+				isOpeningCycle: cycle.isOpeningCycle,
+			},
+			occurredAt: args.occurredAt,
+			now,
+			incomeKind,
+		});
+		if (attachedCycleId !== cycle._id) {
 			throw new ConvexError({
 				code: "VALIDATION_ERROR",
 				message: "La fecha del ingreso debe estar dentro del ciclo activo.",
 				data: { field: "occurredAt" },
 			});
 		}
-		rejectFutureIncomeDate(args.occurredAt, now);
 
 		const weights = {
 			allocationNeeds: profile.allocationNeeds,

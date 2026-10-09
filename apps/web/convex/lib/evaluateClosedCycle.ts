@@ -4,9 +4,21 @@ import { evaluateCycleCompliance } from "./budgetMath";
 import { computeNextStreak } from "./gamificationMath";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
-/** El ciclo de apertura no entra al historial ni a la racha. */
+/** La racha ignora el ciclo de apertura. El historial de Progreso no. */
 export function openingCycleSkipsProgress(isOpeningCycle: boolean | undefined): boolean {
 	return isOpeningCycle === true;
+}
+
+export function recordsClosedCycleInHistory(isOpeningCycle: boolean | undefined): boolean {
+	return openingCycleSkipsProgress(isOpeningCycle) === false || isOpeningCycle === true;
+}
+
+export function wantsWithinBudgetOnClose(
+	wants: { remainingAmount: number; carriedOverCents?: number } | undefined,
+	isOpeningCycle: boolean | undefined,
+): boolean {
+	const carry = isOpeningCycle === true ? 0 : (wants?.carriedOverCents ?? 0);
+	return (wants?.remainingAmount ?? 0) - carry >= 0;
 }
 
 export function streakAfterClose(input: {
@@ -26,7 +38,7 @@ export async function evaluateClosedCycle(
 	now: number,
 ) {
 	const cycle = await ctx.db.get("financialCycles", cycleId);
-	if (!cycle || openingCycleSkipsProgress(cycle.isOpeningCycle)) return;
+	if (!cycle || !recordsClosedCycleInHistory(cycle.isOpeningCycle)) return;
 
 	const profile = await ctx.db.get("profiles", profileId);
 	const closedAtPremium = profile?.plan === "premium";
@@ -49,10 +61,9 @@ export async function evaluateClosedCycle(
 		.withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
 		.collect();
 
-	const compliance = evaluateCycleCompliance(envelopes);
+	const compliance = evaluateCycleCompliance(envelopes, cycle.isOpeningCycle === true);
 	const wantsEnvelope = envelopes.find((env) => env.type === "wants");
-	const wantsWithinBudget =
-		(wantsEnvelope?.remainingAmount ?? 0) - (wantsEnvelope?.carriedOverCents ?? 0) >= 0;
+	const wantsWithinBudget = wantsWithinBudgetOnClose(wantsEnvelope, cycle.isOpeningCycle);
 
 	const coverageContext = await loadCycleCoverageById(ctx, profileId, cycleId, now);
 	const commitments = coverageContext?.commitments ?? [];

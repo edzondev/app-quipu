@@ -3,12 +3,19 @@ import { describe, expect, it } from "vitest";
 import { limaStartOfDay } from "../../shared/lib/date";
 import { computeCycleCarryover, envelopeWithCarry } from "./cycleCarryover";
 import { MS_PER_DAY } from "./dashboardMath";
-import { openingCycleSkipsProgress, streakAfterClose } from "./evaluateClosedCycle";
+import {
+	openingCycleSkipsProgress,
+	recordsClosedCycleInHistory,
+	streakAfterClose,
+	wantsWithinBudgetOnClose,
+} from "./evaluateClosedCycle";
 import {
 	assertFirstCycleAvailable,
 	assertOpeningBalanceCents,
 	FIRST_CYCLE_EXISTS_MESSAGE,
+	firstCycleOnboardingRetry,
 	OPENING_BALANCE_MESSAGE,
+	onboardingCompleteOnCreate,
 	openingEnvelopes,
 } from "./firstCycle";
 import { resolveCycleForIncome } from "./incomeEventLogic";
@@ -64,6 +71,26 @@ describe("openingEnvelopes", () => {
 	});
 });
 
+describe("onboarding and the first cycle", () => {
+	it("leaves onboarding incomplete when createProfile defers it", () => {
+		expect(onboardingCompleteOnCreate(undefined)).toBe(true);
+		expect(onboardingCompleteOnCreate(true)).toBe(true);
+		expect(onboardingCompleteOnCreate(false)).toBe(false);
+	});
+
+	it("marks onboarding complete with the existing cycle instead of a half retry", () => {
+		expect(firstCycleOnboardingRetry({ hasCycle: false, onboardingComplete: false })).toEqual({
+			action: "create",
+		});
+		expect(firstCycleOnboardingRetry({ hasCycle: true, onboardingComplete: true })).toEqual({
+			action: "already_exists",
+		});
+		expect(firstCycleOnboardingRetry({ hasCycle: true, onboardingComplete: false })).toEqual({
+			action: "complete_existing",
+		});
+	});
+});
+
 describe("assertFirstCycleAvailable", () => {
 	it("rejects when the profile already has a personal cycle", () => {
 		expect(() => assertFirstCycleAvailable(false)).not.toThrow();
@@ -91,6 +118,26 @@ describe("streakAfterClose", () => {
 				compliance: "failed",
 			}),
 		).toBeNull();
+		expect(
+			streakAfterClose({
+				isOpeningCycle: true,
+				currentStreak: 3,
+				longestStreak: 5,
+				compliance: "compliant",
+			}),
+		).toBeNull();
+	});
+
+	it("counts the opening cycle in history and still skips the streak", () => {
+		expect(recordsClosedCycleInHistory(true)).toBe(true);
+		expect(recordsClosedCycleInHistory(false)).toBe(true);
+		expect(recordsClosedCycleInHistory(undefined)).toBe(true);
+		expect(
+			wantsWithinBudgetOnClose({ remainingAmount: 2_500, carriedOverCents: 3_000 }, true),
+		).toBe(true);
+		expect(
+			wantsWithinBudgetOnClose({ remainingAmount: 2_500, carriedOverCents: 3_000 }, false),
+		).toBe(false);
 		expect(
 			streakAfterClose({
 				isOpeningCycle: true,
@@ -211,6 +258,44 @@ describe("income against the opening cycle", () => {
 				occurredAt,
 				now: occurredAt,
 				incomeKind: "extraordinary",
+			}),
+		).toBe("opening");
+	});
+
+	it("keeps an extraordinary income on payday and before the opening cycle", () => {
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: endDate,
+				now: endDate,
+				incomeKind: "extraordinary",
+			}),
+		).toBe("opening");
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: startDate - MS_PER_DAY,
+				now: endDate,
+				incomeKind: "extraordinary",
+			}),
+		).toBe("opening");
+	});
+
+	it("treats a missing income kind as habitual in the opening early window", () => {
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: endDate - 2 * MS_PER_DAY,
+				now: endDate - 2 * MS_PER_DAY,
+				incomeKind: undefined,
+			}),
+		).toBeNull();
+		expect(
+			resolveCycleForIncome({
+				activeCycle: opening,
+				occurredAt: endDate - 3 * MS_PER_DAY,
+				now: endDate - 3 * MS_PER_DAY,
+				incomeKind: undefined,
 			}),
 		).toBe("opening");
 	});

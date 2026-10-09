@@ -29,8 +29,10 @@ export function resolveCycleForEvent(input: {
 	activeCycle: MinimalCycle | null;
 	occurredAt: number;
 	now: number;
+	incomeKind?: Doc<"incomeEvents">["incomeKind"];
 }): string | null {
 	if (!input.activeCycle) return null;
+	if (input.incomeKind === "extraordinary") return input.activeCycle._id;
 	const { startDate, endDate } = input.activeCycle;
 	if (input.occurredAt >= startDate && input.occurredAt < endDate) {
 		return input.activeCycle._id;
@@ -39,8 +41,9 @@ export function resolveCycleForEvent(input: {
 }
 
 /**
- * Same window as `resolveCycleForEvent`, except a habitual income on an opening
- * cycle closes it from two days before `endDate`. Other cycles are unchanged.
+ * Only a habitual income (a missing kind counts as habitual) can close the
+ * active cycle. Extraordinary income always stays on it. An opening cycle
+ * also closes from two days before `endDate`.
  */
 export function resolveCycleForIncome(input: {
 	activeCycle: (MinimalCycle & { isOpeningCycle?: boolean }) | null;
@@ -49,9 +52,10 @@ export function resolveCycleForIncome(input: {
 	incomeKind: Doc<"incomeEvents">["incomeKind"];
 }): string | null {
 	const cycle = input.activeCycle;
+	const habitual = input.incomeKind !== "extraordinary";
 	if (
 		cycle?.isOpeningCycle === true &&
-		input.incomeKind === "habitual" &&
+		habitual &&
 		input.occurredAt >= cycle.endDate - OPENING_EARLY_PAY_DAYS * MS_PER_DAY
 	) {
 		return null;

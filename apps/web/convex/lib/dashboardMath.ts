@@ -161,7 +161,7 @@ export function computeEnvelopePercentRemaining(
 }
 
 export function computeSurplusProjection(envelopes: EnvelopeSlice[]): number {
-	return envelopes.reduce((acc, envelope) => acc + Math.max(0, envelope.remainingAmount), 0);
+	return envelopes.reduce((acc, envelope) => acc + envelope.remainingAmount, 0);
 }
 
 export function buildValidationCopy(statusBadge: StatusBadge): string {

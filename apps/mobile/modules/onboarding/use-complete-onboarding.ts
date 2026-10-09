@@ -56,7 +56,10 @@ export function useCompleteOnboarding() {
 		try {
 			let profileId = state.savedProfileId;
 			if (profileId == null) {
-				profileId = await createProfile(buildOnboardingPayload(state));
+				profileId = await createProfile({
+					...buildOnboardingPayload(state),
+					completeOnboarding: false,
+				});
 				dispatch({ type: "UPDATE", payload: { savedProfileId: profileId } });
 			}
 			const valid = state.commitments.filter(isCommitmentValid);
