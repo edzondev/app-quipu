@@ -4,13 +4,14 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
 import { IncomeSheetForm } from "@/shared/components/income/income-sheet-form";
-import { useHomeModel } from "@/shared/hooks/use-dashboard";
+import { useDashboardSummary, useHomeModel } from "@/shared/hooks/use-dashboard";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import type { ExpenseDraftInput } from "@/shared/lib/expenses/draft";
 import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
+import { incomeCycleOffer } from "@/shared/lib/income/cycle-offer";
 import {
 	type RegistrarIntent,
 	type RegistrarMode,
@@ -49,13 +50,15 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 	const router = useRouter();
 	const { register } = useExpenseActions();
 	const { register: registerIncome } = useIncomeActions();
+	const summary = useDashboardSummary();
 	const home = useHomeModel();
 	const { profile } = useProfileGate();
-	const noCycle = home.status === "empty" || home.status === "closed";
-	const hasCycle = home.status === "ready";
+	const offer = incomeCycleOffer(summary);
+	const noCycle = offer === "none";
+	const hasCycle = offer === "open" || offer === "pastEnd";
 	const [picked, setPicked] = useState<RegistrarMode | null>(null);
 	const mode =
-		home.status === "loading"
+		offer === "loading"
 			? null
 			: noCycle
 				? "income"
@@ -129,7 +132,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 				<IncomeSheetForm
 					currencySymbol={currencySymbol}
 					formError={formError}
-					hasActiveCycle={hasCycle}
+					cycle={offer === "loading" ? "open" : offer}
 					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
 					onCancel={onDone}
 				/>

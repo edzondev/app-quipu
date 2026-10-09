@@ -4,39 +4,37 @@ import { ExpenseKeypad, KeypadAmount } from "@/shared/components/expenses/expens
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
 import { formatExpenseWhen } from "@/shared/lib/expenses/present";
+import { type IncomeCycleOffer } from "@/shared/lib/income/cycle-offer";
 import { defaultIncomeDraft, type IncomeDraft, type IncomeKind } from "@/shared/lib/income/draft";
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 const NO_CYCLE_COPY = "Tu sueldo empieza un ciclo nuevo";
+const PAST_END_COPY = "Cierra este ciclo y empieza uno nuevo";
 const INCOME_KINDS = [
 	{ kind: "habitual", label: "Sueldo" },
 	{ kind: "extraordinary", label: "Extra" },
 ] as const satisfies ReadonlyArray<{ kind: IncomeKind; label: string }>;
 
+type SheetCycle = Exclude<IncomeCycleOffer, "loading">;
+
 type Props = {
 	currencySymbol: string;
 	formError?: string | null;
-	hasActiveCycle: boolean;
+	cycle: SheetCycle;
 	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
 	onCancel: () => void;
 };
 
-export function IncomeSheetForm({
-	currencySymbol,
-	formError,
-	hasActiveCycle,
-	onSubmit,
-	onCancel,
-}: Props) {
-	const kinds = hasActiveCycle
-		? INCOME_KINDS
-		: INCOME_KINDS.filter((option) => option.kind === "habitual");
+export function IncomeSheetForm({ currencySymbol, formError, cycle, onSubmit, onCancel }: Props) {
+	const kinds =
+		cycle === "none" ? INCOME_KINDS.filter((option) => option.kind === "habitual") : INCOME_KINDS;
+	const note = cycle === "none" ? NO_CYCLE_COPY : cycle === "pastEnd" ? PAST_END_COPY : null;
 	const form = useForm({
 		defaultValues: defaultIncomeDraft(),
 		onSubmit: ({ value }) =>
 			onSubmit({
 				...value,
-				incomeKind: hasActiveCycle ? value.incomeKind : "habitual",
+				incomeKind: cycle === "none" ? "habitual" : value.incomeKind,
 			}),
 	});
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
@@ -89,9 +87,9 @@ export function IncomeSheetForm({
 								);
 							})}
 						</View>
-						{hasActiveCycle ? null : (
-							<Text className="font-hanken text-[13px] text-foreground/55">{NO_CYCLE_COPY}</Text>
-						)}
+						{note ? (
+							<Text className="font-hanken text-[13px] text-foreground/55">{note}</Text>
+						) : null}
 					</View>
 				)}
 			</form.Field>

@@ -19,15 +19,12 @@ describe("IncomeSheetForm", () => {
 		jest.spyOn(Date, "now").mockReturnValue(NOW);
 		const onSubmit = jest.fn();
 		const view = await render(
-			<IncomeSheetForm
-				currencySymbol="S/"
-				hasActiveCycle
-				onSubmit={onSubmit}
-				onCancel={jest.fn()}
-			/>,
+			<IncomeSheetForm currencySymbol="S/" cycle="open" onSubmit={onSubmit} onCancel={jest.fn()} />,
 		);
 
 		expect(view.getByText(/Hoy/)).toBeTruthy();
+		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
+		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
 		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
 		await fireEvent.press(view.getByText("1"));
@@ -46,12 +43,7 @@ describe("IncomeSheetForm", () => {
 	it("con ciclo activo manda Extra como extraordinary", async () => {
 		const onSubmit = jest.fn();
 		const view = await render(
-			<IncomeSheetForm
-				currencySymbol="S/"
-				hasActiveCycle
-				onSubmit={onSubmit}
-				onCancel={jest.fn()}
-			/>,
+			<IncomeSheetForm currencySymbol="S/" cycle="open" onSubmit={onSubmit} onCancel={jest.fn()} />,
 		);
 		await fireEvent.press(view.getByRole("button", { name: "Extra" }));
 		expect(view.getByRole("button", { name: "Extra" }).props.accessibilityState.selected).toBe(
@@ -64,21 +56,32 @@ describe("IncomeSheetForm", () => {
 		);
 	});
 
-	it("sin ciclo activo solo ofrece Sueldo y explica el ciclo nuevo", async () => {
+	it("sin ciclo solo ofrece Sueldo y explica el ciclo nuevo", async () => {
 		const onSubmit = jest.fn();
 		const view = await render(
-			<IncomeSheetForm
-				currencySymbol="S/"
-				hasActiveCycle={false}
-				onSubmit={onSubmit}
-				onCancel={jest.fn()}
-			/>,
+			<IncomeSheetForm currencySymbol="S/" cycle="none" onSubmit={onSubmit} onCancel={jest.fn()} />,
 		);
 		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
 		expect(view.queryByRole("button", { name: "Extra" })).toBeNull();
 		expect(view.getByText("Tu sueldo empieza un ciclo nuevo")).toBeTruthy();
+		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 		await fireEvent.press(view.getByText("5"));
 		await fireEvent.press(view.getByText("Registrar ingreso"));
 		expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ incomeKind: sueldoKind }));
+	});
+
+	it("con ciclo vencido ofrece Extra y el sueldo dice que cierra el ciclo", async () => {
+		const view = await render(
+			<IncomeSheetForm
+				currencySymbol="S/"
+				cycle="pastEnd"
+				onSubmit={jest.fn()}
+				onCancel={jest.fn()}
+			/>,
+		);
+		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
+		expect(view.getByText("Cierra este ciclo y empieza uno nuevo")).toBeTruthy();
+		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
 	});
 });

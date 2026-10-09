@@ -1,8 +1,10 @@
 import { cleanup, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { summaryWithCycle, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
 
 const mockUseHomeModel = jest.fn();
+const mockSummary = jest.fn();
 
 jest.mock("@/shared/components/ui/reicon", () => ({
 	ChevronRight: () => null,
@@ -23,6 +25,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({
 	useHomeModel: () => mockUseHomeModel(),
+	useDashboardSummary: () => mockSummary(),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -39,12 +42,20 @@ jest.mock("@/shared/hooks/use-income-actions", () => ({
 
 const home = mockUseHomeModel;
 
+const readyHome = {
+	status: "ready" as const,
+	profileName: "Edzon",
+	profileInitial: "E",
+	home: { currencySymbol: "S/", dailyCents: 4200 },
+};
+
 describe("RegistrarSheet", () => {
 	afterEach(() => {
 		cleanup();
 	});
 
 	it("abre en Ingreso cuando no hay ciclo", async () => {
+		mockSummary.mockReturnValue(summaryWithoutCycle);
 		home.mockReturnValue({
 			status: "empty",
 			profileName: "Edzon",
@@ -62,6 +73,7 @@ describe("RegistrarSheet", () => {
 	});
 
 	it("sin ciclo no deja elegir Gasto ni abrir el detalle", async () => {
+		mockSummary.mockReturnValue(summaryWithoutCycle);
 		home.mockReturnValue({
 			status: "empty",
 			profileName: "Edzon",
@@ -81,15 +93,14 @@ describe("RegistrarSheet", () => {
 		expect(view.queryByText("NUEVO GASTO")).toBeNull();
 		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
 		expect(view.getByText("Registrar ingreso")).toBeTruthy();
+		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Extra" })).toBeNull();
+		expect(view.getByText("Tu sueldo empieza un ciclo nuevo")).toBeTruthy();
 	});
 
 	it("abre en Gasto cuando hay ciclo y el botón central no pide ingreso", async () => {
-		home.mockReturnValue({
-			status: "ready",
-			profileName: "Edzon",
-			profileInitial: "E",
-			home: { currencySymbol: "S/", dailyCents: 4200 },
-		});
+		mockSummary.mockReturnValue(summaryWithCycle());
+		home.mockReturnValue(readyHome);
 		const view = await render(
 			<RegistrarSheet isPresented session={{ nonce: 2, intent: "auto" }} onDismiss={jest.fn()} />,
 		);
@@ -98,5 +109,42 @@ describe("RegistrarSheet", () => {
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.selected).toBe(
 			true,
 		);
+		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
+			false,
+		);
+		await fireEvent.press(view.getByRole("button", { name: "Ingreso" }));
+		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
+		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
+		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
+	});
+
+	it("con ciclo vencido ofrece Gasto, Sueldo y Extra, y el sueldo cierra el ciclo", async () => {
+		const open = summaryWithCycle();
+		mockSummary.mockReturnValue({ ...open, cycle: { ...open.cycle, pastEnd: true } });
+		home.mockReturnValue(readyHome);
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 4, intent: "income" }} onDismiss={jest.fn()} />,
+		);
+		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.disabled).toBe(
+			false,
+		);
+		expect(view.getByRole("button", { name: "Sueldo" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Extra" })).toBeTruthy();
+		expect(view.getByText("Cierra este ciclo y empieza uno nuevo")).toBeTruthy();
+		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
+	});
+
+	it("mientras carga no muestra la variante sin ciclo", async () => {
+		mockSummary.mockReturnValue(undefined);
+		home.mockReturnValue({ status: "loading" });
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 5, intent: "auto" }} onDismiss={jest.fn()} />,
+		);
+		expect(view.getByText("Cargando…")).toBeTruthy();
+		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
+		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
+		expect(view.queryByRole("button", { name: "Sueldo" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Extra" })).toBeNull();
 	});
 });
