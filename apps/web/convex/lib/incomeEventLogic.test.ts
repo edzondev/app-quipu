@@ -1,8 +1,32 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
-import { resolveCycleForEvent } from "./incomeEventLogic";
+import {
+	FUTURE_INCOME_DATE_MESSAGE,
+	futureIncomeDateMessage,
+	rejectFutureIncomeDate,
+	resolveCycleForEvent,
+} from "./incomeEventLogic";
 
 const HOUR = 60 * 60 * 1000;
 const _DAY = 24 * HOUR;
+
+describe("futureIncomeDateMessage", () => {
+	const now = Date.parse("2026-10-09T20:00:00.000Z");
+
+	it("rejects a timestamp after now with the edit message", () => {
+		expect(futureIncomeDateMessage(now + 1, now)).toBe(FUTURE_INCOME_DATE_MESSAGE);
+	});
+
+	it("allows now and earlier dates", () => {
+		expect(futureIncomeDateMessage(now, now)).toBeNull();
+		expect(futureIncomeDateMessage(now - 60_000, now)).toBeNull();
+	});
+
+	it("throws the same ConvexError create and edit share", () => {
+		expect(() => rejectFutureIncomeDate(now + 1, now)).toThrow(ConvexError);
+		expect(() => rejectFutureIncomeDate(now, now)).not.toThrow();
+	});
+});
 
 describe("resolveCycleForEvent", () => {
 	const now = new Date("2026-07-15T12:00:00Z").getTime();
