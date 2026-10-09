@@ -11,6 +11,7 @@ import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import type { ExpenseDraftInput } from "@/shared/lib/expenses/draft";
 import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
+import type { IncomeRecord } from "@/shared/lib/income/draft";
 import {
 	type RegistrarIntent,
 	type RegistrarMode,
@@ -23,6 +24,7 @@ type Session = {
 	intent: RegistrarIntent;
 	incomeAmountCents?: number;
 	incomePrompt?: string;
+	incomeRecord?: IncomeRecord;
 };
 
 type Props = {
@@ -135,7 +137,12 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 					formError={formError}
 					initialAmountCents={session.incomeAmountCents}
 					prompt={session.incomePrompt}
-					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
+					onSubmit={(draft) =>
+						guard(
+							() => registerIncome(draft, session.incomeRecord),
+							"No se pudo guardar el ingreso.",
+						)
+					}
 					onCancel={onDone}
 				/>
 			) : (

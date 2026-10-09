@@ -41,6 +41,7 @@ export function Step4Commitments() {
 					<Pressable
 						testID="commitments-skip"
 						accessibilityRole="button"
+						accessibilityLabel="Después"
 						onPress={skip}
 						className="items-center py-2 active:opacity-60"
 					>

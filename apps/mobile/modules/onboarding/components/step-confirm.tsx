@@ -1,11 +1,12 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
 import AuthButton from "@/shared/components/auth/auth-button";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
+import { TODAY_BALANCE_RECORD } from "@/shared/lib/income/draft";
 import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
 import { cycleDaysForModel } from "@/shared/lib/onboarding/cycle";
 import {
@@ -34,6 +35,7 @@ export function StepConfirm() {
 	const { submit, isSubmitting, error, commitmentsFailed } = useCompleteOnboarding();
 	const [incomeOpen, setIncomeOpen] = useState(false);
 	const [nonce, setNonce] = useState(0);
+	const startLock = useRef(false);
 
 	const referenceCents = state.referenceIncomeCents;
 	const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
@@ -64,8 +66,13 @@ export function StepConfirm() {
 	};
 
 	const start = async () => {
+		if (startLock.current) return;
+		startLock.current = true;
 		const ok = await submit();
-		if (!ok) return;
+		if (!ok) {
+			startLock.current = false;
+			return;
+		}
 		setNonce((current) => current + 1);
 		setIncomeOpen(true);
 	};
@@ -86,6 +93,7 @@ export function StepConfirm() {
 							<Pressable
 								testID="confirm-retry"
 								accessibilityRole="button"
+								accessibilityLabel="Reintentar"
 								onPress={() => void start()}
 								disabled={isSubmitting}
 								className="items-center py-2 active:opacity-60"
@@ -157,6 +165,7 @@ export function StepConfirm() {
 					intent: "income",
 					incomeAmountCents: referenceCents ?? 0,
 					incomePrompt: INCOME_PROMPT,
+					incomeRecord: TODAY_BALANCE_RECORD,
 				}}
 				onDismiss={leave}
 			/>

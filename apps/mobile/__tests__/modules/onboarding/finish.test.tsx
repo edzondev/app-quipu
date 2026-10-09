@@ -114,6 +114,30 @@ describe("Empezar mi ciclo", () => {
 		});
 	});
 
+	it("un doble toque no llama dos veces a createCommitmentsBulk", async () => {
+		let release: (value: unknown) => void = () => undefined;
+		mockCreateBulk.mockImplementation(
+			() =>
+				new Promise((resolve) => {
+					release = resolve;
+				}),
+		);
+		await render(
+			<OnboardingProvider>
+				<Host />
+			</OnboardingProvider>,
+		);
+		await act(async () => {
+			fireEvent.press(screen.getByText("Empezar mi ciclo"));
+			fireEvent.press(screen.getByText("Empezar mi ciclo"));
+		});
+		expect(mockCreateBulk).toHaveBeenCalledTimes(1);
+		await act(async () => {
+			release([]);
+		});
+		expect(mockCreateBulk).toHaveBeenCalledTimes(1);
+	});
+
 	it("abre el sheet con el monto de referencia y no registra el ingreso solo", async () => {
 		await render(
 			<OnboardingProvider>
