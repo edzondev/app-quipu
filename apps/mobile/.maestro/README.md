@@ -144,7 +144,7 @@ El atrás de Android en el asistente es manual (Capi: pasos 2 a 5 vuelven al pas
 
 ## testID que faltan
 
-Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, `opening-balance-input`, `pay-date-picker`, `allocation-*`, `chip-*`, `commitment-*`, `confirm-*`, `wizard-back`, `wizard-progress-N`) y en `tabs-top-inset`. El resto de estos flujos usa texto. Conviene agregar:
+Los flujos ya usan estos `id`: asistente (`option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amount-input`, `pay-date-field`, `allocation-percent-needs`, `allocation-increase-needs`, `allocation-reset`, `chip-agua`, `commitment-amount-0`, `commitment-day-0`, `commitments-skip`, `commitments-total`, `confirm-*`, `wizard-back`) y hoja de ingreso (`income-mode-new-cycle`, `income-mode-add`, `income-extra-types`, `income-extra-custom`, `income-submit`). También existen y estos flujos no los necesitan: `pay-date-picker` (solo con el diálogo abierto), `allocation-decrease-*`, `allocation-amount-*`, `allocation-bar`, `commitment-error-*`, `field-error-nextPayDate`, `field-error-openingBalanceCents`, `progress-preview-*`, `tabs-top-inset`. El resto usa texto. Conviene agregar:
 
 | testID propuesto | Pantalla | Archivo | Elemento | Flujo |
 |---|---|---|---|---|
@@ -166,7 +166,6 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `home-envelope-wants` | Inicio | el mismo | fila Gustos | `home-ciclo` |
 | `home-envelope-savings` | Inicio | el mismo | fila Ahorro | `home-ciclo` |
 | `home-carry` | Inicio | el mismo | «Saldo que quedó…» (solo si hay arrastre) | ninguno todavía: el primer ciclo lo deja en 0 |
-| `home-add-income` | Inicio | `shared/components/home/home-identity.tsx` | «+ Ingreso» | `home-ciclo` |
 | `home-view-movements` | Inicio | `home-dense.tsx` | «Ver todos» | `home-ciclo` |
 | `home-register-income` | Inicio vacío | `shared/components/home/home-empty.tsx` | «Registrar ingreso» | `home-vacio`, `home-primer-ingreso` |
 | `registrar-mode-expense` | Hoja | `shared/components/navigation/registrar-sheet.tsx` | «Gasto» | registrar, `home-vacio` |
@@ -176,7 +175,6 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `expense-submit` | Hoja de gasto | `shared/components/expenses/expense-sheet-form.tsx` | «Registrar gasto» | `registrar-gasto-hoja` |
 | `envelope-needs` | Sobres del gasto | `shared/components/expenses/envelope-choices.tsx` | «Necesidades» | registrar, compromisos |
 | `envelope-wants` | el mismo | el mismo | «Gustos» | registrar |
-| `income-submit` | Hoja de ingreso | `shared/components/income/income-sheet-form.tsx` | «Registrar ingreso» | `registrar-ingreso` |
 | `expense-amount` | Pantalla completa | `shared/components/expenses/expense-detail-form.tsx` | campo Monto | `registrar-gasto-completo`, editar |
 | `expense-save` | la misma | el mismo | «Guardar» / «Registrar gasto» | editar, completo |
 | `expense-delete` | la misma | el mismo | «Eliminar» | `movimientos-editar-eliminar` |
@@ -201,7 +199,6 @@ Hoy el `id` de Maestro solo existe en el asistente (`option-*`, `amount-input`, 
 | `sign-in-email` | Entrar | propuesto, Pixi. Hoy el campo y la etiqueta comparten «Correo» | campo Correo | `entrar`, `sign-in` |
 | `sign-in-password` | Entrar | propuesto, Pixi | campo Contraseña | los mismos |
 | `sign-in-submit` | Entrar | propuesto, Pixi | «Entrar» | los mismos |
-| `income-submit` | Hoja de ingreso | ya está en `income-sheet-form.tsx`; los flujos lo usan | «Registrar ingreso» o el del tipo de extra | ingreso |
 | `expense-submit` | Hoja de gasto | propuesto, Pixi | «Registrar gasto» | `registrar-gasto-hoja` |
 | `expense-save` | Gasto completo | propuesto, Pixi | «Registrar gasto» / «Guardar» | `registrar-gasto-completo`, editar |
 | `income-sheet` | Hoja de ingreso | propuesto, Pixi | contenedor de la hoja | registrar ingreso |
