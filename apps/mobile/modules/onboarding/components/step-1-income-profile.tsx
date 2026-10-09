@@ -8,21 +8,47 @@ import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
 import { Check } from "@/shared/components/ui/reicon";
 import { cyclePreview, paydayText } from "@/shared/lib/onboarding/cycle";
-import { FREQ_DRIFT_COPY, INCOME_MODEL_OPTIONS } from "@/shared/lib/onboarding/defaults";
-import type { IncomeModel, OnboardingState, PayFrequency } from "@/shared/lib/onboarding/types";
+import {
+	type FixedPayFrequency,
+	FREQ_DRIFT_COPY,
+	INCOME_MODEL_OPTIONS,
+} from "@/shared/lib/onboarding/defaults";
+import type { IncomeModel, OnboardingState } from "@/shared/lib/onboarding/types";
 
 export const INCOME_FIELD_DEBOUNCE_MS = 300;
 const SOURCE_MAX_LENGTH = 30;
 
 type IncomeDraft = {
 	incomeModel: IncomeModel;
-	payFrequency: PayFrequency;
+	payFrequency: FixedPayFrequency;
 	amountRaw: string;
 	mixedAmountRaw: string;
-	cycleDurationDays: 15 | 30;
+	cycleDurationDays: 15 | 30 | null;
 	sourceDraft: string;
 	sources: string[];
 };
+
+function fixedFrequency(value: OnboardingState["payFrequency"]): FixedPayFrequency {
+	if (value === "monthly" || value === "biweekly" || value === "weekly") return value;
+	return "monthly";
+}
+
+function incomeFieldErrors(value: IncomeDraft): Record<string, string> | undefined {
+	const fields: Record<string, string> = {};
+	if (value.incomeModel === "variable") {
+		if (value.cycleDurationDays !== 15 && value.cycleDurationDays !== 30) {
+			fields.cycleDurationDays = "Elige un ciclo de 15 o 30 días.";
+		}
+		if (value.sources.length < 1) fields.sources = "Agrega al menos una fuente.";
+	}
+	if (value.incomeModel === "mixed") {
+		if (centsFromDigits(value.mixedAmountRaw) == null) {
+			fields.mixedAmountRaw = "Indica la parte fija.";
+		}
+		if (value.sources.length < 1) fields.sources = "Agrega al menos una fuente.";
+	}
+	return Object.keys(fields).length > 0 ? fields : undefined;
+}
 
 function digitsFromCents(cents: number | null | undefined): string {
 	return cents != null ? String(Math.floor(cents / 100)) : "";
@@ -42,7 +68,8 @@ function toState(value: IncomeDraft): Partial<OnboardingState> {
 			value.incomeModel === "mixed"
 				? (centsFromDigits(value.mixedAmountRaw) ?? undefined)
 				: undefined,
-		cycleDurationDays: variable ? value.cycleDurationDays : undefined,
+		cycleDurationDays:
+			variable && value.cycleDurationDays != null ? value.cycleDurationDays : undefined,
 		variableIncomeSources: variable || value.incomeModel === "mixed" ? value.sources : [],
 	};
 }
@@ -52,13 +79,24 @@ export function Step1IncomeProfile() {
 	const form = useForm({
 		defaultValues: {
 			incomeModel: state.incomeModel ?? "fixed",
-			payFrequency: state.payFrequency ?? "monthly",
+			payFrequency: fixedFrequency(state.payFrequency),
 			amountRaw: digitsFromCents(state.referenceIncomeCents),
-			mixedAmountRaw: digitsFromCents(state.mixedFixedAmountCents),
-			cycleDurationDays: state.cycleDurationDays ?? 30,
+			mixedAmountRaw:
+				state.incomeModel === "mixed" ? digitsFromCents(state.mixedFixedAmountCents) : "",
+			cycleDurationDays: state.cycleDurationDays ?? null,
 			sourceDraft: "",
 			sources: state.variableIncomeSources,
 		} satisfies IncomeDraft,
+		validators: {
+			onChange: ({ value }) => {
+				const fields = incomeFieldErrors(value);
+				if (fields) return { fields };
+			},
+			onSubmit: ({ value }) => {
+				const fields = incomeFieldErrors(value);
+				if (fields) return { fields };
+			},
+		},
 		onSubmit: ({ value }) => {
 			dispatch({ type: "UPDATE", payload: toState(value) });
 			dispatch({ type: "SET_STEP", payload: 2 });
@@ -98,7 +136,10 @@ export function Step1IncomeProfile() {
 							testID={`option-${option.value}`}
 							accessibilityRole="button"
 							accessibilityState={{ selected: isSelected }}
-							onPress={() => form.setFieldValue("incomeModel", option.value)}
+							onPress={() => {
+								form.setFieldValue("incomeModel", option.value);
+								if (option.value === "mixed") form.setFieldValue("mixedAmountRaw", "");
+							}}
 							className={
 								isSelected
 									? "flex-row items-start gap-3 rounded-xl border border-primary bg-primary/5 px-4 py-4 active:opacity-80"
@@ -145,6 +186,7 @@ export function Step1IncomeProfile() {
 						</Text>
 					</View>
 					<form.Field
+						key={incomeModel}
 						name={incomeModel === "mixed" ? "mixedAmountRaw" : "amountRaw"}
 						listeners={{
 							onChange: ({ value }) => {

@@ -5,19 +5,24 @@ import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocati
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
 import { StepSuccess } from "@/modules/onboarding/components/step-success";
+import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
-function SistemaWizard() {
-	const { state } = useOnboarding();
+export function SistemaWizard() {
+	const { state, dispatch } = useOnboarding();
 
 	switch (state.step) {
 		case 1:
 			return <Step1IncomeProfile />;
 		case 2:
-		case 3:
-			// El reparto es el paso 2. Continuar sigue en continueToConfirm (PR B reordena 3 y 4).
 			return <Step3Allocation />;
+		case 3:
+			return (
+				<WizardShell stepNumber={3} onBack={() => dispatch({ type: "SET_STEP", payload: 2 })}>
+					{null}
+				</WizardShell>
+			);
 		case 4:
 			return <Step4Commitments />;
 		case "confirm":

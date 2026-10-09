@@ -1,16 +1,16 @@
 import { Pressable, Text, View } from "react-native";
-import { FREQ_OPTIONS } from "@/shared/lib/onboarding/defaults";
+import { FIXED_FREQ_OPTIONS, type FixedPayFrequency } from "@/shared/lib/onboarding/defaults";
 import type { PayFrequency } from "@/shared/lib/onboarding/types";
 
 type FrequencyPickerProps = {
 	value: PayFrequency | null;
-	onChange: (frequency: PayFrequency) => void;
+	onChange: (frequency: FixedPayFrequency) => void;
 };
 
 export function FrequencyPicker({ value, onChange }: FrequencyPickerProps) {
 	return (
 		<View testID="frequency-picker" className="flex-row rounded-full bg-line/50 p-1">
-			{FREQ_OPTIONS.map((option) => {
+			{FIXED_FREQ_OPTIONS.map((option) => {
 				const isActive = value === option.value;
 				return (
 					<Pressable

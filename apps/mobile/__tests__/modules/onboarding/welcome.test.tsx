@@ -18,7 +18,7 @@ describe("Welcome", () => {
 		expect(screen.getByText("EJEMPLO · PUEDES GASTAR HOY")).toBeTruthy();
 		expect(screen.getByText("S/ 42.30")).toBeTruthy();
 		expect(screen.getByText("Crear cuenta")).toBeTruthy();
-		expect(screen.getByText("Ya tengo cuenta")).toBeTruthy();
+		expect(screen.getByLabelText("Ya tengo cuenta")).toBeTruthy();
 	});
 
 	it("Crear cuenta abre el registro y Ya tengo cuenta abre el ingreso", async () => {

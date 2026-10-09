@@ -14,7 +14,8 @@ import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
 
 export function Step3Allocation() {
 	const { state, dispatch } = useOnboarding();
-	const stepNumber = state.step === 2 ? 2 : 3;
+	const backToReparto =
+		state.step === 3 ? () => dispatch({ type: "SET_STEP", payload: 2 }) : undefined;
 
 	const values: Record<EnvelopeKey, number> = {
 		needs: state.allocationNeeds,
@@ -38,7 +39,8 @@ export function Step3Allocation() {
 
 	return (
 		<WizardShell
-			stepNumber={stepNumber}
+			stepNumber={2}
+			onBack={backToReparto}
 			footer={<AuthButton label="Continuar" onPress={continueToConfirm} />}
 		>
 			<View className="gap-6">

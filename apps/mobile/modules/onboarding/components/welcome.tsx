@@ -30,6 +30,7 @@ export function Welcome() {
 				<AuthButton label="Crear cuenta" onPress={() => router.push("/(auth)/create-account")} />
 				<Pressable
 					accessibilityRole="button"
+					accessibilityLabel="Ya tengo cuenta"
 					onPress={() => router.push("/(auth)/sign-in")}
 					className="items-center py-3 active:opacity-60"
 				>

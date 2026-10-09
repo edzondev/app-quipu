@@ -51,6 +51,7 @@ export function Step4Commitments() {
 	return (
 		<WizardShell
 			stepNumber={4}
+			onBack={() => dispatch({ type: "SET_STEP", payload: 2 })}
 			footer={
 				<View className="gap-3">
 					<AuthButton label="Continuar" onPress={continueToConfirm} disabled={!allValid} />
