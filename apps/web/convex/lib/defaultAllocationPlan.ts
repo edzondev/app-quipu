@@ -1,4 +1,5 @@
 import { applyDistributionPolicy, type DistributionPolicy } from "../../shared/lib/allocations";
+import type { Doc } from "../_generated/dataModel";
 import type { AllocationPlan } from "./incomeAllocation";
 
 export type AllocationWeights = {
@@ -39,4 +40,25 @@ export function buildDefaultAllocationPlan(input: {
 		savingsContributions: [],
 		leaveUnallocatedCents,
 	};
+}
+
+/** Explicit plan wins. Otherwise split the amount with the profile percentages. */
+export function resolveIncomeAllocation(input: {
+	amountCents: number;
+	allocation?: AllocationPlan;
+	profile: Pick<Doc<"profiles">, "allocationNeeds" | "allocationWants" | "allocationSavings">;
+	distributionPolicy?: DistributionPolicy;
+}): AllocationPlan {
+	if (input.allocation) {
+		return input.allocation;
+	}
+	return buildDefaultAllocationPlan({
+		amountCents: input.amountCents,
+		weights: {
+			allocationNeeds: input.profile.allocationNeeds,
+			allocationWants: input.profile.allocationWants,
+			allocationSavings: input.profile.allocationSavings,
+		},
+		distributionPolicy: input.distributionPolicy,
+	});
 }

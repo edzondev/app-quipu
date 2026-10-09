@@ -48,7 +48,14 @@ export function summaryWithCycle(
 	} = {},
 ): ActiveSummary {
 	const summary = {
-		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+		profile: {
+			name: "Edzon",
+			currencyCode: "PEN",
+			plan: "free",
+			allocationNeeds: 50,
+			allocationWants: 30,
+			allocationSavings: 20,
+		},
 		cycle: {
 			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
@@ -123,7 +130,14 @@ export function idleCommitment(
 
 /** Resumen sin ciclo activo, compartido por home y sobres. */
 export const summaryWithoutCycle: IdleSummary = {
-	profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+	profile: {
+		name: "Edzon",
+		currencyCode: "PEN",
+		plan: "free",
+		allocationNeeds: 50,
+		allocationWants: 30,
+		allocationSavings: 20,
+	},
 	cycle: null,
 	hero: null,
 	envelopes: [],
