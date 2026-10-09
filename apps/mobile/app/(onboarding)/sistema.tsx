@@ -5,6 +5,7 @@ import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-incom
 import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
+import { StepPayDate } from "@/modules/onboarding/components/step-pay-date";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
@@ -15,10 +16,12 @@ export function SistemaWizard() {
 		case 1:
 			return <Step1IncomeProfile />;
 		case 2:
-			return <Step3Allocation />;
+			return <StepPayDate />;
 		case 3:
-			return <Step4Commitments />;
+			return <Step3Allocation />;
 		case 4:
+			return <Step4Commitments />;
+		case 5:
 			return <StepConfirm />;
 	}
 }

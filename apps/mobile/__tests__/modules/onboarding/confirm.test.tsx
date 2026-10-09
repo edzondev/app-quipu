@@ -61,7 +61,7 @@ function SeedState({ seed }: { seed: Partial<OnboardingState> }) {
 	const { dispatch } = useOnboarding();
 	useEffect(() => {
 		dispatch({ type: "UPDATE", payload: seed });
-		dispatch({ type: "SET_STEP", payload: 4 });
+		dispatch({ type: "SET_STEP", payload: 5 });
 	}, [dispatch, seed]);
 	return null;
 }
@@ -88,6 +88,7 @@ const FULL_SEED: Partial<OnboardingState> = {
 	allocationNeeds: 50,
 	allocationWants: 30,
 	allocationSavings: 20,
+	nextPayDate: "2026-10-20",
 	commitments: [
 		{ id: "c1", name: "Agua", amountCents: 110000, dueDay: 5 },
 		{ id: "c2", name: "Celular", amountCents: 16500, dueDay: 10 },
@@ -106,12 +107,13 @@ describe("StepConfirm — tu número", () => {
 
 	it("muestra el paso 04, el número del día y el resumen", async () => {
 		await renderConfirm(FULL_SEED);
-		expect(screen.getByText("TU SISTEMA · 04/04")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 05/05")).toBeTruthy();
 		expect(screen.getByText("Puedes gastar hoy")).toBeTruthy();
 		expect(screen.getByTestId("confirm-daily").props.children).toBe("S/ 51.16");
 		expect(screen.getByText("Después de compromisos y ahorro, en 30 días.")).toBeTruthy();
 		expect(screen.getByText("Dinero de hoy")).toBeTruthy();
 		expect(screen.getByTestId("confirm-income").props.children).toBe("S/ 3,500");
+		expect(screen.getByTestId("confirm-pay-date").props.children).toBe("20 oct 2026");
 		expect(screen.getByTestId("confirm-envelope-needs").props.children).toBe("50% · S/ 1,750");
 		expect(screen.getByTestId("confirm-envelope-wants").props.children).toBe("30% · S/ 1,050");
 		expect(screen.getByTestId("confirm-envelope-savings").props.children).toBe("20% · S/ 700");
@@ -134,17 +136,32 @@ describe("StepConfirm — tu número", () => {
 		expect(screen.getByTestId("confirm-envelope-needs").props.children).toBe("50%");
 	});
 
-	it("'Empezar mi ciclo' abre el sheet de ingreso con el monto de referencia", async () => {
+	it("'Empezar mi ciclo' cierra el onboarding y no abre el sheet de ingreso", async () => {
 		await renderConfirm(FULL_SEED);
 		await act(async () => {
 			fireEvent.press(screen.getByText("Empezar mi ciclo"));
 		});
 		expect(mockSubmit).toHaveBeenCalledTimes(1);
-		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
-		expect(screen.getByText("3500.00")).toBeTruthy();
-		expect(screen.getByRole("button", { name: "Ingreso" }).props.accessibilityState.selected).toBe(
-			true,
-		);
+		expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+		expect(screen.queryByText("Registrar ingreso")).toBeNull();
+		expect(screen.queryByText("¿Cuánto dinero tienes hoy?")).toBeNull();
+		expect(screen.queryByText("Dinero de hoy")).toBeTruthy();
+	});
+
+	it("muestra el error de cada campo y deja reintentar", async () => {
+		await renderConfirm({
+			...FULL_SEED,
+			cycleFieldErrors: {
+				openingBalanceCents: "El saldo debe ser un entero de céntimos mayor o igual a cero.",
+				nextPayDate: "Tu próxima fecha de cobro debe estar entre mañana y los próximos 31 días.",
+			},
+		});
+		expect(screen.getByTestId("field-error-openingBalanceCents")).toBeTruthy();
+		expect(screen.getByTestId("field-error-nextPayDate")).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Reintentar"));
+		});
+		expect(mockSubmit).toHaveBeenCalledTimes(1);
 	});
 
 	it("con isSubmitting deshabilita el CTA", async () => {
@@ -171,11 +188,11 @@ describe("StepConfirm — tu número", () => {
 		expect(mockSubmit).toHaveBeenCalledTimes(1);
 	});
 
-	it("el back regresa al paso 3", async () => {
+	it("el back regresa a compromisos", async () => {
 		await renderConfirm(FULL_SEED);
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));
 		});
-		expect(screen.getByTestId("probe-step").props.children).toBe("3");
+		expect(screen.getByTestId("probe-step").props.children).toBe("4");
 	});
 });

@@ -32,12 +32,12 @@ export function Step3Allocation() {
 	};
 
 	const continueToCommitments = () => {
-		dispatch({ type: "SET_STEP", payload: 3 });
+		dispatch({ type: "SET_STEP", payload: 4 });
 	};
 
 	return (
 		<WizardShell
-			stepNumber={2}
+			stepNumber={3}
 			footer={<AuthButton label="Continuar" onPress={continueToCommitments} />}
 		>
 			<View className="gap-6">

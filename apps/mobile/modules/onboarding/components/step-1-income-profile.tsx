@@ -221,11 +221,21 @@ export function Step1IncomeProfile() {
 						}}
 					>
 						{(field) => (
-							<AmountInput
-								label={incomeModel === "mixed" ? "PARTE FIJA" : "¿Cuánto dinero tienes hoy?"}
-								valueCents={centsFromDigits(field.state.value)}
-								onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
-							/>
+							<View className="gap-2">
+								<AmountInput
+									label={incomeModel === "mixed" ? "PARTE FIJA" : "¿Cuánto dinero tienes hoy?"}
+									valueCents={centsFromDigits(field.state.value)}
+									onChangeCents={(cents) => field.handleChange(digitsFromCents(cents))}
+								/>
+								{incomeModel === "fixed" && state.cycleFieldErrors.openingBalanceCents ? (
+									<Text
+										testID="field-error-openingBalanceCents"
+										className="font-hanken text-[13px] text-danger"
+									>
+										{state.cycleFieldErrors.openingBalanceCents}
+									</Text>
+								) : null}
+							</View>
 						)}
 					</form.Field>
 				</View>

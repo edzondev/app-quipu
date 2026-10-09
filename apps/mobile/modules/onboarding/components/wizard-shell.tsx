@@ -5,7 +5,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
-import type { WizardStep } from "@/shared/lib/onboarding/types";
+import { WIZARD_STEPS, type WizardStep } from "@/shared/lib/onboarding/types";
 
 type WizardShellProps = {
 	stepNumber: number;
@@ -44,9 +44,9 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 				</View>
 
 				<View className="gap-4">
-					<MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/04`}</MonoLabel>
+					<MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/${String(WIZARD_STEPS.length).padStart(2, "0")}`}</MonoLabel>
 					<View className="flex-row gap-1.5">
-						{[1, 2, 3, 4].map((segment) => (
+						{WIZARD_STEPS.map((segment) => (
 							<View
 								key={segment}
 								testID={`wizard-progress-${segment}`}

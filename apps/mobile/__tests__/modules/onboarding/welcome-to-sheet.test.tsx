@@ -47,6 +47,7 @@ jest.mock("convex/react", () => ({
 			};
 		}
 		if (name === "fixedCommitments:createCommitmentsBulk") return jest.fn(async () => []);
+		if (name === "firstCycle:startFirstCycle") return jest.fn(async () => ({ cycleId: "cycle_1" }));
 		throw new Error(`useMutation inesperado: ${name}`);
 	},
 }));
@@ -104,7 +105,7 @@ describe("Welcome → sistema → sheet", () => {
 		mockFocused = true;
 	});
 
-	it("no va a Inicio antes de que se abra el sheet", async () => {
+	it("no va a Inicio hasta empezar el ciclo, y no abre el sheet de ingreso", async () => {
 		const view = await render(<Stack sistema={false} />);
 		expect(screen.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
 		expect(mockReplace).not.toHaveBeenCalled();
@@ -114,6 +115,13 @@ describe("Welcome → sistema → sheet", () => {
 		await view.rerender(<Stack sistema={true} />);
 		expect(screen.getByText("redirect:/(onboarding)/sistema")).toBeTruthy();
 		expect(screen.getByText("¿Cómo entra tu dinero?")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByText("¿Cuándo cobras?")).toBeTruthy();
+		expect(mockReplace).not.toHaveBeenCalled();
 
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
@@ -129,8 +137,8 @@ describe("Welcome → sistema → sheet", () => {
 		await act(async () => {
 			fireEvent.press(screen.getByText("Empezar mi ciclo"));
 		});
-		expect(screen.getByText("Registrar ingreso")).toBeTruthy();
-		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
-		expect(mockReplace).not.toHaveBeenCalled();
+		expect(screen.queryByText("Registrar ingreso")).toBeNull();
+		expect(screen.queryByText("¿Cuánto dinero tienes hoy?")).toBeNull();
+		expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
 	});
 });

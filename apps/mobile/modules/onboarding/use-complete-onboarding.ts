@@ -3,8 +3,10 @@ import { useMutation } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useState } from "react";
 import { isCommitmentValid } from "@/shared/lib/onboarding/commitments";
+import { readFirstCycleError } from "@/shared/lib/onboarding/first-cycle-error";
+import { isAllowedPayDate, NEXT_PAY_DATE_MESSAGE } from "@/shared/lib/onboarding/pay-date";
 import { buildOnboardingPayload } from "@/shared/lib/onboarding/payload";
-import type { DraftCommitment } from "@/shared/lib/onboarding/types";
+import type { CycleFieldErrors, DraftCommitment } from "@/shared/lib/onboarding/types";
 import { useOnboarding } from "./onboarding-provider";
 
 const PROFILE_ERROR = "No se pudo crear tu sistema. Intenta de nuevo.";
@@ -23,10 +25,18 @@ function toBulkCommitment(commitment: DraftCommitment): BulkCommitment {
 	};
 }
 
+function setFieldError(
+	dispatch: ReturnType<typeof useOnboarding>["dispatch"],
+	errors: CycleFieldErrors,
+) {
+	dispatch({ type: "UPDATE", payload: { cycleFieldErrors: errors } });
+}
+
 export function useCompleteOnboarding() {
-	const { state } = useOnboarding();
+	const { state, dispatch } = useOnboarding();
 	const createProfile = useMutation(api.profiles.createProfile);
 	const createBulk = useMutation(api.fixedCommitments.createCommitmentsBulk);
+	const startFirstCycle = useMutation(api.firstCycle.startFirstCycle);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [commitmentsFailed, setCommitmentsFailed] = useState(false);
@@ -35,6 +45,14 @@ export function useCompleteOnboarding() {
 		setIsSubmitting(true);
 		setError(null);
 		setCommitmentsFailed(false);
+		setFieldError(dispatch, {});
+		const nextPayDate = state.nextPayDate;
+		if (!nextPayDate || !isAllowedPayDate(nextPayDate, Date.now())) {
+			setFieldError(dispatch, { nextPayDate: NEXT_PAY_DATE_MESSAGE });
+			setIsSubmitting(false);
+			return false;
+		}
+		const openingBalanceCents = state.referenceIncomeCents ?? 0;
 		try {
 			const profileId = await createProfile(buildOnboardingPayload(state));
 			const valid = state.commitments.filter(isCommitmentValid);
@@ -49,6 +67,18 @@ export function useCompleteOnboarding() {
 					setError(COMMITMENTS_ERROR);
 					return false;
 				}
+			}
+			try {
+				await startFirstCycle({ openingBalanceCents, nextPayDate });
+			} catch (cycleError) {
+				const failure = readFirstCycleError(cycleError);
+				if (failure.code === "ALREADY_EXISTS") return true;
+				if (failure.code === "VALIDATION_ERROR") {
+					setFieldError(dispatch, { [failure.field]: failure.message });
+					return false;
+				}
+				setError(failure.message);
+				return false;
 			}
 			return true;
 		} catch {

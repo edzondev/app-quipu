@@ -43,6 +43,8 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
 	incomeModel: "fixed",
 	payFrequency: "monthly",
 	referenceIncomeCents: null,
+	nextPayDate: null,
+	cycleFieldErrors: {},
 	cycleDurationDays: undefined,
 	mixedFixedAmountCents: undefined,
 	variableIncomeSources: [],
