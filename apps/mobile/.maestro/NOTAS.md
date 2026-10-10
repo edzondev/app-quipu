@@ -2,7 +2,7 @@
 
 Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`).
 
-Opcional, solo en el dev `perceptive-elk-229` y nunca `--prod`: `devSeed:seedVerifiedAccount` crea una cuenta verificada sin perfil; la contraseña es `DEV_SEED_PASSWORD`. Para un flujo `cuenta-nueva` apunta esas dos variables a esa cuenta.
+Opcional, solo en el dev `perceptive-elk-229` y nunca `--prod`: `devSeed:seedVerifiedAccount` crea una cuenta verificada sin perfil; `devSeed:seedProfileNoCycle` crea una con perfil y sin ciclo (`home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`). La contraseña es `DEV_SEED_PASSWORD`. Para un flujo `cuenta-nueva` apunta esas dos variables a esa cuenta.
 
 ## Pendiente
 

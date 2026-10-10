@@ -79,7 +79,7 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 
 ## Semilla de Maestro (solo dev)
 
-Crea una cuenta verificada **sin perfil** para que Maestro entre y caiga en onboarding. Corre contra el deployment de desarrollo `perceptive-elk-229`. Nunca contra producción (`patient-chihuahua-640`) y nunca con `--prod`.
+Dos `internalMutation` en `devSeed`. Corren contra el deployment de desarrollo `perceptive-elk-229`. Nunca contra producción (`patient-chihuahua-640`) y nunca con `--prod`.
 
 En el deployment de desarrollo, y solo ahí, hay que tener:
 
@@ -88,13 +88,21 @@ En el deployment de desarrollo, y solo ahí, hay que tener:
 
 El secreto no vive en el repo. Maestro usa el mismo valor desde su propio entorno. El valor que estuvo en el commit `9ddd9ce` quedó público; en dev hay que usar uno nuevo.
 
-Desde `apps/web`, con el CLI apuntando a ese deployment:
+Desde `apps/web`, con el CLI apuntando a ese deployment.
+
+Cuenta verificada **sin perfil** (cae en onboarding):
 
 ```bash
 npx convex run devSeed:seedVerifiedAccount '{"email":"maestro-e2e@example.com"}'
 ```
 
-La función es `internalMutation`: el cliente no puede llamarla. Si `ALLOW_DEV_SEED` no es exactamente `"true"`, o si `CONVEX_CLOUD_URL` no es el host de `perceptive-elk-229`, lanza. Si falta `DEV_SEED_PASSWORD`, también.
+Cuenta verificada **con perfil y sin ciclo** (`home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`). El único argumento es `email`. El perfil sale del mismo `createProfile` que el onboarding móvil (fijo, mensual, 50/30/20, Perú, fondo de emergencia y racha) y no llama a `startFirstCycle`.
+
+```bash
+npx convex run devSeed:seedProfileNoCycle '{"email":"maestro-sin-ciclo@example.com"}'
+```
+
+El cliente no puede llamarlas. Si `ALLOW_DEV_SEED` no es exactamente `"true"`, o si `CONVEX_CLOUD_URL` no es el host de `perceptive-elk-229`, lanzan. Si falta `DEV_SEED_PASSWORD`, también. Si el correo ya existe, lanzan `ALREADY_EXISTS`.
 
 ## Flujo típico de trabajo diario
 

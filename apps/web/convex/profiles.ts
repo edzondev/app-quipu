@@ -1,7 +1,13 @@
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 import { marketFromCurrencyCode } from "../shared/constants/markets";
-import type { Doc } from "./_generated/dataModel";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import {
+	internalMutation,
+	internalQuery,
+	type MutationCtx,
+	mutation,
+	query,
+} from "./_generated/server";
 import { APP_DATA_SNAPSHOT_FORMAT } from "./lib/appDataTables";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 import { onboardingCompleteOnCreate } from "./lib/firstCycle";
@@ -36,34 +42,154 @@ export const getMyInternalProfile = internalQuery({
 	},
 });
 
+const createProfileArgs = {
+	name: v.optional(v.string()),
+	country: v.string(),
+	currencyCode: v.string(),
+	currencySymbol: v.string(),
+	incomeModel: v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
+	payFrequency: v.optional(
+		v.union(
+			v.literal("monthly"),
+			v.literal("biweekly"),
+			v.literal("weekly"),
+			v.literal("variable"),
+		),
+	),
+	paydays: v.optional(v.array(v.number())),
+	cycleDurationDays: v.optional(v.number()),
+	mixedFixedAmount: v.optional(v.number()),
+	variableIncomeSources: v.optional(v.array(v.string())),
+	allocationNeeds: v.number(),
+	allocationWants: v.number(),
+	allocationSavings: v.number(),
+	completeOnboarding: v.optional(v.boolean()),
+};
+
+const createProfileArgsValidator = v.object(createProfileArgs);
+export type CreateProfileArgs = Infer<typeof createProfileArgsValidator>;
+
+/**
+ * Misma siembra que `createProfile`: perfil, fondo de emergencia y racha.
+ * `completeOnboarding: false` deja el onboarding abierto (móvil, hasta
+ * `startFirstCycle`). Sin ese flag el perfil queda listo y sin ciclo.
+ */
+export async function createProfileForUser(
+	ctx: MutationCtx,
+	user: { userId: string; fallbackName: string },
+	args: CreateProfileArgs,
+): Promise<Id<"profiles">> {
+	// Idempotencia primero: si ya existe, no revalidamos ni re-sembramos.
+	const existing = await ctx.db
+		.query("profiles")
+		.withIndex("by_userId", (q) => q.eq("userId", user.userId))
+		.unique();
+	if (existing) return existing._id;
+
+	const name = (args.name ?? user.fallbackName).trim();
+	if (!name) {
+		throw new ConvexError({
+			code: "VALIDATION_ERROR",
+			message: "El nombre es obligatorio.",
+			data: { field: "name" },
+		});
+	}
+
+	const market = marketFromCurrencyCode(args.currencyCode);
+	if (!market) {
+		throw new ConvexError({
+			code: "VALIDATION_ERROR",
+			message: "Elige un país y moneda soportados (Perú, España o Estados Unidos).",
+			data: { field: "currencyCode" },
+		});
+	}
+
+	if (
+		(args.incomeModel === "fixed" || args.incomeModel === "mixed") &&
+		(!args.payFrequency || !args.paydays || args.paydays.length === 0)
+	) {
+		throw new ConvexError({
+			code: "VALIDATION_ERROR",
+			message: "Para ingresos fijos o mixtos, payFrequency y paydays son obligatorios.",
+			data: { field: "payFrequency" },
+		});
+	}
+	if (args.incomeModel === "variable" && args.payFrequency) {
+		throw new ConvexError({
+			code: "VALIDATION_ERROR",
+			message: "Para ingresos variables, payFrequency no aplica.",
+			data: { field: "payFrequency" },
+		});
+	}
+
+	if (!isValidAllocations(args.allocationNeeds, args.allocationWants, args.allocationSavings)) {
+		throw new ConvexError({
+			code: "VALIDATION_ERROR",
+			message:
+				"La distribución de sobres (Necesidades, Gustos, Ahorro) debe sumar exactamente 100% con valores enteros no negativos.",
+			data: { field: "allocations" },
+		});
+	}
+	if (args.payFrequency && args.paydays) {
+		if (!isValidPaydays(args.payFrequency, args.paydays)) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Los días de pago no son válidos para la frecuencia seleccionada.",
+				data: { field: "paydays" },
+			});
+		}
+	}
+
+	const profileId = await ctx.db.insert("profiles", {
+		userId: user.userId,
+		name,
+		country: market.country,
+		currencyCode: market.currencyCode,
+		currencySymbol: market.currencySymbol,
+		incomeModel: args.incomeModel,
+		payFrequency: args.payFrequency,
+		paydays: args.paydays,
+		cycleDurationDays: args.cycleDurationDays,
+		mixedFixedAmount: args.mixedFixedAmount,
+		variableIncomeSources: args.variableIncomeSources,
+		allocationNeeds: args.allocationNeeds,
+		allocationWants: args.allocationWants,
+		allocationSavings: args.allocationSavings,
+		onboardingComplete: onboardingCompleteOnCreate(args.completeOnboarding),
+		plan: "free",
+		appearanceTheme: "light",
+		accentPreset: "moss",
+		appIconVariant: "light",
+		dailySummaryEnabled: true,
+		cycleAlertsEnabled: true,
+		createdAt: Date.now(),
+	});
+
+	// Fondo de Emergencia por defecto: evita el dashboard en blanco tras el onboarding.
+	await ctx.db.insert("subEnvelopes", {
+		profileId,
+		parentEnvelopeType: "savings",
+		label: "Fondo de Emergencia",
+		emoji: "🛡️",
+		currentAmount: 0,
+		isSystemDefault: true,
+	});
+
+	await ctx.db.insert("streaks", {
+		profileId,
+		currentStreak: 0,
+		longestStreak: 0,
+	});
+
+	return profileId;
+}
+
 /**
  * Crea el perfil financiero del usuario al terminar el Onboarding.
  * Es una mutación atómica: siembra perfil, racha y fondo de emergencia.
  */
 export const createProfile = mutation({
-	args: {
-		name: v.optional(v.string()),
-		country: v.string(),
-		currencyCode: v.string(),
-		currencySymbol: v.string(),
-		incomeModel: v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
-		payFrequency: v.optional(
-			v.union(
-				v.literal("monthly"),
-				v.literal("biweekly"),
-				v.literal("weekly"),
-				v.literal("variable"),
-			),
-		),
-		paydays: v.optional(v.array(v.number())),
-		cycleDurationDays: v.optional(v.number()),
-		mixedFixedAmount: v.optional(v.number()),
-		variableIncomeSources: v.optional(v.array(v.string())),
-		allocationNeeds: v.number(),
-		allocationWants: v.number(),
-		allocationSavings: v.number(),
-		completeOnboarding: v.optional(v.boolean()),
-	},
+	args: createProfileArgs,
 	handler: async (ctx, args) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) {
@@ -73,109 +199,11 @@ export const createProfile = mutation({
 			});
 		}
 
-		// Idempotencia primero: si ya existe, no revalidamos ni re-sembramos.
-		const existing = await ctx.db
-			.query("profiles")
-			.withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-			.unique();
-		if (existing) return existing._id;
-
-		const name = (args.name ?? identity.name ?? "").trim();
-		if (!name) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: "El nombre es obligatorio.",
-				data: { field: "name" },
-			});
-		}
-
-		const market = marketFromCurrencyCode(args.currencyCode);
-		if (!market) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: "Elige un país y moneda soportados (Perú, España o Estados Unidos).",
-				data: { field: "currencyCode" },
-			});
-		}
-
-		if (
-			(args.incomeModel === "fixed" || args.incomeModel === "mixed") &&
-			(!args.payFrequency || !args.paydays || args.paydays.length === 0)
-		) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: "Para ingresos fijos o mixtos, payFrequency y paydays son obligatorios.",
-				data: { field: "payFrequency" },
-			});
-		}
-		if (args.incomeModel === "variable" && args.payFrequency) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message: "Para ingresos variables, payFrequency no aplica.",
-				data: { field: "payFrequency" },
-			});
-		}
-
-		if (!isValidAllocations(args.allocationNeeds, args.allocationWants, args.allocationSavings)) {
-			throw new ConvexError({
-				code: "VALIDATION_ERROR",
-				message:
-					"La distribución de sobres (Necesidades, Gustos, Ahorro) debe sumar exactamente 100% con valores enteros no negativos.",
-				data: { field: "allocations" },
-			});
-		}
-		if (args.payFrequency && args.paydays) {
-			if (!isValidPaydays(args.payFrequency, args.paydays)) {
-				throw new ConvexError({
-					code: "VALIDATION_ERROR",
-					message: "Los días de pago no son válidos para la frecuencia seleccionada.",
-					data: { field: "paydays" },
-				});
-			}
-		}
-
-		const profileId = await ctx.db.insert("profiles", {
-			userId: identity.subject,
-			name,
-			country: market.country,
-			currencyCode: market.currencyCode,
-			currencySymbol: market.currencySymbol,
-			incomeModel: args.incomeModel,
-			payFrequency: args.payFrequency,
-			paydays: args.paydays,
-			cycleDurationDays: args.cycleDurationDays,
-			mixedFixedAmount: args.mixedFixedAmount,
-			variableIncomeSources: args.variableIncomeSources,
-			allocationNeeds: args.allocationNeeds,
-			allocationWants: args.allocationWants,
-			allocationSavings: args.allocationSavings,
-			onboardingComplete: onboardingCompleteOnCreate(args.completeOnboarding),
-			plan: "free",
-			appearanceTheme: "light",
-			accentPreset: "moss",
-			appIconVariant: "light",
-			dailySummaryEnabled: true,
-			cycleAlertsEnabled: true,
-			createdAt: Date.now(),
-		});
-
-		// Fondo de Emergencia por defecto: evita el dashboard en blanco tras el onboarding.
-		await ctx.db.insert("subEnvelopes", {
-			profileId,
-			parentEnvelopeType: "savings",
-			label: "Fondo de Emergencia",
-			emoji: "🛡️",
-			currentAmount: 0,
-			isSystemDefault: true,
-		});
-
-		await ctx.db.insert("streaks", {
-			profileId,
-			currentStreak: 0,
-			longestStreak: 0,
-		});
-
-		return profileId;
+		return await createProfileForUser(
+			ctx,
+			{ userId: identity.subject, fallbackName: identity.name ?? "" },
+			args,
+		);
 	},
 });
 
