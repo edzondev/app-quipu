@@ -72,11 +72,17 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 								<Text className="font-newsreader text-[19px] text-primary">{model.initial}</Text>
 							</View>
 							<View className="min-w-0 flex-1">
-								<Text className="font-hanken-semibold text-[15px] text-foreground">
+								<Text
+									testID="settings-name"
+									className="font-hanken-semibold text-[15px] text-foreground"
+								>
 									{model.name}
 								</Text>
 								{model.meta ? (
-									<Text className="mt-1.5 font-hanken text-[12.5px] text-foreground/45">
+									<Text
+										testID="settings-meta"
+										className="mt-1.5 font-hanken text-[12.5px] text-foreground/45"
+									>
 										{model.meta}
 									</Text>
 								) : null}

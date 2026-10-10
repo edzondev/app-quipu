@@ -41,6 +41,7 @@ export function EnvelopeChoices({
 				return (
 					<Pressable
 						key={choice.type}
+						testID={`envelope-${choice.type}`}
 						accessibilityRole="button"
 						accessibilityState={{ selected, disabled }}
 						disabled={disabled}

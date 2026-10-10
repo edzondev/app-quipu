@@ -67,6 +67,7 @@ export function PlanHub({
 					) : null}
 					<View className="mt-3.5">
 						<ListRow
+							testID="plan-row-sobres"
 							dotClass={DOT.needs}
 							label="Sobres"
 							subtitle="Necesidades, Gustos y Ahorro"

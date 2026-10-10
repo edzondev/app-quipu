@@ -53,7 +53,10 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 								: "border border-line"
 						}`}
 					>
-						<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+						<Text
+							testID="progress-closed-cycle"
+							className="font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]"
+						>
 							{model.closeEntry.label}
 						</Text>
 						<ChevronRight size={16} color="#9A968C" />
@@ -92,7 +95,10 @@ function EmptyProgress({ onOpenPlan }: { onOpenPlan: () => void }) {
 function FilledProgress({ model }: { model: ProgressScreenModel }) {
 	return (
 		<View>
-			<Text className="mt-8 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+			<Text
+				testID="progress-closed-count"
+				className="mt-8 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]"
+			>
 				CICLOS CERRADOS EN VERDE
 			</Text>
 			<View className="mt-2.5 flex-row items-baseline gap-2.5">

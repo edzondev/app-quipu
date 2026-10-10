@@ -179,6 +179,7 @@ function ModeSwitch({
 				return (
 					<Pressable
 						key={id}
+						testID={`registrar-mode-${id}`}
 						accessibilityRole="button"
 						accessibilityState={{ selected, disabled }}
 						disabled={disabled}

@@ -99,6 +99,7 @@ export function ExpenseDetailForm({
 						<form.Field name="amountRaw">
 							{(field) => (
 								<TextInput
+									testID="expense-amount"
 									value={field.state.value}
 									onChangeText={field.handleChange}
 									onBlur={field.handleBlur}
@@ -218,6 +219,7 @@ export function ExpenseDetailForm({
 			<View className="px-[22px] pb-2">
 				{formError ? <ErrorText message={formError} /> : null}
 				<Pressable
+					testID="expense-save"
 					accessibilityRole="button"
 					disabled={isSubmitting}
 					onPress={() => void form.handleSubmit()}
@@ -231,6 +233,7 @@ export function ExpenseDetailForm({
 				</Pressable>
 				{onDelete ? (
 					<Pressable
+						testID="expense-delete"
 						accessibilityRole="button"
 						hitSlop={HIT_SLOP}
 						onPress={onDelete}
