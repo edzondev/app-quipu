@@ -27,12 +27,32 @@ export type NotificationDiagnostics = {
 	consumed: number;
 };
 
+export type AddSourceResult =
+	| "added"
+	| "invalid_link"
+	| "already_added"
+	| "not_installed"
+	| "added_unverified"
+	| "limit_reached";
+
+export type InstalledBank = {
+	name: string;
+	packageId: string;
+	installed: boolean;
+	label?: string;
+	icon?: string;
+};
+
+export type PlayStoreLinkResult = { packageId: string } | { error: string };
+
 type NativeNotificationListener = {
 	isNotificationAccessEnabled(): boolean;
 	openNotificationAccessSettings(): void;
-	addSource(packageName: string): Promise<boolean>;
+	addSource(input: string): Promise<AddSourceResult>;
 	removeSource(packageName: string): Promise<boolean>;
 	getSources(): Promise<string[]>;
+	getInstalledBanks(): Promise<InstalledBank[]>;
+	parsePlayStoreLink(text: string): PlayStoreLinkResult;
 	getPendingNotifications(): Promise<PendingNotification[]>;
 	consumeNotification(id: string): Promise<boolean>;
 	clearPendingNotifications(): Promise<void>;
@@ -57,9 +77,9 @@ export function openNotificationAccessSettings(): void {
 	native?.openNotificationAccessSettings();
 }
 
-export async function addSource(packageName: string): Promise<boolean> {
-	if (!native) return false;
-	return native.addSource(packageName);
+export async function addSource(input: string): Promise<AddSourceResult> {
+	if (!native) return "invalid_link";
+	return native.addSource(input);
 }
 
 export async function removeSource(packageName: string): Promise<boolean> {
@@ -70,6 +90,16 @@ export async function removeSource(packageName: string): Promise<boolean> {
 export async function getSources(): Promise<string[]> {
 	if (!native) return [];
 	return native.getSources();
+}
+
+export async function getInstalledBanks(): Promise<InstalledBank[]> {
+	if (!native) return [];
+	return native.getInstalledBanks();
+}
+
+export function parsePlayStoreLink(text: string): PlayStoreLinkResult {
+	if (!native) return { error: "unavailable" };
+	return native.parsePlayStoreLink(text);
 }
 
 export async function getPendingNotifications(): Promise<PendingNotification[]> {

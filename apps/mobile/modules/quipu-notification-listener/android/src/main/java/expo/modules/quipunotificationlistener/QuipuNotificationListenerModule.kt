@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
@@ -41,12 +42,30 @@ class QuipuNotificationListenerModule : Module() {
       null
     }
 
-    AsyncFunction("addSource") { packageName: String ->
-      val store = bind() ?: return@AsyncFunction false
+    AsyncFunction("addSource") { input: String ->
+      val store = bind() ?: return@AsyncFunction AddSource.INVALID_LINK
       store.awaitReady()
-      val added = store.addSource(packageName)
-      store.flush()
-      added
+      val decision = AddSource.resolve(
+        input,
+        store.sources().toSet(),
+        store.sources().size >= NotificationStore.MAX_SOURCES,
+      ) { packageId -> isPackageInstalled(packageId) }
+      if (AddSource.persists(decision.code)) {
+        val packageId = decision.packageId ?: return@AsyncFunction AddSource.INVALID_LINK
+        val saved = store.addSource(packageId)
+        store.flush()
+        if (!saved) return@AsyncFunction AddSource.LIMIT_REACHED
+      }
+      decision.code
+    }
+
+    AsyncFunction("getInstalledBanks") {
+      val context = applicationContext() ?: return@AsyncFunction emptyList<Map<String, Any?>>()
+      InstalledBanks.list(context.packageManager)
+    }
+
+    Function("parsePlayStoreLink") { text: String ->
+      PlayStoreLinks.toPayload(text)
     }
 
     AsyncFunction("removeSource") { packageName: String ->
@@ -124,6 +143,16 @@ class QuipuNotificationListenerModule : Module() {
   }
 
   private fun applicationContext(): Context? = appContext.reactContext?.applicationContext
+
+  private fun isPackageInstalled(packageId: String): Boolean {
+    val context = applicationContext() ?: return false
+    return try {
+      context.packageManager.getPackageInfo(packageId, 0)
+      true
+    } catch (_: PackageManager.NameNotFoundException) {
+      false
+    }
+  }
 }
 
 private fun isDebuggable(context: Context): Boolean {

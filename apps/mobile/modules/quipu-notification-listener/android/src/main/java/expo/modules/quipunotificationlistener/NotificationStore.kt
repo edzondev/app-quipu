@@ -364,17 +364,12 @@ internal class NotificationStore(
       }
     }
 
-    fun isValidPackageName(packageName: String): Boolean {
-      if (packageName.length !in 3..200) return false
-      return PACKAGE_NAME.matches(packageName)
-    }
+    fun isValidPackageName(packageName: String): Boolean = PackageIds.isValid(packageName)
 
     /** Logs the phase and the exception class only. Never message text or notification content. */
     private fun logFailure(phase: String, error: Exception) {
       Log.w(TAG, "$phase failed: ${error.javaClass.simpleName}")
     }
-
-    private val PACKAGE_NAME = Regex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$")
   }
 }
 

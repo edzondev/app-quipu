@@ -12,6 +12,8 @@ type NativeModule = {
 	addSource: jest.Mock;
 	removeSource: jest.Mock;
 	getSources: jest.Mock;
+	getInstalledBanks: jest.Mock;
+	parsePlayStoreLink: jest.Mock;
 	getPendingNotifications: jest.Mock;
 	consumeNotification: jest.Mock;
 	clearPendingNotifications: jest.Mock;
@@ -30,9 +32,13 @@ function nativeDouble() {
 	const native: NativeModule = {
 		isNotificationAccessEnabled: jest.fn(() => true),
 		openNotificationAccessSettings: jest.fn(),
-		addSource: jest.fn(async () => true),
+		addSource: jest.fn(async () => "added"),
 		removeSource: jest.fn(async () => true),
 		getSources: jest.fn(async () => ["com.bank.one"]),
+		getInstalledBanks: jest.fn(async () => [
+			{ name: "Banca Móvil BCP", packageId: "com.bcp.bank.bcp", installed: true },
+		]),
+		parsePlayStoreLink: jest.fn(() => ({ packageId: "com.bcp.bank.bcp" })),
 		getPendingNotifications: jest.fn(
 			async (): Promise<PendingNotification[]> => [
 				{
@@ -87,7 +93,13 @@ describe("quipu notification listener wrapper", () => {
 
 		expect(api.isNotificationAccessEnabled()).toBe(true);
 		api.openNotificationAccessSettings();
-		await expect(api.addSource("com.bank.one")).resolves.toBe(true);
+		await expect(api.addSource("com.bank.one")).resolves.toBe("added");
+		await expect(api.getInstalledBanks()).resolves.toEqual([
+			{ name: "Banca Móvil BCP", packageId: "com.bcp.bank.bcp", installed: true },
+		]);
+		expect(api.parsePlayStoreLink("com.bcp.bank.bcp")).toEqual({
+			packageId: "com.bcp.bank.bcp",
+		});
 		await expect(api.removeSource("com.bank.one")).resolves.toBe(true);
 		await expect(api.getSources()).resolves.toEqual(["com.bank.one"]);
 		await expect(api.getPendingNotifications()).resolves.toEqual([
@@ -120,7 +132,9 @@ describe("quipu notification listener wrapper", () => {
 
 		expect(api.isNotificationAccessEnabled()).toBe(false);
 		expect(() => api.openNotificationAccessSettings()).not.toThrow();
-		await expect(api.addSource("com.bank.one")).resolves.toBe(false);
+		await expect(api.addSource("com.bank.one")).resolves.toBe("invalid_link");
+		await expect(api.getInstalledBanks()).resolves.toEqual([]);
+		expect(api.parsePlayStoreLink("com.bcp.bank.bcp")).toEqual({ error: "unavailable" });
 		await expect(api.removeSource("com.bank.one")).resolves.toBe(false);
 		await expect(api.getSources()).resolves.toEqual([]);
 		await expect(api.getPendingNotifications()).resolves.toEqual([]);

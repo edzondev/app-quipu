@@ -1,4 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <queries>
+    <package android:name="com.bcp.bank.bcp" />
+    <package android:name="com.bcp.innovacxion.yapeapp" />
+    <package android:name="pe.com.interbank.mobilebanking" />
+    <package android:name="pe.com.scotiabank.blpm.android.client" />
+    <package android:name="com.bbva.nxt_peru" />
+    <package android:name="pe.com.bn.app.bancodelanacion" />
+    <package android:name="pe.com.banbif.pnappmobile" />
+    <package android:name="pe.pichincha.bm" />
+    <package android:name="com.cmac.cajamovilaqp" />
+  </queries>
   <application>
     <!--
       Official NotificationListenerService declaration. exported=false matches the
