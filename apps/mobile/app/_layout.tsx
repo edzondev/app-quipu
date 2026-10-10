@@ -55,6 +55,7 @@ function RootLayoutNav() {
 			<Stack.Screen name="expense/[id]" options={{ headerShown: false }} />
 			<Stack.Screen name="ajustes" options={{ presentation: "modal", headerShown: false }} />
 			<Stack.Screen name="seguridad" options={{ headerShown: false }} />
+			<Stack.Screen name="prueba-modulo" options={{ headerShown: false }} />
 		</Stack>
 	);
 }

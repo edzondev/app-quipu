@@ -108,6 +108,11 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 						) : null}
 					</>
 				) : null}
+				<ListRow
+					label="Prueba módulo nativo"
+					onPress={() => router.push("/prueba-modulo")}
+					isLast
+				/>
 				<Pressable
 					accessibilityRole="button"
 					accessibilityLabel="Cerrar sesión"
