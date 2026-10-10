@@ -44,7 +44,7 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
-`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. Correlo al final, como mucho una vez al día.
+`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. `config.yaml` lo corre al final automáticamente.
 
 ## Fuera de la corrida
 
