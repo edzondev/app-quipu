@@ -75,8 +75,7 @@ tags:
 - extendedWaitUntil:
     notVisible: "(?-i)REGISTRAR INGRESO"
     timeout: 20000
-- tapOn:
-    text: "Movimientos"
+- runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:
     visible: ".*10\\.00"
     timeout: 15000

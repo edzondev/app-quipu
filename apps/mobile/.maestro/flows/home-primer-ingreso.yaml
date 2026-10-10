@@ -59,11 +59,7 @@ tags:
 - assertVisible: "Ahorro"
 # Misma línea de Inicio que home-ciclo: «Sobra» o «Te pasaste por» si el saldo quedó negativo.
 - assertVisible: "(.*Sobra .*|.*Te pasaste por .*)"
-- tapOn:
-    text: "Movimientos"
-- extendedWaitUntil:
-    visible: "CICLO .*"
-    timeout: 15000
+- runFlow: ../subflows/abrir-movimientos.yaml
 - assertVisible: "\\+ S/ 3,000"
 - tapOn:
     text: "Plan"
