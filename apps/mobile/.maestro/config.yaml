@@ -1,5 +1,6 @@
 # Flujos ejecutables. subflows/ solo se llama con runFlow.
-# Sin executionOrder: cada flujo entra solo. --include-tags del CLI tiene prioridad,
+# flowsOrder corre en orden; lo que no está en la lista corre después, sin orden fijo.
+# ciclo-nuevo-antes-del-fin va al final. --include-tags del CLI tiene prioridad,
 # así que maestro:smoke sigue corriendo solo el tag smoke.
 flows:
   - "flows/*"
@@ -8,3 +9,22 @@ excludeTags:
   - wip
   - blocked
   - cuenta-nueva
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - ahorro-metas
+    - ajustes-cerrar-sesion
+    - compromisos
+    - controles-escondidos
+    - home-ciclo
+    - movimientos-editar-eliminar
+    - movimientos
+    - plan-sobres
+    - preview-sin-selector-dev
+    - registrar-gasto-completo
+    - registrar-gasto-hoja
+    - registrar-ingreso
+    - sign-in
+    - sumar-no-cierra
+    - welcome
+    - ciclo-nuevo-antes-del-fin

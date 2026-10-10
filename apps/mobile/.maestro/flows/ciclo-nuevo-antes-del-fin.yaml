@@ -6,7 +6,7 @@ tags:
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
 # «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro
-# que empieza hoy. Correlo como mucho una vez al día, y al final: una segunda corrida
+# que empieza hoy. config.yaml lo corre al final de la suite. Una segunda corrida
 # el mismo día no cierra, y los flujos que necesitan un ciclo empezado antes de hoy
 # también fallan. No está en smoke.
 # El arrastre («Saldo que quedó») depende del historial.
