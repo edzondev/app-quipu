@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import betterAuthSchema from "./betterAuth/schema";
 import { newConvexTest, type TestConvex } from "./convexTest.helpers";
+import { readAdapterPage } from "./lib/securityDevices";
 
 const betterAuthModules = import.meta.glob(["./betterAuth/**/*.*s"]);
 
@@ -93,6 +94,25 @@ describe("seedProfileNoCycle", () => {
 		await expect(
 			t.mutation(internal.devSeed.seedProfileNoCycle, { email: EMAIL }),
 		).rejects.toMatchObject({ data: { code: "ALREADY_EXISTS" } });
+
+		const afterRetry = await t.run(async (ctx) => {
+			const profiles = await ctx.db.query("profiles").collect();
+			const users = readAdapterPage(
+				await ctx.runQuery(components.betterAuth.adapter.findMany, {
+					model: "user",
+					where: [{ field: "email", operator: "eq", value: EMAIL }],
+					paginationOpts: { numItems: 10, cursor: null },
+				}),
+			);
+			return { profiles, users };
+		});
+		expect(afterRetry.profiles).toHaveLength(1);
+		expect(afterRetry.profiles[0]).toMatchObject({
+			_id: seeded.profileId,
+			onboardingComplete: state.profile?.onboardingComplete,
+		});
+		expect(afterRetry.users).toHaveLength(1);
+		expect(afterRetry.users[0]).toMatchObject({ email: EMAIL });
 	});
 
 	it("refuses without ALLOW_DEV_SEED", async () => {

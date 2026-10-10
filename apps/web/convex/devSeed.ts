@@ -1,5 +1,6 @@
 import { hashPassword } from "better-auth/crypto";
 import { ConvexError, v } from "convex/values";
+import { DEFAULT_MARKET } from "../shared/constants/markets";
 import { components } from "./_generated/api";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { assertDevSeedAllowed, devSeedPassword } from "./lib/devSeedGuard";
@@ -11,15 +12,16 @@ import { type CreateProfileArgs, createProfileForUser } from "./profiles";
 const SEED_USER_NAME = "Maestro";
 
 /**
- * Wizard móvil con los defaults (fijo, mensual, 50/30/20, Perú) al terminar
- * el paso de perfil. El móvil manda `completeOnboarding: false` y cierra el
- * flag en `startFirstCycle`. Aquí el flag queda en true y no hay ciclo: la
- * puerta de las tabs abre directo en «Aún no hay ciclo».
+ * Perfil completo sin ciclo activo: alguien que vuelve entre ciclos (el
+ * anterior ya cerró y el ingreso nuevo todavía no se registra). Lo usan los
+ * flujos Maestro home-vacio, sin-ciclo-solo-ciclo-nuevo y home-primer-ingreso.
  */
 const mobileProfileStep = {
-	country: "Perú",
-	currencyCode: "PEN",
-	currencySymbol: "S/",
+	country: DEFAULT_MARKET.country,
+	currencyCode: DEFAULT_MARKET.currencyCode,
+	currencySymbol: DEFAULT_MARKET.currencySymbol,
+	// TODO: constante compartida del wizard (web + móvil) para incomeModel,
+	// payFrequency, paydays y el reparto 50/30/20. Hoy cada lado los declara.
 	incomeModel: "fixed",
 	payFrequency: "monthly",
 	paydays: [1],
