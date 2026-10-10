@@ -7,6 +7,7 @@ type AuthButtonProps = {
 	loading?: boolean;
 	variant?: "solid" | "outline";
 	disabled?: boolean;
+	testID?: string;
 };
 
 export default function AuthButton({
@@ -15,9 +16,11 @@ export default function AuthButton({
 	loading = false,
 	variant = "solid",
 	disabled = false,
+	testID,
 }: AuthButtonProps): ReactElement {
 	return (
 		<Pressable
+			testID={testID}
 			onPress={onPress}
 			disabled={disabled || loading}
 			accessibilityRole="button"

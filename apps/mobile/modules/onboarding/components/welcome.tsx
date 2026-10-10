@@ -18,7 +18,10 @@ export function Welcome() {
 				</Text>
 				<View className="mt-8 rounded-xl bg-primary/10 px-4 py-4">
 					<MonoLabel>EJEMPLO · PUEDES GASTAR HOY</MonoLabel>
-					<Text className="mt-2 font-newsreader text-[40px] text-foreground">
+					<Text
+						testID="welcome-example-amount"
+						className="mt-2 font-newsreader text-[40px] text-foreground"
+					>
 						{WELCOME_EXAMPLE}
 					</Text>
 					<Text className="mt-2 font-hanken text-[13px] text-foreground/55">
@@ -27,8 +30,13 @@ export function Welcome() {
 				</View>
 			</View>
 			<View className="gap-2">
-				<AuthButton label="Crear cuenta" onPress={() => router.push("/(auth)/create-account")} />
+				<AuthButton
+					label="Crear cuenta"
+					testID="welcome-create-account"
+					onPress={() => router.push("/(auth)/create-account")}
+				/>
 				<Pressable
+					testID="welcome-sign-in"
 					accessibilityRole="button"
 					accessibilityLabel="Ya tengo cuenta"
 					onPress={() => router.push("/(auth)/sign-in")}

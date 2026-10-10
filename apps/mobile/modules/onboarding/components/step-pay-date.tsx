@@ -39,6 +39,7 @@ export function StepPayDate() {
 			footer={
 				<AuthButton
 					label="Continuar"
+					testID="wizard-continue"
 					onPress={() => void form.handleSubmit()}
 					disabled={!canContinue}
 				/>

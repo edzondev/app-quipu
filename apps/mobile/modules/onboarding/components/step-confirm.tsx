@@ -71,6 +71,7 @@ export function StepConfirm() {
 				<View className="gap-3">
 					<AuthButton
 						label="Empezar mi ciclo"
+						testID="wizard-start"
 						onPress={() => void start()}
 						loading={isSubmitting}
 						disabled={isSubmitting}

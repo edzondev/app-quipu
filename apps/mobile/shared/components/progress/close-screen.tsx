@@ -48,9 +48,11 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 					<Text className="mt-[34px] font-newsreader text-[28px] leading-[36px] text-foreground">
 						{model.title}
 					</Text>
-					<Text className="mt-3 font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
-						{model.subtitle}
-					</Text>
+					{model.subtitle ? (
+						<Text className="mt-3 font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
+							{model.subtitle}
+						</Text>
+					) : null}
 
 					{model.segments.length > 0 ? (
 						<View className="mt-7 h-2.5 flex-row gap-0.5 overflow-hidden rounded-[5px]">

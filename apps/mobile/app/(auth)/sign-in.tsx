@@ -262,7 +262,12 @@ function Welcome({
 				</Text>
 				<View className="h-px flex-1 bg-line" />
 			</View>
-			<AuthButton label="Entrar con correo" variant="outline" onPress={onEmail} />
+			<AuthButton
+				label="Entrar con correo"
+				testID="sign-in-email-method"
+				variant="outline"
+				onPress={onEmail}
+			/>
 			<CreateAccountLink onPress={onCreate} />
 		</View>
 	);
@@ -306,6 +311,7 @@ function Backup({
 						<AuthLabeledField
 							label="Correo"
 							field={field}
+							testID="sign-in-email"
 							autoCapitalize="none"
 							autoComplete="email"
 							inputMode="email"
@@ -321,6 +327,7 @@ function Backup({
 						<AuthLabeledField
 							label="Contraseña"
 							field={field}
+							testID="sign-in-password"
 							autoComplete="current-password"
 							secureTextEntry
 							className="border-b border-foreground py-2.5 font-hanken text-[17px] text-foreground"
@@ -354,6 +361,7 @@ function Backup({
 				{([canSubmit, isSubmitting]) => (
 					<AuthButton
 						label="Entrar"
+						testID="sign-in-submit"
 						onPress={() => void form.handleSubmit()}
 						loading={isSubmitting}
 						disabled={!canSubmit}
