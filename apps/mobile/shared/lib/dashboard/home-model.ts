@@ -1,5 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
+import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
@@ -22,6 +23,12 @@ export type HomeEnvelope = {
 	progress: number;
 	tone: "needs" | "wants" | "savings";
 	suffix: string;
+	/** Arrastre del ciclo anterior, tal como lo trae getSummary. */
+	carriedOverCents: number;
+	/** Ingreso de este ciclo en el sobre, tal como lo trae getSummary. */
+	incomeCents: number;
+	/** Total del sobre, tal como lo trae getSummary. */
+	carryTotalCents: number;
 };
 
 export type HomeMovement = {
@@ -55,12 +62,13 @@ export type HomeModel = {
 	heroSubtitle: string;
 	currencySymbol: string;
 	envelopes: HomeEnvelope[];
-	envelopesBalanceCents: number;
-	/** Sum of remaining envelope balances, matching dashboard surplus projection. */
+	/** «Sobra», tal como lo trae getSummary. Negativo si el ciclo se pasó. */
 	surplusCents: number;
 	coachMessage: string | null;
 	commitments: HomeCommitment[];
 	recentMovements: HomeMovement[];
+	/** Primer ciclo: getSummary.cycle.isOpeningCycle. El dinero de hoy no es arrastre. */
+	isOpeningCycle: boolean;
 };
 
 const ENVELOPE_LABEL = {
@@ -100,6 +108,7 @@ const LIMA = "America/Lima";
 
 export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 	if (!summary.cycle || !summary.hero) return null;
+	const dailyCents = summary.hero.displayDailyCents;
 
 	const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
 	const tone = readBadgeTone(summary.hero.statusBadge);
@@ -114,18 +123,11 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		badgeLabel: BADGE_LABEL[tone],
 		badgeTone: tone,
 		cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
-		dailyCents: summary.hero.displayDailyCents,
+		dailyCents,
 		heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
 		currencySymbol: symbol,
 		envelopes,
-		envelopesBalanceCents: envelopes.reduce(
-			(acc, envelope) => acc + Math.max(0, envelope.remainingCents),
-			0,
-		),
-		surplusCents: summary.envelopes.reduce(
-			(acc: number, envelope: SummaryEnvelope) => acc + Math.max(0, envelope.remainingAmount),
-			0,
-		),
+		surplusCents: summary.surplusCents,
 		coachMessage: summary.coach?.message ?? null,
 		commitments: mapCommitments(summary.commitments),
 		recentMovements: summary.movements.map((movement: SummaryMovement) => ({
@@ -134,13 +136,42 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 			amountCents: movement.amount,
 			tone: movementTone(movement.kind, movement.envelopeLabel),
 		})),
+		isOpeningCycle: summary.cycle.isOpeningCycle,
 	};
 }
 
+const MINUS_SIGN = "\u2212";
+
+/** Línea de arrastre. Null si el ciclo anterior no dejó saldo. No suma los céntimos. */
+export function envelopeCarryLabel(
+	carriedOverCents: number,
+	incomeCents: number,
+	totalCents: number,
+	symbol: string,
+	isOpeningCycle = false,
+): string | null {
+	if (isOpeningCycle || carriedOverCents === 0) return null;
+	const carried = formatCarryCents(carriedOverCents, symbol);
+	const income = formatCarryCents(incomeCents, symbol);
+	const total = formatCarryCents(totalCents, symbol);
+	return `Saldo que quedó ${carried} + Ingreso ${income} = ${total}`;
+}
+
+function formatCarryCents(cents: number, symbol: string): string {
+	if (cents < 0) return `${MINUS_SIGN}${formatCentsTrimmed(Math.abs(cents), symbol)}`;
+	return formatCentsTrimmed(cents, symbol);
+}
+
 export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
+	const carry = {
+		carriedOverCents: envelope.carriedOverCents,
+		incomeCents: envelope.incomeCents,
+		carryTotalCents: envelope.totalCents,
+	};
 	const type = readEnvelopeType(envelope.type);
 	if (type === "savings") {
 		return {
+			...carry,
 			label: ENVELOPE_LABEL.savings,
 			shortLabel: SHORT_ENVELOPE_LABEL.savings,
 			spentCents: envelope.allocatedAmount,
@@ -160,6 +191,7 @@ export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
 			: 0;
 
 	return {
+		...carry,
 		label: ENVELOPE_LABEL[type],
 		shortLabel: SHORT_ENVELOPE_LABEL[type],
 		spentCents,

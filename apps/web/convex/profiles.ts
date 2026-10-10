@@ -4,6 +4,7 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { APP_DATA_SNAPSHOT_FORMAT } from "./lib/appDataTables";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
+import { onboardingCompleteOnCreate } from "./lib/firstCycle";
 import { detachProfileFromSpacesOnDelete } from "./lib/spaceLifecycle";
 /**
  * Obtiene el perfil del usuario autenticado actual.
@@ -61,6 +62,7 @@ export const createProfile = mutation({
 		allocationNeeds: v.number(),
 		allocationWants: v.number(),
 		allocationSavings: v.number(),
+		completeOnboarding: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.auth.getUserIdentity();
@@ -147,7 +149,7 @@ export const createProfile = mutation({
 			allocationNeeds: args.allocationNeeds,
 			allocationWants: args.allocationWants,
 			allocationSavings: args.allocationSavings,
-			onboardingComplete: true,
+			onboardingComplete: onboardingCompleteOnCreate(args.completeOnboarding),
 			plan: "free",
 			appearanceTheme: "light",
 			accentPreset: "moss",

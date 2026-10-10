@@ -8,6 +8,11 @@ allowBuilds:
 trustLockfile: true
 verifyDepsBeforeRun: false
 overrides:
-  better-auth: 1.6.30
-  "@better-auth/passkey": 1.6.30
-  "@better-auth/core": 1.6.30
+  # Pinned to the 1.6 line because @convex-dev/better-auth 0.12.5 only supports
+  # >=1.6.11 <1.7.0, and 1.7 breaks the Convex bundle.
+  # https://github.com/get-convex/better-auth/issues/433
+  # Do not remove until a compatible version exists.
+  better-auth: 1.6.33
+  "@better-auth/passkey": 1.6.33
+  "@better-auth/core": 1.6.33
+  "@better-auth/expo": 1.6.33

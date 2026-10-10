@@ -1,0 +1,43 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - progreso
+  - blocked
+  - wip
+  - cuenta-nueva
+---
+# M45, pendiente: Cierre sigue mostrando el subtítulo de la racha aunque streakEvaluated
+# sea falso. Este flujo no afirma ese subtítulo. El tag wip lo deja fuera de la corrida
+# por defecto, junto con blocked (falta la semilla).
+# Notion 3f486a7356a6817698dbdf13ffd7bd83
+# Notion 3f486a7356a6819d80b8f1b507a473e6
+# Hace falta un ciclo de apertura empezado antes de hoy y sin cierres en verde.
+# Apunta QUIPU_E2E_EMAIL a esa cuenta. El ingreso de ciclo nuevo deja otro ciclo activo.
+# No corre por defecto.
+# El cierre entra en el historial de Progreso. No cuenta en «CICLOS CERRADOS EN VERDE» ni en la racha.
+# La racha cuenta 24 horas reales entre el inicio y el cierre, y nunca el ciclo de apertura.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- runFlow:
+    file: ../subflows/registrar-ingreso-tipo.yaml
+    env:
+      QUIPU_MODE_ID: income-mode-new-cycle
+- tapOn:
+    text: "Progreso"
+- tapOn:
+    id: progress-preview-live
+    optional: true
+- extendedWaitUntil:
+    visible: "CICLOS CERRADOS EN VERDE"
+    timeout: 20000
+- assertVisible: "CICLO CERRADO · .*"
+- assertVisible:
+    text: "0"
+    below: "CICLOS CERRADOS EN VERDE"
+- assertNotVisible: "Aún no cierras un ciclo."

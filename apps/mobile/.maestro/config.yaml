@@ -1,0 +1,10 @@
+# Flujos ejecutables. subflows/ solo se llama con runFlow.
+# Sin executionOrder: cada flujo entra solo. --include-tags del CLI tiene prioridad,
+# así que maestro:smoke sigue corriendo solo el tag smoke.
+flows:
+  - "flows/*"
+excludeTags:
+  - one-shot
+  - wip
+  - blocked
+  - cuenta-nueva

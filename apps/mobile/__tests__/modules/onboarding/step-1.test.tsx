@@ -1,7 +1,15 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
+import { onboardingVariableSources } from "@/__fixtures__/onboarding";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
+import {
+	CYCLE_DURATION_COPY,
+	FIXED_FREQ_OPTIONS,
+	INCOME_AMOUNT_COPY,
+	INCOME_MODEL_OPTIONS,
+	INCOME_SOURCES_COPY,
+} from "@/shared/lib/onboarding/defaults";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
@@ -28,11 +36,15 @@ function StateProbe() {
 		<>
 			<Text testID="probe-step">{String(state.step)}</Text>
 			<Text testID="probe-model">{String(state.incomeModel)}</Text>
+			<Text testID="probe-frequency">{String(state.payFrequency)}</Text>
+			<Text testID="probe-sources">{state.variableIncomeSources.join("|")}</Text>
+			<Text testID="probe-reference">{String(state.referenceIncomeCents)}</Text>
+			<Text testID="probe-mixed">{String(state.mixedFixedAmountCents)}</Text>
 		</>
 	);
 }
 
-function renderStep1() {
+async function renderStep1() {
 	return render(
 		<OnboardingProvider>
 			<StateProbe />
@@ -46,64 +58,125 @@ describe("Step1IncomeProfile", () => {
 		jest.clearAllMocks();
 	});
 
-	it("renderiza el header del wizard y las 3 opciones", async () => {
+	it("arranca en 01/05 con Fijo y Mensual, y muestra las opciones de Convex", async () => {
 		await renderStep1();
-		expect(screen.getByText("TU SISTEMA · 01/04")).toBeTruthy();
-		expect(screen.getByText("Fijo")).toBeTruthy();
-		expect(screen.getByText("Variable")).toBeTruthy();
-		expect(screen.getByText("Mixto")).toBeTruthy();
-		expect(screen.getByText("Continuar")).toBeTruthy();
+		expect(screen.getByText("TU SISTEMA · 01/05")).toBeTruthy();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		expect(screen.getByTestId("option-fixed").props.accessibilityState).toMatchObject({
+			selected: true,
+		});
+		expect(screen.getByTestId("freq-option-monthly").props.accessibilityState).toMatchObject({
+			selected: true,
+		});
+		expect(screen.getByTestId("check-fixed")).toBeTruthy();
+		for (const option of INCOME_MODEL_OPTIONS) {
+			expect(screen.getByTestId(`option-${option.value}`)).toBeTruthy();
+			expect(screen.getByText(option.description)).toBeTruthy();
+		}
+		for (const option of FIXED_FREQ_OPTIONS) {
+			expect(screen.getByTestId(`freq-option-${option.value}`)).toBeTruthy();
+			expect(screen.getAllByText(option.label).length).toBeGreaterThan(0);
+		}
+		expect(screen.queryByTestId("freq-option-variable")).toBeNull();
+		expect(screen.queryByText("DÍA DE PAGO")).toBeNull();
+		expect(screen.queryByText("El 1 de cada mes")).toBeNull();
 	});
 
-	it("el paso 1 llena solo la primera barra de progreso", async () => {
+	it("con Fijo y con Mixto el selector de frecuencia no ofrece Variable", async () => {
 		await renderStep1();
-		expect(screen.getByTestId("wizard-progress-1").props.className).toContain("bg-primary");
-		expect(screen.getByTestId("wizard-progress-4").props.className).toContain("bg-line");
+		expect(screen.queryByTestId("freq-option-variable")).toBeNull();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.queryByTestId("freq-option-variable")).toBeNull();
+		expect(screen.getByTestId("freq-option-monthly")).toBeTruthy();
+		expect(screen.getByTestId("freq-option-biweekly")).toBeTruthy();
+		expect(screen.getByTestId("freq-option-weekly")).toBeTruthy();
 	});
 
-	it("Continuar no dispatcha nada sin selección", async () => {
+	it("Variable admite varias fuentes", async () => {
 		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		expect(screen.queryByTestId("freq-option-monthly")).toBeNull();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), onboardingVariableSources[0]);
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), onboardingVariableSources[1]);
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		expect(screen.getByTestId("source-chip-0").props.children).toBe(onboardingVariableSources[0]);
+		expect(screen.getByTestId("source-chip-1").props.children).toBe(onboardingVariableSources[1]);
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("cycle-pill-30"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-model").props.children).toBe("variable");
+		expect(screen.getByTestId("probe-frequency").props.children).toBe("null");
+		expect(screen.getByTestId("probe-sources").props.children).toBe(
+			onboardingVariableSources.join("|"),
+		);
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+	});
+
+	it("Variable exige ciclo y al menos una fuente", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
 		});
 		expect(screen.getByTestId("probe-step").props.children).toBe("1");
-		expect(screen.getByTestId("probe-model").props.children).toBe("null");
-	});
-
-	it("seleccionar Fijo lo marca con borde primary, fondo primary/5 y check", async () => {
-		await renderStep1();
-		expect(screen.queryByTestId("check-fixed")).toBeNull();
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("option-fixed"));
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
 		});
-		expect(screen.getByTestId("option-fixed").props.className).toContain("border-primary");
-		expect(screen.getByTestId("option-fixed").props.className).toContain("bg-primary/5");
-		expect(screen.getByTestId("check-fixed")).toBeTruthy();
-		expect(screen.getByTestId("icon-check")).toBeTruthy();
-		expect(screen.queryByTestId("check-variable")).toBeNull();
-	});
-
-	it("la nota variable solo aparece con Variable seleccionado", async () => {
-		await renderStep1();
-		expect(
-			screen.queryByText(
-				"Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir.",
-			),
-		).toBeNull();
 		await act(async () => {
-			fireEvent.press(screen.getByTestId("option-variable"));
+			fireEvent.press(screen.getByTestId("add-source"));
 		});
-		expect(
-			screen.getByText(
-				"Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir.",
-			),
-		).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("1");
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("cycle-pill-15"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
 	});
 
-	it("con selección, Continuar dispatcha UPDATE { incomeModel } y avanza a paso 2", async () => {
+	it("Mixto exige sueldo base y al menos una fuente", async () => {
 		await renderStep1();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("1");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "2500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("1");
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
 		});
 		await act(async () => {
 			fireEvent.press(screen.getByText("Continuar"));
@@ -112,7 +185,155 @@ describe("Step1IncomeProfile", () => {
 		expect(screen.getByTestId("probe-model").props.children).toBe("mixed");
 	});
 
-	it("el back en paso 1 navega hacia atrás en el stack (router.back)", async () => {
+	it("Mixto no arrastra el monto escrito en Fijo", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "3500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByTestId("amount-input").props.value).toBe("");
+	});
+
+	it("Mixto no deja el monto de Fijo como ingreso de referencia", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "3500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByRole("button", { name: "Continuar" }));
+		});
+		expect(screen.getByTestId("probe-model").props.children).toBe("mixed");
+		expect(screen.getByTestId("probe-reference").props.children).toBe("null");
+		expect(screen.getByTestId("probe-mixed").props.children).toBe("80000");
+	});
+
+	it("Continuar se deshabilita si Variable está incompleto", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		const continuar = screen.getByRole("button", { name: "Continuar" });
+		expect(continuar.props.accessibilityState.disabled).toBe(true);
+		await act(async () => {
+			fireEvent.press(continuar);
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("1");
+	});
+
+	it("volver a tocar Mixto no borra el sueldo base", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByTestId("amount-input").props.value).toContain("800");
+	});
+
+	it("Fijo pregunta el dinero de hoy y lo guarda como saldo", async () => {
+		await renderStep1();
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "1500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-reference").props.children).toBe("150000");
+	});
+
+	it("explica en cada campo qué va dentro, sin jerga como «parte fija»", async () => {
+		await renderStep1();
+		expect(screen.getByText("¿CADA CUÁNTO TE PAGAN?")).toBeTruthy();
+		expect(screen.getByText(INCOME_AMOUNT_COPY.today.hint)).toBeTruthy();
+
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByText("TU SUELDO BASE")).toBeTruthy();
+		expect(screen.getByText(INCOME_AMOUNT_COPY.base.hint)).toBeTruthy();
+		expect(screen.getByText(INCOME_AMOUNT_COPY.today.hint)).toBeTruthy();
+		expect(screen.getByText(INCOME_SOURCES_COPY.hint)).toBeTruthy();
+		expect(screen.queryByText(/parte fija/i)).toBeNull();
+
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		expect(screen.queryByText("¿CADA CUÁNTO TE PAGAN?")).toBeNull();
+		expect(screen.getByText(CYCLE_DURATION_COPY.hint)).toBeTruthy();
+		expect(screen.getByText(INCOME_SOURCES_COPY.hint)).toBeTruthy();
+	});
+
+	it("Mixto pregunta el dinero de hoy además del sueldo base", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-mixed"));
+		});
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		expect(screen.getByText("TU SUELDO BASE")).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("amount-input"), "800");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("opening-balance-input"), "1200");
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-reference").props.children).toBe("120000");
+		expect(screen.getByTestId("probe-mixed").props.children).toBe("80000");
+	});
+
+	it("Variable pregunta el dinero de hoy antes de seguir", async () => {
+		await renderStep1();
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("option-variable"));
+		});
+		expect(screen.getByText("¿Cuánto dinero tienes hoy?")).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("opening-balance-input"), "500");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("cycle-pill-15"));
+		});
+		await act(async () => {
+			fireEvent.changeText(screen.getByTestId("source-input"), "Ventas");
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByTestId("add-source"));
+		});
+		await act(async () => {
+			fireEvent.press(screen.getByText("Continuar"));
+		});
+		expect(screen.getByTestId("probe-step").props.children).toBe("2");
+		expect(screen.getByTestId("probe-reference").props.children).toBe("50000");
+	});
+
+	it("el back en paso 1 navega hacia atrás en el stack", async () => {
 		await renderStep1();
 		await act(async () => {
 			fireEvent.press(screen.getByTestId("wizard-back"));

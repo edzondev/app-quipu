@@ -3,18 +3,23 @@ import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
+	accentPresetValidator,
+	appearanceThemeValidator,
+	appIconVariantValidator,
+} from "./lib/appearanceValidators";
+import { cycleCountsForStreakAndGreen } from "./lib/evaluateClosedCycle";
+import {
 	type AchievementId,
 	achievementIdValidator,
 	buildAchievements,
 	buildCycleChartBars,
 	canUseAccentPreset,
 	canUseTheme,
+	countLoggingStreak,
 	endOfLimaDayInclusive,
 	isRewardUnlocked,
-	observeLoggingStreakExpense,
 	progressChartBarValidator,
 	REWARD_THRESHOLDS,
-	startLoggingStreakScan,
 } from "./lib/gamificationMath";
 import {
 	computeEmergencyFundTargetCents,
@@ -34,12 +39,11 @@ async function countExpensesInCycle(
 	return rows.length;
 }
 
-async function loadDaysWithoutSkipping(
+async function* expenseTimestampsNewestFirst(
 	ctx: QueryCtx,
 	profileId: Id<"profiles">,
 	now: number,
-): Promise<number> {
-	let scan = startLoggingStreakScan(now);
+): AsyncGenerator<number> {
 	const expenses = ctx.db
 		.query("expenses")
 		.withIndex("by_profile_time", (q) =>
@@ -47,10 +51,16 @@ async function loadDaysWithoutSkipping(
 		)
 		.order("desc");
 	for await (const expense of expenses) {
-		scan = observeLoggingStreakExpense(scan, expense.timestamp);
-		if (!scan.keepReading) break;
+		yield expense.timestamp;
 	}
-	return scan.count;
+}
+
+async function loadDaysWithoutSkipping(
+	ctx: QueryCtx,
+	profileId: Id<"profiles">,
+	now: number,
+): Promise<number> {
+	return countLoggingStreak(expenseTimestampsNewestFirst(ctx, profileId, now), now);
 }
 
 const ACHIEVEMENT_TITLES: Record<AchievementId, string> = {
@@ -127,6 +137,13 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 					status: row.status,
 					evaluatedAt: row.evaluatedAt,
 					cycleStart: cycle === null ? null : cycle.startDate,
+					countsForStreak:
+						cycle !== null &&
+						cycleCountsForStreakAndGreen({
+							isOpeningCycle: cycle.isOpeningCycle,
+							startDate: cycle.startDate,
+							closeAt: row.evaluatedAt,
+						}),
 				};
 			}),
 		),
@@ -163,11 +180,7 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
 		achievements,
 		achievementsDoneCount: achievements.filter((a) => a.state === "done").length,
 		achievementsTotal: achievements.length,
-		appearance: {
-			theme: profile.appearanceTheme ?? "light",
-			accent: "moss" as const,
-			appIcon: "light" as const,
-		},
+		appearance: progressAppearance(profile.appearanceTheme),
 	};
 }
 
@@ -193,7 +206,8 @@ const progressOverviewValidator = v.nullable(
 );
 
 export const getOverview = query({
-	args: {},
+	// Cache key only. The server reads the clock; a new Lima day re-subscribes the client.
+	args: { limaDay: v.optional(v.string()) },
 	returns: progressOverviewValidator,
 	handler: async (ctx): Promise<Infer<typeof progressOverviewValidator>> => {
 		const bundle = await getAuthenticatedProgressBundle(ctx);
@@ -212,9 +226,70 @@ export const getOverview = query({
 	},
 });
 
+const progressAppearanceValidator = v.object({
+	theme: appearanceThemeValidator,
+	accent: v.literal("moss"),
+	appIcon: v.literal("light"),
+});
+
+function progressAppearance(
+	theme: Infer<typeof appearanceThemeValidator> | undefined,
+): Infer<typeof progressAppearanceValidator> {
+	return {
+		theme: theme ?? "light",
+		accent: "moss",
+		appIcon: "light",
+	};
+}
+
+const progressRewardFields = {
+	title: v.string(),
+	description: v.string(),
+	unlocked: v.boolean(),
+	requiredStreak: v.number(),
+	active: v.boolean(),
+};
+
+const progressRewardValidator = v.union(
+	v.object({ id: v.literal("tinta_theme"), ...progressRewardFields }),
+	v.object({ id: v.literal("clay_accent"), ...progressRewardFields }),
+	v.object({
+		id: v.literal("annual_report"),
+		...progressRewardFields,
+		cyclesRemaining: v.number(),
+	}),
+);
+
+const progressRewardsValidator = v.nullable(
+	v.object({
+		currentStreak: v.number(),
+		appearance: progressAppearanceValidator,
+		rewards: v.array(progressRewardValidator),
+		accents: v.array(
+			v.object({
+				id: accentPresetValidator,
+				unlocked: v.boolean(),
+			}),
+		),
+		themes: v.array(
+			v.object({
+				id: appearanceThemeValidator,
+				unlocked: v.boolean(),
+			}),
+		),
+		appIcons: v.array(
+			v.object({
+				id: appIconVariantValidator,
+				unlocked: v.boolean(),
+			}),
+		),
+	}),
+);
+
 export const getRewards = query({
 	args: {},
-	handler: async (ctx) => {
+	returns: progressRewardsValidator,
+	handler: async (ctx): Promise<Infer<typeof progressRewardsValidator>> => {
 		const bundle = await getAuthenticatedProgressBundle(ctx);
 		if (!bundle) return null;
 
@@ -225,7 +300,7 @@ export const getRewards = query({
 			appearance,
 			rewards: [
 				{
-					id: "tinta_theme" as const,
+					id: "tinta_theme",
 					title: "Tema Tinta",
 					description: "Modo oscuro sobrio · desbloqueado con 3 ciclos",
 					unlocked: isRewardUnlocked("tintaTheme", currentStreak),
@@ -233,7 +308,7 @@ export const getRewards = query({
 					active: appearance.theme === "tinta",
 				},
 				{
-					id: "clay_accent" as const,
+					id: "clay_accent",
 					title: "Acento Arcilla",
 					description: "Paleta alterna · desbloqueado con 6 ciclos",
 					unlocked: isRewardUnlocked("clayAccent", currentStreak),
@@ -242,7 +317,7 @@ export const getRewards = query({
 					active: false,
 				},
 				{
-					id: "annual_report" as const,
+					id: "annual_report",
 					title: "Informe anual encuadernado",
 					description: "Se desbloquea con 12 ciclos en orden",
 					unlocked: isRewardUnlocked("annualReport", currentStreak),
@@ -252,35 +327,40 @@ export const getRewards = query({
 				},
 			],
 			accents: [
-				{ id: "moss" as const, unlocked: true },
-				{ id: "steel" as const, unlocked: true },
+				{ id: "moss", unlocked: true },
+				{ id: "steel", unlocked: true },
 				{
-					id: "clay" as const,
+					id: "clay",
 					unlocked: canUseAccentPreset("clay", currentStreak),
 				},
 			],
 			themes: [
-				{ id: "light" as const, unlocked: true },
+				{ id: "light", unlocked: true },
 				{
-					id: "tinta" as const,
+					id: "tinta",
 					unlocked: canUseTheme("tinta", currentStreak),
 				},
 			],
 			appIcons: [
-				{ id: "light" as const, unlocked: true },
-				{ id: "dark" as const, unlocked: true },
+				{ id: "light", unlocked: true },
+				{ id: "dark", unlocked: true },
 			],
 		};
 	},
 });
 
+const updateAppearanceResultValidator = v.object({
+	appearance: progressAppearanceValidator,
+});
+
 export const updateAppearance = mutation({
 	args: {
-		appearanceTheme: v.optional(v.union(v.literal("light"), v.literal("tinta"))),
-		accentPreset: v.optional(v.union(v.literal("moss"), v.literal("steel"), v.literal("clay"))),
-		appIconVariant: v.optional(v.union(v.literal("light"), v.literal("dark"))),
+		appearanceTheme: v.optional(appearanceThemeValidator),
+		accentPreset: v.optional(accentPresetValidator),
+		appIconVariant: v.optional(appIconVariantValidator),
 	},
-	handler: async (ctx, args) => {
+	returns: updateAppearanceResultValidator,
+	handler: async (ctx, args): Promise<Infer<typeof updateAppearanceResultValidator>> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) {
 			throw new ConvexError({
@@ -302,35 +382,25 @@ export const updateAppearance = mutation({
 
 		// Dark mode is available from Preferencias without a streak gate.
 		// Accent and app icon are no longer user-selectable; keep moss + ignore icons.
-		const updates: {
-			appearanceTheme?: "light" | "tinta";
-			accentPreset?: "moss";
-		} = {};
-
-		if (args.appearanceTheme !== undefined) {
-			updates.appearanceTheme = args.appearanceTheme;
-		}
-		if (args.accentPreset !== undefined) {
-			updates.accentPreset = "moss";
-		}
-
-		if (Object.keys(updates).length > 0) {
-			await ctx.db.patch(profile._id, updates);
+		if (args.appearanceTheme !== undefined || args.accentPreset !== undefined) {
+			await ctx.db.patch(profile._id, {
+				...(args.appearanceTheme !== undefined ? { appearanceTheme: args.appearanceTheme } : {}),
+				...(args.accentPreset !== undefined ? { accentPreset: "moss" } : {}),
+			});
 		}
 
 		return {
-			appearance: {
-				theme: updates.appearanceTheme ?? profile.appearanceTheme ?? "light",
-				accent: "moss" as const,
-				appIcon: "light" as const,
-			},
+			appearance: progressAppearance(args.appearanceTheme ?? profile.appearanceTheme),
 		};
 	},
 });
 
+const getAppearanceResultValidator = v.nullable(progressAppearanceValidator);
+
 export const getAppearance = query({
 	args: {},
-	handler: async (ctx) => {
+	returns: getAppearanceResultValidator,
+	handler: async (ctx): Promise<Infer<typeof getAppearanceResultValidator>> => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
 
@@ -340,10 +410,6 @@ export const getAppearance = query({
 			.unique();
 		if (!profile) return null;
 
-		return {
-			theme: profile.appearanceTheme ?? "light",
-			accent: "moss" as const,
-			appIcon: "light" as const,
-		};
+		return progressAppearance(profile.appearanceTheme);
 	},
 });

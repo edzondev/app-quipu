@@ -1,5 +1,6 @@
 import { type Infer, v } from "convex/values";
-import { limaStartOfDay } from "../../shared/lib/date";
+import { limaDayKey, limaStartOfDay } from "../../shared/lib/date";
+import { type AccentPreset, type AppearanceTheme } from "./appearanceValidators";
 import { buildCycleLabel } from "./cycleCloseReport";
 
 export const REWARD_THRESHOLDS = {
@@ -64,31 +65,14 @@ export const progressChartBarValidator = v.object({
 	heightPx: v.number(),
 	cycleStart: v.union(v.number(), v.null()),
 	monthLabel: v.union(v.string(), v.null()),
+	// Closed cycles only: false for the opening cycle or one shorter than 24h.
+	countsForStreak: v.boolean(),
 });
 
 type ProgressChartBar = Infer<typeof progressChartBarValidator>;
 
 export function endOfLimaDayInclusive(now: number): number {
 	return limaStartOfDay(now) + MS_PER_DAY - 1;
-}
-
-const LIMA_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-US", {
-	timeZone: "America/Lima",
-	year: "numeric",
-	month: "2-digit",
-	day: "2-digit",
-});
-
-function limaDayKey(timestamp: number): string {
-	let year = "";
-	let month = "";
-	let day = "";
-	for (const part of LIMA_DAY_KEY_FORMATTER.formatToParts(new Date(timestamp))) {
-		if (part.type === "year") year = part.value;
-		else if (part.type === "month") month = part.value;
-		else if (part.type === "day") day = part.value;
-	}
-	return `${year}-${month}-${day}`;
 }
 
 function previousLimaDayKey(dayKey: string): string {
@@ -101,7 +85,7 @@ function previousLimaDayKey(dayKey: string): string {
 	return `${previous.getUTCFullYear()}-${monthText}-${dayText}`;
 }
 
-export type LoggingStreakScan = {
+type LoggingStreakScan = {
 	count: number;
 	lastKey: string | null;
 	todayKey: string;
@@ -110,7 +94,7 @@ export type LoggingStreakScan = {
 };
 
 /** Una sola pasada, de más nuevo a más viejo. today/yesterday se fijan una vez. */
-export function startLoggingStreakScan(now: number): LoggingStreakScan {
+function startLoggingStreakScan(now: number): LoggingStreakScan {
 	return {
 		count: 0,
 		lastKey: null,
@@ -120,11 +104,10 @@ export function startLoggingStreakScan(now: number): LoggingStreakScan {
 	};
 }
 
-export function observeLoggingStreakExpense(
+function observeLoggingStreakExpense(
 	scan: LoggingStreakScan,
 	timestamp: number,
 ): LoggingStreakScan {
-	if (!scan.keepReading) return scan;
 	const key = limaDayKey(timestamp);
 	if (scan.lastKey === null) {
 		if (key !== scan.todayKey && key !== scan.yesterdayKey) {
@@ -139,9 +122,13 @@ export function observeLoggingStreakExpense(
 	return { ...scan, keepReading: false };
 }
 
-export function countLoggingStreak(timestampsNewestFirst: Iterable<number>, now: number): number {
+/** Una pasada de más nuevo a más viejo. Corta y deja de leer en el primer hueco. */
+export async function countLoggingStreak(
+	timestampsNewestFirst: Iterable<number> | AsyncIterable<number>,
+	now: number,
+): Promise<number> {
 	let scan = startLoggingStreakScan(now);
-	for (const timestamp of timestampsNewestFirst) {
+	for await (const timestamp of timestampsNewestFirst) {
 		scan = observeLoggingStreakExpense(scan, timestamp);
 		if (!scan.keepReading) break;
 	}
@@ -150,7 +137,8 @@ export function countLoggingStreak(timestampsNewestFirst: Iterable<number>, now:
 
 export function buildCycleChartBars(
 	history: ReadonlyArray<
-		Pick<CycleHistoryFact, "status" | "evaluatedAt"> & Pick<ProgressChartBar, "cycleStart">
+		Pick<CycleHistoryFact, "status" | "evaluatedAt"> &
+			Pick<ProgressChartBar, "cycleStart" | "countsForStreak">
 	>,
 	currentCycle: { cycleStart: number } | null = null,
 	limit = 12,
@@ -167,6 +155,7 @@ export function buildCycleChartBars(
 			heightPx: base + wobble,
 			cycleStart: entry.cycleStart,
 			monthLabel: entry.cycleStart === null ? null : buildCycleLabel(entry.cycleStart),
+			countsForStreak: entry.countsForStreak,
 		};
 	});
 	let emptySlot = 0;
@@ -177,6 +166,7 @@ export function buildCycleChartBars(
 			heightPx: 0,
 			cycleStart: null,
 			monthLabel: null,
+			countsForStreak: false,
 		});
 		emptySlot += 1;
 	}
@@ -187,6 +177,7 @@ export function buildCycleChartBars(
 			heightPx: CURRENT_CYCLE_BAR_HEIGHT_PX,
 			cycleStart: currentCycle.cycleStart,
 			monthLabel: buildCycleLabel(currentCycle.cycleStart),
+			countsForStreak: false,
 		});
 	}
 	return bars;
@@ -217,17 +208,14 @@ export function isRewardUnlocked(
 	return currentStreak >= REWARD_THRESHOLDS[rewardId];
 }
 
-export function canUseAccentPreset(
-	preset: "moss" | "steel" | "clay",
-	currentStreak: number,
-): boolean {
+export function canUseAccentPreset(preset: AccentPreset, currentStreak: number): boolean {
 	if (preset === "clay") {
 		return currentStreak >= REWARD_THRESHOLDS.clayAccent;
 	}
 	return true;
 }
 
-export function canUseTheme(theme: "light" | "tinta", currentStreak: number): boolean {
+export function canUseTheme(theme: AppearanceTheme, currentStreak: number): boolean {
 	if (theme === "tinta") {
 		return currentStreak >= REWARD_THRESHOLDS.tintaTheme;
 	}

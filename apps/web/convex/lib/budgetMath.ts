@@ -19,7 +19,10 @@ export const SECOND_PAYDAY_FALLBACK = 15;
 export type PayFrequency = keyof typeof CYCLE_DAYS;
 export type EnvelopeType = (typeof ENVELOPE_TYPES)[number];
 
-type EnvelopeCompliance = Pick<Doc<"envelopes">, "type" | "remainingAmount" | "allocatedAmount">;
+type EnvelopeCompliance = Pick<
+	Doc<"envelopes">,
+	"type" | "remainingAmount" | "allocatedAmount" | "carriedOverCents"
+>;
 type AllocationWeights = Pick<
 	Doc<"profiles">,
 	"allocationNeeds" | "allocationWants" | "allocationSavings"
@@ -58,10 +61,15 @@ export function shouldWarnWantsBurn(p: {
 
 export function evaluateCycleCompliance(
 	envelopes: EnvelopeCompliance[],
+	isOpeningCycle = false,
 ): "compliant" | "warning" | "failed" {
 	let hasWarning = false;
-	for (const { type, remainingAmount, allocatedAmount } of envelopes) {
-		if (type === "savings" || remainingAmount >= 0) continue;
+	for (const envelope of envelopes) {
+		// Opening balance is this cycle's own money, not a leftover from a previous one.
+		const carry = isOpeningCycle ? 0 : (envelope.carriedOverCents ?? 0);
+		const remainingAmount = envelope.remainingAmount - carry;
+		const allocatedAmount = envelope.allocatedAmount - carry;
+		if (envelope.type === "savings" || remainingAmount >= 0) continue;
 		if (Math.abs(remainingAmount) > allocatedAmount * OVER_BUDGET_BUFFER) return "failed";
 		hasWarning = true;
 	}

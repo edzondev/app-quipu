@@ -10,6 +10,8 @@ import * as SecureStore from "expo-secure-store";
 const schemeConfig = Constants.expoConfig?.scheme;
 const scheme = (Array.isArray(schemeConfig) ? schemeConfig[0] : schemeConfig) ?? "quipu";
 
+export const authStoragePrefix = scheme;
+
 const expoPasskey = expoPasskeyClient();
 type PluginFetch = Parameters<NonNullable<BetterAuthClientPlugin["getActions"]>>[0];
 type PluginAtoms = Parameters<NonNullable<BetterAuthClientPlugin["getAtoms"]>>[0];
@@ -26,13 +28,7 @@ const passkeyClientPlugin = {
 	getActions: (
 		$fetch: PluginFetch,
 		$store: Parameters<NonNullable<BetterAuthClientPlugin["getActions"]>>[1],
-		options: Parameters<NonNullable<BetterAuthClientPlugin["getActions"]>>[2],
-	) =>
-		expoPasskey.getActions(
-			$fetch as Parameters<(typeof expoPasskey)["getActions"]>[0],
-			$store,
-			options,
-		),
+	) => expoPasskey.getActions($fetch as Parameters<(typeof expoPasskey)["getActions"]>[0], $store),
 } satisfies BetterAuthClientPlugin;
 
 export const authClient = createAuthClient({
@@ -42,7 +38,7 @@ export const authClient = createAuthClient({
 		emailOTPClient(),
 		expoClient({
 			scheme,
-			storagePrefix: scheme,
+			storagePrefix: authStoragePrefix,
 			storage: SecureStore,
 		}),
 		passkeyClientPlugin,

@@ -1,8 +1,50 @@
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { evaluateCycleCompliance } from "./budgetMath";
+import { MS_PER_DAY } from "./dashboardMath";
 import { computeNextStreak } from "./gamificationMath";
 import { loadCycleCoverageById } from "./loadCycleCoverageContext";
+
+/** La racha ignora el ciclo de apertura. Progreso lo cuenta igual que cualquier otro. */
+export function openingCycleSkipsStreak(isOpeningCycle: boolean | undefined): boolean {
+	return isOpeningCycle === true;
+}
+
+export function wantsWithinBudgetOnClose(
+	wants: { remainingAmount: number; carriedOverCents?: number } | undefined,
+	isOpeningCycle: boolean | undefined,
+): boolean {
+	const carry = isOpeningCycle === true ? 0 : (wants?.carriedOverCents ?? 0);
+	return (wants?.remainingAmount ?? 0) - carry >= 0;
+}
+
+export function cycleCountsForStreakAndGreen(input: {
+	isOpeningCycle: Doc<"financialCycles">["isOpeningCycle"];
+	startDate: number;
+	closeAt: number;
+}): boolean {
+	if (openingCycleSkipsStreak(input.isOpeningCycle)) return false;
+	return input.closeAt - input.startDate >= MS_PER_DAY;
+}
+
+export function streakAfterClose(input: {
+	isOpeningCycle: Doc<"financialCycles">["isOpeningCycle"];
+	startDate: number;
+	closeAt: number;
+	currentStreak: number;
+	longestStreak: number;
+	compliance: Parameters<typeof computeNextStreak>[2];
+}): { currentStreak: number; longestStreak: number } | null {
+	if (!cycleCountsForStreakAndGreen(input)) return null;
+	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance);
+}
+
+/** «CICLOS CERRADOS EN VERDE» follows the same predicate as the streak. */
+export function closedGreenCountAfterClose(input: Parameters<typeof streakAfterClose>[0]): number {
+	if (!cycleCountsForStreakAndGreen(input)) return input.currentStreak;
+	return computeNextStreak(input.currentStreak, input.longestStreak, input.compliance)
+		.currentStreak;
+}
 
 export async function evaluateClosedCycle(
 	ctx: MutationCtx,
@@ -34,9 +76,9 @@ export async function evaluateClosedCycle(
 		.withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
 		.collect();
 
-	const compliance = evaluateCycleCompliance(envelopes);
+	const compliance = evaluateCycleCompliance(envelopes, cycle.isOpeningCycle === true);
 	const wantsEnvelope = envelopes.find((env) => env.type === "wants");
-	const wantsWithinBudget = (wantsEnvelope?.remainingAmount ?? 0) >= 0;
+	const wantsWithinBudget = wantsWithinBudgetOnClose(wantsEnvelope, cycle.isOpeningCycle);
 
 	const coverageContext = await loadCycleCoverageById(ctx, profileId, cycleId, now);
 	const commitments = coverageContext?.commitments ?? [];
@@ -59,7 +101,15 @@ export async function evaluateClosedCycle(
 
 	const currentStreak = streakRow?.currentStreak ?? 0;
 	const longestStreak = streakRow?.longestStreak ?? 0;
-	const next = computeNextStreak(currentStreak, longestStreak, compliance);
+	const next = streakAfterClose({
+		isOpeningCycle: cycle.isOpeningCycle,
+		startDate: cycle.startDate,
+		closeAt: now,
+		currentStreak,
+		longestStreak,
+		compliance,
+	});
+	if (next === null) return;
 
 	if (streakRow) {
 		await ctx.db.patch(streakRow._id, {

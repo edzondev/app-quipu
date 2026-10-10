@@ -1,4 +1,5 @@
-import { BottomSheet, RNHostView } from "@expo/ui";
+import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
+import { SheetHost } from "@/shared/components/ui/sheet-host";
 import type { CreateSavingsGoalArgs } from "@/shared/lib/savings/model";
 import { GoalForm } from "./goal-form";
 
@@ -14,13 +15,13 @@ export function GoalSheet({ isPresented, session, onDismiss, onSubmit }: Props) 
 		<BottomSheet
 			isPresented={isPresented}
 			onDismiss={onDismiss}
-			snapPoints={["full"]}
+			snapPoints={[{ fraction: 0.6 }]}
 			contentPadding={0}
-			containerColor="#FBFAF7"
+			containerColorClassName="accent-background"
 		>
-			<RNHostView>
+			<SheetHost>
 				<GoalForm key={session} onCancel={onDismiss} onSubmit={onSubmit} />
-			</RNHostView>
+			</SheetHost>
 		</BottomSheet>
 	);
 }

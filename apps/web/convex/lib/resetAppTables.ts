@@ -1,11 +1,13 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { APP_DATA_TABLES } from "./appDataTables";
+import { assertDevCloudOnly } from "./devCloudGuard";
 
 export const resetAppTables = internalMutation({
 	args: {},
 	returns: v.object({ deleted: v.record(v.string(), v.number()) }),
 	handler: async (ctx) => {
+		assertDevCloudOnly(process.env.CONVEX_CLOUD_URL);
 		const counts: Record<string, number> = {};
 
 		const tableDocs = await Promise.all(

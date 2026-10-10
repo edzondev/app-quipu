@@ -1,0 +1,48 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - ajustes
+---
+# Notion 3f486a7356a681f69b03ce8d1a3addab
+# Notion 3f486a7356a6813d9591f72c49825946 (sin modo avión ni atrás de Android)
+# Abre Seguridad y vuelve. No crea ni borra Passkeys.
+# El cierre de sesión no es la hoja al 60% y no tiene ScrollView: los botones siguen en el sheet.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- tapOn: "Ajustes"
+- runScript: ../scripts/escape-email.js
+- extendedWaitUntil:
+    visible: ".*${output.emailRe}.*"
+    timeout: 15000
+- assertVisible: "Seguridad y Passkeys"
+- assertVisible: "Cerrar sesión"
+- tapOn: "Seguridad y Passkeys"
+- extendedWaitUntil:
+    visible: "Passkeys"
+    timeout: 10000
+- assertVisible: "Cada dispositivo tiene su propia llave. Puedes quitar la que ya no uses."
+- tapOn: "Volver"
+- extendedWaitUntil:
+    visible: "Cerrar sesión"
+    timeout: 10000
+- tapOn: "Cerrar sesión"
+- assertVisible: "Vas a salir de este teléfono."
+- assertVisible: "Se cierra tu sesión y se borra lo que quedó guardado aquí."
+- tapOn: "Cancelar"
+- assertNotVisible: "Vas a salir de este teléfono."
+- assertVisible:
+    text: "Ajustes"
+- tapOn: "Cerrar sesión"
+- assertVisible: "Confirmar cierre de sesión"
+- tapOn: "Confirmar cierre de sesión"
+- extendedWaitUntil:
+    visible: "Ya tengo cuenta"
+    timeout: 20000
+- assertNotVisible: ".*${output.emailRe}.*"
+- assertVisible: "S/ 42\\.30"

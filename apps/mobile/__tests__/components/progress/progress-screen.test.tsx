@@ -42,14 +42,12 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("MAY")).toBeTruthy();
 		expect(view.getByText("SEP")).toBeTruthy();
 		expect(view.getByText("MAYO")).toBeTruthy();
-		expect(view.getByText("AHORRADO TOTAL")).toBeTruthy();
+		expect(view.getByText("AHORRADO\nTOTAL")).toBeTruthy();
 		expect(view.getByText("S/ 4,320")).toBeTruthy();
-		expect(view.getByText("GASTOS REGISTRADOS").parent?.props.className ?? "").not.toContain(
-			"flex-1",
-		);
-		expect(view.getByText("GASTOS REGISTRADOS")).toBeTruthy();
+		expect(view.getByText("GASTOS\nREGISTRADOS").parent?.props.className ?? "").toContain("flex-1");
+		expect(view.getByText("GASTOS\nREGISTRADOS")).toBeTruthy();
 		expect(view.getByText("312")).toBeTruthy();
-		expect(view.getByText("DÍAS SIN SALTAR")).toBeTruthy();
+		expect(view.getByText("DÍAS SIN\nSALTAR")).toBeTruthy();
 		expect(view.getByText("46")).toBeTruthy();
 		expect(view.getByText("Primer ciclo cerrado")).toBeTruthy();
 		expect(view.getByText("RECOMPENSA")).toBeTruthy();
@@ -71,6 +69,7 @@ describe("ProgressScreen", () => {
 								heightPx: 26,
 								cycleStart: MAY,
 								monthLabel: null,
+								countsForStreak: true,
 							},
 							{
 								id: SEP,
@@ -78,6 +77,7 @@ describe("ProgressScreen", () => {
 								heightPx: 26,
 								cycleStart: SEP,
 								monthLabel: "Setiembre",
+								countsForStreak: true,
 							},
 						],
 					} satisfies Overview,
@@ -90,7 +90,9 @@ describe("ProgressScreen", () => {
 
 		expect(view.getByText("MAY")).toBeTruthy();
 		expect(view.getByText("SEP")).toBeTruthy();
-		expect(view.getByLabelText("Ciclo en curso")).toBeTruthy();
+		const current = view.getByLabelText("Ciclo en curso");
+		expect(current).toBeTruthy();
+		expect(current.props.className).toContain("bg-[#F7F5EF]");
 		expect(view.getByText("DESDE MAYO")).toBeTruthy();
 	});
 
@@ -111,6 +113,7 @@ describe("ProgressScreen", () => {
 								heightPx: 26,
 								cycleStart: SEP,
 								monthLabel: "Setiembre",
+								countsForStreak: true,
 							},
 						],
 						achievements: [],
@@ -175,6 +178,8 @@ describe("CloseScreen", () => {
 		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.queryByText("Mover S/ 210 al Fondo")).toBeNull();
+		expect(view.queryByText("Mover al Fondo")).toBeNull();
+		expect(view.queryByRole("button", { name: "Mover al Fondo" })).toBeNull();
 		expect(view.queryByText("Dejarlos en Gustos")).toBeNull();
 		expect(view.queryByText(/%/)).toBeNull();
 		expect(view.queryByText("cycle-1")).toBeNull();

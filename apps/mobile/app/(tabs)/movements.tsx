@@ -8,6 +8,7 @@ export default function MovementsPage() {
 	const list = useMovements();
 	const router = useRouter();
 	const { openCreate } = useRegistrar();
+	const noCycle = list.status === "ready" && list.data?.cycle == null;
 
 	return (
 		<AppShell>
@@ -17,7 +18,7 @@ export default function MovementsPage() {
 				onOpenExpense={(id) => {
 					router.push(`/expense/${id}`);
 				}}
-				onCreate={openCreate}
+				onCreate={() => openCreate(noCycle ? "income" : "auto")}
 			/>
 		</AppShell>
 	);

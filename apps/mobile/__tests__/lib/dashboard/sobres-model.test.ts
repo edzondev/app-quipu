@@ -1,5 +1,11 @@
 import { fixtureId } from "@/__fixtures__/convex-id";
-import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
+import {
+	commitment,
+	emptyCycleCarry,
+	emptyEnvelopeCarry,
+	summaryWithoutCycle,
+} from "@/__fixtures__/dashboard-summary";
+import { envelopeCarryLabel } from "@/shared/lib/dashboard/home-model";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
 
 type Summary = NonNullable<Parameters<typeof mapSobresScreen>[0]>;
@@ -14,18 +20,29 @@ function summary(
 	} = {},
 ): ActiveSummary {
 	return {
-		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+		profile: {
+			name: "Edzon",
+			currencyCode: "PEN",
+			plan: "free",
+			allocationNeeds: 50,
+			allocationWants: 30,
+			allocationSavings: 20,
+		},
 		cycle: {
 			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
 			endDate: AUGUST_START,
 			needsReview: false,
 			unallocatedCents: 0,
+			...emptyCycleCarry,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
 			progressPercent: 50,
+			pastEnd: false,
+			startedToday: false,
 		},
+		surplusCents: 0,
 		hero: {
 			dailyAvailableCents: 0,
 			displayDailyCents: 0,
@@ -48,18 +65,21 @@ function summary(
 				allocatedAmount: 175_000,
 				remainingAmount: 113_800,
 				percentRemaining: 65,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "wants" as const,
 				allocatedAmount: 105_000,
 				remainingAmount: 23_100,
 				percentRemaining: 22,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "savings" as const,
 				allocatedAmount: 70_000,
 				remainingAmount: 70_000,
 				percentRemaining: 100,
+				...emptyEnvelopeCarry,
 			},
 		],
 		commitments: overrides.commitments ?? [
@@ -92,6 +112,7 @@ function summary(
 		},
 		movements: [],
 		isEarlyCycle: false,
+		closedCycle: null,
 	};
 }
 
@@ -118,6 +139,7 @@ describe("mapSobresScreen", () => {
 				footLeft: "GASTADO S/ 612",
 				footRight: "ALQUILER PENDIENTE",
 				footRightTone: "calm",
+				carryLabel: null,
 			},
 			{
 				tone: "wants",
@@ -132,6 +154,7 @@ describe("mapSobresScreen", () => {
 				footLeft: "GASTADO S/ 819",
 				footRight: "ALCANZA 6 DÍAS",
 				footRightTone: "fast",
+				carryLabel: null,
 			},
 			{
 				tone: "savings",
@@ -146,9 +169,55 @@ describe("mapSobresScreen", () => {
 				footLeft: "FONDO + VIAJE",
 				footRight: "100%",
 				footRightTone: "calm",
+				carryLabel: null,
 			},
 		]);
 		expect(JSON.stringify(screen)).not.toContain("rent");
+	});
+
+	it("reusa el arrastre de Inicio y lo omite en el ciclo de apertura", () => {
+		const carried = summary({
+			commitments: [],
+			envelopes: [
+				{
+					type: "needs",
+					allocatedAmount: 175_000,
+					remainingAmount: 61_200,
+					percentRemaining: 35,
+					carriedOverCents: 12_000,
+					incomeCents: 80_000,
+					totalCents: 91_000,
+				},
+			],
+		});
+		expect(mapSobresScreen(carried)?.envelopes[0]?.carryLabel).toBe(
+			envelopeCarryLabel(12_000, 80_000, 91_000, "S/"),
+		);
+		expect(mapSobresScreen(carried)?.envelopes[0]?.carryLabel).toBe(
+			"Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910",
+		);
+		const opening = mapSobresScreen({
+			...carried,
+			cycle: { ...carried.cycle, isOpeningCycle: true },
+		});
+		expect(opening?.envelopes[0]?.carryLabel).toBeNull();
+		const negative = summary({
+			commitments: [],
+			envelopes: [
+				{
+					type: "needs",
+					allocatedAmount: 175_000,
+					remainingAmount: 61_200,
+					percentRemaining: 35,
+					carriedOverCents: -5_000,
+					incomeCents: 80_000,
+					totalCents: 75_000,
+				},
+			],
+		});
+		expect(mapSobresScreen(negative)?.envelopes[0]?.carryLabel).toBe(
+			"Saldo que quedó \u2212S/ 50 + Ingreso S/ 800 = S/ 750",
+		);
 	});
 
 	it("ordena los sobres aunque el resumen venga al revés", () => {
@@ -175,6 +244,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 105_000,
 						remainingAmount: 90_000,
 						percentRemaining: 86,
+						...emptyEnvelopeCarry,
 					},
 				],
 			}),
@@ -195,6 +265,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 30_000,
 						remainingAmount: 1_500,
 						percentRemaining: 5,
+						...emptyEnvelopeCarry,
 					},
 				],
 				commitments: [
@@ -226,6 +297,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 1_000,
 						remainingAmount: -500,
 						percentRemaining: 0,
+						...emptyEnvelopeCarry,
 					},
 				],
 				commitments: [],
@@ -250,6 +322,7 @@ describe("mapSobresScreen", () => {
 						allocatedAmount: 70_000,
 						remainingAmount: 35_000,
 						percentRemaining: 50,
+						...emptyEnvelopeCarry,
 					},
 				],
 			}),

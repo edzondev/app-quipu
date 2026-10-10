@@ -1,0 +1,55 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+  - p0
+  - registrar
+---
+# Notion 3f486a7356a68148b687cafa043f9ffe
+# Registrar gasto en la hoja rápida
+# Los mensajes de monto y sobre también están en 3f486a7356a681e78f2be50f8f7e3a16
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- evalScript: "${output.merchant = 'Bodega' + Date.now()}"
+- tapOn:
+    text: "Registrar"
+- extendedWaitUntil:
+    visible: "NUEVO GASTO"
+    timeout: 10000
+- assertVisible:
+    text: "Gasto"
+- tapOn: "Registrar gasto"
+- assertVisible: "Ingresa un monto mayor a cero."
+- tapOn:
+    text: "2"
+- tapOn:
+    text: "0"
+- tapOn:
+    text: "0"
+- tapOn:
+    text: "0"
+- assertVisible: "20\\.00"
+- tapOn: "Registrar gasto"
+- assertVisible: "Elige un sobre para el gasto."
+- tapOn:
+    text: "Comercio"
+- inputText: ${output.merchant}
+- hideKeyboard
+- tapOn:
+    text: "Gustos"
+    below: "NUEVO GASTO"
+- assertVisible: "DESPUÉS DE ESTE GASTO.*"
+- tapOn: "Registrar gasto"
+- extendedWaitUntil:
+    notVisible: "NUEVO GASTO"
+    timeout: 20000
+- runFlow: ../subflows/abrir-movimientos.yaml
+- extendedWaitUntil:
+    visible: ${output.merchant}
+    timeout: 15000
+- assertVisible: ".*20\\.00"

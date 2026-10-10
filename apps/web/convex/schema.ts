@@ -1,5 +1,10 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+	accentPresetValidator,
+	appearanceThemeValidator,
+	appIconVariantValidator,
+} from "./lib/appearanceValidators";
 
 /**
  * App-level schema.
@@ -99,9 +104,9 @@ export const appTables = {
 		// Legacy (I3): rescate ya no usa upsell; campos opcionales sin escritura nueva.
 		coachRescueUpsellAt: v.optional(v.number()),
 		coachRescueUpsellDismissedAt: v.optional(v.number()),
-		appearanceTheme: v.optional(v.union(v.literal("light"), v.literal("tinta"))),
-		accentPreset: v.optional(v.union(v.literal("moss"), v.literal("steel"), v.literal("clay"))),
-		appIconVariant: v.optional(v.union(v.literal("light"), v.literal("dark"))),
+		appearanceTheme: v.optional(appearanceThemeValidator),
+		accentPreset: v.optional(accentPresetValidator),
+		appIconVariant: v.optional(appIconVariantValidator),
 		// Bloque 9 — preferencias de notificaciones (undefined = defaults en lectura).
 		dailySummaryEnabled: v.optional(v.boolean()),
 		cycleAlertsEnabled: v.optional(v.boolean()),
@@ -136,6 +141,12 @@ export const appTables = {
 		unallocatedCents: v.optional(v.number()),
 		// Legacy cycles without incomeAllocationLines need user review (not silent invent).
 		needsReview: v.optional(v.boolean()),
+		closeSurplusMovedAt: v.optional(v.number()),
+		carriedOverFromCycleId: v.optional(v.id("financialCycles")),
+		carriedOverToCycleId: v.optional(v.id("financialCycles")),
+		carriedOverExtraordinaryCents: v.optional(v.number()),
+		// Onboarding: saldo de hoy hasta el próximo cobro. No es un ingreso y no cuenta en la racha.
+		isOpeningCycle: v.optional(v.boolean()),
 	}).index("by_profile_status", ["profileId", "status"]),
 
 	// SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -145,6 +156,7 @@ export const appTables = {
 		type: v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
 		allocatedAmount: v.number(),
 		remainingAmount: v.number(), // Saldo vivo mutable modificado por gastos en tiempo real
+		carriedOverCents: v.optional(v.number()),
 		frozenUntil: v.optional(v.number()),
 	})
 		.index("by_cycle_type", ["cycleId", "type"])

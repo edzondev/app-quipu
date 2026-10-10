@@ -1,0 +1,42 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+  - p0
+  - progreso
+---
+# El APK preview no puede ser un build de desarrollo.
+# progress-preview-picker.tsx solo pinta si progressScenarios() no es null, y eso
+# ocurre solo con __DEV__. Cuenta fija QUIPU_E2E_EMAIL.
+# Los otros flujos de Progreso tocan progress-preview-live con optional: true
+# para seguir sirviendo si el picker está (build de desarrollo).
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- tapOn:
+    text: "Progreso"
+- extendedWaitUntil:
+    visible: "(Aún no cierras un ciclo\\.|CICLOS CERRADOS EN VERDE)"
+    timeout: 20000
+- assertNotVisible:
+    id: progress-preview-picker
+- assertNotVisible:
+    id: progress-preview-live
+- assertNotVisible:
+    id: progress-preview-sinCiclos
+- assertNotVisible:
+    id: progress-preview-primerCierre
+- assertNotVisible:
+    id: progress-preview-rachaSeis
+- assertNotVisible:
+    id: progress-preview-rachaRota
+- assertNotVisible: "Vista de prueba · solo desarrollo"
+- assertNotVisible: "Datos reales"
+- assertNotVisible: "Sin ciclos"
+- assertNotVisible: "Primer cierre"
+- assertNotVisible: "Racha de 6"
+- assertNotVisible: "Racha rota"

@@ -1,5 +1,12 @@
+import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import {
+	dashboardClosedCycle,
+	findLatestClosedCycle,
+	loadClosedCycleSurplusAmounts,
+	summaryClosedCycle,
+} from "./lib/closedCycleSurplus";
 import { resolveCoachPresentation } from "./lib/coachState";
 import {
 	computeCoverageProgressPercent,
@@ -21,10 +28,12 @@ import {
 	computeSurplusProjection,
 	detectEarlyCycle,
 	evaluateCycleCompliance,
+	isCyclePastEnd,
 	mergeRecentMovements,
 	resolveHeroStatusBadge,
 	sortCommitmentsByDue,
 } from "./lib/dashboardMath";
+import { cycleStartedOnLimaDay } from "./lib/incomeEventLogic";
 import { buildCoverageByIdFromCycleDocs } from "./lib/loadCycleCoverageContext";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
@@ -42,7 +51,9 @@ function envelopeLabel(type: "needs" | "wants" | "savings"): string {
 }
 
 export const getSummary = query({
-	args: {},
+	// Cache key only: the server decides everything with Date.now(). A new Lima day
+	// makes the client re-subscribe, so the summary is recomputed after midnight.
+	args: { limaDay: v.optional(v.string()) },
 	handler: async (ctx) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
@@ -69,6 +80,19 @@ export const getSummary = query({
 		const now = Date.now();
 
 		if (!activeCycle) {
+			const latestClosed = await findLatestClosedCycle(ctx, profile._id);
+			let surplusCents = 0;
+			if (latestClosed !== null) {
+				const amounts = await loadClosedCycleSurplusAmounts(
+					ctx,
+					latestClosed._id,
+					latestClosed.closeSurplusMovedAt,
+					latestClosed.carriedOverToCycleId,
+				);
+				surplusCents = amounts.signedSurplusCents;
+			}
+			const closedCycle = summaryClosedCycle(false, latestClosed, surplusCents);
+
 			const emptyCommitments = sortCommitmentsByDue(
 				commitmentsRaw.map((commitment) => {
 					const nextDueAt = resolveCommitmentNextDueAt({
@@ -106,6 +130,9 @@ export const getSummary = query({
 					name: profile.name,
 					currencyCode: profile.currencyCode,
 					plan: profile.plan,
+					allocationNeeds: profile.allocationNeeds,
+					allocationWants: profile.allocationWants,
+					allocationSavings: profile.allocationSavings,
 				},
 				cycle: null,
 				hero: null,
@@ -114,6 +141,7 @@ export const getSummary = query({
 				coach: null,
 				movements: [],
 				isEarlyCycle: false,
+				closedCycle,
 			};
 		}
 
@@ -128,8 +156,9 @@ export const getSummary = query({
 		}
 
 		const cycleMetrics = computeCycleDayMetrics(activeCycle.startDate, activeCycle.endDate, now);
+		const pastEnd = isCyclePastEnd(activeCycle.endDate, now);
 
-		const compliance = evaluateCycleCompliance(envelopesRaw);
+		const compliance = evaluateCycleCompliance(envelopesRaw, activeCycle.isOpeningCycle === true);
 		const wantsEnvelope = envelopeByType.get("wants");
 		const needsEnvelope = envelopeByType.get("needs");
 		const savingsEnvelope = envelopeByType.get("savings");
@@ -213,11 +242,19 @@ export const getSummary = query({
 			const envelope = envelopeByType.get(type);
 			const remainingAmount = envelope?.remainingAmount ?? 0;
 			const allocatedAmount = envelope?.allocatedAmount ?? 0;
+			const carriedOverCents = envelope?.carriedOverCents ?? 0;
+			const incomeCents = incomesForCycle.reduce(
+				(sum, event) => sum + event.distributionApplied[type],
+				0,
+			);
 			return {
 				type,
 				remainingAmount,
 				allocatedAmount,
 				percentRemaining: computeEnvelopePercentRemaining(remainingAmount, allocatedAmount),
+				carriedOverCents,
+				incomeCents,
+				totalCents: carriedOverCents + incomeCents,
 			};
 		});
 
@@ -227,6 +264,7 @@ export const getSummary = query({
 				commitments: commitmentsRaw,
 				incomeEvents: incomesForCycle,
 				reservationRows: reservationsForCycle,
+				envelopes: envelopesRaw,
 			},
 			now,
 		);
@@ -275,6 +313,7 @@ export const getSummary = query({
 			.order("desc")
 			.first();
 
+		const surplusCents = computeSurplusProjection(envelopes);
 		const uncoveredCommitmentsCents = computeUncoveredCommitmentRemainingCents(
 			commitments.map((commitment) => ({
 				remaining: commitment.remaining,
@@ -309,7 +348,8 @@ export const getSummary = query({
 			compliance,
 			uncoveredCommitmentsCents,
 			profileName: profile.name,
-			surplusCents: computeSurplusProjection(envelopes),
+			// The tranquil copy says «de sobra», so it never receives a negative amount.
+			surplusCents: Math.max(0, surplusCents),
 			currencySymbol: profile.currencySymbol,
 			crisisSnoozed:
 				profile.coachCrisisSnoozedUntil != null && profile.coachCrisisSnoozedUntil > now,
@@ -353,6 +393,9 @@ export const getSummary = query({
 				name: profile.name,
 				currencyCode: profile.currencyCode,
 				plan: profile.plan,
+				allocationNeeds: profile.allocationNeeds,
+				allocationWants: profile.allocationWants,
+				allocationSavings: profile.allocationSavings,
 			},
 			cycle: {
 				id: activeCycle._id,
@@ -360,9 +403,15 @@ export const getSummary = query({
 				endDate: activeCycle.endDate,
 				needsReview: activeCycle.needsReview ?? false,
 				unallocatedCents: activeCycle.unallocatedCents ?? 0,
+				carriedOverFromCycleId: activeCycle.carriedOverFromCycleId ?? null,
+				carriedOverExtraordinaryCents: activeCycle.carriedOverExtraordinaryCents ?? 0,
+				isOpeningCycle: activeCycle.isOpeningCycle === true,
 				...cycleMetrics,
+				pastEnd,
+				startedToday: cycleStartedOnLimaDay(activeCycle, now),
 			},
 			hero,
+			surplusCents,
 			liquidity: {
 				spendableCents: spendable.spendableCents,
 				reservedCents: spendable.reservedCents,
@@ -374,6 +423,19 @@ export const getSummary = query({
 			coach,
 			movements,
 			isEarlyCycle,
+			closedCycle: pastEnd
+				? dashboardClosedCycle(
+						activeCycle,
+						(
+							await loadClosedCycleSurplusAmounts(
+								ctx,
+								activeCycle._id,
+								activeCycle.closeSurplusMovedAt,
+								activeCycle.carriedOverToCycleId,
+							)
+						).signedSurplusCents,
+					)
+				: summaryClosedCycle(true, null, 0),
 		};
 	},
 });

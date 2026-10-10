@@ -58,3 +58,14 @@ export function limaDayLabel(ms: number): string {
 	const stamp = limaStamp(ms);
 	return `${stamp.day} ${LIMA_MONTHS[stamp.monthIndex] ?? ""}`.trim();
 }
+
+/** endDate de un ciclo es exclusivo. El último instante incluido es 1 ms antes. */
+export function inclusiveEndDate(endDate: number): number {
+	return endDate - 1;
+}
+
+/** Medianoche en Lima (UTC−5, sin horario de verano). */
+export function limaStartOfDay(ms: number): number {
+	const [year, month, day] = limaStamp(ms).key.split("-").map(Number);
+	return Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1, 5, 0, 0, 0);
+}

@@ -36,6 +36,15 @@ export type FundingEvent = {
 	amount: number;
 };
 
+/**
+ * La cobertura mezcla ingresos reales con fuentes virtuales (`__boost_*`, `__reservation_*`,
+ * `__carry_*`). Todas empiezan con `__`; un id de Convex nunca lo hace. Así una fuente virtual
+ * nueva no se cuela en `coveredBy`, que solo acepta `incomeEvents` reales.
+ */
+export function isVirtualFundingId(eventId: string): boolean {
+	return eventId.startsWith("__");
+}
+
 export type CommitmentCoverageStatus = "covered" | "partial" | "not-started" | "overdue";
 
 export type CommitmentCoverageResult = {

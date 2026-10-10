@@ -54,6 +54,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
 	reactCompiler: true,
+	// Túnel Cloudflare de dev (dev.quipu-finance.app → localhost:3000).
+	allowedDevOrigins: ["dev.quipu-finance.app"],
 	experimental: {
 		optimizePackageImports: ["date-fns"],
 	},

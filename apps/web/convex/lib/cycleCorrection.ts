@@ -174,3 +174,20 @@ export function buildCycleCorrectionTransfers(input: {
 		conservedLiquidMinusContributions,
 	};
 }
+
+/**
+ * Correction restates the envelope as spent + the new remaining.
+ * That pair is no longer "income + carry", so the old carry must not stay.
+ */
+export function envelopeAmountsAfterCorrection(input: {
+	allocatedAmount: number;
+	remainingAmount: number;
+	targetRemaining: number;
+}) {
+	const spent = Math.max(0, input.allocatedAmount - input.remainingAmount);
+	return {
+		remainingAmount: input.targetRemaining,
+		allocatedAmount: spent + input.targetRemaining,
+		carriedOverCents: 0,
+	};
+}

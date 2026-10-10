@@ -34,6 +34,8 @@ export type CommitmentsScreenModel = {
 	rows: CommitmentRowView[];
 };
 
+export const COMMITMENT_QUICK_NAMES = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"] as const;
+
 export type CommitmentFormValues = {
 	name: string;
 	amountRaw: string;

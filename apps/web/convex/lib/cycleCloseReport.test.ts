@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
 	buildCycleCloseReport,
 	buildCycleLabel,
+	type CycleCloseReportInput,
 	computeEnvelopeSpentCents,
 	isCloseReportEligible,
 	isJustClosedAfterCycleClose,
 } from "./cycleCloseReport";
+import { cycleCountsForStreakAndGreen } from "./evaluateClosedCycle";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -70,6 +72,43 @@ describe("buildCycleCloseReport", () => {
 		expect(result.hasExtraordinaryIncome).toBe(false);
 	});
 
+	it("stays the same when leftover is carried or moved without changing remaining", () => {
+		const input: CycleCloseReportInput = {
+			cycleStartDate: Date.UTC(2026, 6, 1),
+			incomeEvents: [{ amount: 3_500_00, incomeKind: "habitual" }],
+			envelopes: [
+				{ type: "needs", allocatedAmount: 1_750_00, remainingAmount: 250_00 },
+				{ type: "wants", allocatedAmount: 1_050_00, remainingAmount: 400_00 },
+				{ type: "savings", allocatedAmount: 700_00, remainingAmount: 200_00 },
+			],
+			cycleHistory: { status: "warning" },
+			streak: 2,
+		};
+		const before = buildCycleCloseReport(input);
+		const withCarryNoted = buildCycleCloseReport({
+			...input,
+			envelopes: input.envelopes.map((envelope) => ({
+				...envelope,
+				carriedOverCents: envelope.remainingAmount,
+			})),
+		});
+		const ifRemainingDropped = buildCycleCloseReport({
+			...input,
+			envelopes: input.envelopes.map((envelope) => ({
+				...envelope,
+				remainingAmount: 0,
+			})),
+		});
+
+		expect(withCarryNoted).toEqual(before);
+		expect(ifRemainingDropped).not.toEqual(before);
+		expect(before.spendByEnvelope).toEqual([
+			{ type: "needs", label: "Necesidades", spentCents: 1_500_00 },
+			{ type: "wants", label: "Gustos", spentCents: 650_00 },
+			{ type: "savings", label: "Ahorro", spentCents: 500_00 },
+		]);
+	});
+
 	it("flags extraordinary income in the report", () => {
 		const result = buildCycleCloseReport({
 			cycleStartDate: Date.UTC(2026, 11, 1),
@@ -106,6 +145,37 @@ describe("buildCycleCloseReport", () => {
 describe("computeEnvelopeSpentCents", () => {
 	it("never returns negative spend", () => {
 		expect(computeEnvelopeSpentCents(100, 150)).toBe(0);
+	});
+});
+
+describe("streakEvaluated on the close report", () => {
+	const startDate = Date.parse("2026-10-09T15:00:00-05:00");
+
+	it("is false for an opening cycle and for a close under 24 hours", () => {
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: true,
+				startDate,
+				closeAt: startDate + MS_PER_DAY,
+			}),
+		).toBe(false);
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: startDate + 20 * 60 * 1000,
+			}),
+		).toBe(false);
+	});
+
+	it("is true for a non-opening cycle that lasted at least 24 hours", () => {
+		expect(
+			cycleCountsForStreakAndGreen({
+				isOpeningCycle: false,
+				startDate,
+				closeAt: startDate + MS_PER_DAY,
+			}),
+		).toBe(true);
 	});
 });
 

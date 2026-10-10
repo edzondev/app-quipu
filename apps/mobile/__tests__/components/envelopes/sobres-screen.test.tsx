@@ -2,6 +2,10 @@ import { act, cleanup, fireEvent, render } from "@testing-library/react-native";
 import { SobresScreen } from "@/shared/components/envelopes/sobres-screen";
 import type { SobresScreenModel } from "@/shared/lib/dashboard/sobres-model";
 
+jest.mock("@/shared/components/ui/reicon", () => ({
+	ChevronLeft: () => null,
+}));
+
 const screen: SobresScreenModel = {
 	dayLabel: "DÍA 15 / 30",
 	envelopes: [
@@ -18,6 +22,7 @@ const screen: SobresScreenModel = {
 			footLeft: "GASTADO S/ 612",
 			footRight: "ALQUILER PENDIENTE",
 			footRightTone: "calm",
+			carryLabel: null,
 		},
 		{
 			tone: "wants",
@@ -32,6 +37,7 @@ const screen: SobresScreenModel = {
 			footLeft: "GASTADO S/ 819",
 			footRight: "ALCANZA 6 DÍAS",
 			footRightTone: "fast",
+			carryLabel: null,
 		},
 		{
 			tone: "savings",
@@ -46,6 +52,7 @@ const screen: SobresScreenModel = {
 			footLeft: "FONDO + VIAJE",
 			footRight: "100%",
 			footRightTone: "calm",
+			carryLabel: null,
 		},
 	],
 };
@@ -61,13 +68,14 @@ describe("SobresScreen", () => {
 		await cleanup();
 	});
 
-	it("muestra barra, ritmo y las dos acciones", async () => {
+	it("muestra barra y ritmo, y deja solo registrar gasto", async () => {
 		const onMoveMoney = jest.fn();
 		const onRegisterExpense = jest.fn();
 		const view = await render(
 			<SobresScreen
 				status="ready"
 				screen={screen}
+				onBack={jest.fn()}
 				onMoveMoney={onMoveMoney}
 				onRegisterExpense={onRegisterExpense}
 			/>,
@@ -94,9 +102,10 @@ describe("SobresScreen", () => {
 			now: 78,
 		});
 
-		await press(view.getByText("Mover dinero"));
+		expect(view.queryByText("Mover dinero")).toBeNull();
+		expect(view.queryByRole("button", { name: "Mover dinero" })).toBeNull();
 		await press(view.getByText("Registrar gasto"));
-		expect(onMoveMoney).toHaveBeenCalledTimes(1);
+		expect(onMoveMoney).not.toHaveBeenCalled();
 		expect(onRegisterExpense).toHaveBeenCalledTimes(1);
 	});
 
@@ -105,6 +114,7 @@ describe("SobresScreen", () => {
 			<SobresScreen
 				status="loading"
 				screen={null}
+				onBack={jest.fn()}
 				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
@@ -117,6 +127,7 @@ describe("SobresScreen", () => {
 			<SobresScreen
 				status="empty"
 				screen={null}
+				onBack={jest.fn()}
 				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
@@ -124,5 +135,44 @@ describe("SobresScreen", () => {
 		expect(empty.getByText("Todavía no hay sobres en el ciclo activo.")).toBeTruthy();
 		expect(empty.queryByText("Registrar gasto")).toBeNull();
 		expect(empty.queryByText("Necesidades")).toBeNull();
+	});
+
+	it("muestra la línea de arrastre con tabular-nums", async () => {
+		const withCarry: SobresScreenModel = {
+			...screen,
+			envelopes: [
+				{
+					...screen.envelopes[0],
+					carryLabel: "Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910",
+				},
+				...screen.envelopes.slice(1),
+			],
+		};
+		const view = await render(
+			<SobresScreen
+				status="ready"
+				screen={withCarry}
+				onBack={jest.fn()}
+				onMoveMoney={jest.fn()}
+				onRegisterExpense={jest.fn()}
+			/>,
+		);
+		const line = view.getByText("Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910");
+		expect(line.props.className).toContain("tabular-nums");
+	});
+
+	it("vuelve atrás con ChevronLeft", async () => {
+		const onBack = jest.fn();
+		const view = await render(
+			<SobresScreen
+				status="ready"
+				screen={screen}
+				onBack={onBack}
+				onMoveMoney={jest.fn()}
+				onRegisterExpense={jest.fn()}
+			/>,
+		);
+		await press(view.getByLabelText("Volver"));
+		expect(onBack).toHaveBeenCalledTimes(1);
 	});
 });

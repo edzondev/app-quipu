@@ -1,5 +1,6 @@
 import { components, internal } from "./_generated/api";
 import { type ActionCtx, internalAction } from "./_generated/server";
+import { assertDevCloudOnly } from "./lib/devCloudGuard";
 
 const AUTH_MODELS = ["user", "session", "account", "verification", "jwks", "passkey"] as const;
 
@@ -18,6 +19,7 @@ async function deleteAuthModel(
 export const resetJwks = internalAction({
 	args: {},
 	handler: async (ctx): Promise<{ deleted: number }> => {
+		assertDevCloudOnly(process.env.CONVEX_CLOUD_URL);
 		const deleted = await deleteAuthModel(ctx, "jwks");
 		return { deleted };
 	},
@@ -28,6 +30,7 @@ export const resetJwks = internalAction({
 export const resetAll = internalAction({
 	args: {},
 	handler: async (ctx): Promise<{ deleted: Record<string, number> }> => {
+		assertDevCloudOnly(process.env.CONVEX_CLOUD_URL);
 		const appResult = await ctx.runMutation(internal.lib.resetAppTables.resetAppTables);
 		const appDeleted: Record<string, number> =
 			(appResult as { deleted?: Record<string, number> } | null)?.deleted ?? {};

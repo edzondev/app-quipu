@@ -1,15 +1,15 @@
+import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { Pressable, Text, View } from "react-native";
+import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
-import { ChevronLeft } from "@/shared/components/ui/reicon";
-import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
-import { currentMonthLabel, cycleDaysForModel } from "@/shared/lib/onboarding/cycle";
-import {
-	estimateDailyAvailable,
-	formatDailyAvailable,
-	formatSoles,
-} from "@/shared/lib/onboarding/daily";
-import { MonoLabel } from "./mono-label";
+import AuthButton from "@/shared/components/auth/auth-button";
+import { isCommitmentValid, validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
+import { formatSoles } from "@/shared/lib/onboarding/daily";
+import { formatPayDate } from "@/shared/lib/onboarding/pay-date";
+
+const COMMITMENTS_NOTE = "También puedes agregarlos después desde Plan.";
 
 function SummaryRow({ label, value, testID }: { label: string; value: string; testID?: string }) {
 	return (
@@ -22,24 +22,27 @@ function SummaryRow({ label, value, testID }: { label: string; value: string; te
 	);
 }
 
+function FieldError({ testID, message }: { testID: string; message: string | undefined }) {
+	if (!message) return null;
+	return (
+		<Text testID={testID} className="font-hanken text-[13px] text-danger">
+			{message}
+		</Text>
+	);
+}
+
 export function StepConfirm() {
-	const { state, dispatch } = useOnboarding();
-	const { submit, isSubmitting, error } = useCompleteOnboarding();
+	const router = useRouter();
+	const { state } = useOnboarding();
+	const { submit, isSubmitting, error, commitmentsFailed } = useCompleteOnboarding();
+	const startLock = useRef(false);
+	const balanceError = state.cycleFieldErrors.openingBalanceCents;
+	const payDateError = state.cycleFieldErrors.nextPayDate;
+	const showRetry = Boolean(error) || Boolean(balanceError) || Boolean(payDateError);
 
 	const referenceCents = state.referenceIncomeCents;
+	const validCommitments = state.commitments.filter(isCommitmentValid);
 	const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
-
-	const dailyCents =
-		referenceCents == null
-			? null
-			: estimateDailyAvailable({
-					referenceIncomeCents: referenceCents,
-					commitmentsTotalCents,
-					allocationNeeds: state.allocationNeeds,
-					allocationWants: state.allocationWants,
-					allocationSavings: state.allocationSavings,
-					cycleDays: cycleDaysForModel(state),
-				});
 
 	const envelopeAmount = (pct: number) =>
 		referenceCents == null ? null : Math.floor((referenceCents * pct) / 100);
@@ -50,46 +53,60 @@ export function StepConfirm() {
 		{ key: "savings", label: "Ahorro", pct: state.allocationSavings },
 	] as const;
 
+	const start = async () => {
+		if (startLock.current) return;
+		startLock.current = true;
+		const ok = await submit();
+		if (!ok) {
+			startLock.current = false;
+			return;
+		}
+		router.replace("/(tabs)");
+	};
+
 	return (
-		<View className="flex-1 bg-background px-6 pt-16">
-			<View className="h-14 flex-row items-center">
-				<Pressable
-					testID="confirm-back"
-					onPress={() => dispatch({ type: "SET_STEP", payload: 4 })}
-					hitSlop={12}
-					className="-ml-1 px-1 py-2"
-				>
-					<ChevronLeft size={22} colorClassName="accent-foreground" />
-				</Pressable>
-			</View>
-
-			<View className="flex-1 pt-4">
-				<View className="gap-4">
-					<MonoLabel>CONFIRMA TU SISTEMA</MonoLabel>
-					<Text className="font-newsreader text-[28px] text-foreground">
-						{`Así queda tu ciclo de ${currentMonthLabel()}`}
-					</Text>
-				</View>
-
-				<View testID="confirm-daily-card" className="mt-6 rounded-xl bg-primary/10 px-4 py-4">
-					<MonoLabel>PODRÁS GASTAR AL DÍA</MonoLabel>
-					<Text testID="confirm-daily" className="mt-2 font-geist-mono text-[32px] text-foreground">
-						{dailyCents == null ? "—" : formatDailyAvailable(dailyCents)}
-					</Text>
-					{referenceCents == null ? (
-						<Text className="mt-2 font-hanken text-[13px] text-foreground/55">
-							Registra tu primer ingreso para ver tu disponible al día.
-						</Text>
+		<WizardShell
+			stepNumber={5}
+			footer={
+				<View className="gap-3">
+					<AuthButton
+						label="Empezar mi ciclo"
+						onPress={() => void start()}
+						loading={isSubmitting}
+						disabled={isSubmitting}
+					/>
+					{showRetry ? (
+						<Pressable
+							testID="confirm-retry"
+							accessibilityRole="button"
+							accessibilityLabel="Reintentar"
+							onPress={() => void start()}
+							disabled={isSubmitting}
+							className="items-center py-2 active:opacity-60"
+						>
+							<Text className="font-hanken-semibold text-[13px] text-foreground">Reintentar</Text>
+						</Pressable>
 					) : null}
 				</View>
-
-				<View className="mt-6 gap-3">
+			}
+		>
+			<View className="gap-6">
+				<Text className="font-hanken text-[14px] text-foreground/55">
+					Anota el dinero que tienes hoy para ver tu número.
+				</Text>
+				<View className="gap-3">
 					<SummaryRow
-						label="Ingreso del ciclo"
+						label="Dinero de hoy"
 						testID="confirm-income"
 						value={referenceCents == null ? "—" : formatSoles(referenceCents)}
 					/>
-
+					<FieldError testID="field-error-openingBalanceCents" message={balanceError} />
+					<SummaryRow
+						label="Próximo cobro"
+						testID="confirm-pay-date"
+						value={state.nextPayDate ? formatPayDate(state.nextPayDate) : "—"}
+					/>
+					<FieldError testID="field-error-nextPayDate" message={payDateError} />
 					{envelopes.map((envelope) => {
 						const amount = envelopeAmount(envelope.pct);
 						return (
@@ -103,44 +120,36 @@ export function StepConfirm() {
 							/>
 						);
 					})}
-
 					<SummaryRow
-						label="Compromisos reservados"
+						label="Compromisos"
 						testID="confirm-commitments"
 						value={formatSoles(commitmentsTotalCents)}
 					/>
+					{validCommitments.map((commitment, index) => (
+						<View
+							key={commitment.id}
+							testID={`confirm-commitment-${index}`}
+							className="flex-row items-center justify-between pl-3"
+						>
+							<Text className="font-hanken text-[13px] text-foreground/55">
+								{`${commitment.name.trim()} · día ${commitment.dueDay}`}
+							</Text>
+							<Text className="font-hanken text-[13px] text-foreground/55">
+								{formatSoles(commitment.amountCents)}
+							</Text>
+						</View>
+					))}
 				</View>
 
-				<Text className="mt-6 font-hanken text-[13px] text-foreground/45">
-					Puedes cambiar cualquiera de estos números después, desde Ajustes · Tu sistema.
-				</Text>
-
 				{error ? (
-					<Text testID="confirm-error" className="mt-4 font-hanken text-[13px] text-danger">
+					<Text testID="confirm-error" className="font-hanken text-[13px] text-danger">
 						{error}
 					</Text>
 				) : null}
+				{commitmentsFailed ? (
+					<Text className="font-hanken text-[13px] text-foreground/55">{COMMITMENTS_NOTE}</Text>
+				) : null}
 			</View>
-
-			<View className="gap-3 pb-4">
-				<Pressable
-					testID="confirm-submit"
-					onPress={submit}
-					disabled={isSubmitting}
-					className="items-center rounded-xl bg-primary px-5 py-3.5"
-				>
-					<Text className="font-hanken-semibold text-[15px] text-background">
-						{isSubmitting ? "Creando…" : "Empezar mi ciclo"}
-					</Text>
-				</Pressable>
-				<Pressable
-					testID="confirm-adjust"
-					onPress={() => dispatch({ type: "SET_STEP", payload: 3 })}
-					className="items-center py-2"
-				>
-					<Text className="font-hanken-semibold text-[13px] text-foreground/55">Ajustar algo</Text>
-				</Pressable>
-			</View>
-		</View>
+		</WizardShell>
 	);
 }

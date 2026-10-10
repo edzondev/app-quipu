@@ -6,6 +6,7 @@ import {
 	isJustClosedAfterCycleClose,
 } from "./lib/cycleCloseReport";
 import { computeCycleDayMetrics } from "./lib/dashboardMath";
+import { cycleCountsForStreakAndGreen } from "./lib/evaluateClosedCycle";
 
 const envelopeSpendValidator = v.object({
 	type: v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
@@ -20,6 +21,7 @@ const reportValidator = v.object({
 	spendByEnvelope: v.array(envelopeSpendValidator),
 	savingsCents: v.number(),
 	streak: v.number(),
+	streakEvaluated: v.boolean(),
 	status: v.union(v.literal("compliant"), v.literal("warning"), v.literal("failed")),
 	hasExtraordinaryIncome: v.boolean(),
 });
@@ -110,6 +112,11 @@ export const getLatestCloseReport = query({
 			report: {
 				closedCycleId: latestHistory.cycleId,
 				...report,
+				streakEvaluated: cycleCountsForStreakAndGreen({
+					isOpeningCycle: closedCycle.isOpeningCycle,
+					startDate: closedCycle.startDate,
+					closeAt: latestHistory.evaluatedAt,
+				}),
 			},
 		};
 	},

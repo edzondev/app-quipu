@@ -1,6 +1,11 @@
 import { fixtureId } from "@/__fixtures__/convex-id";
-import { commitment, summaryWithoutCycle } from "@/__fixtures__/dashboard-summary";
-import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
+import {
+	commitment,
+	emptyCycleCarry,
+	emptyEnvelopeCarry,
+	summaryWithoutCycle,
+} from "@/__fixtures__/dashboard-summary";
+import { envelopeCarryLabel, mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
 const TODAY_MOVE = Date.UTC(2026, 7, 15, 15, 0, 0);
@@ -23,25 +28,37 @@ const hero: Hero = {
 function summary(
 	overrides: {
 		hero?: Hero;
+		surplusCents?: number;
 		envelopes?: ActiveSummary["envelopes"];
 		movements?: ActiveSummary["movements"];
 		commitments?: ActiveSummary["commitments"];
 	} = {},
 ): ActiveSummary {
 	return {
-		profile: { name: "Edzon", currencyCode: "PEN", plan: "free" },
+		profile: {
+			name: "Edzon",
+			currencyCode: "PEN",
+			plan: "free",
+			allocationNeeds: 50,
+			allocationWants: 30,
+			allocationSavings: 20,
+		},
 		cycle: {
 			id: fixtureId("financialCycles", "cycle"),
 			startDate: AUGUST_START,
 			endDate: AUGUST_START,
 			needsReview: false,
 			unallocatedCents: 0,
+			...emptyCycleCarry,
 			daysTotal: 30,
 			daysRemaining: 15,
 			daysElapsed: 15,
 			progressPercent: 50,
+			pastEnd: false,
+			startedToday: false,
 		},
 		hero: overrides.hero ?? hero,
+		surplusCents: overrides.surplusCents ?? 154300,
 		liquidity: {
 			spendableCents: 0,
 			reservedCents: 0,
@@ -54,18 +71,21 @@ function summary(
 				allocatedAmount: 175000,
 				remainingAmount: 61200,
 				percentRemaining: 35,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "wants" as const,
 				allocatedAmount: 105000,
 				remainingAmount: 23100,
 				percentRemaining: 22,
+				...emptyEnvelopeCarry,
 			},
 			{
 				type: "savings" as const,
 				allocatedAmount: 70000,
 				remainingAmount: 70000,
 				percentRemaining: 100,
+				...emptyEnvelopeCarry,
 			},
 		],
 		coach: {
@@ -98,6 +118,7 @@ function summary(
 			},
 		],
 		isEarlyCycle: false,
+		closedCycle: null,
 	};
 }
 
@@ -165,6 +186,9 @@ describe("mapDashboardHome", () => {
 				progress: 65,
 				tone: "needs",
 				suffix: "de 1,750",
+				carriedOverCents: 0,
+				incomeCents: 0,
+				carryTotalCents: 0,
 			},
 			{
 				label: "Gustos",
@@ -176,6 +200,9 @@ describe("mapDashboardHome", () => {
 				progress: 78,
 				tone: "wants",
 				suffix: "de 1,050",
+				carriedOverCents: 0,
+				incomeCents: 0,
+				carryTotalCents: 0,
 			},
 			{
 				label: "Ahorro",
@@ -187,9 +214,11 @@ describe("mapDashboardHome", () => {
 				progress: 100,
 				tone: "savings",
 				suffix: "apartado",
+				carriedOverCents: 0,
+				incomeCents: 0,
+				carryTotalCents: 0,
 			},
 		]);
-		expect(home?.envelopesBalanceCents).toBe(154300);
 	});
 
 	it("acota la barra si el sobre quedó en negativo", () => {
@@ -201,6 +230,7 @@ describe("mapDashboardHome", () => {
 						allocatedAmount: 1000,
 						remainingAmount: -500,
 						percentRemaining: 0,
+						...emptyEnvelopeCarry,
 					},
 				],
 			}),
@@ -211,8 +241,60 @@ describe("mapDashboardHome", () => {
 			remainingPercent: 0,
 			totalCents: 1000,
 			progress: 100,
+			carriedOverCents: 0,
+			incomeCents: 0,
+			carryTotalCents: 0,
 		});
-		expect(home?.surplusCents).toBe(0);
+	});
+
+	it("«Sobra» llega tal cual del servidor y negativa no se acota a cero", () => {
+		const home = mapDashboardHome(
+			summary({
+				surplusCents: -500,
+				envelopes: [
+					{
+						type: "needs",
+						allocatedAmount: 1000,
+						remainingAmount: -500,
+						percentRemaining: 0,
+						...emptyEnvelopeCarry,
+					},
+					{
+						type: "wants",
+						allocatedAmount: 1000,
+						remainingAmount: 0,
+						percentRemaining: 0,
+						...emptyEnvelopeCarry,
+					},
+				],
+			}),
+		);
+		expect(home?.surplusCents).toBe(-500);
+	});
+
+	it("copia el arrastre del resumen sin sumar los céntimos", () => {
+		const home = mapDashboardHome(
+			summary({
+				envelopes: [
+					{
+						type: "needs",
+						allocatedAmount: 1000,
+						remainingAmount: 500,
+						percentRemaining: 50,
+						...emptyEnvelopeCarry,
+						carriedOverCents: -5000,
+						incomeCents: 80000,
+						totalCents: 11100,
+					},
+				],
+			}),
+		);
+		expect(home?.envelopes[0]).toMatchObject({
+			carriedOverCents: -5000,
+			incomeCents: 80000,
+			carryTotalCents: 11100,
+		});
+		expect(home?.envelopes[0]?.carryTotalCents).not.toBe(-5000 + 80000);
 	});
 
 	it("lista los movimientos recientes del resumen", () => {
@@ -316,5 +398,45 @@ describe("mapDashboardHome", () => {
 			},
 		]);
 		expect(JSON.stringify(home?.commitments)).not.toContain("—");
+	});
+});
+
+describe("envelopeCarryLabel", () => {
+	it("arma la línea con arrastre positivo sin sumar en el cliente", () => {
+		expect(envelopeCarryLabel(12000, 80000, 91000, "S/")).toBe(
+			"Saldo que quedó S/ 120 + Ingreso S/ 800 = S/ 910",
+		);
+	});
+
+	it("no arma línea cuando el arrastre es 0", () => {
+		expect(envelopeCarryLabel(0, 80000, 80000, "S/")).toBeNull();
+	});
+
+	it("no arma línea en el ciclo de apertura aunque haya arrastre", () => {
+		expect(envelopeCarryLabel(12000, 80000, 91000, "S/", true)).toBeNull();
+	});
+
+	it("el diario de Inicio es displayDailyCents, sin restar compromisos", () => {
+		const value = summary({
+			hero: { ...hero, displayDailyCents: 6400, dailyAvailableCents: 9000 },
+			commitments: [
+				commitment({
+					id: "rent",
+					name: "Alquiler",
+					amount: 110000,
+					daysUntilDue: 1,
+					paymentStatus: "pending",
+				}),
+			],
+		});
+		expect(value.hero.displayDailyCents).toBe(6400);
+		expect(mapDashboardHome(value)?.dailyCents).toBe(6400);
+		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
+	});
+
+	it("pone el signo menos delante de S/ cuando el arrastre es negativo", () => {
+		expect(envelopeCarryLabel(-5000, 80000, 75000, "S/")).toBe(
+			"Saldo que quedó \u2212S/ 50 + Ingreso S/ 800 = S/ 750",
+		);
 	});
 });

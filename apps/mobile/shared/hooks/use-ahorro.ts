@@ -19,6 +19,6 @@ export function useAhorro() {
 export function useAhorroPlanRow() {
 	const { isAuthReady } = useProfileGate();
 	const overview = useQuery(api.savings.getOverview, isAuthReady ? {} : "skip");
-	if (overview === undefined) return null;
+	if (!isAuthReady || overview === undefined) return undefined;
 	return ahorroPlanRow(overview);
 }

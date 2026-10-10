@@ -16,3 +16,10 @@ type FormApiWithSubmitError = {
 export function setFormError(formApi: FormApiWithSubmitError, message: string) {
 	formApi.setErrorMap({ onSubmit: { form: message, fields: {} } });
 }
+
+export function formErrorMessage(error: unknown): string | null {
+	if (typeof error === "string" && error.length > 0) return error;
+	if (!error || typeof error !== "object" || !("form" in error)) return null;
+	if (typeof error.form !== "string" || error.form.length === 0) return null;
+	return error.form;
+}

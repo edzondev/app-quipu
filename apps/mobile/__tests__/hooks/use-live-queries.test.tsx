@@ -51,7 +51,7 @@ describe("consultas en vivo", () => {
 		expect(live).toHaveLength(0);
 	});
 
-	it("pide dashboard, movimientos, ahorro y gastos recientes con args vacíos", async () => {
+	it("pide dashboard, movimientos, ahorro y gastos recientes; solo el resumen lleva el día de Lima", async () => {
 		mockUseConvexAuth.mockReturnValue({
 			isAuthenticated: true,
 			isLoading: false,
@@ -75,7 +75,12 @@ describe("consultas en vivo", () => {
 			].sort(),
 		);
 		for (const call of mockUseQuery.mock.calls) {
-			if (call[1] !== "skip") expect(call[1]).toEqual({});
+			if (call[1] === "skip") continue;
+			if (queryName(call[0]) === "dashboard:getSummary") {
+				expect(call[1]).toEqual({ limaDay: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) });
+			} else {
+				expect(call[1]).toEqual({});
+			}
 		}
 	});
 });

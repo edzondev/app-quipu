@@ -1,0 +1,47 @@
+appId: com.quipu.finance
+---
+# Paso 1 Fijo con S/ 1200. Paso 2 deja la fecha por defecto (mañana): ya es válida,
+# no se abre el diálogo nativo de Android. Paso 3 vuelve a 50/30/20 después de probar +/−.
+- assertVisible: "TU SISTEMA · 01/05"
+- assertVisible: "¿Cómo entra tu dinero?"
+- assertNotVisible: "DÍA DE PAGO"
+- assertNotVisible: "El 1 de cada mes"
+- tapOn:
+    id: amount-input
+- inputText: "1200"
+- hideKeyboard
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cuándo cobras?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 02/05"
+- assertVisible: "Toca la fecha y elige tu próximo día de cobro. Puede ser desde mañana hasta dentro de 31 días."
+- assertVisible:
+    id: pay-date-field
+- tapOn:
+    text: "Continuar"
+    enabled: true
+- extendedWaitUntil:
+    visible: "¿Cómo repartes tu dinero?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 03/05"
+- assertVisible:
+    id: allocation-percent-needs
+    text: "50%"
+- tapOn:
+    id: allocation-increase-needs
+- assertVisible:
+    id: allocation-percent-needs
+    text: "55%"
+- tapOn:
+    id: allocation-reset
+- assertVisible:
+    id: allocation-percent-needs
+    text: "50%"
+- assertVisible: "Volver al 50/30/20"
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Qué pagas todos los meses?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 04/05"
+- assertVisible: "Cada compromiso necesita nombre, monto y el día del mes en que vence \\(del 1 al 31\\)\\. Los completos llevan una marca verde\\."

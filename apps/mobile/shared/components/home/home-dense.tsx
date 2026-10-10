@@ -1,8 +1,14 @@
-import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import SignOutButton from "@/shared/components/auth/sign-out-button";
-import type { BadgeTone, HomeModel, HomeTone } from "@/shared/lib/dashboard/home-model";
-import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
+import { EnvelopeCarryLine } from "@/shared/components/envelope-carry-line";
+import { SectionLabel } from "@/shared/components/section-label";
+import {
+	type BadgeTone,
+	envelopeCarryLabel,
+	type HomeModel,
+	type HomeTone,
+} from "@/shared/lib/dashboard/home-model";
+import { formatCents, formatCentsTrimmed, overspentByLabel } from "@/shared/lib/money";
+import { HomeIdentity } from "./home-identity";
 
 const TONE_FILL: Record<"needs" | "wants" | "savings", string> = {
 	needs: "bg-needs",
@@ -28,14 +34,6 @@ const VISIBLE_COMMITMENTS = 3;
 const TRACK = "bg-[#EDEBE4]";
 const ROW_RULE = "border-[#F0EEE8]";
 
-function SectionLabel({ children }: { children: ReactNode }) {
-	return (
-		<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
-			{children}
-		</Text>
-	);
-}
-
 function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 	const negative = cents < 0;
 	const [intPart, decPart] = (Math.abs(cents) / 100).toFixed(2).split(".");
@@ -56,9 +54,15 @@ function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 
 export function HomeDense({
 	home,
+	profileInitial,
+	profileName,
+	onOpenSettings,
 	onViewAllMovements,
 }: {
 	home: HomeModel;
+	profileInitial: string;
+	profileName: string;
+	onOpenSettings: () => void;
 	onViewAllMovements: () => void;
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
@@ -71,6 +75,7 @@ export function HomeDense({
 			contentContainerClassName="pb-8"
 			showsVerticalScrollIndicator={false}
 		>
+			<HomeIdentity initial={profileInitial} name={profileName} onOpenSettings={onOpenSettings} />
 			<View className="border-b border-line pb-6 pt-1">
 				<Text className="font-newsreader text-[22px] leading-[28px] tracking-tight text-foreground">
 					Hoy puedes gastar
@@ -89,34 +94,48 @@ export function HomeDense({
 					<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
 						{home.cycleStatusLabel}
 					</Text>
-					{" · Sobra "}
-					{formatCentsTrimmed(home.surplusCents, home.currencySymbol)}
+					{" · "}
+					{home.surplusCents < 0
+						? overspentByLabel(home.surplusCents, home.currencySymbol)
+						: `Sobra ${formatCentsTrimmed(home.surplusCents, home.currencySymbol)}`}
 				</Text>
 			</View>
 
 			<View className="border-b border-line pb-4 pt-5">
 				<SectionLabel>Sobres · queda</SectionLabel>
 				<View className="mt-3.5 gap-3">
-					{home.envelopes.map((envelope) => (
-						<View key={envelope.label} className="flex-row items-center gap-3">
-							<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
-								{envelope.shortLabel}
-							</Text>
-							<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
-								<View
-									className={`h-full rounded-full ${TONE_FILL[envelope.tone]}`}
-									style={{ width: `${envelope.remainingPercent}%` }}
-								/>
+					{home.envelopes.map((envelope) => {
+						const carry = envelopeCarryLabel(
+							envelope.carriedOverCents,
+							envelope.incomeCents,
+							envelope.carryTotalCents,
+							home.currencySymbol,
+							home.isOpeningCycle,
+						);
+						return (
+							<View key={envelope.label}>
+								<View className="flex-row items-center gap-3">
+									<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
+										{envelope.shortLabel}
+									</Text>
+									<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
+										<View
+											className={`h-full rounded-full ${TONE_FILL[envelope.tone]}`}
+											style={{ width: `${envelope.remainingPercent}%` }}
+										/>
+									</View>
+									<Text
+										className="w-[78px] text-right font-hanken text-[13.5px] text-foreground"
+										style={{ fontVariant: ["tabular-nums"] }}
+										selectable
+									>
+										{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
+									</Text>
+								</View>
+								{carry ? <EnvelopeCarryLine label={carry} /> : null}
 							</View>
-							<Text
-								className="w-[78px] text-right font-hanken text-[13.5px] text-foreground"
-								style={{ fontVariant: ["tabular-nums"] }}
-								selectable
-							>
-								{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
-							</Text>
-						</View>
-					))}
+						);
+					})}
 				</View>
 			</View>
 
@@ -198,10 +217,6 @@ export function HomeDense({
 						);
 					})
 				)}
-			</View>
-
-			<View className="mt-6 items-start">
-				<SignOutButton />
 			</View>
 		</ScrollView>
 	);

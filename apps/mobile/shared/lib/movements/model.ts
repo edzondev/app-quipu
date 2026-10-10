@@ -1,5 +1,5 @@
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
-import { LIMA_MONTHS, type LimaStamp, limaStamp } from "@/shared/lib/lima-date";
+import { inclusiveEndDate, LIMA_MONTHS, type LimaStamp, limaStamp } from "@/shared/lib/lima-date";
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
@@ -46,6 +46,7 @@ export type MovementsListModel = {
 	groups: MovementDayGroup[];
 	isEmpty: boolean;
 	isFilterEmpty: boolean;
+	hasCycle: boolean;
 };
 
 export const MOVEMENT_FILTERS = [
@@ -96,11 +97,13 @@ export function presentMovementList(
 			matchesFilter(row.tone, options.filter) && matchesQuery(row.label, options.query),
 	);
 
+	const cycle = readCycle(data);
 	return {
-		cycleLine: formatCycleLine(readCycle(data), built.length),
+		cycleLine: formatCycleLine(cycle, built.length),
 		groups: groupByDay(visible, symbol, nowStamp.key, yesterdayKey),
 		isEmpty: built.length === 0,
 		isFilterEmpty: built.length > 0 && visible.length === 0,
+		hasCycle: cycle != null,
 	};
 }
 
@@ -311,7 +314,7 @@ function formatCycleLine(
 
 function cycleRange(startDate: number, endDate: number): string {
 	const start = limaStamp(startDate);
-	const end = limaStamp(endDate - 1);
+	const end = limaStamp(inclusiveEndDate(endDate));
 	const startMonth = LIMA_MONTHS[start.monthIndex] ?? "";
 	const endMonth = LIMA_MONTHS[end.monthIndex] ?? "";
 	if (start.monthIndex === end.monthIndex) {

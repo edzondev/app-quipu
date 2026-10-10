@@ -3,11 +3,14 @@ import {
 	buildEarlyCycleCoachMessage,
 	buildEarlyCycleHeroBody,
 	computeCommitmentCoverageMvp,
+	computeCycleDayMetrics,
 	computeCycleProgress,
 	computeDailyAvailable,
 	computeDisplayDailyCents,
+	computeSurplusProjection,
 	daysUntilDueDay,
 	detectEarlyCycle,
+	isCyclePastEnd,
 	MS_PER_DAY,
 	mapComplianceToBadge,
 	mergeRecentMovements,
@@ -15,12 +18,78 @@ import {
 } from "./dashboardMath";
 
 describe("computeDailyAvailable", () => {
-	it("floors wants remaining over days remaining", () => {
-		expect(computeDailyAvailable(8250, 12)).toBe(687);
+	it("floors needs plus wants over days remaining", () => {
+		// S/ 50.00 + S/ 32.50 = S/ 82.50 over 12 days.
+		expect(computeDailyAvailable(50_00, 32_50, 12)).toBe(687);
 	});
 
 	it("uses at least 1 day to avoid division by zero", () => {
-		expect(computeDailyAvailable(5000, 0)).toBe(5000);
+		expect(computeDailyAvailable(30_00, 20_00, 0)).toBe(50_00);
+	});
+});
+
+describe("isCyclePastEnd", () => {
+	const endDate = Date.parse("2026-10-09T05:00:00.000Z");
+
+	it("is true when now reaches endDate", () => {
+		expect(isCyclePastEnd(endDate, endDate)).toBe(true);
+	});
+
+	it("is false one millisecond before endDate", () => {
+		expect(isCyclePastEnd(endDate, endDate - 1)).toBe(false);
+	});
+
+	it("does not treat UTC midnight as Lima midnight", () => {
+		const limaMidnight = Date.parse("2026-10-10T05:00:00.000Z");
+		expect(isCyclePastEnd(limaMidnight, Date.parse("2026-10-10T00:00:00.000Z"))).toBe(false);
+		expect(isCyclePastEnd(limaMidnight, limaMidnight)).toBe(true);
+	});
+
+	it("keeps remaining days at zero and daily available non-negative after the end", () => {
+		const start = endDate - 15 * MS_PER_DAY;
+		const now = endDate + 3 * 60 * 60 * 1000;
+		expect(isCyclePastEnd(endDate, now)).toBe(true);
+		const metrics = computeCycleDayMetrics(start, endDate, now);
+		expect(metrics.daysRemaining).toBe(0);
+		expect(metrics.daysRemaining).toBeGreaterThanOrEqual(0);
+		const daily = computeDailyAvailable(12_00, -4_00, metrics.daysRemaining);
+		expect(Number.isFinite(daily)).toBe(true);
+		expect(daily).toBeGreaterThanOrEqual(0);
+	});
+});
+
+describe("computeSurplusProjection", () => {
+	const envelope = (type: "needs" | "wants" | "savings", remainingAmount: number) => ({
+		type,
+		remainingAmount,
+		allocatedAmount: 0,
+	});
+
+	it("sums every envelope as is", () => {
+		expect(
+			computeSurplusProjection([
+				envelope("needs", 100),
+				envelope("wants", 50),
+				envelope("savings", 0),
+			]),
+		).toBe(150);
+	});
+
+	it("does not count an overspent envelope as zero", () => {
+		expect(
+			computeSurplusProjection([
+				envelope("needs", -100),
+				envelope("wants", 50),
+				envelope("savings", 0),
+			]),
+		).toBe(-50);
+		expect(
+			computeSurplusProjection([
+				envelope("needs", -80),
+				envelope("wants", -20),
+				envelope("savings", 0),
+			]),
+		).toBe(-100);
 	});
 });
 

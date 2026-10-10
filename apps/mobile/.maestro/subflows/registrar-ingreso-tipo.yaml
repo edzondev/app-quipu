@@ -1,0 +1,47 @@
+appId: com.quipu.finance
+---
+# QUIPU_MODE_ID es income-mode-new-cycle o income-mode-add.
+# Monto S/ 10.00. Inicio con ciclo entra por la pestaña «Registrar», luego «Ingreso».
+# Si el perfil es de planilla, «Sumar» muestra los tipos (income-extra-*). Se elige Otro.
+# La hoja scrollea: el envío puede quedar abajo.
+- tapOn:
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
+- extendedWaitUntil:
+    visible: "(?-i)REGISTRAR INGRESO"
+    timeout: 10000
+- tapOn:
+    id: ${QUIPU_MODE_ID}
+- runFlow:
+    when:
+      visible:
+        id: income-extra-types
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: income-extra-custom
+          direction: DOWN
+          timeout: 10000
+      - tapOn:
+          id: income-extra-custom
+- tapOn:
+    text: "1"
+- tapOn:
+    text: "0"
+- tapOn:
+    text: "0"
+- tapOn:
+    text: "0"
+- assertVisible: "10\\.00"
+- scrollUntilVisible:
+    element:
+      id: income-submit
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: income-submit
+    enabled: true
+- extendedWaitUntil:
+    notVisible: "(?-i)REGISTRAR INGRESO"
+    timeout: 20000

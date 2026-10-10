@@ -54,6 +54,7 @@ describe("presentProgress", () => {
 						heightPx: 26,
 						cycleStart: MAY,
 						monthLabel: null,
+						countsForStreak: true,
 					},
 					{
 						id: SEP,
@@ -61,6 +62,7 @@ describe("presentProgress", () => {
 						heightPx: 26,
 						cycleStart: SEP,
 						monthLabel: "Setiembre",
+						countsForStreak: true,
 					},
 				],
 			} satisfies Overview,
@@ -76,18 +78,65 @@ describe("presentProgress", () => {
 		expect(model.sinceLabel).toBe("DESDE MAYO");
 	});
 
+	it("pinta neutra la barra de un ciclo que no cuenta para la racha", () => {
+		const model = presentProgress(
+			{
+				...progressOverview,
+				chartBars: [
+					{
+						id: MAY,
+						status: "compliant",
+						heightPx: 26,
+						cycleStart: MAY,
+						monthLabel: "Mayo",
+						countsForStreak: false,
+					},
+					{
+						id: SEP,
+						status: "warning",
+						heightPx: 22,
+						cycleStart: SEP,
+						monthLabel: "Setiembre",
+						countsForStreak: true,
+					},
+					{
+						id: SEP + 1,
+						status: "current",
+						heightPx: 26,
+						cycleStart: SEP,
+						monthLabel: "Setiembre",
+						countsForStreak: false,
+					},
+				],
+			} satisfies Overview,
+			progressRewards,
+			savingsOverview,
+			null,
+		);
+
+		expect(model.bars.map((bar) => bar.tone)).toEqual(["neutral", "warning", "current"]);
+	});
+
 	it("omite DESDE si ningún ciclo trae mes", () => {
 		const model = presentProgress(
 			{
 				...progressOverview,
 				chartBars: [
-					{ id: -1, status: "empty", heightPx: 0, cycleStart: null, monthLabel: null },
+					{
+						id: -1,
+						status: "empty",
+						heightPx: 0,
+						cycleStart: null,
+						monthLabel: null,
+						countsForStreak: false,
+					},
 					{
 						id: MAY,
 						status: "failed",
 						heightPx: 18,
 						cycleStart: null,
 						monthLabel: null,
+						countsForStreak: true,
 					},
 				],
 			} satisfies Overview,
@@ -112,6 +161,7 @@ describe("presentProgress", () => {
 						heightPx: 26,
 						cycleStart: SEP,
 						monthLabel: "Setiembre",
+						countsForStreak: true,
 					},
 				],
 				achievements: [],
@@ -134,7 +184,16 @@ describe("presentProgress", () => {
 			{
 				...progressOverview,
 				currentStreak: 0,
-				chartBars: [{ id: -1, status: "empty", heightPx: 0, cycleStart: null, monthLabel: null }],
+				chartBars: [
+					{
+						id: -1,
+						status: "empty",
+						heightPx: 0,
+						cycleStart: null,
+						monthLabel: null,
+						countsForStreak: false,
+					},
+				],
 				achievements: [],
 			} satisfies Overview,
 			{
@@ -181,7 +240,6 @@ describe("presentClose", () => {
 			"Ahorro",
 			"Sobró",
 		]);
-		expect(model?.showMove).toBe(false);
 		expect(JSON.stringify(model)).not.toContain("%");
 		expect(JSON.stringify(model)).not.toContain("cycle-1");
 	});
@@ -240,7 +298,6 @@ describe("presentClose", () => {
 
 		expect(model?.title).toBe("Cerraste julio.");
 		expect(model?.surplusLabel).toBeNull();
-		expect(model?.showMove).toBe(false);
 	});
 
 	it("devuelve null sin reporte", () => {

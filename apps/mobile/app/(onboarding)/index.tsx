@@ -1,17 +1,21 @@
-import { Redirect, router } from "expo-router";
-import { useEffect } from "react";
+import { Redirect, router, useIsFocused } from "expo-router";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { IntroCarousel } from "@/modules/onboarding/components/intro-carousel";
+import { Welcome } from "@/modules/onboarding/components/welcome";
+import { AuthNotice } from "@/shared/components/auth/auth-notice";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
+import { takeOfflineSignOutNotice } from "@/shared/lib/auth/device-session";
 
 export default function OnboardingIndexScreen() {
 	const { isAuthReady, isLoading, profile } = useProfileGate();
+	const focused = useIsFocused();
+	const [offlineNotice] = useState(takeOfflineSignOutNotice);
 
 	useEffect(() => {
-		if (isAuthReady && profile?.onboardingComplete) {
+		if (focused && isAuthReady && profile?.onboardingComplete) {
 			router.replace("/(tabs)");
 		}
-	}, [isAuthReady, profile]);
+	}, [focused, isAuthReady, profile]);
 
 	// Sesión/token aún restaurándose en cold start: no decidir todavía.
 	if (isLoading) return null;
@@ -20,7 +24,12 @@ export default function OnboardingIndexScreen() {
 	if (!isAuthReady) {
 		return (
 			<View className="flex-1 bg-background px-0 pt-16">
-				<IntroCarousel />
+				{offlineNotice ? (
+					<View className="px-6">
+						<AuthNotice tone="warning" message={offlineNotice} />
+					</View>
+				) : null}
+				<Welcome />
 			</View>
 		);
 	}

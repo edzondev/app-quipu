@@ -1,51 +1,48 @@
-import { useRef } from "react";
+import { useForm, useStore } from "@tanstack/react-form";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CommitmentRow } from "@/modules/onboarding/components/commitment-row";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
-import { isCommitmentValid, validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
+import { COMMITMENT_QUICK_NAMES } from "@/shared/lib/commitments/model";
+import {
+	commitmentRowErrors,
+	commitmentsFromRows,
+	isCommitmentRowReady,
+	newCommitmentId,
+	rowsFromCommitments,
+	validCommitmentsTotalCents,
+} from "@/shared/lib/onboarding/commitments";
 import { formatSoles } from "@/shared/lib/onboarding/daily";
-import type { DraftCommitment } from "@/shared/lib/onboarding/types";
 
-const QUICK_CHIPS = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"];
+const BLOCKED_MESSAGE =
+	"Revisa los compromisos marcados en rojo. Corrígelos o quítalos con la X para continuar.";
 
 export function Step4Commitments() {
 	const { state, dispatch } = useOnboarding();
-	const idCounter = useRef(0);
+	const [attempted, setAttempted] = useState(false);
+	const form = useForm({
+		defaultValues: { rows: rowsFromCommitments(state.commitments) },
+		onSubmit: ({ value }) => {
+			if (value.rows.some((row) => !isCommitmentRowReady(row))) return;
+			dispatch({ type: "UPDATE", payload: { commitments: commitmentsFromRows(value.rows) } });
+			dispatch({ type: "SET_STEP", payload: 5 });
+		},
+	});
+	const rows = useStore(form.store, (store) => store.values.rows);
+	const totalCents = validCommitmentsTotalCents(commitmentsFromRows(rows));
+	const blocked = attempted && rows.some((row) => !isCommitmentRowReady(row));
 
-	const addQuickCommitment = (name: string) => {
-		idCounter.current += 1;
-		dispatch({
-			type: "ADD_COMMITMENT",
-			payload: {
-				id: `${Date.now()}-${idCounter.current}`,
-				name,
-				amountCents: 0,
-				dueDay: 0,
-			},
-		});
+	const next = () => {
+		setAttempted(true);
+		void form.handleSubmit();
 	};
 
-	const updateCommitment = (next: DraftCommitment) => {
-		dispatch({ type: "UPDATE_COMMITMENT", payload: next });
-	};
-
-	const removeCommitment = (id: string) => {
-		dispatch({ type: "REMOVE_COMMITMENT", payload: id });
-	};
-
-	const allValid = state.commitments.every(isCommitmentValid);
-	const totalCents = validCommitmentsTotalCents(state.commitments);
-
-	const goConfirm = () => {
-		dispatch({ type: "SET_STEP", payload: "confirm" });
-	};
-
-	const continueToConfirm = () => {
-		if (!allValid) return;
-		goConfirm();
+	const skip = () => {
+		dispatch({ type: "UPDATE", payload: { commitments: [] } });
+		dispatch({ type: "SET_STEP", payload: 5 });
 	};
 
 	return (
@@ -53,8 +50,23 @@ export function Step4Commitments() {
 			stepNumber={4}
 			footer={
 				<View className="gap-3">
-					<AuthButton label="Continuar" onPress={continueToConfirm} disabled={!allValid} />
-					<Pressable testID="commitments-skip" onPress={goConfirm} className="items-center py-2">
+					{blocked ? (
+						<Text
+							testID="commitments-blocked"
+							accessibilityRole="alert"
+							className="font-hanken text-[13px] text-danger"
+						>
+							{BLOCKED_MESSAGE}
+						</Text>
+					) : null}
+					<AuthButton label="Continuar" onPress={next} />
+					<Pressable
+						testID="commitments-skip"
+						accessibilityRole="button"
+						accessibilityLabel="Después"
+						onPress={skip}
+						className="items-center py-2 active:opacity-60"
+					>
 						<Text className="font-hanken-semibold text-[13px] text-foreground/55">Después</Text>
 					</Pressable>
 				</View>
@@ -71,31 +83,57 @@ export function Step4Commitments() {
 				</View>
 
 				<View className="flex-row flex-wrap gap-2">
-					{QUICK_CHIPS.map((name) => (
+					{COMMITMENT_QUICK_NAMES.map((name) => (
 						<Pressable
 							key={name}
 							testID={`chip-${name.toLowerCase()}`}
-							onPress={() => addQuickCommitment(name)}
-							className="border border-dashed border-line rounded-full px-3.5 py-2"
+							accessibilityRole="button"
+							accessibilityLabel={`Agregar ${name}`}
+							onPress={() => {
+								form.pushFieldValue("rows", {
+									key: newCommitmentId(),
+									name,
+									amountRaw: "",
+									dueDay: "",
+								});
+							}}
+							className="rounded-full border border-dashed border-line px-3.5 py-2 active:opacity-60"
 						>
 							<Text className="font-hanken text-[13px] text-foreground/70">{`+ ${name}`}</Text>
 						</Pressable>
 					))}
 				</View>
 
-				{state.commitments.length > 0 ? (
-					<View className="gap-3">
-						{state.commitments.map((commitment, index) => (
-							<CommitmentRow
-								key={commitment.id}
-								index={index}
-								commitment={commitment}
-								onChange={updateCommitment}
-								onRemove={() => removeCommitment(commitment.id)}
-							/>
-						))}
-					</View>
-				) : null}
+				<form.Field name="rows">
+					{(field) =>
+						field.state.value.length > 0 ? (
+							<View className="gap-3">
+								{field.state.value.map((row, index) => (
+									<CommitmentRow
+										key={row.key}
+										index={index}
+										row={row}
+										errors={commitmentRowErrors(row, { complete: attempted })}
+										ready={isCommitmentRowReady(row)}
+										onChange={(updatedRow) => {
+											const updated = field.state.value.slice();
+											updated[index] = updatedRow;
+											field.handleChange(updated);
+										}}
+										onRemove={() => {
+											void form.removeFieldValue("rows", index);
+										}}
+									/>
+								))}
+							</View>
+						) : null
+					}
+				</form.Field>
+
+				<Text className="font-hanken text-[13px] text-foreground/55">
+					Cada compromiso necesita nombre, monto y el día del mes en que vence (del 1 al 31). Los
+					completos llevan una marca verde.
+				</Text>
 
 				<View className="flex-row items-center justify-between">
 					<MonoLabel>Se reserva de Necesidades</MonoLabel>

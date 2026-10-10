@@ -1,39 +1,42 @@
 import { Redirect } from "expo-router";
+import { useState } from "react";
 import { View } from "react-native";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
-import { Step2System } from "@/modules/onboarding/components/step-2-system";
 import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
 import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
-import { StepSuccess } from "@/modules/onboarding/components/step-success";
+import { StepPayDate } from "@/modules/onboarding/components/step-pay-date";
 import { OnboardingProvider, useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
-function SistemaWizard() {
+export function SistemaWizard() {
 	const { state } = useOnboarding();
 
 	switch (state.step) {
 		case 1:
 			return <Step1IncomeProfile />;
 		case 2:
-			return <Step2System />;
+			return <StepPayDate />;
 		case 3:
 			return <Step3Allocation />;
 		case 4:
 			return <Step4Commitments />;
-		case "confirm":
+		case 5:
 			return <StepConfirm />;
-		case "success":
-			return <StepSuccess />;
 	}
 }
 
 export default function SistemaScreen() {
 	const { isAuthReady, isLoading, profile } = useProfileGate();
+	const [sessionLive, setSessionLive] = useState(false);
+
+	if (!sessionLive && !isLoading && isAuthReady && !profile?.onboardingComplete) {
+		setSessionLive(true);
+	}
 
 	if (isLoading) return null;
 	if (!isAuthReady) return <Redirect href="/(auth)/sign-in" />;
-	if (profile?.onboardingComplete) return <Redirect href="/(tabs)" />;
+	if (profile?.onboardingComplete && !sessionLive) return <Redirect href="/(tabs)" />;
 
 	return (
 		<OnboardingProvider>

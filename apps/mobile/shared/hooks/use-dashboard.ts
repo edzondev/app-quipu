@@ -2,19 +2,46 @@ import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 import { mapSobresScreen, savingsLineFromOverview } from "@/shared/lib/dashboard/sobres-model";
+import { currencySymbol } from "@/shared/lib/money";
+import { profileInitial } from "@/shared/lib/settings/model";
+import { useLimaDayKey } from "./use-lima-day-key";
 import { useProfileGate } from "./use-profile-gate";
 
 export function useDashboardSummary() {
 	const { isAuthReady } = useProfileGate();
-	return useQuery(api.dashboard.getSummary, isAuthReady ? {} : "skip");
+	const limaDay = useLimaDayKey();
+	return useQuery(api.dashboard.getSummary, isAuthReady ? { limaDay } : "skip");
 }
 
 export function useHomeModel() {
 	const summary = useDashboardSummary();
 	if (summary === undefined) return { status: "loading" as const };
-	const home = summary ? mapDashboardHome(summary) : null;
-	if (!home) return { status: "empty" as const };
-	return { status: "ready" as const, home };
+	const profileName = summary?.profile.name ?? "";
+	const initial = profileInitial(profileName);
+	if (!summary) return { status: "empty" as const, profileName, profileInitial: initial };
+	if (summary.cycle?.pastEnd && summary.closedCycle) {
+		return {
+			status: "closed" as const,
+			closedCycle: summary.closedCycle,
+			profileName,
+			profileInitial: initial,
+			currencySymbol: currencySymbol(summary.profile.currencyCode),
+		};
+	}
+	const home = mapDashboardHome(summary);
+	if (home) {
+		return { status: "ready" as const, home, profileName, profileInitial: initial };
+	}
+	if (summary.closedCycle) {
+		return {
+			status: "closed" as const,
+			closedCycle: summary.closedCycle,
+			profileName,
+			profileInitial: initial,
+			currencySymbol: currencySymbol(summary.profile.currencyCode),
+		};
+	}
+	return { status: "empty" as const, profileName, profileInitial: initial };
 }
 
 export function useSobresScreen() {

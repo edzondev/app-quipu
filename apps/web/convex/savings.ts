@@ -1,7 +1,13 @@
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { findLatestClosedCycle, loadClosedCycleSurplusAmounts } from "./lib/closedCycleSurplus";
+import {
+	assertSurplusNotCarriedOver,
+	savingsContributionExcludingCarry,
+	surplusWasCarriedOver,
+} from "./lib/cycleCarryover";
 import {
 	buildCycleSavingsContextLabel,
 	computeCycleSavingsBreakdown,
@@ -118,7 +124,7 @@ async function buildSavingsOverview(ctx: QueryCtx) {
 				.unique(),
 		]);
 		savingsEnvelopeRemaining = Math.max(0, savingsEnvelope?.remainingAmount ?? 0);
-		cycleContributionCents = Math.max(0, savingsEnvelope?.allocatedAmount ?? 0);
+		cycleContributionCents = savingsContributionExcludingCarry(savingsEnvelope);
 		needsEnvelopeAllocated = Math.max(0, needsEnvelope?.allocatedAmount ?? 0);
 	}
 
@@ -1043,5 +1049,143 @@ export const moveSurplusToSavings = mutation({
 			allocationWants: profile.allocationWants,
 			allocationSavings: profile.allocationSavings,
 		};
+	},
+});
+
+const closedCycleSurplusValidator = v.union(
+	v.null(),
+	v.object({
+		closedCycleId: v.id("financialCycles"),
+		needs: v.number(),
+		wants: v.number(),
+		extraordinary: v.number(),
+		total: v.number(),
+		movedAt: v.union(v.number(), v.null()),
+	}),
+);
+
+const moveClosedCycleSurplusResultValidator = v.null();
+
+export const getClosedCycleSurplus = query({
+	args: {},
+	returns: closedCycleSurplusValidator,
+	handler: async (ctx): Promise<Infer<typeof closedCycleSurplusValidator>> => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) return null;
+
+		const profile = await ctx.db
+			.query("profiles")
+			.withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+			.unique();
+		if (!profile) return null;
+
+		const closedCycle = await findLatestClosedCycle(ctx, profile._id);
+		if (closedCycle === null || surplusWasCarriedOver(closedCycle.carriedOverToCycleId))
+			return null;
+
+		const amounts = await loadClosedCycleSurplusAmounts(
+			ctx,
+			closedCycle._id,
+			closedCycle.closeSurplusMovedAt,
+		);
+		return {
+			closedCycleId: closedCycle._id,
+			needs: amounts.needs,
+			wants: amounts.wants,
+			extraordinary: amounts.extraordinary,
+			total: amounts.total,
+			movedAt: closedCycle.closeSurplusMovedAt ?? null,
+		};
+	},
+});
+
+export const moveClosedCycleSurplusToFund = mutation({
+	args: { closedCycleId: v.id("financialCycles") },
+	returns: moveClosedCycleSurplusResultValidator,
+	handler: async (ctx, args): Promise<Infer<typeof moveClosedCycleSurplusResultValidator>> => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new ConvexError({
+				code: "UNAUTHORIZED",
+				message: "Debes iniciar sesión con tu Passkey o credencial.",
+			});
+		}
+
+		const profile = await ctx.db
+			.query("profiles")
+			.withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+			.unique();
+		if (!profile) {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "Perfil no encontrado.",
+			});
+		}
+
+		const cycle = await ctx.db.get(args.closedCycleId);
+		const latestClosed = await findLatestClosedCycle(ctx, profile._id);
+		if (
+			!cycle ||
+			cycle.profileId !== profile._id ||
+			cycle.status !== "closed" ||
+			latestClosed === null ||
+			latestClosed._id !== cycle._id
+		) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "Solo puedes mover el sobrante del último ciclo cerrado.",
+			});
+		}
+		assertSurplusNotCarriedOver(cycle.carriedOverToCycleId);
+		if (cycle.closeSurplusMovedAt !== undefined) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "El sobrante de este ciclo ya se movió al Fondo.",
+			});
+		}
+
+		const amounts = await loadClosedCycleSurplusAmounts(ctx, cycle._id, cycle.closeSurplusMovedAt);
+		if (amounts.total === 0) {
+			throw new ConvexError({
+				code: "VALIDATION_ERROR",
+				message: "No hay sobrante para mover al Fondo.",
+			});
+		}
+
+		const fundId = await resolveDefaultFundSubEnvelopeId(ctx, profile._id);
+		const fund = await ctx.db.get(fundId);
+		if (!fund) {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "No encontramos tu Fondo de emergencia.",
+			});
+		}
+
+		const now = Date.now();
+		await ctx.db.patch(fund._id, { currentAmount: fund.currentAmount + amounts.total });
+
+		const origins: Array<{
+			fromEnvelope: Infer<typeof surplusFromEnvelopeValidator>;
+			amount: number;
+		}> = [
+			{ fromEnvelope: "needs", amount: amounts.needs },
+			{ fromEnvelope: "wants", amount: amounts.wants },
+			{ fromEnvelope: "extraordinary", amount: amounts.extraordinary },
+		];
+		for (const origin of origins) {
+			if (origin.amount <= 0) continue;
+			await ctx.db.insert("surplusContributions", {
+				profileId: profile._id,
+				cycleId: cycle._id,
+				fromEnvelope: origin.fromEnvelope,
+				amount: origin.amount,
+				subEnvelopeId: fund._id,
+				createdAt: now,
+				contributionKind: "additional",
+			});
+		}
+
+		await ctx.db.patch(cycle._id, { closeSurplusMovedAt: now });
+		return null;
 	},
 });

@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 
+export function formatResendCountdown(seconds: number): string {
+	const minutes = Math.floor(seconds / 60);
+	const rest = seconds % 60;
+	return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
 export function useCountdown(initialSeconds: number) {
 	const [seconds, setSeconds] = useState(initialSeconds);
 	useEffect(() => {

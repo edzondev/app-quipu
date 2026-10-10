@@ -5,40 +5,6 @@ type Allocation = Pick<
 	"allocationNeeds" | "allocationWants" | "allocationSavings"
 >;
 
-const KEYS = ["allocationNeeds", "allocationWants", "allocationSavings"] as const;
-type AllocationKey = (typeof KEYS)[number];
-
-export function distributeEnvelope(
-	state: Allocation,
-	key: AllocationKey,
-	newValue: number,
-): Allocation {
-	const clamped = Math.max(0, Math.min(100, newValue));
-	if (clamped === state[key]) return state;
-	const others = KEYS.filter((k) => k !== key);
-	const first = others[0];
-	const second = others[1];
-	if (first === undefined || second === undefined) return state;
-	const o1 = state[first];
-	const o2 = state[second];
-	const diff = clamped - state[key];
-	let n1: number;
-	let n2: number;
-	if (o1 > 0 && o2 > 0) {
-		const ratio = o1 / (o1 + o2);
-		const adj1 = Math.round(diff * ratio);
-		n1 = Math.max(0, o1 - adj1);
-		n2 = Math.max(0, o2 - (diff - adj1));
-	} else if (o1 > 0) {
-		n1 = Math.max(0, o1 - diff);
-		n2 = o2;
-	} else {
-		n1 = o1;
-		n2 = Math.max(0, o2 - diff);
-	}
-	return { ...state, [key]: clamped, [first]: n1, [second]: n2 };
-}
-
 export const ALLOCATION_DEFAULTS: Allocation = {
 	allocationNeeds: 50,
 	allocationWants: 30,
@@ -47,19 +13,66 @@ export const ALLOCATION_DEFAULTS: Allocation = {
 
 export const ENVELOPES: EnvelopeKey[] = ["needs", "wants", "savings"];
 
-const STATE_KEY_BY_ENVELOPE: Record<EnvelopeKey, AllocationKey> = {
+/** Puntos que sube o baja cada toque en un sobre. */
+export const ALLOCATION_STEP = 5;
+
+/**
+ * Necesidades y Gustos los decide la persona; Ahorro es siempre lo que queda. Así ningún
+ * número cambia solo: tocar un sobre mueve ese sobre y el resto del ingreso (Ahorro).
+ */
+export type EditableEnvelope = Exclude<EnvelopeKey, "savings">;
+
+const STATE_KEY = {
 	needs: "allocationNeeds",
 	wants: "allocationWants",
-	savings: "allocationSavings",
-};
+} as const satisfies Record<EditableEnvelope, keyof Allocation>;
 
-/** Redistribuye los otros dos sobres al mover uno (paso 3). */
-export function setEnvelopeAllocation(
-	state: Allocation,
-	envelope: EnvelopeKey,
-	value: number,
-): Allocation {
-	return distributeEnvelope(state, STATE_KEY_BY_ENVELOPE[envelope], value);
+const OTHER_KEY = {
+	needs: "allocationWants",
+	wants: "allocationNeeds",
+} as const satisfies Record<EditableEnvelope, keyof Allocation>;
+
+export function allocationValue(state: Allocation, envelope: EnvelopeKey): number {
+	if (envelope === "savings") return state.allocationSavings;
+	return state[STATE_KEY[envelope]];
 }
 
-export type { Allocation, AllocationKey };
+/** Lo más alto que puede llegar un sobre sin dejar a Ahorro en negativo. */
+export function maxAllocation(state: Allocation, envelope: EditableEnvelope): number {
+	return 100 - state[OTHER_KEY[envelope]];
+}
+
+/**
+ * Fija Necesidades o Gustos en un entero válido (0 → lo que deja el otro sobre) y recalcula
+ * Ahorro como el resto. Mismo valor ⇒ misma referencia.
+ */
+export function setEnvelopeAllocation(
+	state: Allocation,
+	envelope: EditableEnvelope,
+	value: number,
+): Allocation {
+	const key = STATE_KEY[envelope];
+	const next = Math.max(0, Math.min(maxAllocation(state, envelope), Math.round(value)));
+	if (next === state[key]) return state;
+	const needs = envelope === "needs" ? next : state.allocationNeeds;
+	const wants = envelope === "wants" ? next : state.allocationWants;
+	return {
+		allocationNeeds: needs,
+		allocationWants: wants,
+		allocationSavings: 100 - needs - wants,
+	};
+}
+
+export function stepEnvelopeAllocation(
+	state: Allocation,
+	envelope: EditableEnvelope,
+	direction: 1 | -1,
+): Allocation {
+	return setEnvelopeAllocation(
+		state,
+		envelope,
+		allocationValue(state, envelope) + direction * ALLOCATION_STEP,
+	);
+}
+
+export type { Allocation };

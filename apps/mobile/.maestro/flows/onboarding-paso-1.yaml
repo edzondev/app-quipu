@@ -1,0 +1,112 @@
+appId: com.quipu.finance
+tags:
+  - p1
+  - onboarding
+  - wip
+  - cuenta-nueva
+---
+# Notion 3f486a7356a681d7a4eafd77e456b2e4
+# Paso 1. No llama a «Empezar mi ciclo».
+# Hace falta una cuenta sin perfil. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
+# La flecha (wizard-back) del paso 2 vuelve al paso 1. El atrás de Android es manual:
+# en el paso 1 debe volver a la Bienvenida.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- assertVisible: "TU SISTEMA · 01/05"
+- assertVisible: "Fijo"
+- assertVisible: "Mensual"
+- assertNotVisible: "DÍA DE PAGO"
+- assertNotVisible: "El 1 de cada mes"
+- assertNotVisible: "El 15 y 30 de cada mes"
+- assertNotVisible: "Cada 7 días"
+# Pendiente conocido: cyclePreview sigue pintando «· 30 DÍAS», «· 15 DÍAS» y «7 DÍAS».
+- assertNotVisible:
+    text: ".*30 DÍAS"
+    optional: true
+- tapOn:
+    id: freq-option-biweekly
+- assertNotVisible: "El 15 y 30 de cada mes"
+- assertNotVisible:
+    text: ".*15 DÍAS"
+    optional: true
+- tapOn:
+    id: freq-option-weekly
+- assertNotVisible: "Cada 7 días"
+- assertNotVisible:
+    text: ".*7 DÍAS"
+    optional: true
+- tapOn:
+    id: freq-option-monthly
+- assertNotVisible: "El 1 de cada mes"
+- tapOn:
+    id: amount-input
+- inputText: "12345678901"
+- hideKeyboard
+- copyTextFrom:
+    id: amount-input
+- evalScript: "${output.digits = maestro.copiedText.replace(/[^0-9]/g, '')}"
+- assertTrue: "${output.digits.length <= 9 && output.digits.length >= 1}"
+- tapOn:
+    id: amount-input
+- eraseText
+- tapOn:
+    id: option-mixed
+- assertVisible: "TU SUELDO BASE"
+- assertVisible: "¿DE DÓNDE LLEGA TU DINERO?"
+- hideKeyboard
+- tapOn: "Continuar"
+- assertVisible: "TU SISTEMA · 01/05"
+- assertNotVisible: "¿Cuándo cobras?"
+# Pendiente conocido: el validador arma el texto y la pantalla no lo pinta.
+- assertVisible:
+    text: "Indica tu sueldo base."
+    optional: true
+- assertVisible:
+    text: "Agrega al menos una fuente."
+    optional: true
+- tapOn:
+    id: option-variable
+- assertVisible: "Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca sobre lo que esperas recibir."
+- assertVisible: "15 días"
+- assertVisible: "30 días"
+- tapOn: "Continuar"
+- assertVisible: "TU SISTEMA · 01/05"
+- assertVisible:
+    text: "Elige un ciclo de 15 o 30 días."
+    optional: true
+- assertVisible:
+    text: "Agrega al menos una fuente."
+    optional: true
+- tapOn:
+    id: cycle-pill-15
+- tapOn:
+    id: source-input
+- inputText: "Ventas"
+- tapOn:
+    id: add-source
+- assertVisible:
+    id: source-chip-0
+- tapOn:
+    id: source-input
+- eraseText
+- inputText: "Ventas"
+- tapOn:
+    id: add-source
+- assertNotVisible:
+    id: source-chip-1
+- hideKeyboard
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cuándo cobras?"
+    timeout: 10000
+- assertVisible: "TU SISTEMA · 02/05"
+- tapOn:
+    id: wizard-back
+- assertVisible: "¿Cómo entra tu dinero?"
+- assertVisible: "TU SISTEMA · 01/05"

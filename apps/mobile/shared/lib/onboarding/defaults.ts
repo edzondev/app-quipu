@@ -1,32 +1,75 @@
 import type { IncomeModel, OnboardingState, PayFrequency } from "./types";
 
-export const INCOME_MODEL_OPTIONS: {
-	value: IncomeModel;
-	title: string;
-	description: string;
-}[] = [
-	{
-		value: "fixed",
+export type FixedPayFrequency = Exclude<PayFrequency, "variable">;
+
+function exhaustive<T extends string>() {
+	return <const U extends readonly T[]>(values: U & ([T] extends [U[number]] ? unknown : never)) =>
+		values;
+}
+
+/** Literales de `profiles.createProfile`. Si Convex agrega uno, esto no compila. */
+export const INCOME_MODELS = exhaustive<IncomeModel>()(["fixed", "variable", "mixed"]);
+export const PAY_FREQUENCIES = exhaustive<PayFrequency>()([
+	"monthly",
+	"biweekly",
+	"weekly",
+	"variable",
+]);
+/** Fijo y Mixto: el schema no acepta payFrequency "variable". */
+export const FIXED_FREQUENCIES = exhaustive<FixedPayFrequency>()(["monthly", "biweekly", "weekly"]);
+
+const INCOME_COPY = {
+	fixed: {
 		title: "Fijo",
 		description: "Sueldo en planilla, siempre el mismo monto y la misma fecha.",
 	},
-	{
-		value: "variable",
+	variable: {
 		title: "Variable",
 		description: "Recibos por honorarios, negocio propio o ingresos por proyecto.",
 	},
-	{
-		value: "mixed",
+	mixed: {
 		title: "Mixto",
 		description: "Un sueldo base más trabajos extra que aparecen de vez en cuando.",
 	},
-];
+} satisfies Record<IncomeModel, { title: string; description: string }>;
+
+export const INCOME_MODEL_OPTIONS = INCOME_MODELS.map((value) => ({
+	value,
+	...INCOME_COPY[value],
+}));
+
+/** Cada campo de monto del paso 1: qué es y qué va dentro, sin jerga. */
+export const INCOME_AMOUNT_COPY = {
+	/** `mixedFixedAmount` en Convex: lo que llega seguro con cada pago. */
+	base: {
+		label: "TU SUELDO BASE",
+		hint: "Lo que recibes seguro en cada pago, sin contar los extras.",
+		missing: "Indica tu sueldo base.",
+	},
+	/** Saldo con el que abre el primer ciclo. */
+	today: {
+		label: "¿Cuánto dinero tienes hoy?",
+		hint: "Suma lo que tienes ahora en cuentas y efectivo. Desde aquí empieza tu ciclo.",
+	},
+} as const;
+
+export const PAY_FREQUENCY_LABEL = "¿CADA CUÁNTO TE PAGAN?";
+export const CYCLE_DURATION_COPY = {
+	label: "DURACIÓN DEL CICLO",
+	hint: "Un ciclo es el periodo en que repartes tu dinero. Elige cada cuántos días lo reiniciamos.",
+} as const;
+export const INCOME_SOURCES_COPY = {
+	label: "¿DE DÓNDE LLEGA TU DINERO?",
+	hint: "Escribe cada fuente y toca Agregar. Por ejemplo: recibos por honorarios o ventas.",
+} as const;
 
 export const ONBOARDING_DEFAULTS: OnboardingState = {
 	step: 1,
-	incomeModel: null,
-	payFrequency: null,
+	incomeModel: "fixed",
+	payFrequency: "monthly",
 	referenceIncomeCents: null,
+	nextPayDate: null,
+	cycleFieldErrors: {},
 	cycleDurationDays: undefined,
 	mixedFixedAmountCents: undefined,
 	variableIncomeSources: [],
@@ -34,19 +77,33 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
 	allocationWants: 30,
 	allocationSavings: 20,
 	commitments: [],
+	savedProfileId: null,
+	commitmentsSaved: false,
 };
 
 export const PAYDAYS_BY_FREQUENCY: Record<PayFrequency, number[]> = {
 	monthly: [1],
 	biweekly: [15, 30],
 	weekly: [1],
+	variable: [1],
 };
 
-export const FREQ_OPTIONS: { value: PayFrequency; label: string }[] = [
-	{ value: "monthly", label: "Mensual" },
-	{ value: "biweekly", label: "Quincenal" },
-	{ value: "weekly", label: "Semanal" },
-];
+const FREQ_LABEL = {
+	monthly: "Mensual",
+	biweekly: "Quincenal",
+	weekly: "Semanal",
+	variable: "Variable",
+} satisfies Record<PayFrequency, string>;
+
+export const FREQ_OPTIONS = PAY_FREQUENCIES.map((value) => ({
+	value,
+	label: FREQ_LABEL[value],
+}));
+
+export const FIXED_FREQ_OPTIONS = FIXED_FREQUENCIES.map((value) => ({
+	value,
+	label: FREQ_LABEL[value],
+}));
 
 export const FREQ_DRIFT_COPY: Record<PayFrequency, string> = {
 	monthly:
@@ -55,4 +112,5 @@ export const FREQ_DRIFT_COPY: Record<PayFrequency, string> = {
 		"Pagado a medio y fin de mes. Si tu pago real llega antes o después (feriados, fines de semana), el ciclo se ajusta a la fecha en que registres tu ingreso.",
 	weekly:
 		"El día de pago es una referencia. El ciclo se ajusta a la fecha en que registres tu ingreso.",
+	variable: "Sin día fijo. Anotas cada ingreso cuando entra.",
 };

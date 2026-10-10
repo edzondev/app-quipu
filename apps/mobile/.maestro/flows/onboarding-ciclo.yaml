@@ -1,0 +1,81 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - onboarding
+  - cuenta-nueva
+---
+# Notion 3f486a7356a6811e875cd4a55d3340cd reparto (en el código es el paso 3)
+# Notion 3f486a7356a681c78c1be4c0e607cad5 compromisos completos
+# Notion 3f486a7356a68125aec2f56e21bd1d92 Paso 5: sin monto diario
+# Notion 3f486a7356a681f4a6e6d2b0add684ee solo la fecha de mañana, sin calendario
+# Hace falta una cuenta sin perfil. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
+# wizard-back es la flecha de la app (paso 4 → 3). El atrás de Android es manual.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- runFlow: ../subflows/onboarding-hasta-paso-4.yaml
+- tapOn:
+    id: wizard-back
+- assertVisible: "¿Cómo repartes tu dinero?"
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Qué pagas todos los meses?"
+    timeout: 10000
+- tapOn:
+    id: chip-agua
+- tapOn:
+    id: commitment-amount-0
+- inputText: "100"
+- tapOn:
+    id: commitment-day-0
+- inputText: "10"
+- hideKeyboard
+- assertVisible:
+    id: commitments-total
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "TU SISTEMA · 05/05"
+    timeout: 10000
+- assertVisible: "Dinero de hoy"
+- assertVisible: "Próximo cobro"
+- assertNotVisible: "Puedes gastar hoy"
+- assertNotVisible:
+    id: confirm-daily
+- assertNotVisible: "Después de compromisos y ahorro, en .* días\\."
+- assertVisible:
+    id: confirm-income
+- assertVisible:
+    id: confirm-pay-date
+- assertVisible: "50% · S/ 600"
+- assertVisible: "30% · S/ 360"
+- assertVisible: "20% · S/ 240"
+- assertVisible:
+    id: confirm-envelope-needs
+- assertVisible:
+    id: confirm-envelope-wants
+- assertVisible:
+    id: confirm-envelope-savings
+- assertVisible:
+    id: confirm-commitments
+- tapOn:
+    text: "Empezar mi ciclo"
+    enabled: true
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 40000
+- assertVisible: "Inicio"
+- assertVisible: "S/ 960\\.00"
+- assertNotVisible: "Saldo que quedó.*"
+- assertVisible: "Agua"
+- assertVisible: "Necesid\\."
+- assertVisible: "Gustos"
+- assertVisible: "Ahorro"
+- tapOn: "Ver todos"
+- extendedWaitUntil:
+    visible: "Todavía no hay nada registrado en este ciclo."
+    timeout: 15000

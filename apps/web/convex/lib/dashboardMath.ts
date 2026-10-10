@@ -1,4 +1,5 @@
 import { evaluateCycleCompliance } from "./budgetMath";
+import { computeDailyAvailableFromSpendable, computeSpendableCents } from "./spendableBalance";
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const LIMA_TIMEZONE = "America/Lima";
@@ -62,8 +63,21 @@ function daysInMonth(year: number, month: number): number {
 	return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-export function computeDailyAvailable(wantsRemaining: number, daysRemaining: number): number {
-	return Math.floor(wantsRemaining / Math.max(daysRemaining, 1));
+/** «Hoy puedes gastar»: Needs + Wants, same helper as the dashboard snapshot. */
+export function computeDailyAvailable(
+	needsRemainingCents: number,
+	wantsRemainingCents: number,
+	daysRemaining: number,
+): number {
+	return computeDailyAvailableFromSpendable(
+		computeSpendableCents({ needsRemainingCents, wantsRemainingCents }),
+		daysRemaining,
+	);
+}
+
+/** True at the same instant `daysRemaining` hits 0: `now` has reached `endDate`. */
+export function isCyclePastEnd(endDate: number, now: number): boolean {
+	return now >= endDate;
 }
 
 export function computeDisplayDailyCents(dailyAvailableCents: number): number {
@@ -146,8 +160,9 @@ export function computeEnvelopePercentRemaining(
 	return Math.round((remainingAmount / allocatedAmount) * 100);
 }
 
+/** Signed: an overspent envelope subtracts. «Sobra» is negative when the cycle overspends. */
 export function computeSurplusProjection(envelopes: EnvelopeSlice[]): number {
-	return envelopes.reduce((acc, envelope) => acc + Math.max(0, envelope.remainingAmount), 0);
+	return envelopes.reduce((acc, envelope) => acc + envelope.remainingAmount, 0);
 }
 
 export function buildValidationCopy(statusBadge: StatusBadge): string {

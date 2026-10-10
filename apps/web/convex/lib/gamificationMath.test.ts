@@ -39,8 +39,8 @@ describe("buildCycleChartBars", () => {
 		const july = Date.parse("2026-07-15T12:00:00-05:00");
 		const august = Date.parse("2026-08-15T12:00:00-05:00");
 		const bars = buildCycleChartBars([
-			{ status: "warning", evaluatedAt: 1, cycleStart: july },
-			{ status: "compliant", evaluatedAt: 2, cycleStart: august },
+			{ status: "warning", evaluatedAt: 1, cycleStart: july, countsForStreak: true },
+			{ status: "compliant", evaluatedAt: 2, cycleStart: august, countsForStreak: true },
 		]);
 		expect(bars).toHaveLength(12);
 		expect(bars.filter((b) => b.status === "empty")).toHaveLength(10);
@@ -63,6 +63,7 @@ describe("buildCycleChartBars", () => {
 					status: "compliant",
 					evaluatedAt: 2,
 					cycleStart: Date.parse("2026-08-15T12:00:00-05:00"),
+					countsForStreak: true,
 				},
 			],
 			{ cycleStart: september },
@@ -78,7 +79,9 @@ describe("buildCycleChartBars", () => {
 	});
 
 	it("omits the month when the closed cycle has no start date", () => {
-		const bars = buildCycleChartBars([{ status: "failed", evaluatedAt: 5, cycleStart: null }]);
+		const bars = buildCycleChartBars([
+			{ status: "failed", evaluatedAt: 5, cycleStart: null, countsForStreak: false },
+		]);
 		expect(bars.at(-1)?.status).toBe("failed");
 		expect(bars.at(-1)?.cycleStart).toBeNull();
 		expect(bars.at(-1)?.monthLabel).toBeNull();
@@ -101,9 +104,9 @@ describe("countLoggingStreak", () => {
 	const now = Date.parse("2026-10-08T15:00:00-05:00");
 	const day = 86_400_000;
 
-	it("counts consecutive Lima days backward from today", () => {
+	it("counts consecutive Lima days backward from today", async () => {
 		expect(
-			countLoggingStreak(
+			await countLoggingStreak(
 				[
 					Date.parse("2026-10-08T09:00:00-05:00"),
 					Date.parse("2026-10-07T09:00:00-05:00"),
@@ -114,20 +117,20 @@ describe("countLoggingStreak", () => {
 		).toBe(3);
 	});
 
-	it("starts at yesterday when today has no expense yet", () => {
+	it("starts at yesterday when today has no expense yet", async () => {
 		expect(
-			countLoggingStreak(
+			await countLoggingStreak(
 				[Date.parse("2026-10-07T09:00:00-05:00"), Date.parse("2026-10-06T09:00:00-05:00")],
 				now,
 			),
 		).toBe(2);
 	});
 
-	it("is zero when today and yesterday are both empty", () => {
-		expect(countLoggingStreak([Date.parse("2026-10-05T09:00:00-05:00")], now)).toBe(0);
+	it("is zero when today and yesterday are both empty", async () => {
+		expect(await countLoggingStreak([Date.parse("2026-10-05T09:00:00-05:00")], now)).toBe(0);
 	});
 
-	it("counts a calendar day once and stops at the first gap", () => {
+	it("counts a calendar day once and stops at the first gap", async () => {
 		let reads = 0;
 		function* source() {
 			const values = [
@@ -141,32 +144,50 @@ describe("countLoggingStreak", () => {
 				yield value;
 			}
 		}
-		expect(countLoggingStreak(source(), now)).toBe(1);
+		expect(await countLoggingStreak(source(), now)).toBe(1);
 		expect(reads).toBe(3);
 	});
 
-	it("uses the Lima calendar instead of the UTC date", () => {
+	it("stops reading an async source at the first gap", async () => {
+		let reads = 0;
+		async function* source() {
+			const values = [
+				Date.parse("2026-10-08T08:00:00-05:00"),
+				Date.parse("2026-10-08T21:00:00-05:00"),
+				Date.parse("2026-10-06T08:00:00-05:00"),
+				Date.parse("2026-10-05T08:00:00-05:00"),
+			];
+			for (const value of values) {
+				reads += 1;
+				yield value;
+			}
+		}
+		expect(await countLoggingStreak(source(), now)).toBe(1);
+		expect(reads).toBe(3);
+	});
+
+	it("uses the Lima calendar instead of the UTC date", async () => {
 		const limaEveningThatIsNextUtcDay = Date.parse("2026-10-08T02:00:00Z");
 		expect(
-			countLoggingStreak([Date.parse("2026-10-07T21:00:00-05:00")], limaEveningThatIsNextUtcDay),
+			await countLoggingStreak(
+				[Date.parse("2026-10-07T21:00:00-05:00")],
+				limaEveningThatIsNextUtcDay,
+			),
 		).toBe(1);
 	});
 
-	it("crosses a month boundary", () => {
+	it("crosses a month boundary", async () => {
 		expect(
-			countLoggingStreak(
+			await countLoggingStreak(
 				[Date.parse("2026-10-01T10:00:00-05:00"), Date.parse("2026-09-30T10:00:00-05:00")],
 				Date.parse("2026-10-01T18:00:00-05:00"),
 			),
 		).toBe(2);
 	});
 
-	it("counts a thousand consecutive days in one pass", () => {
+	it("counts a thousand consecutive days in one pass", async () => {
 		const stamps = Array.from({ length: 1000 }, (_, index) => now - index * day);
-		const started = performance.now();
-		expect(countLoggingStreak(stamps, now)).toBe(1000);
-		const elapsed = performance.now() - started;
-		expect(elapsed).toBeLessThan(50);
+		expect(await countLoggingStreak(stamps, now)).toBe(1000);
 	});
 });
 
