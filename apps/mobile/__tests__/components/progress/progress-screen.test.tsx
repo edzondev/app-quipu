@@ -191,18 +191,19 @@ describe("CloseScreen", () => {
 		}
 	});
 
-	it("muestra el texto de racha solo cuando streakEvaluated es true", async () => {
-		const shown = await render(
+	it("muestra el texto de racha cuando streakEvaluated es true", async () => {
+		const view = await render(
 			<CloseScreen
 				status="ready"
 				model={presentClose(closeReport, savingsOverview)}
 				onBack={jest.fn()}
 			/>,
 		);
-		expect(shown.getByText("3 ciclos seguidos.")).toBeTruthy();
-		cleanup();
+		expect(view.getByText("3 ciclos seguidos.")).toBeTruthy();
+	});
 
-		const hidden = await render(
+	it("no muestra texto de racha cuando streakEvaluated es false", async () => {
+		const view = await render(
 			<CloseScreen
 				status="ready"
 				model={presentClose(
@@ -215,10 +216,10 @@ describe("CloseScreen", () => {
 				onBack={jest.fn()}
 			/>,
 		);
-		expect(hidden.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
-		expect(hidden.queryByText("3 ciclos seguidos.")).toBeNull();
-		expect(hidden.queryByText("La racha vuelve a empezar.")).toBeNull();
-		expect(hidden.queryByText("Primer ciclo de la racha.")).toBeNull();
+		expect(view.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
+		expect(view.queryByText("3 ciclos seguidos.")).toBeNull();
+		expect(view.queryByText("La racha vuelve a empezar.")).toBeNull();
+		expect(view.queryByText("Primer ciclo de la racha.")).toBeNull();
 	});
 
 	it("muestra carga mientras el reporte no llega", async () => {
