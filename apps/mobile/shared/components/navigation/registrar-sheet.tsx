@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
@@ -9,7 +8,6 @@ import { useDashboardSummary, useHomeModel } from "@/shared/hooks/use-dashboard"
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
-import type { ExpenseDraftInput } from "@/shared/lib/expenses/draft";
 import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { incomeCycleOffer } from "@/shared/lib/income/cycle-offer";
@@ -48,7 +46,6 @@ export default function RegistrarSheet({ isPresented, session, onDismiss }: Prop
 }
 
 function SheetBody({ session, onDone }: { session: Session; onDone: () => void }) {
-	const router = useRouter();
 	const { register } = useExpenseActions();
 	const { register: registerIncome } = useIncomeActions();
 	const summary = useDashboardSummary();
@@ -96,17 +93,6 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 		}
 	}
 
-	function openDetail(input: ExpenseDraftInput) {
-		if (noCycle) return;
-		const query = new URLSearchParams({
-			amountRaw: input.amountRaw,
-			description: input.description,
-			envelopeType: input.envelopeType ?? "",
-		});
-		onDone();
-		router.push(`/expense/new?${query.toString()}`);
-	}
-
 	if (offer === "loading" || mode == null) {
 		return (
 			<View className="items-center justify-center py-16">
@@ -134,6 +120,7 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 					currencySymbol={currencySymbol}
 					formError={formError}
 					cycle={offer}
+					startedToday={summary?.cycle?.startedToday === true}
 					incomeModel={profile?.incomeModel ?? null}
 					onSubmit={(draft) => guard(() => registerIncome(draft), "No se pudo guardar el ingreso.")}
 					onCancel={onDone}
@@ -147,7 +134,6 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 					isSubmitting={isSubmitting}
 					onSubmit={(input) => void guard(() => register(input), "No se pudo guardar el gasto.")}
 					onCancel={onDone}
-					onOpenDetail={openDetail}
 				/>
 			)}
 		</View>

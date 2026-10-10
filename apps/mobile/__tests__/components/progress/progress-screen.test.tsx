@@ -191,6 +191,36 @@ describe("CloseScreen", () => {
 		}
 	});
 
+	it("muestra el texto de racha solo cuando streakEvaluated es true", async () => {
+		const shown = await render(
+			<CloseScreen
+				status="ready"
+				model={presentClose(closeReport, savingsOverview)}
+				onBack={jest.fn()}
+			/>,
+		);
+		expect(shown.getByText("3 ciclos seguidos.")).toBeTruthy();
+		cleanup();
+
+		const hidden = await render(
+			<CloseScreen
+				status="ready"
+				model={presentClose(
+					{
+						...closeReport,
+						report: { ...closeReport.report, streak: 3, streakEvaluated: false },
+					},
+					savingsOverview,
+				)}
+				onBack={jest.fn()}
+			/>,
+		);
+		expect(hidden.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
+		expect(hidden.queryByText("3 ciclos seguidos.")).toBeNull();
+		expect(hidden.queryByText("La racha vuelve a empezar.")).toBeNull();
+		expect(hidden.queryByText("Primer ciclo de la racha.")).toBeNull();
+	});
+
 	it("muestra carga mientras el reporte no llega", async () => {
 		const view = await render(<CloseScreen status="loading" model={null} onBack={jest.fn()} />);
 		expect(view.getByText("Cargando…")).toBeTruthy();
