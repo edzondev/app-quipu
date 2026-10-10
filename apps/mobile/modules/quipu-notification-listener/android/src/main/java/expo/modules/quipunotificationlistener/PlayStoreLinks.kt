@@ -9,17 +9,24 @@ internal sealed class PlayStoreLink {
 
 internal object PlayStoreLinks {
   private val PLAY = Regex(
-    "^https?://(?:www\\.)?play\\.google\\.com/store/apps/details\\?([^#\\s]+)$",
+    "https?://(?:www\\.)?play\\.google\\.com/store/apps/details\\?([^#\\s]+)",
     RegexOption.IGNORE_CASE,
   )
   private val MARKET = Regex(
-    "^market://details\\?([^#\\s]+)$",
+    "market://details\\?([^#\\s]+)",
     RegexOption.IGNORE_CASE,
   )
 
   fun parse(raw: String): PlayStoreLink {
     val text = raw.trim()
-    val link = PLAY.matchEntire(text) ?: MARKET.matchEntire(text)
+    val play = PLAY.find(text)
+    val market = MARKET.find(text)
+    val link = when {
+      play == null -> market
+      market == null -> play
+      play.range.first <= market.range.first -> play
+      else -> market
+    }
     if (link != null) {
       val packageId = queryId(link.groupValues[1])
       if (packageId != null && PackageIds.isValid(packageId)) return PlayStoreLink.Id(packageId)
@@ -37,13 +44,12 @@ internal object PlayStoreLinks {
   }
 
   private fun queryId(query: String): String? {
-    var packageId: String? = null
     for (part in query.split('&')) {
       val eq = part.indexOf('=')
       if (eq <= 0 || part.substring(0, eq) != "id") continue
-      packageId = decode(part.substring(eq + 1))
+      return decode(part.substring(eq + 1))?.takeIf { it.isNotEmpty() }
     }
-    return packageId?.takeIf { it.isNotEmpty() }
+    return null
   }
 
   private fun decode(raw: String): String? {

@@ -43,7 +43,9 @@ export type InstalledBank = {
 	icon?: string;
 };
 
-export type PlayStoreLinkResult = { packageId: string } | { error: string };
+export type PlayStoreLinkResult =
+	| { packageId: string }
+	| { error: "invalid_link" | "unavailable" };
 
 type NativeNotificationListener = {
 	isNotificationAccessEnabled(): boolean;

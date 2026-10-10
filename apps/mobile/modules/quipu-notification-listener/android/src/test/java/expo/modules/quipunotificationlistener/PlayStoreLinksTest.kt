@@ -79,4 +79,29 @@ class PlayStoreLinksTest {
     )
     assertTrue(parsed is PlayStoreLink.Invalid)
   }
+
+  @Test
+  fun linkInsideOtherText() {
+    val parsed = PlayStoreLinks.parse(
+      "Mira esta app: https://play.google.com/store/apps/details?id=pe.com.interbank.mobilebanking&hl=es gracias",
+    )
+    assertEquals("pe.com.interbank.mobilebanking", (parsed as PlayStoreLink.Id).packageId)
+  }
+
+  @Test
+  fun firstIdParamWins() {
+    val parsed = PlayStoreLinks.parse(
+      "https://play.google.com/store/apps/details?id=pe.com.interbank.mobilebanking&hl=es&id=com.other.app",
+    )
+    assertEquals("pe.com.interbank.mobilebanking", (parsed as PlayStoreLink.Id).packageId)
+  }
+
+  @Test
+  fun nonPlayUrlInsideTextIsRejected() {
+    val parsed = PlayStoreLinks.parse(
+      "mira https://example.com/app?id=com.bcp.bank.bcp gracias",
+    )
+    assertTrue(parsed is PlayStoreLink.Invalid)
+    assertEquals("invalid_link", (parsed as PlayStoreLink.Invalid).error)
+  }
 }
