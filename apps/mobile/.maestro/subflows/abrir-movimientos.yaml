@@ -1,4 +1,5 @@
 appId: com.quipu.finance
+---
 # Inicio tiene una sección que también dice «Movimientos» (home-dense.tsx).
 # Tocar ese texto no abre la pestaña: Maestro scrollea hasta la sección y el
 # gasto nuevo ya está ahí, así que «CICLO …» (solo en movements-list.tsx) no aparece.
