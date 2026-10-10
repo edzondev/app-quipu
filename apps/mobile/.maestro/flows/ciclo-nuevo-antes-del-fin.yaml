@@ -5,8 +5,11 @@ tags:
 ---
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
-# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro.
-# La cuenta queda con un ciclo activo. El arrastre («Saldo que quedó») depende del historial.
+# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro
+# que empieza hoy. Correlo como mucho una vez al día, y al final: una segunda corrida
+# el mismo día no cierra, y los flujos que necesitan un ciclo empezado antes de hoy
+# también fallan. No está en smoke.
+# El arrastre («Saldo que quedó») depende del historial.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -26,8 +29,9 @@ tags:
     env:
       QUIPU_MODE_ID: income-mode-new-cycle
 - runFlow: ../subflows/abrir-movimientos.yaml
+# Ingreso en soles enteros: «+ S/ 10», sin decimales (shared/lib/movements/model.ts).
 - extendedWaitUntil:
-    visible: ".*10\\.00"
+    visible: "\\+ S/ 10"
     timeout: 20000
 - assertNotVisible: "${output.cycleBefore} · .*"
 - assertVisible: "CICLO .*"

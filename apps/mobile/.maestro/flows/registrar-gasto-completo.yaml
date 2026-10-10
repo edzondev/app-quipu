@@ -3,7 +3,7 @@ tags:
   - p0
   - registrar
 ---
-# Notion 3f486a7356a68159a778eda5c427c41f
+# Notion 3f286a7356a68159a778eda5c427c41f
 # Registrar gasto en pantalla completa
 # 1.234 se rechaza: 3f486a7356a681e78f2be50f8f7e3a16
 - runFlow:
@@ -48,7 +48,8 @@ tags:
 - eraseText
 - inputText: "1.234"
 - hideKeyboard
-- tapOn: "Registrar gasto"
+# (?-i): sin él también coincide el título «REGISTRAR GASTO» y Maestro toca ese texto.
+- tapOn: "(?-i)Registrar gasto"
 - assertVisible: "Ingresa un monto mayor a cero."
 - tapOn: "Monto"
 - eraseText

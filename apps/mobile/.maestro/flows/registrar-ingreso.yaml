@@ -76,7 +76,9 @@ tags:
     notVisible: "(?-i)REGISTRAR INGRESO"
     timeout: 20000
 - runFlow: ../subflows/abrir-movimientos.yaml
+# Los ingresos se muestran sin decimales si son soles enteros: «+ S/ 10»
+# (formatCentsTrimmed en shared/lib/movements/model.ts). «10.00» solo sale en el total del día.
 - extendedWaitUntil:
-    visible: ".*10\\.00"
+    visible: "\\+ S/ 10"
     timeout: 15000
 - assertVisible: "CICLO .*"
