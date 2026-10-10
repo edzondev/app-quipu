@@ -42,6 +42,7 @@ export function ExpenseKeypad({
 			{KEYS.map((key) => (
 				<View key={key} className="w-1/3">
 					<Pressable
+						testID={`keypad-${key}`}
 						accessibilityRole="button"
 						accessibilityLabel={key === "backspace" ? "Borrar" : key}
 						onPress={() => onKey(key)}

@@ -13,6 +13,7 @@ type Props = {
 	trailing?: ReactNode;
 	onPress?: () => void;
 	isLast?: boolean;
+	testID?: string;
 };
 
 export function ListRow({
@@ -25,9 +26,11 @@ export function ListRow({
 	trailing,
 	onPress,
 	isLast = false,
+	testID,
 }: Props) {
 	const row = (
 		<View
+			testID={onPress ? undefined : testID}
 			className={`flex-row items-center justify-between ${dotClass ? "py-[17px]" : "py-3.5"} ${
 				isLast ? "" : "border-b border-foreground/10"
 			}`}
@@ -69,6 +72,7 @@ export function ListRow({
 	if (!onPress) return row;
 	return (
 		<Pressable
+			testID={testID}
 			accessibilityRole="button"
 			accessibilityLabel={label}
 			hitSlop={HIT_SLOP}

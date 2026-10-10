@@ -59,6 +59,7 @@ export default function TabLayout() {
 									options={{
 										title: "Inicio",
 										tabBarLabel: "Inicio",
+										tabBarButtonTestID: "tab-inicio",
 										tabBarIcon: ({ focused }) => (
 											<Home size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
 										),
@@ -69,6 +70,7 @@ export default function TabLayout() {
 									options={{
 										title: "Movimientos",
 										tabBarLabel: "Movimientos",
+										tabBarButtonTestID: "tab-movimientos",
 										tabBarIcon: ({ focused }) => (
 											<ReceiptText size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
 										),
@@ -86,6 +88,7 @@ export default function TabLayout() {
 									options={{
 										title: "Plan",
 										tabBarLabel: "Plan",
+										tabBarButtonTestID: "tab-plan",
 										popToTopOnBlur: true,
 										tabBarIcon: ({ focused }) => (
 											<Envelope size={20} color={focused ? "#1A1A1A" : "#9A968C"} />
@@ -97,6 +100,7 @@ export default function TabLayout() {
 									options={{
 										title: "Progreso",
 										tabBarLabel: "Progreso",
+										tabBarButtonTestID: "tab-progreso",
 										popToTopOnBlur: true,
 										tabBarIcon: ({ focused }) => (
 											<ChartBar size={20} color={focused ? "#1A1A1A" : "#9A968C"} />

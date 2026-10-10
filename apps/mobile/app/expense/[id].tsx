@@ -107,7 +107,11 @@ export default function ExpenseDetailScreen() {
 			};
 
 	return (
-		<SafeArea className="flex-1 bg-background" edges={["top", "bottom"]}>
+		<SafeArea
+			testID="expense-detail-screen"
+			className="flex-1 bg-background"
+			edges={["top", "bottom"]}
+		>
 			<KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
 				{mode === "edit" && !showForm ? (
 					<View className="flex-1 px-[22px] pt-3">

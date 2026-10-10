@@ -15,6 +15,7 @@ type Props = BottomTabBarButtonProps & {
 export default function RegistrarTabButton({ onPress: customOnPress, ...props }: Props) {
 	return (
 		<Pressable
+			testID="registrar-fab"
 			accessibilityRole="button"
 			accessibilityLabel="Registrar"
 			accessibilityState={props.accessibilityState}

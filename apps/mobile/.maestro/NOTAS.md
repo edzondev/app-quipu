@@ -27,35 +27,4 @@ Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amo
 | `field-error-mixed` | Paso 1 | `step-1-income-profile.tsx` | no pinta «Indica tu sueldo base.» | `onboarding-paso-1` |
 | `field-error-sources` | Paso 1 | el mismo | «Agrega al menos una fuente.» | `onboarding-paso-1` |
 | `field-error-cycle` | Paso 1 | el mismo | «Elige un ciclo de 15 o 30 días.» | `onboarding-paso-1` |
-| `registrar-mode-expense` | Hoja | `shared/components/navigation/registrar-sheet.tsx` | «Gasto» | registrar |
-| `registrar-mode-income` | Hoja | el mismo | «Ingreso» | registrar |
-| `registrar-fab` | Tab | `shared/components/navigation/registrar-tab-button.tsx` | botón central | registrar |
-| `keypad-0` … `keypad-9`, `keypad-backspace` | Teclado | `shared/components/expenses/expense-keypad.tsx` | teclas | registrar |
-| `expense-submit` | Hoja de gasto | `shared/components/expenses/expense-sheet-form.tsx` | «Registrar gasto» | `registrar-gasto-hoja` |
-| `envelope-needs` | Sobres del gasto | `shared/components/expenses/envelope-choices.tsx` | «Necesidades» | registrar, compromisos |
-| `envelope-wants` | el mismo | el mismo | «Gustos» | registrar |
-| `expense-amount` | Pantalla completa | `shared/components/expenses/expense-detail-form.tsx` | campo Monto | editar |
-| `expense-save` | la misma | el mismo | «Guardar» / «Registrar gasto» | editar |
-| `expense-delete` | la misma | el mismo | «Eliminar» | `movimientos-editar-eliminar` |
-| `movement-filter-all` | Movimientos | `shared/components/movements/movements-list.tsx` | «Todos» | `movimientos` |
-| `movement-filter-needs` | la misma | el mismo | «Necesidades» | `movimientos` |
-| `movement-filter-wants` | la misma | el mismo | «Gustos» | `movimientos` |
-| `movement-filter-savings` | la misma | el mismo | «Ahorro» | `movimientos` |
-| `movement-row` | la misma | el mismo | fila | editar |
-| `commitment-submit` | Hoja de compromiso | `shared/components/commitments/commitment-form.tsx` | «Agregar compromiso» | `compromisos` |
 | `goal-submit` | Hoja de meta | pendiente, Pixi. No está en `goal-form.tsx` | «Crear meta» | `ahorro-metas` |
-| `savings-fund` | Ahorro | `shared/components/savings/savings-screen.tsx` | tarjeta del Fondo | `ahorro-metas` |
-| `plan-row-sobres` | Plan | `shared/components/plan/plan-hub.tsx` | fila Sobres | `plan-sobres` |
-| `sobres-needs` | Sobres | `shared/components/envelopes/sobres-screen.tsx` | bloque Necesidades | `plan-sobres` |
-| `sobres-wants` | la misma | el mismo | Gustos | `plan-sobres` |
-| `sobres-savings` | la misma | el mismo | Ahorro | `plan-sobres` |
-| `settings-name` | Ajustes | `shared/components/settings/settings-screen.tsx` | nombre | `ajustes-cerrar-sesion` |
-| `settings-meta` | la misma | el mismo | «correo · país» | `ajustes-cerrar-sesion` |
-| `tab-inicio` | Tabs | `app/(tabs)/_layout.tsx` | pestaña Inicio | varios |
-| `tab-movimientos` | la misma | el mismo | Movimientos | varios |
-| `tab-plan` | la misma | el mismo | Plan | varios |
-| `tab-progreso` | la misma | el mismo | Progreso | `progreso-vacio`, `progreso-primer-cierre` |
-| `income-sheet` | Hoja de ingreso | propuesto | contenedor de la hoja | registrar ingreso |
-| `expense-sheet` | Hoja de gasto | propuesto | contenedor de la hoja | `registrar-gasto-hoja` |
-| `progress-closed-cycle` | Progreso | `shared/components/progress/progress-screen.tsx` | «CICLO CERRADO · …» | `progreso-primer-cierre` |
-| `progress-closed-count` | Progreso | el mismo | «CICLOS CERRADOS EN VERDE» | `progreso-primer-cierre` |

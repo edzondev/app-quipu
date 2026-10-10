@@ -121,7 +121,7 @@ function EnvelopeBlock({
 }) {
 	const rule = isLast ? "" : "border-b border-line pb-5.5";
 	return (
-		<View className={`${isFirst ? "mt-6.5" : "mt-5.5"} ${rule}`}>
+		<View testID={`sobres-${envelope.tone}`} className={`${isFirst ? "mt-6.5" : "mt-5.5"} ${rule}`}>
 			<View className="flex-row items-center gap-2.25">
 				<View className={`h-1.75 w-1.75 rounded-full ${DOT[envelope.tone]}`} />
 				<Text className="font-hanken-semibold text-[15px] text-foreground">{envelope.label}</Text>

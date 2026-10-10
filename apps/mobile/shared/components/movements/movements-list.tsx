@@ -97,6 +97,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 					{MOVEMENT_FILTERS.map((item) => (
 						<FilterChip
 							key={item.id}
+							testID={`movement-filter-${item.id}`}
 							label={item.label}
 							selected={filter === item.id}
 							onPress={() => setFilter(item.id)}
@@ -179,13 +180,16 @@ function FilterChip({
 	label,
 	selected,
 	onPress,
+	testID,
 }: {
 	label: string;
 	selected: boolean;
 	onPress: () => void;
+	testID: string;
 }) {
 	return (
 		<Pressable
+			testID={testID}
 			accessibilityRole="button"
 			accessibilityState={{ selected }}
 			onPress={onPress}
@@ -206,7 +210,10 @@ function FilterChip({
 
 function MovementRow({ row, onOpen }: { row: MovementListRow; onOpen: (id: string) => void }) {
 	const body = (
-		<View className="flex-row items-center justify-between border-b border-line py-3">
+		<View
+			testID={row.opensExpense ? undefined : "movement-row"}
+			className="flex-row items-center justify-between border-b border-line py-3"
+		>
 			<View className="min-w-0 flex-1 flex-row items-center gap-2.75 pr-3">
 				<View className={`h-1.5 w-1.5 rounded-full ${DOT[row.dot]}`} />
 				<View className="min-w-0 flex-1">
@@ -237,6 +244,7 @@ function MovementRow({ row, onOpen }: { row: MovementListRow; onOpen: (id: strin
 	if (!row.opensExpense) return body;
 	return (
 		<Pressable
+			testID="movement-row"
 			accessibilityRole="button"
 			accessibilityLabel={`${row.label}, ${row.amountLabel}`}
 			onPress={() => onOpen(row.id)}

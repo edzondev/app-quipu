@@ -99,7 +99,10 @@ export function SavingsScreen({
 function FundCard({ fund }: { fund: FundView }) {
 	if (fund.pending) {
 		return (
-			<View className="mt-[26px] rounded-2xl border border-dashed border-[#DEDBD2] px-5 py-5">
+			<View
+				testID="savings-fund"
+				className="mt-[26px] rounded-2xl border border-dashed border-[#DEDBD2] px-5 py-5"
+			>
 				<View className="flex-row items-center gap-[9px]">
 					<Lock size={17} color="#B6B2A8" />
 					<Text className="font-hanken-semibold text-[15px] text-[#8C8880]">{fund.label}</Text>
@@ -114,7 +117,7 @@ function FundCard({ fund }: { fund: FundView }) {
 	}
 
 	return (
-		<View className="mt-[26px] rounded-2xl bg-savings/10 px-5 py-5">
+		<View testID="savings-fund" className="mt-[26px] rounded-2xl bg-savings/10 px-5 py-5">
 			<View className="flex-row items-center gap-[9px]">
 				<Lock size={17} color="#3C7D6E" />
 				<Text className="font-hanken-semibold text-[15px] text-foreground">{fund.label}</Text>

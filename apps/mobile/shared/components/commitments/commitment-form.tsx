@@ -167,6 +167,7 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 
 			{formError ? <ErrorText message={formError} /> : null}
 			<Pressable
+				testID="commitment-submit"
 				accessibilityRole="button"
 				accessibilityLabel="Agregar compromiso"
 				accessibilityState={{ disabled: isSubmitting }}

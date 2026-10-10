@@ -123,7 +123,7 @@ export function IncomeSheetForm({
 		incomeKind === "extraordinary" ? EXTRA_COPY[extraType].submit : "Registrar ingreso";
 
 	return (
-		<View className="px-[22px] pb-8">
+		<View testID="income-sheet" className="px-[22px] pb-8">
 			<View className="mt-4 flex-row items-center justify-between">
 				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
 					REGISTRAR INGRESO
