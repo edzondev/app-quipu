@@ -60,7 +60,7 @@ Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amo
 | `movement-filter-savings` | la misma | el mismo | «Ahorro» | `movimientos` |
 | `movement-row` | la misma | el mismo | fila | editar |
 | `commitment-submit` | Hoja de compromiso | `shared/components/commitments/commitment-form.tsx` | «Agregar compromiso» | `compromisos` |
-| `goal-submit` | Hoja de meta | `shared/components/savings/goal-form.tsx` | «Crear meta» | `ahorro-metas` |
+| `goal-submit` | Hoja de meta | pendiente, Pixi. No está en `goal-form.tsx` | «Crear meta» | `ahorro-metas` |
 | `savings-fund` | Ahorro | `shared/components/savings/savings-screen.tsx` | tarjeta del Fondo | `ahorro-metas` |
 | `plan-row-sobres` | Plan | `shared/components/plan/plan-hub.tsx` | fila Sobres | `plan-sobres` |
 | `sobres-needs` | Sobres | `shared/components/envelopes/sobres-screen.tsx` | bloque Necesidades | `plan-sobres` |

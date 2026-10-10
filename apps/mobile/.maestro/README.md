@@ -37,14 +37,18 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
 | `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro |
+| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
+`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. Correlo al final, como mucho una vez al día.
+
 ## Fuera de la corrida
+
+Los flujos `cuenta-nueva` quedan excluidos por defecto (`config.yaml`): no corren con `maestro test .maestro/` ni con el resto. Se corren uno por uno, con una cuenta en el estado que piden.
 
 - `cuenta-nueva`: `onboarding-ciclo`, `onboarding-saldo-cero`, `onboarding-despues`, `onboarding-paso-1` (también `wip`). Cuenta sin perfil.
 - `cuenta-nueva`: `home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso` (también `one-shot`). Nunca hubo un ciclo.

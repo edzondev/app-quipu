@@ -27,7 +27,8 @@ tags:
 - extendedWaitUntil:
     visible: "${output.cycleBefore} · .*"
     timeout: 20000
-- assertVisible: ".*10\\.00"
+# Ingreso en soles enteros: «+ S/ 10», sin decimales (shared/lib/movements/model.ts).
+- assertVisible: "\\+ S/ 10"
 - tapOn:
     text: "Inicio"
 - assertVisible: "Hoy puedes gastar"
