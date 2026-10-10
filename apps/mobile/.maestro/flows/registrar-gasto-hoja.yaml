@@ -36,16 +36,14 @@ tags:
 - assertVisible: "20\\.00"
 - tapOn: "Registrar gasto"
 - assertVisible: "Elige un sobre para el gasto."
-# Sobre antes del texto. hideKeyboard solo justo después de escribir:
-# en Android es Back y cierra la hoja si el teclado ya no está.
-- tapOn:
-    text: "Gustos"
-    below: "NUEVO GASTO"
-- assertVisible: "DESPUÉS DE ESTE GASTO.*"
 - tapOn:
     text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
+- tapOn:
+    text: "Gustos"
+    below: "NUEVO GASTO"
+- assertVisible: "DESPUÉS DE ESTE GASTO.*"
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"

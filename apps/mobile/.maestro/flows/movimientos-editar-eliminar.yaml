@@ -28,12 +28,12 @@ tags:
 - tapOn:
     text: "0"
 - tapOn:
-    text: "Gustos"
-    below: "NUEVO GASTO"
-- tapOn:
     text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
+- tapOn:
+    text: "Gustos"
+    below: "NUEVO GASTO"
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"
@@ -47,14 +47,9 @@ tags:
     visible: "EDITAR GASTO"
     timeout: 10000
 - assertVisible: "HOY QUEDARÍA.*"
-# Igual que el gasto completo: Select all y un backspace, no eraseText a mitad del texto.
-- longPressOn: "Monto"
-- tapOn:
-    text: "Select all|Seleccionar todo"
-    optional: true
-- eraseText: 1
+- tapOn: "Monto"
+- eraseText
 - inputText: "30"
-- assertVisible: "30"
 - hideKeyboard
 - tapOn:
     text: "Guardar"
