@@ -37,12 +37,14 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
 | `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro |
+| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
+
+`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. Correlo al final, como mucho una vez al día.
 
 ## Fuera de la corrida
 

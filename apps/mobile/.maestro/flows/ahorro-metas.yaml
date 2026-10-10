@@ -6,7 +6,9 @@ tags:
 # Notion 3f486a7356a68151890de99f4fa8e495
 # Ahorro: crear metas. El nombre de 41 caracteres lo corta maxLength={40}
 # antes de llegar al mensaje del servidor: no se puede afirmar ese error.
-# Misma cuenta. El nombre lleva la hora para no chocar con metas viejas. No hay cómo borrarlas.
+# Nombre fijo «Meta E2E». Si no está en la lista, se crea una sola vez.
+# La afirmación «Ya tienes una meta con ese nombre.» pasa cuando llegue el arreglo
+# de Pixi en goal-form.tsx (el formulario no muestra el error del servidor).
 # La hoja es 60% (goal-sheet.tsx). «Crear meta» se busca con scroll antes de tocarlo.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -16,7 +18,6 @@ tags:
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
-- evalScript: "${output.goal = 'Viaje' + String(Date.now()).slice(-6)}"
 - tapOn:
     text: "Plan"
 - tapOn: "Ahorro y metas"
@@ -26,61 +27,66 @@ tags:
 - assertVisible: "Ahorro"
 - runFlow:
     when:
-      visible: "Crear mi primera meta"
+      notVisible: "Meta E2E"
     commands:
-      - tapOn: "Crear mi primera meta"
-- runFlow:
-    when:
-      visible: "\\+ Nueva meta"
-    commands:
+      - runFlow:
+          when:
+            visible: "Crear mi primera meta"
+          commands:
+            - tapOn: "Crear mi primera meta"
+      - runFlow:
+          when:
+            visible: "\\+ Nueva meta"
+          commands:
+            - tapOn:
+                text: "\\+ Nueva meta"
+      - extendedWaitUntil:
+          visible: "(?-i)NUEVA META"
+          timeout: 10000
+      - scrollUntilVisible:
+          element: "Crear meta"
+          direction: DOWN
+          timeout: 10000
+      - tapOn: "Crear meta"
+      - scrollUntilVisible:
+          element: "El nombre de la meta es obligatorio."
+          direction: UP
+          timeout: 10000
+      - assertVisible: "El nombre de la meta es obligatorio."
+      - tapOn: "Nombre de la meta"
+      - inputText: "Meta E2E"
+      - scrollUntilVisible:
+          element: "Meta"
+          direction: DOWN
+          timeout: 10000
+      - tapOn: "Meta"
+      - inputText: "0"
+      - hideKeyboard
+      - scrollUntilVisible:
+          element: "Crear meta"
+          direction: DOWN
+          timeout: 10000
+      - tapOn: "Crear meta"
+      - scrollUntilVisible:
+          element: "La meta debe ser mayor a cero."
+          direction: UP
+          timeout: 10000
+      - assertVisible: "La meta debe ser mayor a cero."
+      - tapOn: "Meta"
+      - eraseText
+      - inputText: "2000"
+      - hideKeyboard
+      - scrollUntilVisible:
+          element: "Crear meta"
+          direction: DOWN
+          timeout: 10000
       - tapOn:
-          text: "\\+ Nueva meta"
-- extendedWaitUntil:
-    visible: "(?-i)NUEVA META"
-    timeout: 10000
-- scrollUntilVisible:
-    element: "Crear meta"
-    direction: DOWN
-    timeout: 10000
-- tapOn: "Crear meta"
-- scrollUntilVisible:
-    element: "El nombre de la meta es obligatorio."
-    direction: UP
-    timeout: 10000
-- assertVisible: "El nombre de la meta es obligatorio."
-- tapOn: "Nombre de la meta"
-- inputText: ${output.goal}
-- scrollUntilVisible:
-    element: "Meta"
-    direction: DOWN
-    timeout: 10000
-- tapOn: "Meta"
-- inputText: "0"
-- hideKeyboard
-- scrollUntilVisible:
-    element: "Crear meta"
-    direction: DOWN
-    timeout: 10000
-- tapOn: "Crear meta"
-- scrollUntilVisible:
-    element: "La meta debe ser mayor a cero."
-    direction: UP
-    timeout: 10000
-- assertVisible: "La meta debe ser mayor a cero."
-- tapOn: "Meta"
-- eraseText
-- inputText: "2000"
-- hideKeyboard
-- scrollUntilVisible:
-    element: "Crear meta"
-    direction: DOWN
-    timeout: 10000
-- tapOn:
-    text: "Crear meta"
-    enabled: true
-- extendedWaitUntil:
-    visible: ${output.goal}
-    timeout: 20000
+          text: "Crear meta"
+          enabled: true
+      - extendedWaitUntil:
+          notVisible: "(?-i)NUEVA META"
+          timeout: 20000
+- assertVisible: "Meta E2E"
 - assertVisible: "SIN APORTE AUTOMÁTICO"
 - assertVisible: ".*de 2,000"
 - runFlow:
@@ -90,10 +96,11 @@ tags:
       - tapOn:
           text: "\\+ Nueva meta"
 - extendedWaitUntil:
-    visible: "Nombre de la meta"
+    visible: "(?-i)NUEVA META"
     timeout: 10000
 - tapOn: "Nombre de la meta"
-- inputText: ${output.goal}
+- eraseText
+- inputText: "Meta E2E"
 - hideKeyboard
 - scrollUntilVisible:
     element: "Crear meta"
