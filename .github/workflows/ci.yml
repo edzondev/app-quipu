@@ -59,7 +59,7 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git diff --name-only "$BASE" HEAD | grep -Eq '^(apps/mobile/|\.github/workflows/)'
+          git diff --name-only "$BASE" HEAD | grep -Eq '^(apps/mobile/(modules/|android/|app\.json|app\.config|eas\.json|package\.json)|pnpm-lock\.yaml|\.github/workflows/)'
           if [ "$?" -eq 0 ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
