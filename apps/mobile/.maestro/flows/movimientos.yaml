@@ -29,13 +29,15 @@ tags:
     text: "0"
 - tapOn:
     text: "0"
+# El sobre va antes del texto: hideKeyboard en Android es Back y, si el teclado
+# ya está cerrado, cierra la hoja. Uno solo, justo después de escribir.
+- tapOn:
+    text: "Necesidades"
+    below: "NUEVO GASTO"
 - tapOn:
     text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
-- tapOn:
-    text: "Necesidades"
-    below: "NUEVO GASTO"
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"
