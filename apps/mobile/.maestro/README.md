@@ -32,7 +32,6 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `home-ciclo` | Inicio con ciclo |
 | `preview-sin-selector-dev` | Progreso sin el selector de desarrollo |
 | `registrar-gasto-hoja` | Gasto en la hoja |
-| `registrar-gasto-completo` | Gasto en pantalla completa |
 | `movimientos` | Lista, filtros y búsqueda |
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
 | `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |

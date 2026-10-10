@@ -34,8 +34,8 @@ Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amo
 | `expense-submit` | Hoja de gasto | `shared/components/expenses/expense-sheet-form.tsx` | «Registrar gasto» | `registrar-gasto-hoja` |
 | `envelope-needs` | Sobres del gasto | `shared/components/expenses/envelope-choices.tsx` | «Necesidades» | registrar, compromisos |
 | `envelope-wants` | el mismo | el mismo | «Gustos» | registrar |
-| `expense-amount` | Pantalla completa | `shared/components/expenses/expense-detail-form.tsx` | campo Monto | `registrar-gasto-completo`, editar |
-| `expense-save` | la misma | el mismo | «Guardar» / «Registrar gasto» | editar, completo |
+| `expense-amount` | Pantalla completa | `shared/components/expenses/expense-detail-form.tsx` | campo Monto | editar |
+| `expense-save` | la misma | el mismo | «Guardar» / «Registrar gasto» | editar |
 | `expense-delete` | la misma | el mismo | «Eliminar» | `movimientos-editar-eliminar` |
 | `movement-filter-all` | Movimientos | `shared/components/movements/movements-list.tsx` | «Todos» | `movimientos` |
 | `movement-filter-needs` | la misma | el mismo | «Necesidades» | `movimientos` |
@@ -57,6 +57,5 @@ Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amo
 | `tab-progreso` | la misma | el mismo | Progreso | `progreso-vacio`, `progreso-primer-cierre` |
 | `income-sheet` | Hoja de ingreso | propuesto | contenedor de la hoja | registrar ingreso |
 | `expense-sheet` | Hoja de gasto | propuesto | contenedor de la hoja | `registrar-gasto-hoja` |
-| `expense-detail-screen` | Gasto completo | propuesto | pantalla «REGISTRAR GASTO» | `registrar-gasto-completo` |
 | `progress-closed-cycle` | Progreso | `shared/components/progress/progress-screen.tsx` | «CICLO CERRADO · …» | `progreso-primer-cierre` |
 | `progress-closed-count` | Progreso | el mismo | «CICLOS CERRADOS EN VERDE» | `progreso-primer-cierre` |

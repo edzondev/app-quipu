@@ -21,7 +21,6 @@ executionOrder:
     - movimientos
     - plan-sobres
     - preview-sin-selector-dev
-    - registrar-gasto-completo
     - registrar-gasto-hoja
     - registrar-ingreso
     - sign-in
