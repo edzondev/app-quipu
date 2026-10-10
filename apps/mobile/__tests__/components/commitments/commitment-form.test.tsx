@@ -65,6 +65,31 @@ describe("CommitmentForm", () => {
 		expect(view.getByText(/^Se repite cada mes\. Próximo: 21 [A-Z]{3}\.$/)).toBeTruthy();
 	});
 
+	it("muestra el error del servidor si no se pudo guardar", async () => {
+		const onSubmit = jest.fn().mockRejectedValue({
+			data: {
+				code: "VALIDATION_ERROR",
+				message: "El monto debe ser un entero de céntimos mayor a cero.",
+			},
+		});
+		const view = await render(<CommitmentForm onSubmit={onSubmit} onCancel={jest.fn()} />);
+
+		await fireEvent.changeText(view.getByLabelText("Nombre"), "Luz");
+		await fireEvent.changeText(view.getByLabelText("Monto"), "10");
+		await fireEvent.changeText(view.getByLabelText("Día de vencimiento"), "5");
+		await fireEvent.press(view.getByLabelText("Agregar compromiso"));
+
+		expect(
+			await view.findByText("El monto debe ser un entero de céntimos mayor a cero."),
+		).toBeTruthy();
+		expect(onSubmit).toHaveBeenCalledWith({
+			name: "Luz",
+			amount: 1000,
+			dueDay: 5,
+			envelope: "needs",
+		});
+	});
+
 	it("cancela", async () => {
 		const onCancel = jest.fn();
 		const view = await render(<CommitmentForm onSubmit={jest.fn()} onCancel={onCancel} />);
