@@ -75,8 +75,7 @@ tags:
 - assertVisible: "Necesid\\."
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
-- tapOn:
-    text: "Movimientos"
+- tapOn: "Ver todos"
 - extendedWaitUntil:
     visible: "Todavía no hay nada registrado en este ciclo."
     timeout: 15000

@@ -38,8 +38,7 @@ tags:
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"
     timeout: 20000
-- tapOn:
-    text: "Movimientos"
+- runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000

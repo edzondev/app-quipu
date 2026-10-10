@@ -6,7 +6,7 @@ tags:
 ---
 # Notion 3f486a7356a681c697bad1f751335490
 # Movimientos: lista por día, filtros y búsqueda. El filtro «Ahorro» se ve.
-# 99e2e3b solo retoca el espaciado. La hoja de gasto sigue a pantalla completa.
+# Abrir con «Ver todos»: el título de sección en Inicio también dice «Movimientos».
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -40,8 +40,7 @@ tags:
 - extendedWaitUntil:
     notVisible: "NUEVO GASTO"
     timeout: 20000
-- tapOn:
-    text: "Movimientos"
+- runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000

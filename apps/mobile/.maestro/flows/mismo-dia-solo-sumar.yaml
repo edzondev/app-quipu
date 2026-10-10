@@ -25,11 +25,7 @@ tags:
     visible: "¿Cómo entra tu dinero?"
     timeout: 30000
 - runFlow: ../subflows/onboarding-abrir-ciclo.yaml
-- tapOn:
-    text: "Movimientos"
-- extendedWaitUntil:
-    visible: "CICLO .*"
-    timeout: 15000
+- runFlow: ../subflows/abrir-movimientos.yaml
 - copyTextFrom:
     text: "CICLO .*"
 - evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
@@ -69,8 +65,7 @@ tags:
 - extendedWaitUntil:
     notVisible: "(?-i)REGISTRAR INGRESO"
     timeout: 20000
-- tapOn:
-    text: "Movimientos"
+- runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:
     visible: "${output.cycleBefore} · .*"
     timeout: 20000
