@@ -132,6 +132,7 @@ export function Step1IncomeProfile() {
 					{(canSubmit) => (
 						<AuthButton
 							label="Continuar"
+							testID="wizard-continue"
 							onPress={() => void form.handleSubmit()}
 							disabled={!canSubmit}
 						/>

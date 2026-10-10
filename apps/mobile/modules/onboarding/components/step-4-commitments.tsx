@@ -59,7 +59,7 @@ export function Step4Commitments() {
 							{BLOCKED_MESSAGE}
 						</Text>
 					) : null}
-					<AuthButton label="Continuar" onPress={next} />
+					<AuthButton label="Continuar" testID="wizard-continue" onPress={next} />
 					<Pressable
 						testID="commitments-skip"
 						accessibilityRole="button"

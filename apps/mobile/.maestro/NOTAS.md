@@ -24,26 +24,9 @@ Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amo
 
 | testID propuesto | Pantalla | Archivo | Elemento | Flujo |
 |---|---|---|---|---|
-| `welcome-create-account` | Bienvenida | `modules/onboarding/components/welcome.tsx` | «Crear cuenta» | `welcome` |
-| `welcome-sign-in` | Bienvenida | el mismo | «Ya tengo cuenta» | `welcome` |
-| `welcome-example-amount` | Bienvenida | el mismo | `S/ 42.30` | `welcome` |
-| `sign-in-email-method` | Entrar | `app/(auth)/sign-in.tsx` | «Entrar con correo» | `sign-in` |
-| `sign-in-email` | Entrar | `shared/components/auth/auth-labeled-field.tsx` | campo Correo | `sign-in` |
-| `sign-in-password` | Entrar | el mismo | campo Contraseña | `sign-in` |
-| `sign-in-submit` | Entrar | `shared/components/auth/auth-button.tsx` | «Entrar» | `sign-in` |
-| `wizard-continue` | Asistente, pasos 1–4 | cada paso | «Continuar» | onboarding |
-| `wizard-start` | Paso 5 | `modules/onboarding/components/step-confirm.tsx` | «Empezar mi ciclo» | `onboarding-ciclo`, `onboarding-despues` |
 | `field-error-mixed` | Paso 1 | `step-1-income-profile.tsx` | no pinta «Indica tu sueldo base.» | `onboarding-paso-1` |
 | `field-error-sources` | Paso 1 | el mismo | «Agrega al menos una fuente.» | `onboarding-paso-1` |
 | `field-error-cycle` | Paso 1 | el mismo | «Elige un ciclo de 15 o 30 días.» | `onboarding-paso-1` |
-| `home-daily` | Inicio | `shared/components/home/home-dense.tsx` | monto «Hoy puedes gastar» | onboarding, `home-ciclo` |
-| `home-cycle-day` | Inicio | el mismo | «Día X/Y» | `home-ciclo` |
-| `home-envelope-needs` | Inicio | el mismo | fila Necesidades | `home-ciclo` |
-| `home-envelope-wants` | Inicio | el mismo | fila Gustos | `home-ciclo` |
-| `home-envelope-savings` | Inicio | el mismo | fila Ahorro | `home-ciclo` |
-| `home-carry` | Inicio | el mismo | «Saldo que quedó…» | `ciclo-nuevo-antes-del-fin` (opcional) |
-| `home-view-movements` | Inicio | `home-dense.tsx` | «Ver todos» | `home-ciclo` |
-| `home-register-income` | Inicio vacío | `shared/components/home/home-empty.tsx` | «Registrar ingreso» | `home-vacio`, `home-primer-ingreso` |
 | `registrar-mode-expense` | Hoja | `shared/components/navigation/registrar-sheet.tsx` | «Gasto» | registrar |
 | `registrar-mode-income` | Hoja | el mismo | «Ingreso» | registrar |
 | `registrar-fab` | Tab | `shared/components/navigation/registrar-tab-button.tsx` | botón central | registrar |
