@@ -2,13 +2,23 @@ appId: com.quipu.finance
 ---
 # Sesión local vacía solo de esta app, para entrar con la cuenta del env.
 # No borra datos en Convex y no es resetAll.
-- launchApp:
-    appId: com.quipu.finance
-    clearState: true
-    stopApp: true
-- extendedWaitUntil:
-    visible: "Ya tengo cuenta"
-    timeout: 25000
+# Primero cierra y borra la app, espera 3 s para que Android termine
+# de cerrarla y recién la abre. Si aun así no carga, reintenta.
+- retry:
+    maxRetries: 2
+    commands:
+      - stopApp: com.quipu.finance
+      - clearState: com.quipu.finance
+      - extendedWaitUntil:
+          visible: "texto-que-nunca-aparece"
+          timeout: 3000
+          optional: true
+      - launchApp:
+          appId: com.quipu.finance
+          stopApp: false
+      - extendedWaitUntil:
+          visible: "Ya tengo cuenta"
+          timeout: 45000
 - tapOn: "Ya tengo cuenta"
 - extendedWaitUntil:
     visible: "Entrar con correo"
