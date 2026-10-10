@@ -2,7 +2,7 @@ import { Pressable, Text, View } from "react-native";
 import { Backspace } from "reicon-react-native/icons/Backspace";
 import { appendKeypadDigit, backspaceKeypad, keypadFigures } from "@/shared/lib/expenses/keypad";
 
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "backspace"] as const;
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "backspace"] as const;
 
 type Key = (typeof KEYS)[number];
 
@@ -34,7 +34,6 @@ export function ExpenseKeypad({
 			onAmountChange(backspaceKeypad(amountCents));
 			return;
 		}
-		if (key === ",") return;
 		onAmountChange(appendKeypadDigit(amountCents, Number(key)));
 	}
 
@@ -51,13 +50,7 @@ export function ExpenseKeypad({
 						{key === "backspace" ? (
 							<Backspace size={22} color="#6B6B6B" />
 						) : (
-							<Text
-								className={`font-hanken text-[23px] ${
-									key === "," ? "text-foreground/55" : "text-foreground"
-								}`}
-							>
-								{key}
-							</Text>
+							<Text className="font-hanken text-[23px] text-foreground">{key}</Text>
 						)}
 					</Pressable>
 				</View>

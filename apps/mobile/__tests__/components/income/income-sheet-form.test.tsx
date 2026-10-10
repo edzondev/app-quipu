@@ -296,6 +296,33 @@ describe("IncomeSheetForm", () => {
 		});
 	});
 
+	it("si el ciclo empezó hoy solo ofrece sumar al actual", async () => {
+		const onSubmit = jest.fn();
+		const view = await render(
+			<IncomeSheetForm
+				currencySymbol="S/"
+				cycle="open"
+				startedToday
+				onSubmit={onSubmit}
+				onCancel={jest.fn()}
+			/>,
+		);
+
+		expect(view.queryByTestId(NEW_CYCLE)).toBeNull();
+		expect(view.queryByText("Empieza un nuevo ciclo")).toBeNull();
+		expect(view.getByText("Sumar al ciclo actual")).toBeTruthy();
+		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
+
+		await fireEvent.press(view.getByText("5"));
+		await fireEvent.press(view.getByText("Registrar ingreso"));
+
+		expect(submittedArgs(onSubmit)).toMatchObject({
+			amount: 5,
+			incomeKind: extraKind,
+			extraordinaryType: "custom",
+		});
+	});
+
 	it("sin ciclo solo ofrece empezar uno nuevo", async () => {
 		const onSubmit = jest.fn();
 		const view = await render(

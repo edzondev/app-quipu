@@ -14,13 +14,11 @@ describe("ExpenseSheetForm", () => {
 				dailyCents={4230}
 				onSubmit={onSubmit}
 				onCancel={jest.fn()}
-				onOpenDetail={jest.fn()}
 			/>,
 		);
 
 		await fireEvent.press(view.getByText("4"));
 		await fireEvent.press(view.getByText("2"));
-		await fireEvent.press(view.getByLabelText(","));
 		await fireEvent.press(view.getByText("0"));
 		await fireEvent.press(view.getByText("0"));
 		expect(view.getByLabelText("Monto").props.children).toBe("42.00");
@@ -37,15 +35,13 @@ describe("ExpenseSheetForm", () => {
 		});
 	});
 
-	it("borra un dígito y abre el detalle con el borrador", async () => {
-		const onOpenDetail = jest.fn();
+	it("borra un dígito y no abre un gasto nuevo", async () => {
 		const view = await render(
 			<ExpenseSheetForm
 				currencySymbol="S/"
 				dailyCents={null}
 				onSubmit={jest.fn()}
 				onCancel={jest.fn()}
-				onOpenDetail={onOpenDetail}
 			/>,
 		);
 
@@ -53,14 +49,11 @@ describe("ExpenseSheetForm", () => {
 		await fireEvent.press(view.getByText("5"));
 		await fireEvent.press(view.getByLabelText("Borrar"));
 		await fireEvent.press(view.getByText("Necesidades"));
-		await fireEvent.press(view.getByLabelText("Abrir detalle del gasto"));
 
+		expect(view.getByLabelText("Monto").props.children).toBe("0.01");
 		expect(view.queryByText(/HOY QUEDA/)).toBeNull();
-		expect(onOpenDetail).toHaveBeenCalledWith({
-			amountRaw: "0.01",
-			description: "",
-			envelopeType: "needs",
-		});
+		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
+		expect(view.queryByLabelText(",")).toBeNull();
 	});
 
 	it("no ofrece Ahorro como sobre de gasto y cancela", async () => {
@@ -71,7 +64,6 @@ describe("ExpenseSheetForm", () => {
 				dailyCents={null}
 				onSubmit={jest.fn()}
 				onCancel={onCancel}
-				onOpenDetail={jest.fn()}
 			/>,
 		);
 
@@ -94,7 +86,6 @@ describe("ExpenseSheetForm", () => {
 				}}
 				onSubmit={jest.fn()}
 				onCancel={jest.fn()}
-				onOpenDetail={jest.fn()}
 			/>,
 		);
 		expect(view.getByText("Ingresa un monto mayor a cero.")).toBeTruthy();

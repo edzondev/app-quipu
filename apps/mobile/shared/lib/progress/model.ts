@@ -70,7 +70,7 @@ export type CloseRowView = {
 export type CloseScreenModel = {
 	eyebrow: string;
 	title: string;
-	subtitle: string;
+	subtitle: string | null;
 	spentLabel: string;
 	surplusLabel: string | null;
 	segments: CloseSegmentView[];
@@ -120,7 +120,7 @@ export function presentClose(
 			surplusCents == null
 				? `Cerraste ${month}.`
 				: `Cerraste ${month} con ${formatCentsTrimmed(surplusCents, symbol)} de sobra.`,
-		subtitle: streakSubtitle(report.streak),
+		subtitle: report.streakEvaluated ? streakSubtitle(report.streak) : null,
 		spentLabel: `GASTADO ${formatCentsTrimmed(spentCents, symbol)}`,
 		surplusLabel: surplusCents == null ? null : `SOBRÓ ${formatCentsTrimmed(surplusCents, symbol)}`,
 		segments: toSegments(report, spentCents, surplusCents),

@@ -42,18 +42,25 @@ const CYCLE_CHOICES = [
 
 type SheetCycle = Exclude<IncomeCycleOffer, "loading">;
 
-function choicesFor(cycle: SheetCycle) {
+function choicesFor(cycle: SheetCycle, startedToday: boolean) {
+	if (startedToday) return CYCLE_CHOICES.filter((choice) => choice.kind === "extraordinary");
 	if (cycle === "none") return CYCLE_CHOICES.filter((choice) => choice.kind === "habitual");
 	return CYCLE_CHOICES;
 }
 
-/** Ciclo en curso: sumar. Vencido o sin ciclo: empezar uno nuevo. */
-function initialIncomeKind(cycle: SheetCycle): IncomeKind {
-	return cycle === "open" ? "extraordinary" : "habitual";
+/** Empezó hoy o sigue en curso: sumar. Vencido o sin ciclo: empezar uno nuevo. */
+function initialIncomeKind(cycle: SheetCycle, startedToday: boolean): IncomeKind {
+	if (startedToday || cycle === "open") return "extraordinary";
+	return "habitual";
 }
 
 /** Si solo hay una opción, el valor sale de esa opción en el render. */
-function resolveIncomeKind(cycle: SheetCycle, chosen: IncomeKind): IncomeKind {
+function resolveIncomeKind(
+	cycle: SheetCycle,
+	startedToday: boolean,
+	chosen: IncomeKind,
+): IncomeKind {
+	if (startedToday) return "extraordinary";
 	if (cycle === "none") return "habitual";
 	return chosen;
 }
@@ -70,6 +77,8 @@ type Props = {
 	currencySymbol: string;
 	formError?: string | null;
 	cycle: SheetCycle;
+	/** getSummary.cycle.startedToday: hoy solo se suma al ciclo en curso. */
+	startedToday?: boolean;
 	/** Define qué extraordinarios se ofrecen; sin perfil cargado solo el genérico. */
 	incomeModel?: IncomeModel | null;
 	onSubmit: (draft: IncomeDraft) => Promise<unknown>;
@@ -80,19 +89,23 @@ export function IncomeSheetForm({
 	currencySymbol,
 	formError,
 	cycle,
+	startedToday = false,
 	incomeModel,
 	onSubmit,
 	onCancel,
 }: Props) {
-	const choices = choicesFor(cycle);
+	const choices = choicesFor(cycle, startedToday);
 	const extraTypes = extraTypesFor(incomeModel);
 	const form = useForm({
-		defaultValues: { ...defaultIncomeFormValues(), incomeKind: initialIncomeKind(cycle) },
+		defaultValues: {
+			...defaultIncomeFormValues(),
+			incomeKind: initialIncomeKind(cycle, startedToday),
+		},
 		onSubmit: ({ value }) =>
 			onSubmit(
 				incomeDraftFromForm({
 					...value,
-					incomeKind: resolveIncomeKind(cycle, value.incomeKind),
+					incomeKind: resolveIncomeKind(cycle, startedToday, value.incomeKind),
 					extraordinaryType: resolveExtraType(extraTypes, value.extraordinaryType),
 				}),
 			),
@@ -100,7 +113,7 @@ export function IncomeSheetForm({
 	const amountCents = useStore(form.store, (state) => state.values.amountCents);
 	const occurredAt = useStore(form.store, (state) => state.values.occurredAt);
 	const incomeKind = useStore(form.store, (state) =>
-		resolveIncomeKind(cycle, state.values.incomeKind),
+		resolveIncomeKind(cycle, startedToday, state.values.incomeKind),
 	);
 	const extraType = useStore(form.store, (state) =>
 		resolveExtraType(extraTypes, state.values.extraordinaryType),
@@ -128,7 +141,7 @@ export function IncomeSheetForm({
 
 			<form.Field name="incomeKind">
 				{(field) => {
-					const kind = resolveIncomeKind(cycle, field.state.value);
+					const kind = resolveIncomeKind(cycle, startedToday, field.state.value);
 					return (
 						<View className="mt-4 gap-2">
 							{choices.map((option) => {
