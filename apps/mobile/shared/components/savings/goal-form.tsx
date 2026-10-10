@@ -2,6 +2,7 @@ import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { ErrorText, FieldError } from "@/shared/components/forms/field-error";
 import { readActionError } from "@/shared/lib/expenses/errors";
+import { formErrorMessage } from "@/shared/lib/form";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import {
 	type CreateSavingsGoalArgs,
@@ -44,13 +45,7 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 		},
 	});
 	const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
-	const formError = useStore(form.store, (state) => {
-		const error = state.errorMap.onSubmit;
-		if (error && typeof error === "object" && "form" in error && typeof error.form === "string") {
-			return error.form;
-		}
-		return null;
-	});
+	const formError = useStore(form.store, (state) => formErrorMessage(state.errorMap.onSubmit));
 
 	return (
 		<View className="flex-1 px-[22px] pt-1.5 pb-8">
@@ -107,6 +102,7 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 
 			{formError ? <ErrorText message={formError} /> : null}
 			<Pressable
+				testID="goal-submit"
 				accessibilityRole="button"
 				accessibilityLabel="Crear meta"
 				accessibilityState={{ disabled: isSubmitting }}
