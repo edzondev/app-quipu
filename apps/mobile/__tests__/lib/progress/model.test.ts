@@ -265,6 +265,24 @@ describe("presentClose", () => {
 		expect(model?.segments.every((segment) => segment.percent > 0)).toBe(true);
 	});
 
+	it("el texto de racha sale solo cuando streakEvaluated es true", () => {
+		const withStreak = (streak: number, streakEvaluated: boolean) =>
+			presentClose(
+				{
+					...closeReport,
+					report: { ...closeReport.report, streak, streakEvaluated },
+				} satisfies ClosePayload,
+				savingsOverview,
+			);
+
+		expect(withStreak(0, true)?.subtitle).toBe("La racha vuelve a empezar.");
+		expect(withStreak(1, true)?.subtitle).toBe("Primer ciclo de la racha.");
+		expect(withStreak(3, true)?.subtitle).toBe("3 ciclos seguidos.");
+		expect(withStreak(0, false)?.subtitle).toBeNull();
+		expect(withStreak(1, false)?.subtitle).toBeNull();
+		expect(withStreak(4, false)?.subtitle).toBeNull();
+	});
+
 	it("el subtítulo sigue a la racha aunque el estado sea aviso o fallo", () => {
 		const warning = presentClose(
 			{

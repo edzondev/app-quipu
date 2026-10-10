@@ -135,6 +135,7 @@ describe("RegistrarSheet", () => {
 		);
 
 		expect(view.getByText("NUEVO GASTO")).toBeTruthy();
+		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.selected).toBe(
 			true,
 		);
@@ -186,6 +187,23 @@ describe("RegistrarSheet", () => {
 		expect(view.getByTestId("income-mode-new-cycle").props.accessibilityState.selected).toBe(true);
 		expect(view.queryByText("Cierra este ciclo y empieza uno nuevo")).toBeNull();
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
+	});
+
+	it("si el ciclo empezó hoy solo deja sumar al actual", async () => {
+		const open = summaryWithCycle();
+		mockSummary.mockReturnValue({
+			...open,
+			cycle: { ...open.cycle, startedToday: true },
+		});
+		home.mockReturnValue(readyHome);
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 8, intent: "income" }} onDismiss={jest.fn()} />,
+		);
+
+		expect(view.queryByTestId("income-mode-new-cycle")).toBeNull();
+		expect(view.queryByText("Empieza un nuevo ciclo")).toBeNull();
+		expect(view.getByText("Sumar al ciclo actual")).toBeTruthy();
+		expect(view.getByTestId("income-mode-add").props.accessibilityState.selected).toBe(true);
 	});
 
 	it("mientras carga no muestra la variante sin ciclo", async () => {

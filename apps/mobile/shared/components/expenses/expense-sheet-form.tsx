@@ -1,6 +1,5 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { Camera } from "reicon-react-native/icons/Camera";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
 import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
@@ -32,7 +31,6 @@ type Props = {
 	isSubmitting?: boolean;
 	onSubmit: (input: ExpenseDraftInput) => void;
 	onCancel: () => void;
-	onOpenDetail: (input: ExpenseDraftInput) => void;
 };
 
 export function ExpenseSheetForm({
@@ -43,7 +41,6 @@ export function ExpenseSheetForm({
 	isSubmitting = false,
 	onSubmit,
 	onCancel,
-	onOpenDetail,
 }: Props) {
 	const form = useForm({
 		defaultValues: DEFAULT_VALUES,
@@ -87,15 +84,6 @@ export function ExpenseSheetForm({
 							accessibilityLabel="Comercio"
 							className="flex-1 font-hanken text-[16px] text-foreground"
 						/>
-						<Pressable
-							accessibilityRole="button"
-							accessibilityLabel="Abrir detalle del gasto"
-							hitSlop={HIT_SLOP}
-							onPress={() => onOpenDetail(toDraft(form.state.values))}
-							className="active:opacity-60"
-						>
-							<Camera size={19} color="#9A968C" />
-						</Pressable>
 					</View>
 				)}
 			</form.Field>
