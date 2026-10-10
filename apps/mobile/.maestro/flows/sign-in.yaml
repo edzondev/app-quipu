@@ -1,0 +1,51 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+  - p0
+  - auth
+---
+# Notion 3f486a7356a6818f9591c98fc1713062
+# Entrar con correo y contraseña
+- runFlow: ../subflows/abrir-formulario-correo.yaml
+- tapOn:
+    text: "Entrar"
+- assertVisible: "El email es obligatorio"
+- assertVisible: "La contraseña es obligatoria"
+# index: 1 es el campo, no la etiqueta. Confirmar con maestro hierarchy.
+- tapOn:
+    text: "Correo"
+    index: 1
+- inputText: "no-es-correo"
+- tapOn:
+    text: "Contraseña"
+    index: 1
+- inputText: "clave-incorrecta"
+- hideKeyboard
+- tapOn:
+    text: "Entrar"
+- assertVisible: "Email inválido"
+- tapOn:
+    text: "Correo"
+    index: 1
+- eraseText
+- inputText: ${QUIPU_E2E_EMAIL}
+- hideKeyboard
+- tapOn:
+    text: "Entrar"
+- extendedWaitUntil:
+    visible: "Email o contraseña incorrectos"
+    timeout: 20000
+- assertVisible: "Entra con tu respaldo."
+- tapOn:
+    text: "Contraseña"
+    index: 1
+- eraseText
+- inputText: ${QUIPU_E2E_PASSWORD}
+- hideKeyboard
+- tapOn:
+    text: "Entrar"
+    enabled: true
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- assertVisible: "Inicio"

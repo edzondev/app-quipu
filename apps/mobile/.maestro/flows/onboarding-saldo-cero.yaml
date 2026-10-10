@@ -1,0 +1,55 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - onboarding
+  - cuenta-nueva
+---
+# Notion 3f486a7356a681f9880cdca871f470e8
+# Dinero de hoy vacío = S/ 0 (Capi, 9 oct). El diario solo se ve en Inicio.
+# Hace falta una cuenta sin perfil. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- assertNotVisible: "DÍA DE PAGO"
+- assertNotVisible: "El 1 de cada mes"
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cuándo cobras?"
+    timeout: 10000
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Cómo repartes tu dinero?"
+    timeout: 10000
+- tapOn:
+    id: allocation-reset
+- tapOn: "Continuar"
+- extendedWaitUntil:
+    visible: "¿Qué pagas todos los meses?"
+    timeout: 10000
+- tapOn:
+    id: commitments-skip
+- extendedWaitUntil:
+    visible: "TU SISTEMA · 05/05"
+    timeout: 10000
+- assertVisible: "Dinero de hoy"
+- assertNotVisible: "Puedes gastar hoy"
+# El texto está en step-confirm.tsx en b70a12f.
+- assertVisible: "Anota el dinero que tienes hoy para ver tu número\\."
+- assertNotVisible:
+    id: confirm-daily
+- tapOn:
+    text: "Empezar mi ciclo"
+    enabled: true
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 40000
+- assertVisible: "S/ 0\\.00"
+- assertNotVisible: "Saldo que quedó.*"
+- assertVisible: "Necesid\\."
+- assertVisible: "Gustos"
+- assertVisible: "Ahorro"

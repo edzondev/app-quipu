@@ -1,0 +1,44 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - registrar
+---
+# Antes: sueldo-antes-del-fin.
+# Notion 3f486a7356a681b0b79ffe78ff0896aa
+# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro.
+# La cuenta queda con un ciclo activo. El arrastre («Saldo que quedó») depende del historial.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- tapOn:
+    text: "Movimientos"
+- extendedWaitUntil:
+    visible: "CICLO .*"
+    timeout: 15000
+- copyTextFrom:
+    text: "CICLO .*"
+- evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
+- tapOn:
+    text: "Inicio"
+- runFlow:
+    file: ../subflows/registrar-ingreso-tipo.yaml
+    env:
+      QUIPU_MODE_ID: income-mode-new-cycle
+- tapOn:
+    text: "Movimientos"
+- extendedWaitUntil:
+    visible: ".*10\\.00"
+    timeout: 20000
+- assertNotVisible: "${output.cycleBefore} · .*"
+- assertVisible: "CICLO .*"
+- tapOn:
+    text: "Inicio"
+- assertVisible: "Hoy puedes gastar"
+- assertVisible:
+    text: "Saldo que quedó.*"
+    optional: true

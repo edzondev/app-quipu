@@ -1,0 +1,60 @@
+appId: com.quipu.finance
+tags:
+  - smoke
+  - p0
+  - home
+---
+# Notion 3f486a7356a6813797ddd1dade3b109b
+# Inicio con ciclo: datos y sumas (textos estables; los montos dependen de la cuenta)
+# Notion 3f486a7356a6817eb281ce598278a629
+# Capi, 9 oct: Inicio no tiene «Salir». Se sale con «Cerrar sesión» en Ajustes.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 30000
+- assertVisible: "Inicio"
+- assertVisible: "Día .*"
+# f93107b: si el saldo quedó negativo, la misma línea dice «Te pasaste por S/ X» (overspentByLabel).
+- assertVisible: "(.*Sobra .*|.*Te pasaste por .*)"
+- assertVisible: "Sobres · queda"
+- assertVisible: "Necesid\\."
+- assertVisible: "Gustos"
+- assertVisible: "Ahorro"
+- assertNotVisible: "\\+ Ingreso"
+- assertNotVisible: "Salir"
+- tapOn: "Ajustes"
+- extendedWaitUntil:
+    visible: "Cerrar sesión"
+    timeout: 10000
+- assertVisible:
+    text: "Ajustes"
+- tapOn:
+    text: "Cerrar"
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 10000
+- tapOn:
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
+- extendedWaitUntil:
+    visible: "(?-i)REGISTRAR INGRESO"
+    timeout: 10000
+- assertVisible:
+    id: income-mode-add
+- tapOn: "Cancelar"
+- extendedWaitUntil:
+    notVisible: "(?-i)REGISTRAR INGRESO"
+    timeout: 10000
+- tapOn: "Ver todos"
+- extendedWaitUntil:
+    visible: "Movimientos"
+    timeout: 10000
+- tapOn:
+    text: "Inicio"
+- assertVisible: "Hoy puedes gastar"
+- assertVisible: "Hola.*"

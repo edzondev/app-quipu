@@ -1,0 +1,79 @@
+appId: com.quipu.finance
+tags:
+  - p0
+  - registrar
+  - onboarding
+  - wip
+  - cuenta-nueva
+---
+# M45, pendiente: el mismo día de Lima se ven las dos opciones. Tag wip para no contarlo
+# como fallo mientras ingeniería no lo cierre. «Empieza un nuevo ciclo» no lleva «¿?».
+# Antes: sueldo-cierra-ciclo. El mismo día el ciclo no se puede cerrar.
+# Notion 3f486a7356a681239318fa33957072e0
+# El asistente abre el ciclo hoy. Solo «Sumar al ciclo actual».
+# El cierre con arrastre está en ciclo-nuevo-antes-del-fin.
+# Las dos opciones se ven. #109 suma el habitual si el ciclo empezó hoy (día de Lima),
+# aunque se toque «Empieza un nuevo ciclo». La marcada es «Sumar al ciclo actual».
+# El ciclo tiene que haber empezado hoy: hace falta una cuenta sin perfil.
+# Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
+- tapOn:
+    text: "Movimientos"
+- extendedWaitUntil:
+    visible: "CICLO .*"
+    timeout: 15000
+- copyTextFrom:
+    text: "CICLO .*"
+- evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
+- tapOn:
+    text: "Inicio"
+- tapOn:
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
+- extendedWaitUntil:
+    visible: "(?-i)REGISTRAR INGRESO"
+    timeout: 10000
+- assertVisible:
+    id: income-mode-new-cycle
+- assertVisible:
+    id: income-mode-add
+    selected: true
+- tapOn:
+    id: income-mode-new-cycle
+- tapOn:
+    text: "1"
+- tapOn:
+    text: "0"
+- tapOn:
+    text: "0"
+- tapOn:
+    text: "0"
+- assertVisible: "10\\.00"
+- scrollUntilVisible:
+    element:
+      id: income-submit
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: income-submit
+    enabled: true
+- extendedWaitUntil:
+    notVisible: "(?-i)REGISTRAR INGRESO"
+    timeout: 20000
+- tapOn:
+    text: "Movimientos"
+- extendedWaitUntil:
+    visible: "${output.cycleBefore} · .*"
+    timeout: 20000
+- tapOn:
+    text: "Inicio"
+- assertNotVisible: "Saldo que quedó.*"

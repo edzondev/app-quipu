@@ -1,0 +1,26 @@
+appId: com.quipu.finance
+---
+# Cuenta fresca ya en el paso 1. «Después», ciclo abierto.
+# El diario no está en el paso 5 (PR #106). Se afirma en Inicio.
+# La flecha del asistente (wizard-back) no es el atrás de Android: ese caso es manual.
+- runFlow: onboarding-hasta-paso-4.yaml
+- tapOn:
+    id: commitments-skip
+- extendedWaitUntil:
+    visible: "TU SISTEMA · 05/05"
+    timeout: 10000
+- assertVisible: "Dinero de hoy"
+- assertVisible: "Próximo cobro"
+- assertNotVisible: "Puedes gastar hoy"
+- assertNotVisible:
+    id: confirm-daily
+- assertNotVisible: "Después de compromisos y ahorro, en .* días\\."
+- tapOn:
+    text: "Empezar mi ciclo"
+    enabled: true
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 40000
+# Inicio. S/ 1,200 al 50/30/20 y cobro mañana: (600 + 360) / 1 día = 960.
+- assertVisible: "S/ 960\\.00"
+- assertNotVisible: "Saldo que quedó.*"

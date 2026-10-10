@@ -1,0 +1,37 @@
+appId: com.quipu.finance
+tags:
+  - p2
+  - progreso
+  - onboarding
+  - cuenta-nueva
+---
+# Notion 3f486a7356a681278c46c8b9151e0828
+# Progreso vacío: cuenta sin perfil, el asistente abre el primer ciclo.
+# Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
+# «Cierre vacío» (Aún no hay un cierre. / Volver a Progreso) no tiene
+# un control en Progreso vacío: la ruta savings/cierre no se abre desde la UI.
+# En __DEV__ el selector «Datos reales» (progress-preview-live) se toca si está.
+- runFlow:
+    file: ../subflows/entrar.yaml
+    env:
+      QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
+      QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
+- extendedWaitUntil:
+    visible: "¿Cómo entra tu dinero?"
+    timeout: 30000
+- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
+- tapOn:
+    text: "Progreso"
+- tapOn:
+    id: progress-preview-live
+    optional: true
+- extendedWaitUntil:
+    visible: "Aún no cierras un ciclo."
+    timeout: 15000
+- assertVisible: "La constancia aparece cuando el primero queda cerrado. Sin medallas ni apuro."
+- tapOn: "Ir a Plan"
+- extendedWaitUntil:
+    visible: "Dónde está tu dinero antes de que lo gastes."
+    timeout: 10000
+- assertVisible:
+    text: "Plan"
