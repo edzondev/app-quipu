@@ -29,12 +29,12 @@ tags:
 - tapOn:
     text: "0"
 - tapOn:
+    text: "Gustos"
+    below: "NUEVO GASTO"
+- tapOn:
     text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
-- tapOn:
-    text: "Gustos"
-    below: "NUEVO GASTO"
 - tapOn: "Abrir detalle del gasto"
 - extendedWaitUntil:
     visible: "(?-i)REGISTRAR GASTO"
@@ -44,16 +44,26 @@ tags:
 - assertNotVisible:
     text: "Nota"
 - assertNotVisible: "Adjuntar boleta"
-- tapOn: "Monto"
-- eraseText
+# Reabrir no vacía el campo: el detalle siempre llega con el monto del keypad.
+# Docs de eraseText: pulsación larga, Select all, un backspace borra la selección.
+- longPressOn: "Monto"
+- tapOn:
+    text: "Select all|Seleccionar todo"
+    optional: true
+- eraseText: 1
 - inputText: "1.234"
+- assertVisible: "1\\.234"
 - hideKeyboard
 # (?-i): sin él también coincide el título «REGISTRAR GASTO» y Maestro toca ese texto.
 - tapOn: "(?-i)Registrar gasto"
 - assertVisible: "Ingresa un monto mayor a cero."
-- tapOn: "Monto"
-- eraseText
+- longPressOn: "Monto"
+- tapOn:
+    text: "Select all|Seleccionar todo"
+    optional: true
+- eraseText: 1
 - inputText: "15.50"
+- assertVisible: "15\\.50"
 - hideKeyboard
 - tapOn:
     text: "(?-i)Registrar gasto"
