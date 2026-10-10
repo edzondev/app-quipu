@@ -39,7 +39,7 @@ function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 	const [intPart, decPart] = (Math.abs(cents) / 100).toFixed(2).split(".");
 	const grouped = (intPart ?? "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	return (
-		<Text className="font-newsreader text-foreground" selectable>
+		<Text testID="home-daily" className="font-newsreader text-foreground" selectable>
 			<Text className="font-newsreader text-[18px] text-foreground/55">
 				{negative ? "-" : ""}
 				{symbol}{" "}
@@ -88,7 +88,10 @@ export function HomeDense({
 						{home.heroSubtitle}
 					</Text>
 				) : null}
-				<Text className="mt-2.5 font-hanken text-[13px] leading-[18px] text-foreground/45">
+				<Text
+					testID="home-cycle-day"
+					className="mt-2.5 font-hanken text-[13px] leading-[18px] text-foreground/45"
+				>
 					Día {home.cycleDay}/{home.cycleTotal}
 					{" · "}
 					<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
@@ -114,7 +117,10 @@ export function HomeDense({
 						);
 						return (
 							<View key={envelope.label}>
-								<View className="flex-row items-center gap-3">
+								<View
+									testID={`home-envelope-${envelope.tone}`}
+									className="flex-row items-center gap-3"
+								>
 									<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
 										{envelope.shortLabel}
 									</Text>
@@ -132,7 +138,7 @@ export function HomeDense({
 										{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
 									</Text>
 								</View>
-								{carry ? <EnvelopeCarryLine label={carry} /> : null}
+								{carry ? <EnvelopeCarryLine testID="home-carry" label={carry} /> : null}
 							</View>
 						);
 					})}
@@ -179,7 +185,7 @@ export function HomeDense({
 			<View className="pt-[15px]">
 				<View className="mb-1.5 flex-row items-baseline justify-between">
 					<SectionLabel>Movimientos</SectionLabel>
-					<Pressable hitSlop={8} onPress={onViewAllMovements}>
+					<Pressable testID="home-view-movements" hitSlop={8} onPress={onViewAllMovements}>
 						<Text className="font-hanken-semibold text-[12.5px] text-stable">Ver todos</Text>
 					</Pressable>
 				</View>

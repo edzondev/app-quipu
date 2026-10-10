@@ -34,7 +34,9 @@ export function Step3Allocation() {
 	return (
 		<WizardShell
 			stepNumber={3}
-			footer={<AuthButton label="Continuar" onPress={continueToCommitments} />}
+			footer={
+				<AuthButton label="Continuar" testID="wizard-continue" onPress={continueToCommitments} />
+			}
 		>
 			<View className="gap-6">
 				<View className="gap-1">

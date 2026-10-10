@@ -49,6 +49,7 @@ export function HomeEmpty({
 					Registra tu primer ingreso para ver cuánto puedes gastar hoy.
 				</Text>
 				<Pressable
+					testID="home-register-income"
 					accessibilityRole="button"
 					onPress={onRegisterIncome}
 					className="mt-8 rounded-xl bg-foreground px-[22px] py-3.5 active:opacity-80"
