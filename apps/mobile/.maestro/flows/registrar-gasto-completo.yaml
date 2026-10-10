@@ -48,7 +48,8 @@ tags:
 - eraseText
 - inputText: "1.234"
 - hideKeyboard
-- tapOn: "Registrar gasto"
+# (?-i): sin él también coincide el título «REGISTRAR GASTO» y Maestro toca ese texto.
+- tapOn: "(?-i)Registrar gasto"
 - assertVisible: "Ingresa un monto mayor a cero."
 - tapOn: "Monto"
 - eraseText

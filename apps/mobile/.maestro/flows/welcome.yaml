@@ -6,13 +6,24 @@ tags:
 ---
 # Notion 3f486a7356a681698c8ccd745398cce5
 # Bienvenida sin sesión: una sola pantalla
-- launchApp:
-    appId: com.quipu.finance
-    clearState: true
-    stopApp: true
-- extendedWaitUntil:
-    visible: "Ya tengo cuenta"
-    timeout: 25000
+# Mismo arranque que subflows/abrir-formulario-correo.yaml (PR #114): clearState
+# dentro de launchApp choca con el cierre de la tarea vieja en el emulador.
+# Cierra, borra, espera 3 s y recién abre. Si no carga, reintenta.
+- retry:
+    maxRetries: 2
+    commands:
+      - stopApp: com.quipu.finance
+      - clearState: com.quipu.finance
+      - extendedWaitUntil:
+          visible: "texto-que-nunca-aparece"
+          timeout: 3000
+          optional: true
+      - launchApp:
+          appId: com.quipu.finance
+          stopApp: false
+      - extendedWaitUntil:
+          visible: "Ya tengo cuenta"
+          timeout: 45000
 - assertVisible: "QUIPU"
 - assertVisible: "Divide tu dinero antes de gastarlo"
 - assertVisible: "EJEMPLO · PUEDES GASTAR HOY"

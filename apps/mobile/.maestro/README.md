@@ -46,6 +46,8 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 
 ## Fuera de la corrida
 
+Los flujos `cuenta-nueva` quedan excluidos por defecto (`config.yaml`): no corren con `maestro test .maestro/` ni con el resto. Se corren uno por uno, con una cuenta en el estado que piden.
+
 - `cuenta-nueva`: `onboarding-ciclo`, `onboarding-saldo-cero`, `onboarding-despues`, `onboarding-paso-1` (también `wip`). Cuenta sin perfil.
 - `cuenta-nueva`: `home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso` (también `one-shot`). Nunca hubo un ciclo.
 - `cuenta-nueva`: `progreso-vacio`. Primer ciclo, historial vacío.
