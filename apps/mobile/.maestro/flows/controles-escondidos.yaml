@@ -3,10 +3,9 @@ tags:
   - p1
   - hidden
 ---
-# H1–H8, flags de shared/hidden-until-ready.ts. Selección por texto visible.
+# H1 y H4–H8, flags de shared/hidden-until-ready.ts. Selección por texto visible.
 # H1 Mover dinero          envelopes/sobres-screen.tsx
-# H2 Nota                  expenses/expense-detail-form.tsx
-# H3 Adjuntar boleta       expenses/expense-detail-form.tsx
+# H2 Nota y H3 Adjuntar boleta estaban en la pantalla que abría la cámara (#123).
 # H4 Perfil y datos        settings/settings-screen.tsx
 # H5 Plan y suscripción    settings/settings-screen.tsx
 # H6 Reparto               settings/settings-screen.tsx
@@ -41,14 +40,10 @@ tags:
 - extendedWaitUntil:
     visible: "NUEVO GASTO"
     timeout: 10000
-- tapOn: "Abrir detalle del gasto"
+- tapOn: "Cancelar"
 - extendedWaitUntil:
-    visible: "REGISTRAR GASTO"
+    notVisible: "NUEVO GASTO"
     timeout: 10000
-- assertNotVisible:
-    text: "Nota"
-- assertNotVisible: "Adjuntar boleta"
-- tapOn: "Volver"
 - tapOn: "Ajustes"
 - extendedWaitUntil:
     visible: "Cerrar sesión"

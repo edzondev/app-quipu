@@ -30,7 +30,6 @@ tags:
     text: "Gasto"
 - assertVisible: "(?-i)REGISTRAR INGRESO"
 - assertNotVisible: "NUEVO GASTO"
-- assertNotVisible: "Abrir detalle del gasto"
 - tapOn: "Cancelar"
 - tapOn:
     text: "Registrar"
