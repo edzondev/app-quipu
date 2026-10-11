@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Backspace } from "reicon-react-native/icons/Backspace";
 import { appendKeypadDigit, backspaceKeypad, keypadFigures } from "@/shared/lib/expenses/keypad";
@@ -40,21 +41,24 @@ export function ExpenseKeypad({
 	return (
 		<View className="flex-row flex-wrap">
 			{KEYS.map((key) => (
-				<View key={key} className="w-1/3">
-					<Pressable
-						testID={`keypad-${key}`}
-						accessibilityRole="button"
-						accessibilityLabel={key === "backspace" ? "Borrar" : key}
-						onPress={() => onKey(key)}
-						className="items-center py-3.5 active:opacity-40"
-					>
-						{key === "backspace" ? (
-							<Backspace size={22} color="#6B6B6B" />
-						) : (
-							<Text className="font-hanken text-[23px] text-foreground">{key}</Text>
-						)}
-					</Pressable>
-				</View>
+				<Fragment key={key}>
+					{key === "0" ? <View collapsable={false} className="w-1/3" /> : null}
+					<View className="w-1/3">
+						<Pressable
+							testID={`keypad-${key}`}
+							accessibilityRole="button"
+							accessibilityLabel={key === "backspace" ? "Borrar" : key}
+							onPress={() => onKey(key)}
+							className="items-center py-3.5 active:opacity-40"
+						>
+							{key === "backspace" ? (
+								<Backspace size={22} color="#6B6B6B" />
+							) : (
+								<Text className="font-hanken text-[23px] text-foreground">{key}</Text>
+							)}
+						</Pressable>
+					</View>
+				</Fragment>
 			))}
 		</View>
 	);
