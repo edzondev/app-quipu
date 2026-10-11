@@ -9,7 +9,7 @@
  *     para respetar el área privada (verificado en auditoría 2026-07-22).
  *   - `capture_exceptions: true` → errores JS no manejados llegan a PostHog.
  *   - `capture_pageview: false` → el dashboard es un único screen; emitimos
- *     `dashboard_viewed` manualmente con `usePageView` para controlar el shape.
+ *     `dashboard_viewed` manualmente para controlar el shape.
  *   - `capture_pageleave: true` → engagement de salida de cada vista.
  *   - `autocapture: true` → rage clicks, dead clicks, scroll depth, console
  *     logs, network requests, JS exceptions. Heatmaps se controlan en el
@@ -21,8 +21,7 @@
  * a `track()` se vuelven no-op en ese caso.
  *
  * En desarrollo (`NODE_ENV === "development"`) PostHog no se inicializa ni
- * envía eventos aunque las variables existan en `.env.local`. Los feature
- * flags usan sus fallbacks locales (`FEATURE_FLAG_DEFAULTS`).
+ * envía eventos aunque las variables existan en `.env.local`.
  */
 
 import posthog, { type PostHogConfig } from "posthog-js";
@@ -55,7 +54,7 @@ export function initPostHog(): void {
 		capture_exceptions: true,
 		debug: process.env.NODE_ENV === "development",
 
-		// Page views: los emitimos manualmente desde usePageView para
+		// Page views: los emitimos manualmente para
 		// tipar `dashboard_viewed` con el shape que queremos. Si esto
 		// quedara en `true`, PostHog dispara `$pageview` en cada navegación,
 		// duplicando señal.
