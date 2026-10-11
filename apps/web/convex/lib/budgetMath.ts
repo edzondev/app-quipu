@@ -28,12 +28,6 @@ type AllocationWeights = Pick<
 	"allocationNeeds" | "allocationWants" | "allocationSavings"
 >;
 
-// Rescate: cubre el déficit real de wants, topado por el saldo disponible en ahorros.
-export function computeRescueTransfer(savingsRemaining: number, wantsRemaining: number): number {
-	const deficit = wantsRemaining < 0 ? Math.abs(wantsRemaining) : 0;
-	return Math.min(savingsRemaining, deficit);
-}
-
 // v2.5: el coach sugiere, no aplica. Devuelve cuánto transferir y el déficit
 // proyectado para que la UI muestre un paso de confirmación.
 export function suggestRescueTransfer(
