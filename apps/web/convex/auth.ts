@@ -46,7 +46,6 @@ export const authComponent = createClient<DataModel, typeof authSchema>(componen
 	authFunctions,
 	triggers: {
 		user: {
-			onUpdate: async () => {},
 			onDelete: async (ctx, authUser) => {
 				const profile = await ctx.db
 					.query("profiles")

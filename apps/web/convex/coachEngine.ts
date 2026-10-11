@@ -1,9 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import { suggestRescueTransfer } from "./lib/budgetMath";
-import { resolveCoachPresentation, WANTS_OVERFLOW_EVENT } from "./lib/coachState";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
 import { requireActiveAccount, requirePremiumProfile } from "./lib/entitlements";
@@ -11,8 +10,6 @@ import { allowsOutboundTransfer } from "./lib/envelopeGuards";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import { loadCycleCoverageById } from "./lib/loadCycleCoverageContext";
 import { computeRescueEnvelopePatches, validateRescueTransferApply } from "./lib/rescueTransfer";
-
-export { resolveCoachPresentation, WANTS_OVERFLOW_EVENT };
 
 const FREEZE_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 const CRISIS_SNOOZE_MS = 24 * 60 * 60 * 1000;
@@ -135,26 +132,6 @@ function buildRescueConfirmMessage(
 	});
 	return `Te sugiero transferir ${currencySymbol} ${transferAmount} de Ahorro a Gustos para cubrir ${currencySymbol} ${deficitAmount} de déficit. Confirma para aplicar.`;
 }
-
-export const getActiveNudge = query({
-	args: {},
-	handler: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) return null;
-
-		const profile = await ctx.db
-			.query("profiles")
-			.withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-			.unique();
-		if (!profile) return null;
-
-		return await ctx.db
-			.query("coachInteractions")
-			.withIndex("by_profile_status", (q) => q.eq("profileId", profile._id).eq("status", "pending"))
-			.order("desc")
-			.first();
-	},
-});
 
 export const resolveNudgeAction = mutation({
 	args: {
