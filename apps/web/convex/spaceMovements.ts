@@ -1,17 +1,7 @@
+import { ENVELOPE_LABELS } from "../shared/constants/envelopes";
 import type { Doc } from "./_generated/dataModel";
 
 const MOVEMENTS_LIST_LIMIT = 500;
-
-function envelopeLabel(type: "needs" | "wants" | "savings"): string {
-	switch (type) {
-		case "needs":
-			return "Necesidades";
-		case "wants":
-			return "Gustos";
-		case "savings":
-			return "Ahorro";
-	}
-}
 
 export function buildSpaceMovements(
 	expenses: Doc<"spaceExpenses">[],
@@ -22,7 +12,7 @@ export function buildSpaceMovements(
 		id: expense._id as string,
 		kind: "expense" as const,
 		label: expense.description,
-		envelopeLabel: envelopeLabel(expense.envelopeType),
+		envelopeLabel: ENVELOPE_LABELS[expense.envelopeType],
 		fundingSource: expense.fundingSource,
 		amount: expense.amount,
 		timestamp: expense.timestamp,
@@ -35,7 +25,9 @@ export function buildSpaceMovements(
 			contribution.kind === "explicit_transfer"
 				? "Aporte al espacio"
 				: "Gasto pagado personalmente",
-		envelopeLabel: contribution.envelopeType ? envelopeLabel(contribution.envelopeType) : undefined,
+		envelopeLabel: contribution.envelopeType
+			? ENVELOPE_LABELS[contribution.envelopeType]
+			: undefined,
 		amount: contribution.amountCents,
 		timestamp: contribution.createdAt,
 	}));

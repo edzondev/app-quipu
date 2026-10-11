@@ -1,21 +1,11 @@
 import { v } from "convex/values";
+import { ENVELOPE_LABELS } from "../shared/constants/envelopes";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { getActiveSpaceCycle, requireSpaceMember } from "./lib/spaceAuth";
 import { buildSpaceMovements } from "./spaceMovements";
 
 const MOVEMENTS_LIST_LIMIT = 500;
-
-function envelopeLabel(type: "needs" | "wants" | "savings"): string {
-	switch (type) {
-		case "needs":
-			return "Necesidades";
-		case "wants":
-			return "Gustos";
-		case "savings":
-			return "Ahorro";
-	}
-}
 
 export const listForActiveCycle = query({
 	args: {},
@@ -120,7 +110,7 @@ function buildMovements(
 			id: expense._id,
 			kind: "expense",
 			label: expense.description,
-			envelopeLabel: type ? envelopeLabel(type) : undefined,
+			envelopeLabel: type ? ENVELOPE_LABELS[type] : undefined,
 			amount: expense.amount,
 			timestamp: expense.timestamp,
 			envelopeType: type === "needs" || type === "wants" ? type : undefined,
