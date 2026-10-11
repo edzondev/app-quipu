@@ -33,7 +33,7 @@ jest.mock("@/shared/components/auth/onboarding-gate", () => ({
 
 jest.mock("@/shared/components/navigation/registrar-context", () => ({
 	RegistrarProvider: ({ children }: { children?: unknown }) => children,
-	useRegistrar: () => ({ openCreate: jest.fn(), openEdit: jest.fn() }),
+	useRegistrar: () => ({ openCreate: jest.fn() }),
 }));
 
 jest.mock("@/lib/auth-client", () => ({

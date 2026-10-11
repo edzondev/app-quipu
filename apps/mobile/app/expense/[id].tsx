@@ -16,7 +16,6 @@ import { readActionError } from "@/shared/lib/expenses/errors";
 import {
 	lookupExpense,
 	mapFrequentExpenses,
-	readCreateDraft,
 	routeParam,
 } from "@/shared/lib/expenses/expense-record";
 import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
@@ -28,27 +27,20 @@ export default function ExpenseDetailScreen() {
 	const router = useRouter();
 	const params = useLocalSearchParams();
 	const id = routeParam(params.id);
-	const mode = id === "new" ? "create" : "edit";
 	const { isAuthReady, profile } = useProfileGate();
 	const home = useHomeModel();
 	const movements = useQuery(api.movements.listForActiveCycle, isAuthReady ? {} : "skip");
 	const recent = useQuery(api.expenses.getRecentExpenses, isAuthReady ? {} : "skip");
-	const { register, update, remove } = useExpenseActions();
+	const { update, remove } = useExpenseActions();
 	const [fieldError, setFieldError] = useState<{
 		field: ExpenseValidationError["field"];
 		message: string;
 	} | null>(null);
 	const [formError, setFormError] = useState<string | null>(null);
 	const [isSubmitting, setSubmitting] = useState(false);
-	const [openedAt] = useState(() => Date.now());
 
 	const lookup = lookupExpense(movements, id);
 	const editing = lookup.status === "ready" ? lookup.expense : null;
-	const seed = readCreateDraft({
-		amountRaw: routeParam(params.amountRaw),
-		description: routeParam(params.description),
-		envelopeType: routeParam(params.envelopeType),
-	});
 	const symbol = currencySymbol(home, profile?.currencyCode);
 	const dailyCents = home.status === "ready" ? home.home.dailyCents : null;
 
@@ -62,8 +54,7 @@ export default function ExpenseDetailScreen() {
 		setFormError(null);
 		setSubmitting(true);
 		try {
-			if (mode === "edit") await update(id, input);
-			else await register(input);
+			await update(id, input);
 			goBack();
 		} catch (error) {
 			if (error instanceof ExpenseValidationError) {
@@ -93,19 +84,6 @@ export default function ExpenseDetailScreen() {
 		]);
 	}
 
-	const showForm = mode === "create" || editing !== null;
-	const initial = editing
-		? {
-				amountRaw: formatKeypadAmount(editing.amountCents),
-				description: editing.description,
-				envelopeType: editing.envelopeType,
-			}
-		: {
-				amountRaw: seed.amountRaw.trim() ? seed.amountRaw : formatKeypadAmount(0),
-				description: seed.description,
-				envelopeType: seed.envelopeType,
-			};
-
 	return (
 		<SafeArea
 			testID="expense-detail-screen"
@@ -113,7 +91,7 @@ export default function ExpenseDetailScreen() {
 			edges={["top", "bottom"]}
 		>
 			<KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-				{mode === "edit" && !showForm ? (
+				{editing ? null : (
 					<View className="flex-1 px-[22px] pt-3">
 						<Pressable accessibilityRole="button" onPress={goBack}>
 							<Text className="font-hanken-semibold text-[15px] text-foreground">Volver</Text>
@@ -122,16 +100,20 @@ export default function ExpenseDetailScreen() {
 							{lookup.status === "loading" ? "Cargando…" : "No encontramos este gasto."}
 						</Text>
 					</View>
-				) : null}
-				{showForm ? (
+				)}
+				{editing ? (
 					<ExpenseDetailForm
-						key={mode === "edit" ? id : createKey(seed)}
-						mode={mode}
+						key={id}
+						mode="edit"
 						currencySymbol={symbol}
 						dailyCents={dailyCents}
-						previousAmountCents={editing ? editing.amountCents : 0}
-						initial={initial}
-						timestamp={editing ? editing.timestamp : openedAt}
+						previousAmountCents={editing.amountCents}
+						initial={{
+							amountRaw: formatKeypadAmount(editing.amountCents),
+							description: editing.description,
+							envelopeType: editing.envelopeType,
+						}}
+						timestamp={editing.timestamp}
 						frecuentes={mapFrequentExpenses(recent)}
 						fieldError={fieldError}
 						formError={formError}
@@ -140,16 +122,12 @@ export default function ExpenseDetailScreen() {
 							void submit(input);
 						}}
 						onBack={goBack}
-						onDelete={mode === "edit" ? askDelete : undefined}
+						onDelete={askDelete}
 					/>
 				) : null}
 			</KeyboardAvoidingView>
 		</SafeArea>
 	);
-}
-
-function createKey(seed: ExpenseDraftInput): string {
-	return `${seed.amountRaw}|${seed.description}|${seed.envelopeType ?? ""}`;
 }
 
 function currencySymbol(home: ReturnType<typeof useHomeModel>, currencyCode: unknown): string {

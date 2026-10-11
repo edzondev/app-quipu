@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-// import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import "../global.css";
 import { type AuthClient, ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
@@ -15,9 +14,6 @@ export { ErrorBoundary } from "expo-router";
 export const unstable_settings = {
 	initialRouteName: "(tabs)",
 };
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-// SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
 	const [session, setSession] = useState(() => ({ epoch: 0, client: createConvexClient() }));

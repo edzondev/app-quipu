@@ -27,4 +27,3 @@ Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amo
 | `field-error-mixed` | Paso 1 | `step-1-income-profile.tsx` | no pinta «Indica tu sueldo base.» | `onboarding-paso-1` |
 | `field-error-sources` | Paso 1 | el mismo | «Agrega al menos una fuente.» | `onboarding-paso-1` |
 | `field-error-cycle` | Paso 1 | el mismo | «Elige un ciclo de 15 o 30 días.» | `onboarding-paso-1` |
-| `goal-submit` | Hoja de meta | pendiente, Pixi. No está en `goal-form.tsx` | «Crear meta» | `ahorro-metas` |
