@@ -31,6 +31,4 @@
  *      las props correctas.
  *
  * No añadir lógica de UI acá. Esta capa es presentacional-inerte.
- *
- * Auditoría completa (2026-07-22): `docs/analytics-posthog-audit-2026-07-22.md`
  */
