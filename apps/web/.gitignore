@@ -73,10 +73,6 @@ shared/**/*.d.ts
 /types.ts
 
 docs/*
-!docs/QUIPU-MASTER.md
-!docs/manuales-de-sistema.md
-!docs/adr/
-!docs/security-debt.md
 !docs/superpowers/
 
 .turbo
