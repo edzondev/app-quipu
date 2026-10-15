@@ -9,7 +9,7 @@ import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { X } from "@/shared/components/ui/reicon";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
-import { noteOfflineSignOut, SIGNED_OUT_HREF } from "@/shared/lib/auth/device-session";
+import { signedOutHref } from "@/shared/lib/auth/device-session";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
@@ -35,11 +35,12 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		if (pending.current) return;
 		pending.current = true;
 		setClosing(true);
+		let notified = true;
 		try {
 			const result = await signOutAndClearLocalData();
-			if (result?.serverNotified === false) noteOfflineSignOut();
+			notified = result.serverNotified;
 		} finally {
-			router.replace(SIGNED_OUT_HREF);
+			router.replace(signedOutHref(notified));
 		}
 	}
 

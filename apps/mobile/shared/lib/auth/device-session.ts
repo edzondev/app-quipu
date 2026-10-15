@@ -1,13 +1,6 @@
-/** Misma marca que `@better-auth/expo` cuando parte un valor de SecureStore. */
-export const CHUNK_MARKER = "\u0001ba-chunks:";
-
-/**
- * Better Auth parte valores de más de 1800 caracteres. El tope cubre una sesión
- * real y los trozos que quedan si un cierre anterior reescribió la clave base.
- */
-export const MAX_STORAGE_CHUNKS = 8;
-
 const SESSION_KEY_SUFFIXES = ["_cookie", "_session_data"] as const;
+
+export const MAX_STORAGE_CHUNKS = 8;
 
 /** Puerta de entrada sin sesión. La misma ruta que usa OnboardingGate. */
 export const SIGNED_OUT_HREF = "/(onboarding)";
@@ -15,6 +8,9 @@ export const SIGNED_OUT_HREF = "/(onboarding)";
 /** Aviso fijo cuando el teléfono ya olvidó la sesión y el servidor no se enteró. */
 export const OFFLINE_SIGN_OUT_MESSAGE =
 	"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.";
+
+/** Espera máxima a Better Auth antes de decidir que el servidor no se enteró. */
+export const SERVER_SIGN_OUT_WAIT_MS = 3000;
 
 export type AuthSessionSnapshot = {
 	data: unknown;
@@ -26,22 +22,9 @@ export function clearedAuthSession<T extends AuthSessionSnapshot>(current: T): T
 	return { ...current, data: null, error: null, isPending: false };
 }
 
-let offlineNotice: string | null = null;
-
-export function noteOfflineSignOut() {
-	offlineNotice = OFFLINE_SIGN_OUT_MESSAGE;
-}
-
-export function takeOfflineSignOutNotice(): string | null {
-	const current = offlineNotice;
-	offlineNotice = null;
-	return current;
-}
-
 export type DeviceSessionDeps = {
 	storagePrefix: string;
 	signOut: () => Promise<unknown>;
-	readSecure: (key: string) => Promise<string | null>;
 	deleteSecure: (key: string) => Promise<void>;
 	resetConvex: () => void;
 	clearMemorySession: () => void;
@@ -51,48 +34,37 @@ export type DeviceSignOutResult = {
 	serverNotified: boolean;
 };
 
-function chunkCount(stored: string | null): number {
-	if (!stored?.startsWith(CHUNK_MARKER)) return MAX_STORAGE_CHUNKS;
-	const parsed = Number(stored.slice(CHUNK_MARKER.length));
-	if (!Number.isInteger(parsed) || parsed < 1) return MAX_STORAGE_CHUNKS;
-	return Math.max(parsed, MAX_STORAGE_CHUNKS);
+export function signedOutHref(serverNotified: boolean) {
+	if (serverNotified) return SIGNED_OUT_HREF;
+	return {
+		pathname: SIGNED_OUT_HREF,
+		params: { notice: "offline" },
+	};
 }
 
-export function secureKeysFor(prefix: string, stored: Record<string, string | null>): string[] {
+function secureKeysFor(prefix: string) {
 	const keys: string[] = [];
 	for (const suffix of SESSION_KEY_SUFFIXES) {
 		const base = `${prefix}${suffix}`;
 		keys.push(base);
-		const count = chunkCount(stored[base] ?? null);
-		for (let index = 0; index < count; index++) keys.push(`${base}.${index}`);
+		for (let index = 0; index < MAX_STORAGE_CHUNKS; index++) keys.push(`${base}.${index}`);
 	}
 	return keys;
 }
 
 export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<DeviceSignOutResult> {
-	let serverNotified = true;
-	try {
-		await deps.signOut();
-	} catch {
-		// El átomo de Better Auth sigue con la sesión si el fetch ni siquiera arranca.
-		serverNotified = false;
-		deps.clearMemorySession();
-	}
-
-	const stored: Record<string, string | null> = {};
-	await Promise.all(
-		SESSION_KEY_SUFFIXES.map(async (suffix) => {
-			const base = `${deps.storagePrefix}${suffix}`;
-			try {
-				stored[base] = await deps.readSecure(base);
-			} catch {
-				stored[base] = null;
-			}
-		}),
+	const server = deps.signOut().then(
+		() => true,
+		() => false,
 	);
-
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timeout = new Promise<boolean>((resolve) => {
+		timer = setTimeout(() => resolve(false), SERVER_SIGN_OUT_WAIT_MS);
+	});
+	const serverNotified = await Promise.race([server, timeout]);
+	clearTimeout(timer);
 	await Promise.all(
-		secureKeysFor(deps.storagePrefix, stored).map(async (key) => {
+		secureKeysFor(deps.storagePrefix).map(async (key) => {
 			try {
 				await deps.deleteSecure(key);
 			} catch {
@@ -100,7 +72,7 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 			}
 		}),
 	);
-
+	deps.clearMemorySession();
 	deps.resetConvex();
 	return { serverNotified };
 }

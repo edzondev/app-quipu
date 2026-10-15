@@ -2,7 +2,10 @@ import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
-import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
+import {
+	OFFLINE_SIGN_OUT_MESSAGE,
+	SERVER_SIGN_OUT_WAIT_MS,
+} from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
@@ -18,6 +21,7 @@ jest.mock("expo-router", () => ({
 	Redirect: () => null,
 	router: { replace: mockReplace },
 	useIsFocused: () => true,
+	useLocalSearchParams: () => ({ notice: "offline" }),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -78,6 +82,12 @@ const model: SettingsScreenModel = {
 };
 
 describe("signOut HTTP error", () => {
+	afterEach(() => {
+		session.data = { session: { id: "sess" } };
+		session.error = null;
+		session.isPending = false;
+	});
+
 	it("un 5xx limpia la sesión en memoria, avisa y deja la Bienvenida", async () => {
 		session.data = { session: { id: "sess" } };
 		mockSignOut.mockResolvedValue({
@@ -99,7 +109,10 @@ describe("signOut HTTP error", () => {
 		});
 
 		expect(session.data).toBeNull();
-		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		expect(mockReplace).toHaveBeenCalledWith({
+			pathname: "/(onboarding)",
+			params: { notice: "offline" },
+		});
 		expect(ajustes.queryByText("upstream 500 raw")).toBeNull();
 		await ajustes.unmount();
 
@@ -109,5 +122,43 @@ describe("signOut HTTP error", () => {
 		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
 		expect(welcome.queryByText("upstream 500 raw")).toBeNull();
 		await welcome.unmount();
+	});
+
+	it("si el servidor no responde, limpia la sesión, avisa y deja la Bienvenida", async () => {
+		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
+		session.data = { session: { id: "sess" } };
+		mockSignOut.mockReturnValue(new Promise(() => undefined));
+		try {
+			const ajustes = await render(
+				<SettingsScreen
+					status="ready"
+					model={model}
+					onClose={jest.fn()}
+					onOpenSecurity={jest.fn()}
+				/>,
+			);
+			await act(async () => {
+				fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+			});
+			await act(async () => {
+				fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+				await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+			});
+
+			expect(session.data).toBeNull();
+			expect(mockReplace).toHaveBeenCalledWith({
+				pathname: "/(onboarding)",
+				params: { notice: "offline" },
+			});
+			await ajustes.unmount();
+
+			const welcome = await render(<OnboardingIndexScreen />);
+			expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
+			expect(welcome.getByText("Crear cuenta")).toBeTruthy();
+			expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
+			await welcome.unmount();
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 });

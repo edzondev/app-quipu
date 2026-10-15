@@ -28,13 +28,10 @@ export function useSecurity() {
 	const settled = isAuthReady && sessions !== undefined && overview !== undefined;
 	const hasData = settled && sessions != null && overview != null;
 
-	async function revokeAllAndSignOut(goToSignedOut: () => void) {
+	async function revokeAllAndSignOut() {
 		await revokeAllSessions({});
-		try {
-			await signOutAndClearLocalData();
-		} finally {
-			goToSignedOut();
-		}
+		const { serverNotified } = await signOutAndClearLocalData();
+		return serverNotified;
 	}
 
 	const actions = {

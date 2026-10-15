@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import AppShell from "@/shared/components/app-shell";
 import { SecurityScreen } from "@/shared/components/settings/security-screen";
 import { useSecurity } from "@/shared/hooks/use-security";
-import { SIGNED_OUT_HREF } from "@/shared/lib/auth/device-session";
+import { signedOutHref } from "@/shared/lib/auth/device-session";
 
 export default function SeguridadPage() {
 	const router = useRouter();
@@ -17,7 +17,9 @@ export default function SeguridadPage() {
 				onAddPasskey={() => security.addPasskey()}
 				onDeletePasskey={(id) => security.deletePasskey(id)}
 				onRevokeSession={(sessionId) => security.revokeSession(sessionId)}
-				onRevokeAll={() => security.revokeAllAndSignOut(() => router.replace(SIGNED_OUT_HREF))}
+				onRevokeAll={async () =>
+					router.replace(signedOutHref(await security.revokeAllAndSignOut()))
+				}
 			/>
 		</AppShell>
 	);

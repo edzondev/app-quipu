@@ -73,48 +73,43 @@ describe("useSecurity", () => {
 			throw new Error(`useMutation inesperado: ${name}`);
 		});
 		revokeAllMock.mockResolvedValue({ success: true });
-		mockClearLocal.mockResolvedValue(undefined);
+		mockClearLocal.mockResolvedValue({ serverNotified: true });
 		mockAddPasskey.mockResolvedValue({ data: { id: "pk" }, error: null });
 		mockDeletePasskey.mockResolvedValue({ data: { success: true }, error: null });
 		security = null;
 		await render(<Host />);
 	});
 
-	it("cerrar todas revoca, limpia el teléfono y después navega", async () => {
+	it("cerrar todas revoca, limpia el teléfono y devuelve si el servidor se enteró", async () => {
 		const order: string[] = [];
-		const goToSignedOut = jest.fn(() => {
-			order.push("signed-out");
-		});
 		revokeAllMock.mockImplementation(async () => {
 			order.push("revoke");
 			return { success: true };
 		});
 		mockClearLocal.mockImplementation(async () => {
 			order.push("clear");
+			return { serverNotified: false };
 		});
+		let notified: boolean | undefined;
 		await act(async () => {
-			await security?.revokeAllAndSignOut(goToSignedOut);
+			notified = await security?.revokeAllAndSignOut();
 		});
 		expect(revokeAllMock).toHaveBeenCalledWith({});
 		expect(mockClearLocal).toHaveBeenCalledTimes(1);
-		expect(goToSignedOut).toHaveBeenCalledTimes(1);
-		expect(order).toEqual(["revoke", "clear", "signed-out"]);
+		expect(notified).toBe(false);
+		expect(order).toEqual(["revoke", "clear"]);
 	});
 
-	it("si el borrado local falla, igual navega a la entrada", async () => {
+	it("si el borrado local falla, propaga el error", async () => {
 		mockClearLocal.mockRejectedValue(new Error("falló el cierre"));
-		const goToSignedOut = jest.fn();
-		await expect(security?.revokeAllAndSignOut(goToSignedOut)).rejects.toThrow("falló el cierre");
+		await expect(security?.revokeAllAndSignOut()).rejects.toThrow("falló el cierre");
 		expect(revokeAllMock).toHaveBeenCalledTimes(1);
-		expect(goToSignedOut).toHaveBeenCalledTimes(1);
 	});
 
 	it("no limpia el teléfono si revokeAllSessions falla", async () => {
 		revokeAllMock.mockRejectedValue(new Error("red"));
-		const goToSignedOut = jest.fn();
-		await expect(security?.revokeAllAndSignOut(goToSignedOut)).rejects.toThrow("red");
+		await expect(security?.revokeAllAndSignOut()).rejects.toThrow("red");
 		expect(mockClearLocal).not.toHaveBeenCalled();
-		expect(goToSignedOut).not.toHaveBeenCalled();
 	});
 
 	it("agrega sin name y borra por id, sin propagar el error de auth", async () => {

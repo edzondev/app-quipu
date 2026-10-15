@@ -10,6 +10,7 @@ jest.mock("expo-router", () => ({
 		replace: (...args: unknown[]) => mockReplace(...args),
 	},
 	useIsFocused: () => mockFocused,
+	useLocalSearchParams: () => ({}),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({

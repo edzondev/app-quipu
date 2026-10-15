@@ -10,7 +10,6 @@ export function signOutAndClearLocalData() {
 			const result = await authClient.signOut();
 			if (result.error) throw result.error;
 		},
-		readSecure: (key) => SecureStore.getItemAsync(key),
 		deleteSecure: (key) => SecureStore.deleteItemAsync(key),
 		resetConvex: resetConvexClient,
 		clearMemorySession: () => {

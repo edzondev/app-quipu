@@ -13,6 +13,7 @@ jest.mock("expo-router", () => ({
 	Redirect: () => null,
 	router: { replace: mockReplace },
 	useIsFocused: () => true,
+	useLocalSearchParams: () => ({ notice: "offline" }),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -143,8 +144,8 @@ describe("SettingsScreen", () => {
 		let release: () => void = () => undefined;
 		mockClear.mockImplementation(
 			() =>
-				new Promise<void>((resolve) => {
-					release = resolve;
+				new Promise<{ serverNotified: boolean }>((resolve) => {
+					release = () => resolve({ serverNotified: true });
 				}),
 		);
 		const view = await render(
@@ -192,7 +193,10 @@ describe("SettingsScreen", () => {
 		await act(async () => {
 			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
 		});
-		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		expect(mockReplace).toHaveBeenCalledWith({
+			pathname: "/(onboarding)",
+			params: { notice: "offline" },
+		});
 		await ajustes.unmount();
 
 		const welcome = await render(<OnboardingIndexScreen />);

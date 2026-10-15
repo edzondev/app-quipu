@@ -1,15 +1,16 @@
-import { Redirect, router, useIsFocused } from "expo-router";
-import { useEffect, useState } from "react";
+import { Redirect, router, useIsFocused, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import { View } from "react-native";
 import { Welcome } from "@/modules/onboarding/components/welcome";
 import { AuthNotice } from "@/shared/components/auth/auth-notice";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
-import { takeOfflineSignOutNotice } from "@/shared/lib/auth/device-session";
+import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
 
 export default function OnboardingIndexScreen() {
 	const { isAuthReady, isLoading, profile } = useProfileGate();
 	const focused = useIsFocused();
-	const [offlineNotice] = useState(takeOfflineSignOutNotice);
+	const params = useLocalSearchParams<{ notice?: string }>();
+	const offlineNotice = params.notice === "offline" ? OFFLINE_SIGN_OUT_MESSAGE : null;
 
 	useEffect(() => {
 		if (focused && isAuthReady && profile?.onboardingComplete) {
