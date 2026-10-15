@@ -1,7 +1,6 @@
 import { nextConvexClient } from "@/lib/convex";
 import {
 	MAX_STORAGE_CHUNKS,
-	OFFLINE_SIGN_OUT_MESSAGE,
 	SERVER_SIGN_OUT_WAIT_MS,
 	SIGNED_OUT_HREF,
 	signedOutHref,
@@ -40,8 +39,8 @@ describe("signedOutHref", () => {
 	it("sin aviso si el servidor se enteró; con notice si no", () => {
 		expect(signedOutHref(true)).toBe(SIGNED_OUT_HREF);
 		expect(signedOutHref(false)).toEqual({
-			pathname: "/(onboarding)",
-			params: { notice: OFFLINE_SIGN_OUT_MESSAGE },
+			pathname: SIGNED_OUT_HREF,
+			params: { notice: "offline" },
 		});
 	});
 });
@@ -66,6 +65,27 @@ describe("signOutAndClearDevice", () => {
 		expect(deleted).toContain(`${PREFIX}_session_data.${MAX_STORAGE_CHUNKS - 1}`);
 		expect(deleted).not.toContain(`${PREFIX}_cookie.${MAX_STORAGE_CHUNKS}`);
 		expect(log).toContain("memory");
+	});
+
+	it("borra SecureStore después de que signOut se llama y termina", async () => {
+		const { log, deps } = harness();
+		let signOutSettled = false;
+		deps.signOut = async () => {
+			log.push("signOut");
+			await Promise.resolve();
+			signOutSettled = true;
+			log.push("signOut:settled");
+		};
+		deps.deleteSecure = async (key: string) => {
+			expect(signOutSettled).toBe(true);
+			log.push(`delete:${key}`);
+		};
+
+		await signOutAndClearDevice(deps);
+
+		expect(log.indexOf("signOut:settled")).toBeLessThan(
+			log.findIndex((entry) => entry.startsWith("delete:")),
+		);
 	});
 
 	it("si signOut falla, igual borra el almacenamiento y reinicia Convex", async () => {

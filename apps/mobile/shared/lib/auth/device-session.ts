@@ -37,13 +37,22 @@ export type DeviceSignOutResult = {
 export function signedOutHref(serverNotified: boolean) {
 	if (serverNotified) return SIGNED_OUT_HREF;
 	return {
-		pathname: "/(onboarding)",
-		params: { notice: OFFLINE_SIGN_OUT_MESSAGE },
+		pathname: SIGNED_OUT_HREF,
+		params: { notice: "offline" },
 	};
 }
 
 function sleep(ms: number) {
-	return new Promise<void>((resolve) => setTimeout(resolve, ms));
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const promise = new Promise<void>((resolve) => {
+		timer = setTimeout(resolve, ms);
+	});
+	return {
+		promise,
+		cancel() {
+			if (timer !== undefined) clearTimeout(timer);
+		},
+	};
 }
 
 function secureKeysFor(prefix: string) {
@@ -61,6 +70,9 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 		() => true,
 		() => false,
 	);
+	const wait = sleep(SERVER_SIGN_OUT_WAIT_MS);
+	const serverNotified = await Promise.race([server, wait.promise.then(() => false)]);
+	wait.cancel();
 	await Promise.all(
 		secureKeysFor(deps.storagePrefix).map(async (key) => {
 			try {
@@ -70,10 +82,6 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 			}
 		}),
 	);
-	const serverNotified = await Promise.race([
-		server,
-		sleep(SERVER_SIGN_OUT_WAIT_MS).then(() => false),
-	]);
 	deps.clearMemorySession();
 	deps.resetConvex();
 	return { serverNotified };
