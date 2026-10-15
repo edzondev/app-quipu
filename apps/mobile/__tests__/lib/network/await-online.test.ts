@@ -1,8 +1,8 @@
 import {
 	ACTION_TIMEOUT_MS,
+	assertOnline,
 	OfflineError,
 	TimeoutError,
-	assertOnline,
 	withTimeout,
 } from "@/shared/lib/network/await-online";
 

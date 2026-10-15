@@ -16,7 +16,7 @@ jest.mock("expo-router", () => {
 			canGoBack: () => mockCanGoBack(),
 		}),
 		useLocalSearchParams: () => ({ id: "exp_1" }),
-		useFocusEffect: (callback: () => void | (() => void)) => {
+		useFocusEffect: (callback: () => undefined | (() => void)) => {
 			React.useEffect(() => {
 				const cleanup = callback();
 				return typeof cleanup === "function" ? cleanup : undefined;
