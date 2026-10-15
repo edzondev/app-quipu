@@ -1,6 +1,6 @@
 # Notas de Maestro
 
-Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`). `mismo-dia-solo-sumar` entra en la corrida por defecto: el ciclo tiene que haber empezado hoy (día de Lima).
+Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`). `zz-mismo-dia-solo-sumar` entra en la corrida por defecto, después de `z-ciclo-nuevo-antes-del-fin`, que deja el ciclo empezado hoy (día de Lima); no hay que prepararlo a mano.
 
 Opcional, solo en el dev `perceptive-elk-229` y nunca `--prod`: `devSeed:seedVerifiedAccount` crea una cuenta verificada sin perfil; `devSeed:seedProfileNoCycle` crea una con perfil y sin ciclo (`home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`). La contraseña es `DEV_SEED_PASSWORD`. Para un flujo `cuenta-nueva` apunta esas dos variables a esa cuenta.
 

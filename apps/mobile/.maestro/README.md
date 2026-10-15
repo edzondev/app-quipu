@@ -36,15 +36,15 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
 | `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `mismo-dia-solo-sumar` | Ciclo empezado hoy (Lima): las dos opciones, Sumar marcada; tocar nuevo ciclo solo suma |
 | `z-ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
+| `zz-mismo-dia-solo-sumar` | Después de z-ciclo-nuevo: las dos opciones, Sumar marcada; tocar nuevo ciclo solo suma |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
-`z-ciclo-nuevo-antes-del-fin` (antes `ciclo-nuevo-antes-del-fin`) deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. El prefijo `z-` lo deja al final sin `executionOrder`. `mismo-dia-solo-sumar` pide ese ciclo empezado hoy (día de Lima).
+`z-ciclo-nuevo-antes-del-fin` (antes `ciclo-nuevo-antes-del-fin`) deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. El prefijo `z-` lo deja al final sin `executionOrder`, salvo `zz-mismo-dia-solo-sumar`, que corre después y usa ese ciclo de hoy: no hay que prepararlo a mano.
 
 ## Fuera de la corrida
 
