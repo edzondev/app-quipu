@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Check } from "reicon-react-native/icons/Check";
 import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import type {
 	AchievementRowView,
 	ProgressBarView,
@@ -38,9 +39,7 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 					) : null}
 				</View>
 
-				{status === "loading" ? (
-					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-				) : null}
+				{status === "loading" ? <InlineLoading /> : null}
 
 				{model?.closeEntry ? (
 					<Pressable

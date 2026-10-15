@@ -4,23 +4,22 @@ import {
 	OfflineBanner,
 } from "@/shared/components/offline/offline-banner";
 
-const mockConnectionState = jest.fn();
+const mockNetworkState = jest.fn();
 
-jest.mock("convex/react", () => ({
-	useConvexConnectionState: () => mockConnectionState(),
+jest.mock("expo-network", () => ({
+	useNetworkState: () => mockNetworkState(),
 }));
 
-function connection(overrides: {
-	isWebSocketConnected: boolean;
-	hasEverConnected: boolean;
-	connectionRetries: number;
+function network(overrides: {
+	isConnected?: boolean | null;
+	isInternetReachable?: boolean | null;
 }) {
-	mockConnectionState.mockReturnValue(overrides);
+	mockNetworkState.mockReturnValue(overrides);
 }
 
 describe("OfflineBanner", () => {
 	beforeEach(() => {
-		mockConnectionState.mockReset();
+		mockNetworkState.mockReset();
 	});
 
 	afterEach(() => {
@@ -38,13 +37,9 @@ describe("OfflineBanner", () => {
 		});
 	}
 
-	it("no aparece cuando el websocket está conectado", async () => {
+	it("no aparece cuando el dispositivo está online", async () => {
 		useDebounceTimers();
-		connection({
-			isWebSocketConnected: true,
-			hasEverConnected: true,
-			connectionRetries: 0,
-		});
+		network({ isConnected: true, isInternetReachable: true });
 
 		const view = await render(<OfflineBanner />);
 		await advance(OFFLINE_BANNER_DEBOUNCE_MS);
@@ -55,11 +50,7 @@ describe("OfflineBanner", () => {
 
 	it("aparece desconectado, después del debounce", async () => {
 		useDebounceTimers();
-		connection({
-			isWebSocketConnected: false,
-			hasEverConnected: true,
-			connectionRetries: 0,
-		});
+		network({ isConnected: false });
 
 		const view = await render(<OfflineBanner />);
 		expect(view.queryByText("Sin conexión")).toBeNull();
@@ -72,16 +63,11 @@ describe("OfflineBanner", () => {
 		expect(view.getByText("Sin conexión")).toBeTruthy();
 		expect(view.getByLabelText("Sin conexión")).toBeTruthy();
 		expect(view.getByLabelText("Sin conexión").props.accessibilityLiveRegion).toBe("polite");
-		expect(view.queryByText(/por sincronizar/)).toBeNull();
 	});
 
-	it("aparece si el primer intento falla y nunca llegó a conectar", async () => {
+	it("aparece si hay WiFi pero internet no es alcanzable", async () => {
 		useDebounceTimers();
-		connection({
-			isWebSocketConnected: false,
-			hasEverConnected: false,
-			connectionRetries: 1,
-		});
+		network({ isConnected: true, isInternetReachable: false });
 
 		const view = await render(<OfflineBanner />);
 		await advance(OFFLINE_BANNER_DEBOUNCE_MS);
@@ -91,21 +77,13 @@ describe("OfflineBanner", () => {
 
 	it("respeta el debounce y no parpadea en una reconexión rápida", async () => {
 		useDebounceTimers();
-		connection({
-			isWebSocketConnected: false,
-			hasEverConnected: true,
-			connectionRetries: 1,
-		});
+		network({ isConnected: false });
 
 		const view = await render(<OfflineBanner />);
 		await advance(OFFLINE_BANNER_DEBOUNCE_MS - 1);
 		expect(view.queryByText("Sin conexión")).toBeNull();
 
-		connection({
-			isWebSocketConnected: true,
-			hasEverConnected: true,
-			connectionRetries: 1,
-		});
+		network({ isConnected: true, isInternetReachable: true });
 		await act(async () => {
 			view.rerender(<OfflineBanner />);
 		});
@@ -114,23 +92,15 @@ describe("OfflineBanner", () => {
 		expect(view.queryByText("Sin conexión")).toBeNull();
 	});
 
-	it("se oculta en cuanto vuelve la conexión", async () => {
+	it("se oculta en cuanto vuelve la red del dispositivo", async () => {
 		useDebounceTimers();
-		connection({
-			isWebSocketConnected: false,
-			hasEverConnected: true,
-			connectionRetries: 0,
-		});
+		network({ isConnected: false });
 
 		const view = await render(<OfflineBanner />);
 		await advance(OFFLINE_BANNER_DEBOUNCE_MS);
 		expect(view.getByText("Sin conexión")).toBeTruthy();
 
-		connection({
-			isWebSocketConnected: true,
-			hasEverConnected: true,
-			connectionRetries: 0,
-		});
+		network({ isConnected: true, isInternetReachable: true });
 		await act(async () => {
 			view.rerender(<OfflineBanner />);
 		});
@@ -138,13 +108,9 @@ describe("OfflineBanner", () => {
 		expect(view.queryByText("Sin conexión")).toBeNull();
 	});
 
-	it("no aparece durante el primer intento de conexión", async () => {
+	it("no aparece mientras el estado de red es desconocido", async () => {
 		useDebounceTimers();
-		connection({
-			isWebSocketConnected: false,
-			hasEverConnected: false,
-			connectionRetries: 0,
-		});
+		network({});
 
 		const view = await render(<OfflineBanner />);
 		await advance(OFFLINE_BANNER_DEBOUNCE_MS * 4);

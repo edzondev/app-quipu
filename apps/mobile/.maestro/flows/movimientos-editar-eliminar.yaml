@@ -55,7 +55,9 @@ tags:
 - eraseText: 1
 - inputText: "30"
 - assertVisible: "30"
-- hideKeyboard
+# Android's hideKeyboard sends Back; tap the static header to dismiss the keyboard without leaving this route.
+- tapOn: "EDITAR GASTO"
+- assertVisible: "EDITAR GASTO"
 - tapOn:
     text: "Guardar"
     enabled: true

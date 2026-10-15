@@ -25,6 +25,7 @@ import {
 import { platformAdmitsPasskeys } from "@/shared/lib/auth/passkey-support";
 import { revalidateOnBlur } from "@/shared/lib/form";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
+import { ACTION_TIMEOUT_MS, assertOnline, withTimeout } from "@/shared/lib/network/await-online";
 
 type SignInView = "welcome" | "backup" | "verify";
 
@@ -44,26 +45,35 @@ function useSignInForm(
 		onSubmit: async ({ value, formApi }) => {
 			onError(null);
 			const email = value.email.trim().toLowerCase();
-			const { error } = await authClient.signIn.email({ email, password: value.password });
-			if (!error) {
-				formApi.setFieldValue("password", "");
-				onSignedIn();
-				return;
-			}
-			if (isEmailNotVerified(error)) {
-				const sent = await authClient.emailOtp.sendVerificationOtp({
-					email,
-					type: "email-verification",
-				});
-				if (sent.error) {
-					onError("No se pudo enviar el código");
+			try {
+				await assertOnline(CREDENTIALS_MESSAGE);
+				const { error } = await withTimeout(
+					authClient.signIn.email({ email, password: value.password }),
+					ACTION_TIMEOUT_MS,
+					CREDENTIALS_MESSAGE,
+				);
+				if (!error) {
+					formApi.setFieldValue("password", "");
+					onSignedIn();
 					return;
 				}
-				formApi.setFieldValue("email", email);
-				onUnverified();
-				return;
+				if (isEmailNotVerified(error)) {
+					const sent = await authClient.emailOtp.sendVerificationOtp({
+						email,
+						type: "email-verification",
+					});
+					if (sent.error) {
+						onError("No se pudo enviar el código");
+						return;
+					}
+					formApi.setFieldValue("email", email);
+					onUnverified();
+					return;
+				}
+				onError(CREDENTIALS_MESSAGE);
+			} catch {
+				onError(CREDENTIALS_MESSAGE);
 			}
-			onError(CREDENTIALS_MESSAGE);
 		},
 	});
 }

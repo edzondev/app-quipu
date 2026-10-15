@@ -1,3 +1,4 @@
+import { ENVELOPE_LABELS } from "../../shared/constants/envelopes";
 import { getLimaDay, limaStartOfDay } from "../../shared/lib/date";
 import { MS_PER_DAY } from "./dashboardMath";
 
@@ -36,16 +37,6 @@ export type CycleForecast = {
 };
 
 export const MIN_CYCLE_DAYS_FOR_FORECAST = 3;
-
-const ENVELOPE_LABELS: Record<EnvelopeType, string> = {
-	needs: "Necesidades",
-	wants: "Gustos",
-	savings: "Ahorro",
-};
-
-export function envelopeLabel(type: EnvelopeType): string {
-	return ENVELOPE_LABELS[type];
-}
 
 export function computeEnvelopeBurnRate(spentAmount: number, cycleDay: number): number | null {
 	if (cycleDay < MIN_CYCLE_DAYS_FOR_FORECAST) return null;
@@ -95,7 +86,7 @@ export function buildEnvelopeForecast(
 
 	return {
 		type: input.type,
-		label: envelopeLabel(input.type),
+		label: ENVELOPE_LABELS[input.type],
 		burnRateCentsPerDay,
 		daysUntilDepleted,
 		closeProjectionCents,

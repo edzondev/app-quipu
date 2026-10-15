@@ -42,11 +42,6 @@ export async function requireActiveAccount(ctx: QueryCtx): Promise<Doc<"profiles
 	return profile;
 }
 
-/** @deprecated Prefer `requireActiveAccount` (I6). */
-export async function requireAuthenticatedProfile(ctx: QueryCtx): Promise<Doc<"profiles">> {
-	return requireActiveAccount(ctx);
-}
-
 /**
  * Gate premium (Fase 0 — entitlements).
  *

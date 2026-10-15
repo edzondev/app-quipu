@@ -6,6 +6,7 @@ import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { X } from "@/shared/components/ui/reicon";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import { noteOfflineSignOut, SIGNED_OUT_HREF } from "@/shared/lib/auth/device-session";
@@ -61,9 +62,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					<X size={22} colorClassName="accent-foreground" />
 				</Pressable>
 			</View>
-			{status === "loading" ? (
-				<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-			) : null}
+			{status === "loading" ? <InlineLoading /> : null}
 			<ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
 				{model ? (
 					<>

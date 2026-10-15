@@ -4,7 +4,6 @@
  * Las features y módulos deben importar de acá:
  *
  *   import { track, AnalyticsEvents, identify, reset } from "@/core/analytics";
- *   import { useFeatureFlag, usePageView } from "@/hooks/use-analytics";
  *
  * Ningún archivo fuera de `core/analytics/` debe importar `posthog-js`
  * directamente.
@@ -39,12 +38,6 @@ export type {
 	SignInMethod,
 } from "./events";
 export { AnalyticsEvents } from "./events";
-export type { FeatureFlagKey } from "./feature-flags";
-export {
-	FEATURE_FLAG_DEFAULTS,
-	FEATURE_FLAG_VARIANT_DEFAULTS,
-	FeatureFlags,
-} from "./feature-flags";
 export {
 	daysSinceLastLogin,
 	readLastLoginTimestamp,

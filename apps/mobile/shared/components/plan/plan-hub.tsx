@@ -1,6 +1,7 @@
 import { ScrollView, Text, View } from "react-native";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type { PlanHubModel, PlanSegment } from "@/shared/lib/plan/model";
 import type { AhorroPlanRow } from "@/shared/lib/savings/model";
@@ -57,9 +58,7 @@ export function PlanHub({
 			<Text className="mt-2 font-hanken text-[14px] leading-[21px] text-foreground/55">
 				{SUBTITLE}
 			</Text>
-			{status === "loading" ? (
-				<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-			) : null}
+			{status === "loading" ? <InlineLoading /> : null}
 			{model ? (
 				<>
 					{model.totalLabel && model.segments ? (

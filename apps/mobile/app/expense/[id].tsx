@@ -9,6 +9,7 @@ import { withUniwind } from "uniwind";
 import { ExpenseDetailForm } from "@/shared/components/expenses/expense-detail-form";
 import { useHomeModel } from "@/shared/hooks/use-dashboard";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
+import { useHardwareBack } from "@/shared/hooks/use-hardware-back";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import type { ExpenseDraftInput } from "@/shared/lib/expenses/draft";
 import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
@@ -46,8 +47,10 @@ export default function ExpenseDetailScreen() {
 
 	function goBack() {
 		if (router.canGoBack()) router.back();
-		else router.replace("/(tabs)");
+		else router.replace("/(tabs)/movements");
 	}
+
+	useHardwareBack(goBack);
 
 	async function submit(input: ExpenseDraftInput) {
 		setFieldError(null);

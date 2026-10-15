@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown } from "react-native-reanimated";
 import { Search } from "reicon-react-native/icons/Search";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
 import {
 	MOVEMENT_FILTERS,
@@ -92,7 +93,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 				</Text>
 			) : null}
 
-			{model && !model.isEmpty ? (
+			{status === "loading" || (model && !model.isEmpty) ? (
 				<View className="mt-4.5 flex-row flex-wrap gap-1.75">
 					{MOVEMENT_FILTERS.map((item) => (
 						<FilterChip
@@ -106,11 +107,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 				</View>
 			) : null}
 
-			{status === "loading" ? (
-				<View className="flex-1 items-center justify-center py-16">
-					<Text className="font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-				</View>
-			) : null}
+			{status === "loading" ? <InlineLoading /> : null}
 
 			{model?.isEmpty ? (
 				<EmptyState
