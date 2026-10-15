@@ -7,6 +7,16 @@ import {
 
 const PREFIX = "quipu";
 
+function rejectIfHung<T>(promise: Promise<T>, ms = 200): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => reject(new Error("sign-out siguió esperando al servidor")), ms);
+	});
+	return Promise.race([promise, timeout]).finally(() => {
+		if (timer) clearTimeout(timer);
+	});
+}
+
 function harness(stored: Record<string, string | null> = {}) {
 	const log: string[] = [];
 	const deleted: string[] = [];
@@ -83,6 +93,24 @@ describe("signOutAndClearDevice", () => {
 		expect(log).toContain("signOut");
 		expect(log.indexOf("memory")).toBeGreaterThan(log.indexOf("signOut"));
 		expect(log.indexOf("memory")).toBeLessThan(log.indexOf("reset"));
+		expect(deleted).toContain(`${PREFIX}_session_data`);
+		expect(log.at(-1)).toBe("reset");
+	});
+
+	it("si signOut no responde, igual borra el teléfono y no espera al servidor", async () => {
+		const { log, deleted, deps } = harness({
+			[`${PREFIX}_session_data`]: "usuario",
+		});
+		deps.signOut = () =>
+			new Promise(() => {
+				log.push("signOut");
+			});
+
+		const result = await rejectIfHung(signOutAndClearDevice(deps));
+
+		expect(result).toEqual({ serverNotified: false });
+		expect(log).toContain("signOut");
+		expect(log).toContain("memory");
 		expect(deleted).toContain(`${PREFIX}_session_data`);
 		expect(log.at(-1)).toBe("reset");
 	});

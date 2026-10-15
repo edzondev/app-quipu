@@ -70,14 +70,15 @@ export function secureKeysFor(prefix: string, stored: Record<string, string | nu
 }
 
 export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<DeviceSignOutResult> {
-	let serverNotified = true;
-	try {
-		await deps.signOut();
-	} catch {
-		// El átomo de Better Auth sigue con la sesión si el fetch ni siquiera arranca.
-		serverNotified = false;
-		deps.clearMemorySession();
-	}
+	let serverNotified = false;
+	const server = deps.signOut().then(
+		() => {
+			serverNotified = true;
+		},
+		() => {
+			serverNotified = false;
+		},
+	);
 
 	const stored: Record<string, string | null> = {};
 	await Promise.all(
@@ -101,6 +102,12 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 		}),
 	);
 
+	if (!serverNotified) {
+		// El átomo de Better Auth sigue con la sesión si el fetch no termina.
+		deps.clearMemorySession();
+	}
+
 	deps.resetConvex();
+	await Promise.race([server, Promise.resolve()]);
 	return { serverNotified };
 }

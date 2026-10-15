@@ -67,6 +67,16 @@ jest.mock("@/shared/components/ui/reicon", () => ({
 	ChevronRight: () => null,
 }));
 
+function rejectIfHung<T>(promise: Promise<T>, ms = 200): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => reject(new Error("sign-out siguió esperando al servidor")), ms);
+	});
+	return Promise.race([promise, timeout]).finally(() => {
+		if (timer) clearTimeout(timer);
+	});
+}
+
 const model: SettingsScreenModel = {
 	initial: "E",
 	name: "Edzon Perez",
@@ -78,6 +88,12 @@ const model: SettingsScreenModel = {
 };
 
 describe("signOut HTTP error", () => {
+	afterEach(() => {
+		session.data = { session: { id: "sess" } };
+		session.error = null;
+		session.isPending = false;
+	});
+
 	it("un 5xx limpia la sesión en memoria, avisa y deja la Bienvenida", async () => {
 		session.data = { session: { id: "sess" } };
 		mockSignOut.mockResolvedValue({
@@ -108,6 +124,37 @@ describe("signOut HTTP error", () => {
 		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
 		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
 		expect(welcome.queryByText("upstream 500 raw")).toBeNull();
+		await welcome.unmount();
+	});
+
+	it("si el servidor no responde, limpia la sesión, avisa y deja la Bienvenida", async () => {
+		session.data = { session: { id: "sess" } };
+		mockSignOut.mockReturnValue(new Promise(() => undefined));
+		const ajustes = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		await act(async () => {
+			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+		});
+		await rejectIfHung(
+			act(async () => {
+				fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+			}),
+		);
+
+		expect(session.data).toBeNull();
+		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		await ajustes.unmount();
+
+		const welcome = await render(<OnboardingIndexScreen />);
+		expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
+		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
+		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
 		await welcome.unmount();
 	});
 });
