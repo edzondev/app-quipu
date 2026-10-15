@@ -17,6 +17,7 @@ import {
 	type RegistrarMode,
 	resolveRegistrarMode,
 } from "@/shared/lib/navigation/registrar-mode";
+import { ACTION_TIMEOUT_MS, assertOnline, withTimeout } from "@/shared/lib/network/await-online";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
 type Session = {
@@ -81,7 +82,8 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 		setFormError(null);
 		setSubmitting(true);
 		try {
-			await work();
+			await assertOnline(fallback);
+			await withTimeout(work(), ACTION_TIMEOUT_MS, fallback);
 			onDone();
 		} catch (error) {
 			if (error instanceof ExpenseValidationError) {

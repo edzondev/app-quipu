@@ -35,12 +35,20 @@ jest.mock("@/shared/hooks/use-profile-gate", () => ({
 	useProfileGate: () => ({ profile: mockProfile() }),
 }));
 
+const mockRegister = jest.fn();
+const mockGetNetworkStateAsync = jest.fn();
+
 jest.mock("@/shared/hooks/use-expense-actions", () => ({
-	useExpenseActions: () => ({ register: jest.fn() }),
+	useExpenseActions: () => ({ register: (...args: unknown[]) => mockRegister(...args) }),
 }));
 
 jest.mock("@/shared/hooks/use-income-actions", () => ({
 	useIncomeActions: () => ({ register: jest.fn() }),
+}));
+
+jest.mock("expo-network", () => ({
+	getNetworkStateAsync: (...args: unknown[]) => mockGetNetworkStateAsync(...args),
+	useNetworkState: () => ({ isConnected: true, isInternetReachable: true }),
 }));
 
 const home = mockUseHomeModel;
@@ -55,6 +63,12 @@ const readyHome = {
 describe("RegistrarSheet", () => {
 	beforeEach(() => {
 		mockProfile.mockReturnValue({ currencyCode: "PEN" });
+		mockRegister.mockReset();
+		mockGetNetworkStateAsync.mockReset();
+		mockGetNetworkStateAsync.mockResolvedValue({
+			isConnected: true,
+			isInternetReachable: true,
+		});
 	});
 
 	afterEach(() => {
@@ -204,6 +218,28 @@ describe("RegistrarSheet", () => {
 		expect(view.queryByText("Empieza un nuevo ciclo")).toBeNull();
 		expect(view.getByText("Sumar al ciclo actual")).toBeTruthy();
 		expect(view.getByTestId("income-mode-add").props.accessibilityState.selected).toBe(true);
+	});
+
+	it("sin red muestra el aviso y no deja el loader", async () => {
+		mockGetNetworkStateAsync.mockResolvedValue({ isConnected: false });
+		mockRegister.mockImplementation(() => new Promise(() => undefined));
+		mockSummary.mockReturnValue(summaryWithCycle());
+		home.mockReturnValue(readyHome);
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 9, intent: "auto" }} onDismiss={jest.fn()} />,
+		);
+
+		await fireEvent.press(view.getByText("4"));
+		await fireEvent.press(view.getByText("2"));
+		await fireEvent.press(view.getByText("0"));
+		await fireEvent.press(view.getByText("0"));
+		await fireEvent.changeText(view.getByLabelText("Comercio"), "Plaza Vea");
+		await fireEvent.press(view.getByText("Gustos"));
+		await fireEvent.press(view.getByText("Registrar gasto"));
+
+		expect(await view.findByText("No se pudo guardar el gasto.")).toBeTruthy();
+		expect(mockRegister).not.toHaveBeenCalled();
+		expect(view.getByText("Registrar gasto")).toBeTruthy();
 	});
 
 	it("mientras carga no muestra la variante sin ciclo", async () => {
