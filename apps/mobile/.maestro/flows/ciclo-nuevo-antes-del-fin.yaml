@@ -6,9 +6,10 @@ tags:
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
 # «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro
-# que empieza hoy. config.yaml lo corre al final de la suite. Una segunda corrida
-# el mismo día no cierra, y los flujos que necesitan un ciclo empezado antes de hoy
-# también fallan. No está en smoke.
+# que empieza hoy. config.yaml lo corre al final de la suite, justo antes de
+# mismo-dia-solo-sumar. Una segunda corrida el mismo día no cierra, y los flujos
+# que necesitan un ciclo empezado antes de hoy también fallan. No está en smoke.
+# Deja el ciclo empezado hoy que usa después mismo-dia-solo-sumar.
 # El arrastre («Saldo que quedó») depende del historial.
 - runFlow:
     file: ../subflows/entrar.yaml

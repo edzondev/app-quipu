@@ -1,7 +1,11 @@
 # Flujos ejecutables. subflows/ solo se llama con runFlow.
-# flowsOrder corre en orden; lo que no está en la lista corre después, sin orden fijo.
-# ciclo-nuevo-antes-del-fin va al final. --include-tags del CLI tiene prioridad,
-# así que maestro:smoke sigue corriendo solo el tag smoke.
+# La corrida completa usa este orden. Smoke usa config.smoke.yaml
+# (sin executionOrder: --include-tags=smoke no exige flujos fuera de ese tag;
+# https://github.com/mobile-dev-inc/Maestro/issues/1681).
+# Lo listado en flowsOrder corre primero, en orden
+# (https://docs.maestro.dev/maestro-flows/workspace-management/sequential-execution).
+# ciclo-nuevo-antes-del-fin y luego mismo-dia-solo-sumar van al final:
+# el primero deja el ciclo empezado hoy que usa el segundo.
 flows:
   - "flows/*"
 excludeTags:
@@ -27,3 +31,4 @@ executionOrder:
     - sumar-no-cierra
     - welcome
     - ciclo-nuevo-antes-del-fin
+    - mismo-dia-solo-sumar
