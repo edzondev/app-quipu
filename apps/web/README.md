@@ -2,45 +2,23 @@
 
 Repositorio de **Quipu v2** — app web de finanzas personales para Perú (PEN, español). El producto responde: *¿cuánto puedo gastar hoy sin destruir mi mes?* Divide el dinero en tres sobres (Necesidades / Gustos / Ahorro) antes de gastarlo.
 
-**Estado:** desarrollo activo. Bloques 1–5 implementados (auth, onboarding, dashboard, gastos, ingresos). Detalle en [`docs/QUIPU-MASTER.md` §8](docs/QUIPU-MASTER.md).
+**Estado:** desarrollo activo. Bloques 1–5 implementados (auth, onboarding, dashboard, gastos, ingresos).
 
 ---
 
 ## Inicio rápido
 
-**Requisitos:** Node.js 20+, [pnpm](https://pnpm.io/), cuenta en [Convex](https://convex.dev).
+Comandos del monorepo: [`SCRIPTS.md`](../../SCRIPTS.md). Node `>=24` y pnpm `12.10.1` están en el `package.json` de la raíz.
 
-```bash
-pnpm install
-cp .env.example .env.local   # si existe; si no, crear .env.local (ver abajo)
-npx convex dev               # terminal 1
-pnpm dev                     # terminal 2 → http://localhost:3000
-```
-
-**Verificar que funciona:**
-
-```bash
-pnpm typecheck
-pnpm test
-```
+Copia `apps/web/.env.example` a `apps/web/.env.local`. `apps/web/core/env.client.ts` valida `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_CONVEX_URL` y `NEXT_PUBLIC_CONVEX_SITE_URL`.
 
 ---
 
 ## Variables de entorno
 
-Crear `.env.local` en la raíz (no se commitea):
+`apps/web/.env.local` no se commitea. El listado está en `apps/web/.env.example`.
 
-```env
-NEXT_PUBLIC_CONVEX_URL=https://<tu-deployment>.convex.cloud
-NEXT_PUBLIC_CONVEX_SITE_URL=https://<tu-deployment>.convex.site
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-BETTER_AUTH_SECRET=<mínimo 32 caracteres aleatorios>
-# Cloudflare Turnstile dummy keys (local). Do not skip verification via NODE_ENV.
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
-TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
-```
-
-Todas las variables se validan en build vía [`core/env.ts`](core/env.ts). Las que empiezan con `NEXT_PUBLIC_` son públicas en el bundle.
+En `apps/web/core/env.client.ts`, `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN`, `NEXT_PUBLIC_POSTHOG_HOST` y `NEXT_PUBLIC_TURNSTILE_SITE_KEY` son opcionales. Las tres URLs del inicio rápido son obligatorias.
 
 ---
 
@@ -70,7 +48,6 @@ core/              env, errores tipados, constantes
 modules/           un directorio por dominio funcional
   auth/ onboarding/ dashboard/ expenses/ income/ coach/ savings/
 shared/            UI primitivos, layout, helpers (money, date)
-docs/              documentación del proyecto
 ```
 
 **Reglas de arquitectura** (resumen):
@@ -80,8 +57,6 @@ docs/              documentación del proyecto
 - Cada módulo: `components/`, `actions.ts`, `schemas.ts`, `types.ts`, `lib/`.
 - Tipos de datos desde `convex/_generated/dataModel`; no duplicar a mano.
 - Dinero en céntimos (`shared/lib/money.ts`); fechas en `America/Lima` (`shared/lib/date.ts`).
-
-Detalle completo: [`docs/QUIPU-MASTER.md` §4–§6](docs/QUIPU-MASTER.md).
 
 ---
 
@@ -97,14 +72,15 @@ pnpm test             # Vitest (unitarios)
 npx convex dashboard  # UI de Convex
 ```
 
+El cheatsheet del monorepo (raíz, filtros, móvil) está en [`SCRIPTS.md`](../../SCRIPTS.md).
+
 ### Antes de commit / PR
 
 1. `pnpm typecheck` sin errores.
 2. `pnpm lint` sin warnings nuevos.
 3. Si tocaste `convex/schema.ts` → regenerar tipos y commitear `convex/_generated/`.
-4. Nueva env var → agregar en `core/env.ts` con Zod.
+4. Nueva variable pública del cliente → `apps/web/core/env.client.ts`.
 5. Nuevo error de dominio → enum en `core/errors/`.
-6. Actualizar [`docs/QUIPU-MASTER.md` §8](docs/QUIPU-MASTER.md) si cerraste o descubriste trabajo.
 
 ---
 
@@ -112,28 +88,16 @@ npx convex dashboard  # UI de Convex
 
 | Documento | Para qué |
 |-----------|----------|
-| [`docs/QUIPU-MASTER.md`](docs/QUIPU-MASTER.md) | **Leer primero.** Producto, diseño, arquitectura, backend, estándares, roadmap |
+| [`SCRIPTS.md`](../../SCRIPTS.md) | Comandos del monorepo |
 | [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Contexto para agentes de IA y herramientas |
-| [`convex/_generated/ai/guidelines.md`](convex/_generated/ai/guidelines.md) | Reglas de Convex (obligatorio antes de tocar `convex/`) |
-| [`docs/manuales-de-sistema.md`](docs/manuales-de-sistema.md) | System prompts de rigor (seguridad, RCA, CI/CD) |
-| [`quipu-2.html`](quipu-2.html) | Canvas visual del diseño (9 bloques) |
 
-**Mapa rápido del maestro:**
-
-| Necesito… | Sección |
-|-----------|---------|
-| Qué falta por construir | §8 Estado y roadmap |
-| Escribir o revisar código | §4 Arquitectura + §6 Estándares |
-| Tocar UI | §3 Diseño (canon v3.0) |
-| Tocar backend | §5 Backend + guidelines de Convex |
+`convex/_generated/ai/guidelines.md` no está en git. Existe solo después de `npx convex ai-files install`.
 
 ---
 
-## Política de branching
+## CI
 
-Todo el desarrollo va en la rama de trabajo actual. **Nada mergea a `main` hasta que la app esté completa.** Los P0 bloquean el release del producto, no un merge intermedio.
-
-CI del monorepo: Biome, typecheck de móvil y Convex, y Jest de `@quipu/mobile` corren en push/PR a `master` (ver [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)).
+Push y pull request a `master` corren [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml): `pnpm ci:quality`, `pnpm typecheck:ci`, `pnpm test:mobile` y `pnpm test:web`.
 
 ---
 
@@ -141,7 +105,7 @@ CI del monorepo: Biome, typecheck de móvil y Convex, y Jest de `@quipu/mobile` 
 
 | Problema | Qué revisar |
 |----------|-------------|
-| Build falla por env | Variables en `.env.local` y esquema en `core/env.ts` |
+| Build falla por env | `apps/web/.env.local` y `apps/web/core/env.client.ts` |
 | Tipos de Convex desactualizados | Correr `npx convex dev` y commitear `_generated/` |
 | Auth no funciona | `BETTER_AUTH_SECRET` (≥32 chars) y URLs de Convex correctas |
 
