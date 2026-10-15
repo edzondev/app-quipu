@@ -4,7 +4,7 @@ Una sola cuenta de desarrollo, desechable, que ya terminó el asistente y tiene 
 
 Los datos se acumulan. Donde hace falta, el nombre lleva la hora. No se afirman totales del historial. Si un flujo cierra el ciclo, el ingreso siguiente deja otro ciclo activo.
 
-`maestro test .maestro/` corre lo que esa cuenta puede hacer. `config.yaml` excluye `wip`, `blocked`, `one-shot` y `cuenta-nueva`. `pnpm maestro:smoke` es `maestro test --include-tags=smoke .maestro/`.
+`maestro test .maestro/` corre lo que esa cuenta puede hacer. `config.yaml` excluye `wip`, `blocked`, `one-shot` y `cuenta-nueva`. No usa `executionOrder`: `--include-tags=smoke` fallaba si `flowsOrder` listaba flujos sin ese tag. `pnpm maestro:smoke` es `maestro test --include-tags=smoke .maestro/`.
 
 ## Cómo correrlo
 
@@ -36,14 +36,15 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
 | `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
+| `mismo-dia-solo-sumar` | Ciclo empezado hoy (Lima): las dos opciones, Sumar marcada; tocar nuevo ciclo solo suma |
+| `z-ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
-`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. `config.yaml` lo corre al final automáticamente.
+`z-ciclo-nuevo-antes-del-fin` (antes `ciclo-nuevo-antes-del-fin`) deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. El prefijo `z-` lo deja al final sin `executionOrder`. `mismo-dia-solo-sumar` pide ese ciclo empezado hoy (día de Lima).
 
 ## Fuera de la corrida
 
@@ -52,7 +53,6 @@ Los flujos `cuenta-nueva` quedan excluidos por defecto (`config.yaml`): no corre
 - `cuenta-nueva`: `onboarding-ciclo`, `onboarding-saldo-cero`, `onboarding-despues`, `onboarding-paso-1` (también `wip`). Cuenta sin perfil.
 - `cuenta-nueva`: `home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso` (también `one-shot`). Nunca hubo un ciclo.
 - `cuenta-nueva`: `progreso-vacio`. Primer ciclo, historial vacío.
-- `cuenta-nueva` y `wip`: `mismo-dia-solo-sumar`. El ciclo tiene que haber empezado hoy (M45).
 - `cuenta-nueva`, `wip` y `blocked`: `progreso-primer-cierre`. Ciclo de apertura empezado antes de hoy, sin cierres en verde.
 - Ciclo vencido: no hay flujo.
 

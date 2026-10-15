@@ -1,6 +1,6 @@
 # Notas de Maestro
 
-Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`).
+Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`). `mismo-dia-solo-sumar` entra en la corrida por defecto: el ciclo tiene que haber empezado hoy (día de Lima).
 
 Opcional, solo en el dev `perceptive-elk-229` y nunca `--prod`: `devSeed:seedVerifiedAccount` crea una cuenta verificada sin perfil; `devSeed:seedProfileNoCycle` crea una con perfil y sin ciclo (`home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`). La contraseña es `DEV_SEED_PASSWORD`. Para un flujo `cuenta-nueva` apunta esas dos variables a esa cuenta.
 
@@ -11,7 +11,6 @@ Opcional, solo en el dev `perceptive-elk-229` y nunca `--prod`: `devSeed:seedVer
 | El paso 1 sigue pintando «30 DÍAS» / «15 DÍAS» / «7 DÍAS» | `onboarding-paso-1`, `optional: true` |
 | Mixto/Variable no pintan «Indica tu sueldo base.», «Agrega al menos una fuente.» ni «Elige un ciclo de 15 o 30 días.» | `onboarding-paso-1`, `optional: true`. La etiqueta sí es «TU SUELDO BASE» |
 | Cierre muestra el subtítulo de la racha aunque `streakEvaluated` sea falso (M45) | `progreso-primer-cierre` no lo afirma |
-| El mismo día se ven las dos opciones de ingreso (M45) | `mismo-dia-solo-sumar` |
 | Ciclo vencido: no hay flujo. Inicio muestra «Tu ciclo del … terminó.» | `home-closed-cycle.tsx` |
 
 La hoja de ingreso dice «Empieza un nuevo ciclo» y «Sumar al ciclo actual» (sin «¿?»). Los `id` son `income-mode-new-cycle`, `income-mode-add`, `income-extra-*` e `income-submit`. El paso 2 deja la fecha de mañana y no abre el diálogo nativo. El paso 3 es más/menos (`allocation-increase-needs`, `allocation-reset`).

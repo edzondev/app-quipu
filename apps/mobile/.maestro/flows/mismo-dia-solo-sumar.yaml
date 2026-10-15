@@ -2,29 +2,24 @@ appId: com.quipu.finance
 tags:
   - p0
   - registrar
-  - onboarding
-  - wip
-  - cuenta-nueva
 ---
-# M45, pendiente: el mismo día de Lima se ven las dos opciones. Tag wip para no contarlo
-# como fallo mientras ingeniería no lo cierre. «Empieza un nuevo ciclo» no lleva «¿?».
-# Antes: sueldo-cierra-ciclo. El mismo día el ciclo no se puede cerrar.
 # Notion 3f486a7356a681239318fa33957072e0
-# El asistente abre el ciclo hoy. Solo «Sumar al ciclo actual».
-# El cierre con arrastre está en ciclo-nuevo-antes-del-fin.
-# Las dos opciones se ven. #109 suma el habitual si el ciclo empezó hoy (día de Lima),
-# aunque se toque «Empieza un nuevo ciclo». La marcada es «Sumar al ciclo actual».
-# El ciclo tiene que haber empezado hoy: hace falta una cuenta sin perfil.
-# Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
+# Antes: sueldo-cierra-ciclo. El mismo día de Lima el ciclo no se cierra.
+# Misma cuenta que el resto (QUIPU_E2E_EMAIL / QUIPU_E2E_PASSWORD). Sin onboarding.
+# Requisito: el ciclo de esa cuenta tiene que haber empezado HOY (día de Lima).
+# Si empezó antes, «Empieza un nuevo ciclo» sí cierra; este flujo no aplica.
+# z-ciclo-nuevo-antes-del-fin deja un ciclo que empezó hoy; corre al final.
+# Las dos opciones se ven. «Sumar al ciclo actual» viene marcada. Tocar
+# «Empieza un nuevo ciclo» igual solo suma: el rango de CICLO no cambia.
+# No aparece «Saldo que quedó».
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
       QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
       QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
 - extendedWaitUntil:
-    visible: "¿Cómo entra tu dinero?"
+    visible: "Hoy puedes gastar"
     timeout: 30000
-- runFlow: ../subflows/onboarding-abrir-ciclo.yaml
 - runFlow: ../subflows/abrir-movimientos.yaml
 - copyTextFrom:
     text: "CICLO .*"
