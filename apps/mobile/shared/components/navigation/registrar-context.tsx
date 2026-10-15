@@ -1,4 +1,6 @@
+import { useRouter } from "expo-router";
 import { createContext, type ReactNode, useContext, useState } from "react";
+import type { EditableExpense } from "@/shared/lib/movements/model";
 import type { RegistrarIntent } from "@/shared/lib/navigation/registrar-mode";
 import RegistrarSheet from "./registrar-sheet";
 
@@ -9,6 +11,7 @@ type Session = {
 
 type RegistrarApi = {
 	openCreate: (intent?: RegistrarIntent) => void;
+	openEdit: (expense: EditableExpense) => void;
 };
 
 const RegistrarContext = createContext<RegistrarApi | null>(null);
@@ -22,6 +25,7 @@ export function useRegistrar() {
 }
 
 export function RegistrarProvider({ children }: { children: ReactNode }) {
+	const router = useRouter();
 	const [isPresented, setPresented] = useState(false);
 	const [session, setSession] = useState<Session>({ nonce: 0, intent: "auto" });
 
@@ -31,8 +35,12 @@ export function RegistrarProvider({ children }: { children: ReactNode }) {
 		setPresented(true);
 	}
 
+	function openEdit(expense: EditableExpense) {
+		router.push(`/expense/${expense.id}`);
+	}
+
 	return (
-		<RegistrarContext.Provider value={{ openCreate }}>
+		<RegistrarContext.Provider value={{ openCreate, openEdit }}>
 			{children}
 			<RegistrarSheet
 				isPresented={isPresented}

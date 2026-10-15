@@ -106,7 +106,7 @@ jest.mock("expo-router", () => ({
 const mockOpenCreate = jest.fn();
 
 jest.mock("@/shared/components/navigation/registrar-context", () => ({
-	useRegistrar: () => ({ openCreate: mockOpenCreate }),
+	useRegistrar: () => ({ openCreate: mockOpenCreate, openEdit: jest.fn() }),
 }));
 
 jest.mock("@/shared/hooks/use-dashboard", () => ({

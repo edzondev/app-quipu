@@ -1,5 +1,9 @@
 import { fixtureId } from "@/__fixtures__/convex-id";
-import { lookupExpense, mapFrequentExpenses } from "@/shared/lib/expenses/expense-record";
+import {
+	lookupExpense,
+	mapFrequentExpenses,
+	readCreateDraft,
+} from "@/shared/lib/expenses/expense-record";
 
 const movements = {
 	currencyCode: "PEN",
@@ -89,5 +93,28 @@ describe("mapFrequentExpenses", () => {
 			{ id: "exp1", label: "Plaza Vea", amountCents: 4200 },
 			{ id: "exp3", label: "Metropolitano", amountCents: 500 },
 		]);
+	});
+});
+
+describe("readCreateDraft", () => {
+	it("lee el borrador que viaja en la ruta", () => {
+		expect(
+			readCreateDraft({
+				amountRaw: "42.00",
+				description: "Plaza Vea",
+				envelopeType: "wants",
+			}),
+		).toEqual({
+			amountRaw: "42.00",
+			description: "Plaza Vea",
+			envelopeType: "wants",
+		});
+		expect(
+			readCreateDraft({
+				amountRaw: "",
+				description: "",
+				envelopeType: "savings-no",
+			}).envelopeType,
+		).toBeNull();
 	});
 });
