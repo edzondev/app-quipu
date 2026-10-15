@@ -11,13 +11,11 @@
 
 This project uses [Convex](https://convex.dev) as its backend.
 
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first**.
+
 `convex/_generated/ai/guidelines.md` is not committed. It exists only after `npx convex ai-files install`.
 
 <!-- convex-ai-end -->
-
----
-
-skills obligatorias (`caveman`/`ponytail` siempre activos), gstack
 
 ---
 
