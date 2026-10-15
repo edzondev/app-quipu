@@ -3,11 +3,11 @@ import HomePage from "@/app/(tabs)";
 import TabLayout from "@/app/(tabs)/_layout";
 import { OFFLINE_BANNER_DEBOUNCE_MS } from "@/shared/components/offline/offline-banner";
 
-const mockConnectionState = jest.fn();
+const mockNetworkState = jest.fn();
 const mockTabScreens: { name: string; options?: { popToTopOnBlur?: boolean } }[] = [];
 
-jest.mock("convex/react", () => ({
-	useConvexConnectionState: () => mockConnectionState(),
+jest.mock("expo-network", () => ({
+	useNetworkState: () => mockNetworkState(),
 }));
 
 jest.mock("expo-router", () => {
@@ -68,16 +68,12 @@ jest.mock("@/shared/hooks/use-dashboard", () => ({
 }));
 
 function offline() {
-	mockConnectionState.mockReturnValue({
-		isWebSocketConnected: false,
-		hasEverConnected: true,
-		connectionRetries: 0,
-	});
+	mockNetworkState.mockReturnValue({ isConnected: false });
 }
 
 describe("franja offline en el layout de pestañas", () => {
 	beforeEach(() => {
-		mockConnectionState.mockReset();
+		mockNetworkState.mockReset();
 		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
 		offline();
 	});

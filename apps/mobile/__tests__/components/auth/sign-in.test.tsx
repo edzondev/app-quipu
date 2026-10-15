@@ -6,6 +6,7 @@ const mockReplace = jest.fn();
 const mockPasskey = jest.fn();
 const mockEmail = jest.fn();
 const mockSendOtp = jest.fn();
+const mockGetNetworkStateAsync = jest.fn();
 
 jest.mock("@/shared/components/app-shell", () => {
 	const { View } = require("react-native");
@@ -51,9 +52,18 @@ jest.mock("@/lib/auth-client", () => ({
 	},
 }));
 
+jest.mock("expo-network", () => ({
+	getNetworkStateAsync: (...args: unknown[]) => mockGetNetworkStateAsync(...args),
+	useNetworkState: () => ({ isConnected: true, isInternetReachable: true }),
+}));
+
 describe("SignInScreen", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		mockGetNetworkStateAsync.mockResolvedValue({
+			isConnected: true,
+			isInternetReachable: true,
+		});
 	});
 
 	afterEach(() => {
@@ -115,6 +125,34 @@ describe("SignInScreen", () => {
 		expect(await view.findByText("Email o contraseña incorrectos")).toBeTruthy();
 		expect(view.queryByText(/User not found/)).toBeNull();
 		expect(view.queryByText(/no existe/i)).toBeNull();
+	});
+
+	it("sin red muestra el mismo mensaje de credenciales y no deja el loader", async () => {
+		mockGetNetworkStateAsync.mockResolvedValue({ isConnected: false });
+		mockEmail.mockImplementation(() => new Promise(() => undefined));
+		const view = await render(<SignInScreen />);
+
+		await fireEvent.press(view.getByText("Entrar con correo"));
+		await fireEvent.changeText(view.getByLabelText("Correo"), "ana@quipu.test");
+		await fireEvent.changeText(view.getByLabelText("Contraseña"), "secreta-123");
+		await fireEvent.press(view.getByText("Entrar"));
+
+		expect(await view.findByText("Email o contraseña incorrectos")).toBeTruthy();
+		expect(mockEmail).not.toHaveBeenCalled();
+		expect(view.getByText("Entrar")).toBeTruthy();
+	});
+
+	it("si signIn lanza, muestra el mensaje de credenciales", async () => {
+		mockEmail.mockRejectedValue(new TypeError("Network request failed"));
+		const view = await render(<SignInScreen />);
+
+		await fireEvent.press(view.getByText("Entrar con correo"));
+		await fireEvent.changeText(view.getByLabelText("Correo"), "ana@quipu.test");
+		await fireEvent.changeText(view.getByLabelText("Contraseña"), "secreta-123");
+		await fireEvent.press(view.getByText("Entrar"));
+
+		expect(await view.findByText("Email o contraseña incorrectos")).toBeTruthy();
+		expect(view.getByText("Entrar")).toBeTruthy();
 	});
 
 	it("Olvidé la mía abre recuperar con el correo escrito", async () => {

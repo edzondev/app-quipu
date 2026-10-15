@@ -5,6 +5,7 @@ import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
@@ -96,9 +97,7 @@ export function SecurityScreen({
 				<View className="w-5.5" />
 			</View>
 
-			{status === "loading" ? (
-				<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-			) : null}
+			{status === "loading" ? <InlineLoading /> : null}
 			{status === "empty" ? (
 				<Text className="mt-6 font-hanken text-[15px] text-foreground/55">
 					Inicia sesión para ver tu seguridad.

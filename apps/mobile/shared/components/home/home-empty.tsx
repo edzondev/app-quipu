@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { HomeIdentity } from "./home-identity";
 
 function EmptyIllustration() {
@@ -19,11 +20,7 @@ function EmptyIllustration() {
 }
 
 export function HomeLoading() {
-	return (
-		<View className="flex-1 items-center justify-center">
-			<Text className="font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-		</View>
-	);
+	return <InlineLoading />;
 }
 
 export function HomeEmpty({

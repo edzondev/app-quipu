@@ -2,6 +2,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { Lock } from "reicon-react-native/icons/Lock";
 import { ErrorText } from "@/shared/components/forms/field-error";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { AhorroScreenModel, FundView, GoalView } from "@/shared/lib/savings/model";
 
@@ -68,9 +69,7 @@ export function SavingsScreen({
 					</Text>
 				) : null}
 
-				{status === "loading" ? (
-					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-				) : null}
+				{status === "loading" ? <InlineLoading /> : null}
 
 				{model ? <FundCard fund={model.fund} /> : null}
 

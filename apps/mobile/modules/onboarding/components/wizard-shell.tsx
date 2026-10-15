@@ -1,16 +1,17 @@
-import { useRouter } from "expo-router";
-import { type ReactNode, useEffect } from "react";
-import { BackHandler, Pressable, ScrollView, View } from "react-native";
+import { type Href, useRouter } from "expo-router";
+import type { ReactNode } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
+import { useHardwareBack } from "@/shared/hooks/use-hardware-back";
 import { WIZARD_STEPS, type WizardStep } from "@/shared/lib/onboarding/types";
 
 function leaveStep(
 	stepNumber: number,
 	onBack: (() => void) | undefined,
-	router: { canGoBack: () => boolean; back: () => void; replace: (href: string) => void },
+	router: { canGoBack: () => boolean; back: () => void; replace: (href: Href) => void },
 	dispatch: (action: { type: "SET_STEP"; payload: WizardStep }) => void,
 	commitmentsSaved: boolean,
 ) {
@@ -42,14 +43,7 @@ export function WizardShell({ stepNumber, children, footer, onBack }: WizardShel
 	const { state, dispatch } = useOnboarding();
 
 	const goBack = () => leaveStep(stepNumber, onBack, router, dispatch, state.commitmentsSaved);
-
-	useEffect(() => {
-		const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-			leaveStep(stepNumber, onBack, router, dispatch, state.commitmentsSaved);
-			return true;
-		});
-		return () => subscription.remove();
-	}, [dispatch, onBack, router, state.commitmentsSaved, stepNumber]);
+	useHardwareBack(goBack);
 
 	return (
 		<KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>

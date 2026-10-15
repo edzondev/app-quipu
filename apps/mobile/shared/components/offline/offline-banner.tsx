@@ -1,8 +1,9 @@
-import { useConvexConnectionState } from "convex/react";
+import { useNetworkState } from "expo-network";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOut } from "react-native-reanimated";
 import { WifiOff } from "@/shared/components/ui/reicon";
+import { isDeviceOnline } from "@/shared/lib/network/device-online";
 
 export const OFFLINE_BANNER_DEBOUNCE_MS = 500;
 
@@ -13,11 +14,8 @@ const ENTER = FadeInDown.duration(180)
 const EXIT = FadeOut.duration(160).easing(Easing.bezier(0.23, 1, 0.32, 1));
 
 function useOfflineBannerVisible() {
-	const connection = useConvexConnectionState();
-	// El primer intento en curso no es un corte: hace falta haber conectado o un reintento fallido.
-	const offline =
-		!connection.isWebSocketConnected &&
-		(connection.hasEverConnected || connection.connectionRetries > 0);
+	const network = useNetworkState();
+	const offline = !isDeviceOnline(network);
 	const [visible, setVisible] = useState(false);
 
 	useEffect(() => {

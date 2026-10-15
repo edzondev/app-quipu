@@ -61,7 +61,8 @@
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
 		"format:check": "biome format --check .",
-		"ci:quality": "biome ci ."
+		"ci:quality": "biome ci .",
+		"eas-build-post-install": "node ../../scripts/ensure-convex-api.mjs"
 	},
 	"jest": {
 		"preset": "jest-expo",

@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { EnvelopeCarryLine } from "@/shared/components/envelope-carry-line";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type {
@@ -58,9 +59,7 @@ export function SobresScreen({ status, screen, onBack, onMoveMoney, onRegisterEx
 					) : null}
 				</View>
 
-				{status === "loading" ? (
-					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-				) : null}
+				{status === "loading" ? <InlineLoading /> : null}
 				{status === "empty" ? (
 					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">{EMPTY}</Text>
 				) : null}
