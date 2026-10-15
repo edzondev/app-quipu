@@ -1,0 +1,10 @@
+# Smoke: maestro test --config .maestro/config.smoke.yaml --include-tags=smoke .maestro/
+# Sin executionOrder: no exige flujos de flowsOrder que no tienen el tag smoke
+# (https://github.com/mobile-dev-inc/Maestro/issues/1681).
+flows:
+  - "flows/*"
+excludeTags:
+  - one-shot
+  - wip
+  - blocked
+  - cuenta-nueva
