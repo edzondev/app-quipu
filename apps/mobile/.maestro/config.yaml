@@ -1,10 +1,11 @@
 # Flujos ejecutables. subflows/ solo se llama con runFlow.
-# Sin executionOrder: --include-tags=smoke no exige flujos que no tienen ese tag.
-# Lo listado en flowsOrder corre primero; lo no listado, después, sin orden fijo
+# La corrida completa usa este orden. Smoke usa config.smoke.yaml
+# (sin executionOrder: --include-tags=smoke no exige flujos fuera de ese tag;
+# https://github.com/mobile-dev-inc/Maestro/issues/1681).
+# Lo listado en flowsOrder corre primero, en orden
 # (https://docs.maestro.dev/maestro-flows/workspace-management/sequential-execution).
-# Listar solo z-ciclo-nuevo-antes-del-fin lo pondría primero. No hay opción
-# documentada para entradas faltantes (https://github.com/mobile-dev-inc/Maestro/issues/1681).
-# El prefijo z- lo deja último en el orden alfabético de la corrida (PR #118).
+# ciclo-nuevo-antes-del-fin y luego mismo-dia-solo-sumar van al final:
+# el primero deja el ciclo empezado hoy que usa el segundo.
 flows:
   - "flows/*"
 excludeTags:
@@ -12,3 +13,22 @@ excludeTags:
   - wip
   - blocked
   - cuenta-nueva
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - ahorro-metas
+    - ajustes-cerrar-sesion
+    - compromisos
+    - controles-escondidos
+    - home-ciclo
+    - movimientos-editar-eliminar
+    - movimientos
+    - plan-sobres
+    - preview-sin-selector-dev
+    - registrar-gasto-hoja
+    - registrar-ingreso
+    - sign-in
+    - sumar-no-cierra
+    - welcome
+    - ciclo-nuevo-antes-del-fin
+    - mismo-dia-solo-sumar

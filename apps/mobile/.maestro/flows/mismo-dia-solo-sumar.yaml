@@ -6,8 +6,8 @@ tags:
 # Notion 3f486a7356a681239318fa33957072e0
 # Antes: sueldo-cierra-ciclo. El mismo día de Lima el ciclo no se cierra.
 # Misma cuenta que el resto (QUIPU_E2E_EMAIL / QUIPU_E2E_PASSWORD). Sin onboarding.
-# El prefijo zz- lo corre después de z-ciclo-nuevo-antes-del-fin, que deja un
-# ciclo empezado hoy (día de Lima). No hace falta preparar ese ciclo a mano.
+# config.yaml lo corre después de ciclo-nuevo-antes-del-fin, que deja un ciclo
+# empezado hoy (día de Lima). No hace falta preparar ese ciclo a mano.
 # Las dos opciones se ven. «Sumar al ciclo actual» viene marcada. Tocar
 # «Empieza un nuevo ciclo» igual solo suma: el rango de CICLO no cambia.
 # No aparece «Saldo que quedó».

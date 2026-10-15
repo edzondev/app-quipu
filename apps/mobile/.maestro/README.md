@@ -4,7 +4,7 @@ Una sola cuenta de desarrollo, desechable, que ya terminó el asistente y tiene 
 
 Los datos se acumulan. Donde hace falta, el nombre lleva la hora. No se afirman totales del historial. Si un flujo cierra el ciclo, el ingreso siguiente deja otro ciclo activo.
 
-`maestro test .maestro/` corre lo que esa cuenta puede hacer. `config.yaml` excluye `wip`, `blocked`, `one-shot` y `cuenta-nueva`. No usa `executionOrder`: `--include-tags=smoke` fallaba si `flowsOrder` listaba flujos sin ese tag. `pnpm maestro:smoke` es `maestro test --include-tags=smoke .maestro/`.
+`maestro test .maestro/` corre lo que esa cuenta puede hacer. `config.yaml` excluye `wip`, `blocked`, `one-shot` y `cuenta-nueva`, y ordena la corrida con `executionOrder`. `pnpm maestro:smoke` es `maestro test --config .maestro/config.smoke.yaml --include-tags=smoke .maestro/` (ese config no tiene `executionOrder`, para no exigir flujos fuera de smoke).
 
 ## Cómo correrlo
 
@@ -16,7 +16,7 @@ Desde `apps/mobile`, con el emulador encendido:
 
 ```bash
 maestro test .maestro/flows/welcome.yaml
-maestro test --include-tags=smoke .maestro/ -e QUIPU_E2E_EMAIL=... -e QUIPU_E2E_PASSWORD=...
+maestro test --config .maestro/config.smoke.yaml --include-tags=smoke .maestro/ -e QUIPU_E2E_EMAIL=... -e QUIPU_E2E_PASSWORD=...
 maestro test .maestro/ -e QUIPU_E2E_EMAIL=... -e QUIPU_E2E_PASSWORD=...
 maestro test .maestro/flows/home-ciclo.yaml -e QUIPU_E2E_EMAIL=... -e QUIPU_E2E_PASSWORD=...
 ```
@@ -36,15 +36,15 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
 | `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `z-ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
-| `zz-mismo-dia-solo-sumar` | Después de z-ciclo-nuevo: las dos opciones, Sumar marcada; tocar nuevo ciclo solo suma |
+| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
+| `mismo-dia-solo-sumar` | Después de ciclo-nuevo: las dos opciones, Sumar marcada; tocar nuevo ciclo solo suma |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
-`z-ciclo-nuevo-antes-del-fin` (antes `ciclo-nuevo-antes-del-fin`) deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. El prefijo `z-` lo deja al final sin `executionOrder`, salvo `zz-mismo-dia-solo-sumar`, que corre después y usa ese ciclo de hoy: no hay que prepararlo a mano.
+`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. `config.yaml` lo corre al final, y `mismo-dia-solo-sumar` justo después, para usar ese ciclo de hoy: no hay que prepararlo a mano. Smoke usa `config.smoke.yaml`.
 
 ## Fuera de la corrida
 
