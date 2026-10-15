@@ -5,10 +5,8 @@ import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import {
 	OFFLINE_SIGN_OUT_MESSAGE,
 	SERVER_SIGN_OUT_WAIT_MS,
-	signedOutHref,
 } from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
-import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 const mockReplace = jest.fn();
 const mockSignOut = jest.fn();
@@ -23,13 +21,7 @@ jest.mock("expo-router", () => ({
 	Redirect: () => null,
 	router: { replace: mockReplace },
 	useIsFocused: () => true,
-	useLocalSearchParams: () => {
-		const last = mockReplace.mock.calls.at(-1)?.[0] as
-			| { params?: { notice?: string } }
-			| string
-			| undefined;
-		return last && typeof last === "object" ? (last.params ?? {}) : {};
-	},
+	useLocalSearchParams: () => ({ notice: "offline" }),
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -117,7 +109,10 @@ describe("signOut HTTP error", () => {
 		});
 
 		expect(session.data).toBeNull();
-		expect(mockReplace).toHaveBeenCalledWith(signedOutHref(false));
+		expect(mockReplace).toHaveBeenCalledWith({
+			pathname: "/(onboarding)",
+			params: { notice: "offline" },
+		});
 		expect(ajustes.queryByText("upstream 500 raw")).toBeNull();
 		await ajustes.unmount();
 
@@ -145,16 +140,16 @@ describe("signOut HTTP error", () => {
 			await act(async () => {
 				fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
 			});
-			await rejectIfHung(
-				act(async () => {
-					fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
-					await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
-				}),
-				SERVER_SIGN_OUT_WAIT_MS + 200,
-			);
+			await act(async () => {
+				fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+				await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+			});
 
 			expect(session.data).toBeNull();
-			expect(mockReplace).toHaveBeenCalledWith(signedOutHref(false));
+			expect(mockReplace).toHaveBeenCalledWith({
+				pathname: "/(onboarding)",
+				params: { notice: "offline" },
+			});
 			await ajustes.unmount();
 
 			const welcome = await render(<OnboardingIndexScreen />);

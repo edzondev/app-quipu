@@ -40,21 +40,29 @@ describe("SeguridadPage", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		onRevokeAll = null;
-		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: (href: string) => void) => {
-			goToSignIn("/(onboarding)");
+	});
+
+	it("si el servidor se enteró, va a la entrada", async () => {
+		mockRevokeAllAndSignOut.mockResolvedValue(true);
+		await render(<SeguridadPage />);
+		await onRevokeAll?.();
+		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+	});
+
+	it("si el servidor no se enteró, va a la entrada con el aviso offline", async () => {
+		mockRevokeAllAndSignOut.mockResolvedValue(false);
+		await render(<SeguridadPage />);
+		await onRevokeAll?.();
+		expect(mockReplace).toHaveBeenCalledWith({
+			pathname: "/(onboarding)",
+			params: { notice: "offline" },
 		});
 	});
 
-	it("si el cierre falla, igual navega a la entrada", async () => {
-		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: (href: string) => void) => {
-			try {
-				throw new Error("falló el cierre");
-			} finally {
-				goToSignIn("/(onboarding)");
-			}
-		});
+	it("si el cierre falla, no navega", async () => {
+		mockRevokeAllAndSignOut.mockRejectedValue(new Error("falló el cierre"));
 		await render(<SeguridadPage />);
 		await expect(onRevokeAll?.()).rejects.toThrow("falló el cierre");
-		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		expect(mockReplace).not.toHaveBeenCalled();
 	});
 });

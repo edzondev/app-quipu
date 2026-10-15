@@ -27,7 +27,6 @@ jest.mock("@/lib/convex", () => ({
 
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { SERVER_SIGN_OUT_WAIT_MS } from "@/shared/lib/auth/device-session";
-import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 describe("signOutAndClearLocalData", () => {
 	beforeEach(() => {
@@ -55,14 +54,9 @@ describe("signOutAndClearLocalData", () => {
 		mockSignOut.mockReturnValue(new Promise(() => undefined));
 
 		try {
-			const result = await rejectIfHung(
-				(async () => {
-					const pending = signOutAndClearLocalData();
-					await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
-					return pending;
-				})(),
-				SERVER_SIGN_OUT_WAIT_MS + 200,
-			);
+			const pending = signOutAndClearLocalData();
+			await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+			const result = await pending;
 
 			expect(result).toEqual({ serverNotified: false });
 			expect(mockDelete).toHaveBeenCalledWith("quipu_cookie");

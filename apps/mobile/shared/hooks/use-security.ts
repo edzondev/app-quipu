@@ -2,7 +2,6 @@ import { api } from "@quipu/convex-api";
 import { useMutation, useQuery } from "convex/react";
 import { authClient } from "@/lib/auth-client";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
-import { signedOutHref } from "@/shared/lib/auth/device-session";
 import { isPasskeyCancelled } from "@/shared/lib/auth/errors";
 import { presentSecurity, SECURITY_ERROR } from "@/shared/lib/settings/security-model";
 import { useProfileGate } from "./use-profile-gate";
@@ -29,17 +28,10 @@ export function useSecurity() {
 	const settled = isAuthReady && sessions !== undefined && overview !== undefined;
 	const hasData = settled && sessions != null && overview != null;
 
-	async function revokeAllAndSignOut(
-		goToSignedOut: (href: ReturnType<typeof signedOutHref>) => void,
-	) {
+	async function revokeAllAndSignOut() {
 		await revokeAllSessions({});
-		let notified = true;
-		try {
-			const result = await signOutAndClearLocalData();
-			notified = result.serverNotified;
-		} finally {
-			goToSignedOut(signedOutHref(notified));
-		}
+		const { serverNotified } = await signOutAndClearLocalData();
+		return serverNotified;
 	}
 
 	const actions = {

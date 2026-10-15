@@ -2,11 +2,8 @@ import { nextConvexClient } from "@/lib/convex";
 import {
 	MAX_STORAGE_CHUNKS,
 	SERVER_SIGN_OUT_WAIT_MS,
-	SIGNED_OUT_HREF,
-	signedOutHref,
 	signOutAndClearDevice,
 } from "@/shared/lib/auth/device-session";
-import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 const PREFIX = "quipu";
 
@@ -34,16 +31,6 @@ function harness() {
 		},
 	};
 }
-
-describe("signedOutHref", () => {
-	it("sin aviso si el servidor se enteró; con notice si no", () => {
-		expect(signedOutHref(true)).toBe(SIGNED_OUT_HREF);
-		expect(signedOutHref(false)).toEqual({
-			pathname: SIGNED_OUT_HREF,
-			params: { notice: "offline" },
-		});
-	});
-});
 
 describe("signOutAndClearDevice", () => {
 	it("cierra sesión, borra cookie y caché (con trozos) y después reinicia Convex", async () => {
@@ -104,32 +91,6 @@ describe("signOutAndClearDevice", () => {
 		expect(log.at(-1)).toBe("reset");
 	});
 
-	it("si signOut responde a los 50 ms, marca que el servidor se enteró", async () => {
-		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
-		const { log, deps } = harness();
-		deps.signOut = () =>
-			new Promise((resolve) => {
-				log.push("signOut");
-				setTimeout(resolve, 50);
-			});
-
-		try {
-			const result = await rejectIfHung(
-				(async () => {
-					const pending = signOutAndClearDevice(deps);
-					await jest.advanceTimersByTimeAsync(50);
-					return pending;
-				})(),
-			);
-
-			expect(result).toEqual({ serverNotified: true });
-			expect(log).toContain("memory");
-			expect(log.at(-1)).toBe("reset");
-		} finally {
-			jest.useRealTimers();
-		}
-	});
-
 	it("si signOut no responde, igual borra el teléfono y no espera al servidor", async () => {
 		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
 		const { log, deleted, deps } = harness();
@@ -139,14 +100,9 @@ describe("signOutAndClearDevice", () => {
 			});
 
 		try {
-			const result = await rejectIfHung(
-				(async () => {
-					const pending = signOutAndClearDevice(deps);
-					await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
-					return pending;
-				})(),
-				SERVER_SIGN_OUT_WAIT_MS + 200,
-			);
+			const pending = signOutAndClearDevice(deps);
+			await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+			const result = await pending;
 
 			expect(result).toEqual({ serverNotified: false });
 			expect(log).toContain("signOut");

@@ -42,19 +42,6 @@ export function signedOutHref(serverNotified: boolean) {
 	};
 }
 
-function sleep(ms: number) {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const promise = new Promise<void>((resolve) => {
-		timer = setTimeout(resolve, ms);
-	});
-	return {
-		promise,
-		cancel() {
-			if (timer !== undefined) clearTimeout(timer);
-		},
-	};
-}
-
 function secureKeysFor(prefix: string) {
 	const keys: string[] = [];
 	for (const suffix of SESSION_KEY_SUFFIXES) {
@@ -70,9 +57,12 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 		() => true,
 		() => false,
 	);
-	const wait = sleep(SERVER_SIGN_OUT_WAIT_MS);
-	const serverNotified = await Promise.race([server, wait.promise.then(() => false)]);
-	wait.cancel();
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timeout = new Promise<boolean>((resolve) => {
+		timer = setTimeout(() => resolve(false), SERVER_SIGN_OUT_WAIT_MS);
+	});
+	const serverNotified = await Promise.race([server, timeout]);
+	clearTimeout(timer);
 	await Promise.all(
 		secureKeysFor(deps.storagePrefix).map(async (key) => {
 			try {
