@@ -9,22 +9,13 @@ const mockBack = jest.fn();
 const mockReplace = jest.fn();
 const mockCanGoBack = jest.fn(() => false);
 
-jest.mock("expo-router", () => {
-	const React = require("react");
-	return {
-		useRouter: () => ({
-			back: mockBack,
-			canGoBack: () => mockCanGoBack(),
-			replace: mockReplace,
-		}),
-		useFocusEffect: (callback: () => undefined | (() => void)) => {
-			React.useEffect(() => {
-				const cleanup = callback();
-				return typeof cleanup === "function" ? cleanup : undefined;
-			}, [callback]);
-		},
-	};
-});
+jest.mock("expo-router", () => ({
+	useRouter: () => ({
+		back: mockBack,
+		canGoBack: () => mockCanGoBack(),
+		replace: mockReplace,
+	}),
+}));
 
 jest.mock("@/shared/components/ui/reicon", () => {
 	const { View } = require("react-native");

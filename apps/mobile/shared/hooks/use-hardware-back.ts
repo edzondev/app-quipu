@@ -1,8 +1,8 @@
-import { useFocusEffect } from "expo-router";
 import { useCallback, useEffectEvent } from "react";
 import { BackHandler } from "react-native";
+import { useFocusEffect } from "@/shared/navigation/use-focus-effect";
 
-/** Atrás de Android mientras la pantalla tiene foco; onBack no re-suscribe. */
+/** Atrás de Android solo con la pantalla en foco; onBack no re-suscribe. */
 export function useHardwareBack(onBack: () => void) {
 	const handleBack = useEffectEvent(() => {
 		onBack();

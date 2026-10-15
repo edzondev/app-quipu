@@ -7,23 +7,14 @@ const mockReplace = jest.fn();
 const mockCanGoBack = jest.fn(() => true);
 const mockUpdate = jest.fn();
 
-jest.mock("expo-router", () => {
-	const React = require("react");
-	return {
-		useRouter: () => ({
-			back: mockBack,
-			replace: mockReplace,
-			canGoBack: () => mockCanGoBack(),
-		}),
-		useLocalSearchParams: () => ({ id: "exp_1" }),
-		useFocusEffect: (callback: () => undefined | (() => void)) => {
-			React.useEffect(() => {
-				const cleanup = callback();
-				return typeof cleanup === "function" ? cleanup : undefined;
-			}, [callback]);
-		},
-	};
-});
+jest.mock("expo-router", () => ({
+	useRouter: () => ({
+		back: mockBack,
+		replace: mockReplace,
+		canGoBack: () => mockCanGoBack(),
+	}),
+	useLocalSearchParams: () => ({ id: "exp_1" }),
+}));
 
 jest.mock("@quipu/convex-api", () => ({ api: { movements: {}, expenses: {} } }), {
 	virtual: true,
