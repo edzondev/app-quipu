@@ -2,7 +2,7 @@ import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
-import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
+import { OFFLINE_SIGN_OUT_MESSAGE, signedOutHref } from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
@@ -13,6 +13,13 @@ jest.mock("expo-router", () => ({
 	Redirect: () => null,
 	router: { replace: mockReplace },
 	useIsFocused: () => true,
+	useLocalSearchParams: () => {
+		const last = mockReplace.mock.calls.at(-1)?.[0] as
+			| { params?: { notice?: string } }
+			| string
+			| undefined;
+		return last && typeof last === "object" ? (last.params ?? {}) : {};
+	},
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -143,8 +150,8 @@ describe("SettingsScreen", () => {
 		let release: () => void = () => undefined;
 		mockClear.mockImplementation(
 			() =>
-				new Promise<void>((resolve) => {
-					release = resolve;
+				new Promise<{ serverNotified: boolean }>((resolve) => {
+					release = () => resolve({ serverNotified: true });
 				}),
 		);
 		const view = await render(
@@ -192,7 +199,7 @@ describe("SettingsScreen", () => {
 		await act(async () => {
 			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
 		});
-		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		expect(mockReplace).toHaveBeenCalledWith(signedOutHref(false));
 		await ajustes.unmount();
 
 		const welcome = await render(<OnboardingIndexScreen />);

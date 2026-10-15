@@ -1,5 +1,4 @@
 const mockSignOut = jest.fn();
-const mockGet = jest.fn();
 const mockDelete = jest.fn();
 const mockReset = jest.fn();
 
@@ -19,7 +18,6 @@ jest.mock("@/lib/auth-client", () => ({
 }));
 
 jest.mock("expo-secure-store", () => ({
-	getItemAsync: (key: string) => mockGet(key),
 	deleteItemAsync: (key: string) => mockDelete(key),
 }));
 
@@ -35,7 +33,6 @@ describe("signOutAndClearLocalData", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockSignOut.mockResolvedValue({ error: null });
-		mockGet.mockResolvedValue(null);
 		mockDelete.mockResolvedValue(undefined);
 	});
 
@@ -43,8 +40,6 @@ describe("signOutAndClearLocalData", () => {
 		await signOutAndClearLocalData();
 
 		expect(mockSignOut).toHaveBeenCalledTimes(1);
-		expect(mockGet).toHaveBeenCalledWith("quipu_cookie");
-		expect(mockGet).toHaveBeenCalledWith("quipu_session_data");
 		expect(mockDelete).toHaveBeenCalledWith("quipu_cookie");
 		expect(mockDelete).toHaveBeenCalledWith("quipu_session_data");
 		expect(mockReset).toHaveBeenCalledTimes(1);

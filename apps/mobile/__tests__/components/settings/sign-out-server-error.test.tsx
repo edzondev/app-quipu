@@ -5,6 +5,7 @@ import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import {
 	OFFLINE_SIGN_OUT_MESSAGE,
 	SERVER_SIGN_OUT_WAIT_MS,
+	signedOutHref,
 } from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 import { rejectIfHung } from "@/test-utils/reject-if-hung";
@@ -22,6 +23,13 @@ jest.mock("expo-router", () => ({
 	Redirect: () => null,
 	router: { replace: mockReplace },
 	useIsFocused: () => true,
+	useLocalSearchParams: () => {
+		const last = mockReplace.mock.calls.at(-1)?.[0] as
+			| { params?: { notice?: string } }
+			| string
+			| undefined;
+		return last && typeof last === "object" ? (last.params ?? {}) : {};
+	},
 }));
 
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
@@ -109,7 +117,7 @@ describe("signOut HTTP error", () => {
 		});
 
 		expect(session.data).toBeNull();
-		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+		expect(mockReplace).toHaveBeenCalledWith(signedOutHref(false));
 		expect(ajustes.queryByText("upstream 500 raw")).toBeNull();
 		await ajustes.unmount();
 
@@ -146,7 +154,7 @@ describe("signOut HTTP error", () => {
 			);
 
 			expect(session.data).toBeNull();
-			expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+			expect(mockReplace).toHaveBeenCalledWith(signedOutHref(false));
 			await ajustes.unmount();
 
 			const welcome = await render(<OnboardingIndexScreen />);

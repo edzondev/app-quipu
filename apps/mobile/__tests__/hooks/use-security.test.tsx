@@ -1,6 +1,7 @@
 import { act, render } from "@testing-library/react-native";
 import { getFunctionName } from "convex/server";
 import { useSecurity } from "@/shared/hooks/use-security";
+import { signedOutHref } from "@/shared/lib/auth/device-session";
 
 const mockUseQuery = jest.fn();
 const mockUseMutation = jest.fn();
@@ -73,7 +74,7 @@ describe("useSecurity", () => {
 			throw new Error(`useMutation inesperado: ${name}`);
 		});
 		revokeAllMock.mockResolvedValue({ success: true });
-		mockClearLocal.mockResolvedValue(undefined);
+		mockClearLocal.mockResolvedValue({ serverNotified: true });
 		mockAddPasskey.mockResolvedValue({ data: { id: "pk" }, error: null });
 		mockDeletePasskey.mockResolvedValue({ data: { success: true }, error: null });
 		security = null;
@@ -91,14 +92,24 @@ describe("useSecurity", () => {
 		});
 		mockClearLocal.mockImplementation(async () => {
 			order.push("clear");
+			return { serverNotified: true };
 		});
 		await act(async () => {
 			await security?.revokeAllAndSignOut(goToSignedOut);
 		});
 		expect(revokeAllMock).toHaveBeenCalledWith({});
 		expect(mockClearLocal).toHaveBeenCalledTimes(1);
-		expect(goToSignedOut).toHaveBeenCalledTimes(1);
+		expect(goToSignedOut).toHaveBeenCalledWith(signedOutHref(true));
 		expect(order).toEqual(["revoke", "clear", "signed-out"]);
+	});
+
+	it("si el servidor no se enteró, navega con el aviso", async () => {
+		mockClearLocal.mockResolvedValue({ serverNotified: false });
+		const goToSignedOut = jest.fn();
+		await act(async () => {
+			await security?.revokeAllAndSignOut(goToSignedOut);
+		});
+		expect(goToSignedOut).toHaveBeenCalledWith(signedOutHref(false));
 	});
 
 	it("si el borrado local falla, igual navega a la entrada", async () => {
@@ -106,7 +117,7 @@ describe("useSecurity", () => {
 		const goToSignedOut = jest.fn();
 		await expect(security?.revokeAllAndSignOut(goToSignedOut)).rejects.toThrow("falló el cierre");
 		expect(revokeAllMock).toHaveBeenCalledTimes(1);
-		expect(goToSignedOut).toHaveBeenCalledTimes(1);
+		expect(goToSignedOut).toHaveBeenCalledWith(signedOutHref(true));
 	});
 
 	it("no limpia el teléfono si revokeAllSessions falla", async () => {

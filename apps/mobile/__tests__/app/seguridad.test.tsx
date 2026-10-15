@@ -40,17 +40,17 @@ describe("SeguridadPage", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		onRevokeAll = null;
-		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: () => void) => {
-			goToSignIn();
+		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: (href: string) => void) => {
+			goToSignIn("/(onboarding)");
 		});
 	});
 
 	it("si el cierre falla, igual navega a la entrada", async () => {
-		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: () => void) => {
+		mockRevokeAllAndSignOut.mockImplementation(async (goToSignIn: (href: string) => void) => {
 			try {
 				throw new Error("falló el cierre");
 			} finally {
-				goToSignIn();
+				goToSignIn("/(onboarding)");
 			}
 		});
 		await render(<SeguridadPage />);

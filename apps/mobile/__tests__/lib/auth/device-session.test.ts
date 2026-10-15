@@ -1,15 +1,17 @@
 import { nextConvexClient } from "@/lib/convex";
 import {
-	CHUNK_MARKER,
 	MAX_STORAGE_CHUNKS,
+	OFFLINE_SIGN_OUT_MESSAGE,
 	SERVER_SIGN_OUT_WAIT_MS,
+	SIGNED_OUT_HREF,
+	signedOutHref,
 	signOutAndClearDevice,
 } from "@/shared/lib/auth/device-session";
 import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 const PREFIX = "quipu";
 
-function harness(stored: Record<string, string | null> = {}) {
+function harness() {
 	const log: string[] = [];
 	const deleted: string[] = [];
 	return {
@@ -19,10 +21,6 @@ function harness(stored: Record<string, string | null> = {}) {
 			storagePrefix: PREFIX,
 			signOut: async () => {
 				log.push("signOut");
-			},
-			readSecure: async (key: string) => {
-				log.push(`read:${key}`);
-				return stored[key] ?? null;
 			},
 			deleteSecure: async (key: string) => {
 				log.push(`delete:${key}`);
@@ -37,6 +35,16 @@ function harness(stored: Record<string, string | null> = {}) {
 		},
 	};
 }
+
+describe("signedOutHref", () => {
+	it("sin aviso si el servidor se enteró; con notice si no", () => {
+		expect(signedOutHref(true)).toBe(SIGNED_OUT_HREF);
+		expect(signedOutHref(false)).toEqual({
+			pathname: "/(onboarding)",
+			params: { notice: OFFLINE_SIGN_OUT_MESSAGE },
+		});
+	});
+});
 
 describe("signOutAndClearDevice", () => {
 	it("cierra sesión, borra cookie y caché (con trozos) y después reinicia Convex", async () => {
@@ -57,24 +65,11 @@ describe("signOutAndClearDevice", () => {
 		expect(deleted).toContain(`${PREFIX}_cookie.0`);
 		expect(deleted).toContain(`${PREFIX}_session_data.${MAX_STORAGE_CHUNKS - 1}`);
 		expect(deleted).not.toContain(`${PREFIX}_cookie.${MAX_STORAGE_CHUNKS}`);
-	});
-
-	it("borra todos los trozos que indica el marcador de Better Auth", async () => {
-		const extra = MAX_STORAGE_CHUNKS + 4;
-		const { deleted, deps } = harness({
-			[`${PREFIX}_cookie`]: `${CHUNK_MARKER}${extra}`,
-		});
-
-		await signOutAndClearDevice(deps);
-
-		expect(deleted).toContain(`${PREFIX}_cookie.${extra - 1}`);
-		expect(deleted).not.toContain(`${PREFIX}_cookie.${extra}`);
+		expect(log).toContain("memory");
 	});
 
 	it("si signOut falla, igual borra el almacenamiento y reinicia Convex", async () => {
-		const { log, deleted, deps } = harness({
-			[`${PREFIX}_session_data`]: "usuario",
-		});
+		const { log, deleted, deps } = harness();
 		deps.signOut = async () => {
 			log.push("signOut");
 			throw new Error("red");
@@ -108,7 +103,7 @@ describe("signOutAndClearDevice", () => {
 			);
 
 			expect(result).toEqual({ serverNotified: true });
-			expect(log).not.toContain("memory");
+			expect(log).toContain("memory");
 			expect(log.at(-1)).toBe("reset");
 		} finally {
 			jest.useRealTimers();
@@ -117,9 +112,7 @@ describe("signOutAndClearDevice", () => {
 
 	it("si signOut no responde, igual borra el teléfono y no espera al servidor", async () => {
 		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
-		const { log, deleted, deps } = harness({
-			[`${PREFIX}_session_data`]: "usuario",
-		});
+		const { log, deleted, deps } = harness();
 		deps.signOut = () =>
 			new Promise(() => {
 				log.push("signOut");
@@ -154,7 +147,7 @@ describe("signOutAndClearDevice", () => {
 		};
 
 		await expect(signOutAndClearDevice(deps)).resolves.toEqual({ serverNotified: true });
-		expect(log).not.toContain("memory");
+		expect(log).toContain("memory");
 		expect(deleted).toContain(`${PREFIX}_session_data`);
 		expect(log.at(-1)).toBe("reset");
 	});
