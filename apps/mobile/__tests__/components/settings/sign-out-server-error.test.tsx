@@ -2,8 +2,12 @@ import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
-import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
+import {
+	OFFLINE_SIGN_OUT_MESSAGE,
+	SERVER_SIGN_OUT_WAIT_MS,
+} from "@/shared/lib/auth/device-session";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
+import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 const mockReplace = jest.fn();
 const mockSignOut = jest.fn();
@@ -67,16 +71,6 @@ jest.mock("@/shared/components/ui/reicon", () => ({
 	ChevronRight: () => null,
 }));
 
-function rejectIfHung<T>(promise: Promise<T>, ms = 200): Promise<T> {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const timeout = new Promise<never>((_, reject) => {
-		timer = setTimeout(() => reject(new Error("sign-out siguió esperando al servidor")), ms);
-	});
-	return Promise.race([promise, timeout]).finally(() => {
-		if (timer) clearTimeout(timer);
-	});
-}
-
 const model: SettingsScreenModel = {
 	initial: "E",
 	name: "Edzon Perez",
@@ -128,33 +122,40 @@ describe("signOut HTTP error", () => {
 	});
 
 	it("si el servidor no responde, limpia la sesión, avisa y deja la Bienvenida", async () => {
+		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
 		session.data = { session: { id: "sess" } };
 		mockSignOut.mockReturnValue(new Promise(() => undefined));
-		const ajustes = await render(
-			<SettingsScreen
-				status="ready"
-				model={model}
-				onClose={jest.fn()}
-				onOpenSecurity={jest.fn()}
-			/>,
-		);
-		await act(async () => {
-			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
-		});
-		await rejectIfHung(
-			act(async () => {
-				fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
-			}),
-		);
+		try {
+			const ajustes = await render(
+				<SettingsScreen
+					status="ready"
+					model={model}
+					onClose={jest.fn()}
+					onOpenSecurity={jest.fn()}
+				/>,
+			);
+			await act(async () => {
+				fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+			});
+			await rejectIfHung(
+				act(async () => {
+					fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+					await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+				}),
+				SERVER_SIGN_OUT_WAIT_MS + 200,
+			);
 
-		expect(session.data).toBeNull();
-		expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
-		await ajustes.unmount();
+			expect(session.data).toBeNull();
+			expect(mockReplace).toHaveBeenCalledWith("/(onboarding)");
+			await ajustes.unmount();
 
-		const welcome = await render(<OnboardingIndexScreen />);
-		expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
-		expect(welcome.getByText("Crear cuenta")).toBeTruthy();
-		expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
-		await welcome.unmount();
+			const welcome = await render(<OnboardingIndexScreen />);
+			expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
+			expect(welcome.getByText("Crear cuenta")).toBeTruthy();
+			expect(welcome.getByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeTruthy();
+			await welcome.unmount();
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 });

@@ -16,6 +16,9 @@ export const SIGNED_OUT_HREF = "/(onboarding)";
 export const OFFLINE_SIGN_OUT_MESSAGE =
 	"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.";
 
+/** Espera máxima a Better Auth antes de decidir que el servidor no se enteró. */
+export const SERVER_SIGN_OUT_WAIT_MS = 3000;
+
 export type AuthSessionSnapshot = {
 	data: unknown;
 	error: unknown;
@@ -102,12 +105,23 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 		}),
 	);
 
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	try {
+		await Promise.race([
+			server,
+			new Promise<void>((resolve) => {
+				timer = setTimeout(resolve, SERVER_SIGN_OUT_WAIT_MS);
+			}),
+		]);
+	} finally {
+		if (timer !== undefined) clearTimeout(timer);
+	}
+
 	if (!serverNotified) {
 		// El átomo de Better Auth sigue con la sesión si el fetch no termina.
 		deps.clearMemorySession();
 	}
 
 	deps.resetConvex();
-	await Promise.race([server, Promise.resolve()]);
 	return { serverNotified };
 }

@@ -2,20 +2,12 @@ import { nextConvexClient } from "@/lib/convex";
 import {
 	CHUNK_MARKER,
 	MAX_STORAGE_CHUNKS,
+	SERVER_SIGN_OUT_WAIT_MS,
 	signOutAndClearDevice,
 } from "@/shared/lib/auth/device-session";
+import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 const PREFIX = "quipu";
-
-function rejectIfHung<T>(promise: Promise<T>, ms = 200): Promise<T> {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const timeout = new Promise<never>((_, reject) => {
-		timer = setTimeout(() => reject(new Error("sign-out siguió esperando al servidor")), ms);
-	});
-	return Promise.race([promise, timeout]).finally(() => {
-		if (timer) clearTimeout(timer);
-	});
-}
 
 function harness(stored: Record<string, string | null> = {}) {
 	const log: string[] = [];
@@ -97,7 +89,34 @@ describe("signOutAndClearDevice", () => {
 		expect(log.at(-1)).toBe("reset");
 	});
 
+	it("si signOut responde a los 50 ms, marca que el servidor se enteró", async () => {
+		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
+		const { log, deps } = harness();
+		deps.signOut = () =>
+			new Promise((resolve) => {
+				log.push("signOut");
+				setTimeout(resolve, 50);
+			});
+
+		try {
+			const result = await rejectIfHung(
+				(async () => {
+					const pending = signOutAndClearDevice(deps);
+					await jest.advanceTimersByTimeAsync(50);
+					return pending;
+				})(),
+			);
+
+			expect(result).toEqual({ serverNotified: true });
+			expect(log).not.toContain("memory");
+			expect(log.at(-1)).toBe("reset");
+		} finally {
+			jest.useRealTimers();
+		}
+	});
+
 	it("si signOut no responde, igual borra el teléfono y no espera al servidor", async () => {
+		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
 		const { log, deleted, deps } = harness({
 			[`${PREFIX}_session_data`]: "usuario",
 		});
@@ -106,13 +125,24 @@ describe("signOutAndClearDevice", () => {
 				log.push("signOut");
 			});
 
-		const result = await rejectIfHung(signOutAndClearDevice(deps));
+		try {
+			const result = await rejectIfHung(
+				(async () => {
+					const pending = signOutAndClearDevice(deps);
+					await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+					return pending;
+				})(),
+				SERVER_SIGN_OUT_WAIT_MS + 200,
+			);
 
-		expect(result).toEqual({ serverNotified: false });
-		expect(log).toContain("signOut");
-		expect(log).toContain("memory");
-		expect(deleted).toContain(`${PREFIX}_session_data`);
-		expect(log.at(-1)).toBe("reset");
+			expect(result).toEqual({ serverNotified: false });
+			expect(log).toContain("signOut");
+			expect(log).toContain("memory");
+			expect(deleted).toContain(`${PREFIX}_session_data`);
+			expect(log.at(-1)).toBe("reset");
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 
 	it("si una clave no se puede borrar, sigue con el resto y reinicia Convex", async () => {

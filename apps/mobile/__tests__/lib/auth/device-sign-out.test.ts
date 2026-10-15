@@ -28,16 +28,8 @@ jest.mock("@/lib/convex", () => ({
 }));
 
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
-
-function rejectIfHung<T>(promise: Promise<T>, ms = 200): Promise<T> {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const timeout = new Promise<never>((_, reject) => {
-		timer = setTimeout(() => reject(new Error("sign-out siguió esperando al servidor")), ms);
-	});
-	return Promise.race([promise, timeout]).finally(() => {
-		if (timer) clearTimeout(timer);
-	});
-}
+import { SERVER_SIGN_OUT_WAIT_MS } from "@/shared/lib/auth/device-session";
+import { rejectIfHung } from "@/test-utils/reject-if-hung";
 
 describe("signOutAndClearLocalData", () => {
 	beforeEach(() => {
@@ -64,13 +56,25 @@ describe("signOutAndClearLocalData", () => {
 	});
 
 	it("si el servidor no responde, igual borra las claves y reinicia Convex", async () => {
+		jest.useFakeTimers({ doNotFake: ["nextTick", "queueMicrotask", "setImmediate"] });
 		mockSignOut.mockReturnValue(new Promise(() => undefined));
 
-		const result = await rejectIfHung(signOutAndClearLocalData());
+		try {
+			const result = await rejectIfHung(
+				(async () => {
+					const pending = signOutAndClearLocalData();
+					await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
+					return pending;
+				})(),
+				SERVER_SIGN_OUT_WAIT_MS + 200,
+			);
 
-		expect(result).toEqual({ serverNotified: false });
-		expect(mockDelete).toHaveBeenCalledWith("quipu_cookie");
-		expect(mockDelete).toHaveBeenCalledWith("quipu_session_data");
-		expect(mockReset).toHaveBeenCalledTimes(1);
+			expect(result).toEqual({ serverNotified: false });
+			expect(mockDelete).toHaveBeenCalledWith("quipu_cookie");
+			expect(mockDelete).toHaveBeenCalledWith("quipu_session_data");
+			expect(mockReset).toHaveBeenCalledTimes(1);
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 });
