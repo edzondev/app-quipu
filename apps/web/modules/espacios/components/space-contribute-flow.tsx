@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
+import { parseToCents } from "@/shared/lib/money";
 import { useContributeToSpace } from "../actions";
 import { SpaceEnvelopePicker, type SpaceEnvelopeType } from "./space-envelope-picker";
 
@@ -63,8 +64,8 @@ export function SpaceContributeFlow({ open, onOpenChange, spaceId }: Props) {
 						className="rounded-[11px] bg-ink px-4 py-2 text-sm font-semibold text-canvas"
 						disabled={pending}
 						onClick={() => {
-							const cents = Math.round(Number.parseFloat(amount) * 100);
-							if (!Number.isFinite(cents) || cents <= 0) {
+							const cents = parseToCents(amount);
+							if (cents == null || !Number.isFinite(cents) || cents <= 0) {
 								toast.error("Ingresa un monto válido.");
 								return;
 							}
