@@ -208,4 +208,21 @@ describe("MovementsList", () => {
 		expect(view.queryByText("Plaza Vea")).toBeNull();
 		expect(view.queryByText("exp_plaza")).toBeNull();
 	});
+
+	it("mientras carga mantiene título, filtros y un loader inline", async () => {
+		const view = await render(
+			<MovementsList
+				status="loading"
+				data={null}
+				now={NOW}
+				onOpenExpense={jest.fn()}
+				onCreate={jest.fn()}
+			/>,
+		);
+
+		expect(view.getByText("Movimientos")).toBeTruthy();
+		expect(view.getByLabelText("Buscar")).toBeTruthy();
+		expect(view.getByTestId("movement-filter-all")).toBeTruthy();
+		expect(view.getByText("Cargando…")).toBeTruthy();
+	});
 });

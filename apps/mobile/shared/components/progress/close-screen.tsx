@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { CloseScreenModel, CloseSegmentTone } from "@/shared/lib/progress/model";
 
@@ -37,9 +38,8 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 				<View className="w-[22px]" />
 			</View>
 
-			{status === "loading" ? (
-				<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-			) : model ? (
+			{status === "loading" ? <InlineLoading /> : null}
+			{model ? (
 				<ScrollView
 					className="flex-1"
 					contentContainerClassName="grow pb-8"
@@ -94,7 +94,8 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 					</View>
 					{footer}
 				</ScrollView>
-			) : (
+			) : null}
+			{status !== "loading" && !model ? (
 				<View className="flex-1 items-center justify-center">
 					<Text className="text-center font-newsreader text-[23px] leading-8 text-foreground">
 						Aún no hay un cierre.
@@ -113,7 +114,7 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 						</Text>
 					</Pressable>
 				</View>
-			)}
+			) : null}
 		</View>
 	);
 }

@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { ENVELOPE_LABELS } from "../shared/constants/envelopes";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import {
@@ -38,17 +39,6 @@ import { buildCoverageByIdFromCycleDocs } from "./lib/loadCycleCoverageContext";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
 const ENVELOPE_ORDER = ["needs", "wants", "savings"] as const;
-
-function envelopeLabel(type: "needs" | "wants" | "savings"): string {
-	switch (type) {
-		case "needs":
-			return "Necesidades";
-		case "wants":
-			return "Gustos";
-		case "savings":
-			return "Ahorro";
-	}
-}
 
 export const getSummary = query({
 	// Cache key only: the server decides everything with Date.now(). A new Lima day
@@ -215,7 +205,7 @@ export const getSummary = query({
 		).map((movement) => ({
 			...movement,
 			envelopeLabel: movement.envelopeLabel
-				? envelopeLabel(movement.envelopeLabel as "needs" | "wants" | "savings")
+				? ENVELOPE_LABELS[movement.envelopeLabel as "needs" | "wants" | "savings"]
 				: undefined,
 		}));
 

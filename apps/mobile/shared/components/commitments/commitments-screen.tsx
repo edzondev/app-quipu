@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import type {
 	CommitmentRowView,
 	CommitmentStatusTone,
@@ -46,9 +47,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 					{SUBTITLE}
 				</Text>
 
-				{status === "loading" ? (
-					<Text className="mt-6 font-hanken text-[15px] text-foreground/55">Cargando…</Text>
-				) : null}
+				{status === "loading" ? <InlineLoading /> : null}
 
 				{model ? <ReservedBlock model={model} empty={isEmpty} /> : null}
 

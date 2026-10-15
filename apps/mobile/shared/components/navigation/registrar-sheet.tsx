@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
 import { IncomeSheetForm } from "@/shared/components/income/income-sheet-form";
 import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
+import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { SheetHost } from "@/shared/components/ui/sheet-host";
 import { useDashboardSummary, useHomeModel } from "@/shared/hooks/use-dashboard";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
@@ -95,8 +96,8 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 
 	if (offer === "loading" || mode == null) {
 		return (
-			<View className="items-center justify-center py-16">
-				<Text className="font-hanken text-[15px] text-foreground/55">Cargando…</Text>
+			<View className="px-[22px] pt-1.5 pb-8">
+				<InlineLoading />
 			</View>
 		);
 	}

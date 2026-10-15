@@ -145,13 +145,6 @@ export const buildInvestigationBundle = internalQuery({
 	handler: async (ctx, args) => buildInvestigationBundleForProfile(ctx, args.profileId),
 });
 
-/** @deprecated Prefer `buildInvestigationBundle` (I5 — internal only). */
-export const getProfileInvestigationBundle = internalQuery({
-	args: { profileId: v.id("profiles") },
-	returns: investigationBundleValidator,
-	handler: async (ctx, args) => buildInvestigationBundleForProfile(ctx, args.profileId),
-});
-
 export const enqueueManualReviewFlag = internalMutation({
 	args: {
 		profileId: v.id("profiles"),
