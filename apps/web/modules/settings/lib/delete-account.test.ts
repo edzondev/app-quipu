@@ -92,6 +92,7 @@ describe("deleteAccount", () => {
 		const result = await deleteAccount({
 			password: "x",
 			email: "ada@example.com",
+			hasPassword: true,
 			canUsePasskey: true,
 		});
 		expect(result).toEqual({
@@ -100,6 +101,41 @@ describe("deleteAccount", () => {
 			code: "SESSION_EXPIRED",
 		});
 		expect(signInPasskey).not.toHaveBeenCalled();
+		expect(sendVerificationOtp).not.toHaveBeenCalled();
+	});
+
+	it("does not send OTP when a password user leaves the optional password empty", async () => {
+		deleteUser.mockResolvedValue({
+			error: { code: "SESSION_EXPIRED", message: "Session expired" },
+		});
+
+		const result = await deleteAccount({
+			email: "ada@example.com",
+			hasPassword: true,
+		});
+		expect(result).toEqual({
+			ok: false,
+			message: SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH,
+			code: "SESSION_EXPIRED",
+		});
+		expect(sendVerificationOtp).not.toHaveBeenCalled();
+		expect(signInPasskey).not.toHaveBeenCalled();
+	});
+
+	it("does not fall back to OTP when passkey fails for a password user", async () => {
+		deleteUser.mockResolvedValue({
+			error: { code: "SESSION_EXPIRED", message: "Session expired" },
+		});
+		signInPasskey.mockResolvedValue({
+			error: { code: "PASSKEY_FAILED", message: "canceled" },
+		});
+
+		const result = await deleteAccount({
+			email: "ada@example.com",
+			hasPassword: true,
+			canUsePasskey: true,
+		});
+		expect(result.ok).toBe(false);
 		expect(sendVerificationOtp).not.toHaveBeenCalled();
 	});
 

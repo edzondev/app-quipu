@@ -14,10 +14,25 @@ const TURNSTILE_AUTH_PATH_MARKERS = [
 	// Send x-cf-turnstile-token from the sign-in widget. In-session reauth
 	// (settings delete-account) is skipped when a session cookie is present.
 	"/sign-in/passkey",
+	"/sign-in/email-otp",
 	"/request-password-reset",
 	"/forget-password",
 	"/send-verification-email",
 ] as const;
+
+function pathMatchesAuthMarker(pathname: string, marker: string): boolean {
+	const index = pathname.indexOf(marker);
+	if (index === -1) return false;
+	const after = pathname[index + marker.length];
+	return after === undefined || after === "/" || after === "?";
+}
+
+function isInSessionReauthPath(pathname: string): boolean {
+	return (
+		pathMatchesAuthMarker(pathname, "/sign-in/passkey") ||
+		pathMatchesAuthMarker(pathname, "/sign-in/email-otp")
+	);
+}
 
 type TurnstileVerifyResponse = {
 	success: boolean;
@@ -30,7 +45,7 @@ export type TurnstileGuardResult =
 	| { blocked: true; status: 400 | 403 | 503; error: string };
 
 export function authPathRequiresTurnstile(pathname: string): boolean {
-	return TURNSTILE_AUTH_PATH_MARKERS.some((marker) => pathname.includes(marker));
+	return TURNSTILE_AUTH_PATH_MARKERS.some((marker) => pathMatchesAuthMarker(pathname, marker));
 }
 
 export function hasSessionCookie(cookieHeader: string | null | undefined): boolean {
@@ -85,9 +100,9 @@ export async function enforceAuthTurnstile(args: {
 
 	// Passkey registration lives under /passkey/* (not covered). Public
 	// passkey *sign-in* is POST /sign-in/passkey and requires Turnstile.
-	// Settings delete-account reauth uses the same path with an existing
-	// session cookie and has no widget — WebAuthn is enough there.
-	if (args.pathname.includes("/sign-in/passkey") && hasSessionCookie(args.cookieHeader)) {
+	// Settings delete-account reauth uses /sign-in/passkey or /sign-in/email-otp
+	// with an existing session cookie and has no widget.
+	if (isInSessionReauthPath(args.pathname) && hasSessionCookie(args.cookieHeader)) {
 		return { blocked: false };
 	}
 

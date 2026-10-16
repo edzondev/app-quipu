@@ -19,6 +19,11 @@ describe("decidePolarDeletionCancel", () => {
 		expect(decidePolarDeletionCancel({ id: "sub_1", status: "active" })).toBe("cancel");
 		expect(decidePolarDeletionCancel({ id: "sub_1", status: "trialing" })).toBe("cancel");
 	});
+
+	it("cancels past_due and unpaid subscriptions so Polar cannot keep dunning", () => {
+		expect(decidePolarDeletionCancel({ id: "sub_1", status: "past_due" })).toBe("cancel");
+		expect(decidePolarDeletionCancel({ id: "sub_1", status: "unpaid" })).toBe("cancel");
+	});
 });
 
 describe("isIgnorablePolarCancelError", () => {

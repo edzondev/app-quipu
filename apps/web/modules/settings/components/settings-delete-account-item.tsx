@@ -76,6 +76,7 @@ export function SettingsDeleteAccountItem({ className, hasPassword = true, email
 			otp: needsOtp ? otp : undefined,
 			email: email ?? undefined,
 			canUsePasskey: passkeySupport.webauthn,
+			hasPassword,
 		}).finally(() => {
 			setIsDeleting(false);
 		});

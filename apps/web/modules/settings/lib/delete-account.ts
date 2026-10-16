@@ -115,11 +115,13 @@ export async function deleteAccount(options?: {
 	otp?: string;
 	email?: string;
 	canUsePasskey?: boolean;
+	hasPassword?: boolean;
 }): Promise<DeleteAccountResult> {
 	const password = options?.password?.trim();
 	const otp = options?.otp?.trim();
 	const email = options?.email?.trim().toLowerCase();
 	const canUsePasskey = options?.canUsePasskey ?? false;
+	const passwordAccount = options?.hasPassword === true;
 
 	if (otp && email) {
 		const signedIn = await authClient.signIn.emailOtp({ email, otp });
@@ -141,13 +143,13 @@ export async function deleteAccount(options?: {
 			if (!second.error) return { ok: true };
 			return failure(second.error);
 		}
-		if (email) {
+		if (!passwordAccount && email) {
 			return sendDeleteAccountOtp(email);
 		}
 		return failure(first.error);
 	}
 
-	if (!password && email && isStaleSessionError(first.error)) {
+	if (!passwordAccount && email && isStaleSessionError(first.error)) {
 		return sendDeleteAccountOtp(email);
 	}
 

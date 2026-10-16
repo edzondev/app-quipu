@@ -1,4 +1,4 @@
-const BILLABLE_POLAR_STATUSES = new Set(["active", "trialing"]);
+const TERMINAL_POLAR_STATUSES = new Set(["canceled", "revoked"]);
 
 const IGNORABLE_POLAR_ERROR_NAMES = new Set(["AlreadyCanceledSubscription", "ResourceNotFound"]);
 
@@ -15,7 +15,7 @@ export function decidePolarDeletionCancel(
 	subscription: PolarDeletionLookup,
 ): PolarDeletionDecision {
 	if (subscription === null) return "none";
-	if (!BILLABLE_POLAR_STATUSES.has(subscription.status)) return "already_canceled";
+	if (TERMINAL_POLAR_STATUSES.has(subscription.status)) return "already_canceled";
 	return "cancel";
 }
 
