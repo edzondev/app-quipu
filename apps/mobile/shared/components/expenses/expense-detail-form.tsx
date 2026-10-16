@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
@@ -59,8 +59,8 @@ export function ExpenseDetailForm({
 		defaultValues: initial,
 		onSubmit: ({ value }) => onSubmit(value),
 	});
-	const amountRaw = useStore(form.store, (state) => state.values.amountRaw);
-	const envelopeType = useStore(form.store, (state) => state.values.envelopeType);
+	const amountRaw = useSelector(form.store, (state) => state.values.amountRaw);
+	const envelopeType = useSelector(form.store, (state) => state.values.envelopeType);
 	const [envelopeOpen, setEnvelopeOpen] = useState(false);
 	const remaining =
 		dailyCents == null

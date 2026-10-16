@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -55,7 +55,7 @@ export default function RecuperarScreen() {
 			setSent(true);
 		},
 	});
-	const email = useStore(form.store, (state) => state.values.email.trim());
+	const email = useSelector(form.store, (state) => state.values.email.trim());
 
 	return (
 		<AppShell>

@@ -1,5 +1,5 @@
 import { api } from "@quipu/convex-api";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { useQuery } from "convex/react";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
@@ -98,8 +98,8 @@ export default function SignInScreen() {
 		},
 		setSubmitError,
 	);
-	const email = useStore(form.store, (state) => state.values.email.trim().toLowerCase());
-	const password = useStore(form.store, (state) => state.values.password);
+	const email = useSelector(form.store, (state) => state.values.email.trim().toLowerCase());
+	const password = useSelector(form.store, (state) => state.values.password);
 
 	if (hasSession && profile === undefined) return null;
 	if (hasSession) {

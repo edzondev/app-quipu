@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { EnvelopeChoices } from "@/shared/components/expenses/envelope-choices";
 import { ErrorText } from "@/shared/components/forms/field-error";
@@ -51,8 +51,8 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 			}
 		},
 	});
-	const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
-	const formError = useStore(form.store, (state) => formErrorMessage(state.errorMap.onSubmit));
+	const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+	const formError = useSelector(form.store, (state) => formErrorMessage(state.errorMap.onSubmit));
 
 	return (
 		<View className="flex-1 px-[22px] pt-1.5 pb-8">

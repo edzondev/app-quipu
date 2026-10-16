@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CommitmentRow } from "@/modules/onboarding/components/commitment-row";
@@ -31,7 +31,7 @@ export function Step4Commitments() {
 			dispatch({ type: "SET_STEP", payload: 5 });
 		},
 	});
-	const rows = useStore(form.store, (store) => store.values.rows);
+	const rows = useSelector(form.store, (store) => store.values.rows);
 	const totalCents = validCommitmentsTotalCents(commitmentsFromRows(rows));
 	const blocked = attempted && rows.some((row) => !isCommitmentRowReady(row));
 
