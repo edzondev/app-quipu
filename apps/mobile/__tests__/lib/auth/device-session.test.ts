@@ -1,6 +1,8 @@
 import { nextConvexClient } from "@/lib/convex";
 import {
 	MAX_STORAGE_CHUNKS,
+	OFFLINE_SIGN_OUT_MESSAGE,
+	offlineSignOutNotice,
 	SERVER_SIGN_OUT_WAIT_MS,
 	signOutAndClearDevice,
 } from "@/shared/lib/auth/device-session";
@@ -31,6 +33,18 @@ function harness() {
 		},
 	};
 }
+
+describe("offlineSignOutNotice", () => {
+	it("usa el aviso acordado cuando Expo manda string o lista", () => {
+		expect(OFFLINE_SIGN_OUT_MESSAGE).toBe(
+			"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.",
+		);
+		expect(offlineSignOutNotice("offline")).toBe(OFFLINE_SIGN_OUT_MESSAGE);
+		expect(offlineSignOutNotice(["offline"])).toBe(OFFLINE_SIGN_OUT_MESSAGE);
+		expect(offlineSignOutNotice("online")).toBeNull();
+		expect(offlineSignOutNotice(undefined)).toBeNull();
+	});
+});
 
 describe("signOutAndClearDevice", () => {
 	it("cierra sesión, borra cookie y caché (con trozos) y después reinicia Convex", async () => {
