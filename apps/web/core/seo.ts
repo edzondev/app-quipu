@@ -133,4 +133,6 @@ export const privateRoutePrefixes = [
 	"/settings",
 	"/income",
 	"/auth",
+	"/espacios",
+	"/cycle/",
 ] as const;
