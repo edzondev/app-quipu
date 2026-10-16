@@ -133,4 +133,13 @@ export const privateRoutePrefixes = [
 	"/settings",
 	"/income",
 	"/auth",
+	"/espacios",
+	"/cycle",
 ] as const;
+
+/** Segment-aware: `/cycle` matches `/cycle` and `/cycle/correct`, not `/cycles-info`. */
+export function isPrivateRoute(pathname: string): boolean {
+	return privateRoutePrefixes.some(
+		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+	);
+}
