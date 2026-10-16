@@ -11,12 +11,8 @@ describe("decidePolarDeletionCancel", () => {
 	});
 
 	it("skips when the subscription is already canceled", () => {
-		expect(decidePolarDeletionCancel({ id: "sub_1", status: "canceled" })).toBe(
-			"already_canceled",
-		);
-		expect(decidePolarDeletionCancel({ id: "sub_1", status: "revoked" })).toBe(
-			"already_canceled",
-		);
+		expect(decidePolarDeletionCancel({ id: "sub_1", status: "canceled" })).toBe("already_canceled");
+		expect(decidePolarDeletionCancel({ id: "sub_1", status: "revoked" })).toBe("already_canceled");
 	});
 
 	it("cancels active and trialing subscriptions", () => {

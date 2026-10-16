@@ -128,7 +128,7 @@ export function SettingsAccountView() {
 				</div>
 			</div>
 
-			<SettingsAccountActions />
+			<SettingsAccountActions hasPassword={overview.hasPassword} email={overview.profile.email} />
 		</AppPageShell>
 	);
 }

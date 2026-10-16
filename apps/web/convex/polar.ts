@@ -1,6 +1,12 @@
 import { Polar } from "@convex-dev/polar";
+import { subscriptionsUpdate } from "@polar-sh/sdk/funcs/subscriptionsUpdate.js";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
+import type { ActionCtx, MutationCtx, QueryCtx } from "./_generated/server";
+import {
+	cancelPolarSubscriptionForDeletion,
+	type PolarDeletionOutcome,
+} from "./lib/cancelPolarForDeletion";
 
 /**
  * Quipu Plus: 2 productos Polar (mensual + anual).
@@ -50,3 +56,27 @@ export const {
 	changeCurrentSubscription,
 	listAllSubscriptions,
 } = polar.api();
+
+export async function revokePolarSubscription(subscriptionId: string): Promise<void> {
+	const updated = await subscriptionsUpdate(polar.polar, {
+		id: subscriptionId,
+		subscriptionUpdate: { revoke: true },
+	});
+	if (!updated.ok) {
+		throw updated.error;
+	}
+}
+
+export async function cancelPolarSubscriptionForUserId(
+	ctx: QueryCtx | MutationCtx | ActionCtx,
+	userId: string,
+): Promise<PolarDeletionOutcome> {
+	return cancelPolarSubscriptionForDeletion({
+		getCurrent: async () => {
+			const subscription = await polar.getCurrentSubscription(ctx, { userId });
+			if (!subscription) return null;
+			return { id: subscription.id, status: subscription.status };
+		},
+		cancel: revokePolarSubscription,
+	});
+}

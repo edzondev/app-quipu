@@ -163,9 +163,9 @@ describe("deleteAccount", () => {
 		signInEmailOtp.mockResolvedValue({ error: null });
 		deleteUser.mockResolvedValue({ error: null });
 
-		await expect(
-			deleteAccount({ email: " ada@example.com ", otp: " 482913 " }),
-		).resolves.toEqual({ ok: true });
+		await expect(deleteAccount({ email: " ada@example.com ", otp: " 482913 " })).resolves.toEqual({
+			ok: true,
+		});
 		expect(signInEmailOtp).toHaveBeenCalledWith({
 			email: "ada@example.com",
 			otp: "482913",

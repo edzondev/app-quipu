@@ -21,6 +21,8 @@ import {
 	SETTINGS_DELETE_ACCOUNT_CANCEL,
 	SETTINGS_DELETE_ACCOUNT_CONFIRM,
 	SETTINGS_DELETE_ACCOUNT_ERROR,
+	SETTINGS_DELETE_ACCOUNT_OTP_LABEL,
+	SETTINGS_DELETE_ACCOUNT_OTP_PLACEHOLDER,
 	SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL,
 	SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
 	SETTINGS_DELETE_ACCOUNT_TITLE,
@@ -30,6 +32,8 @@ import { deleteAccount } from "../lib/delete-account";
 
 type Props = {
 	className?: string;
+	hasPassword?: boolean;
+	email?: string | null;
 };
 
 /**
@@ -38,19 +42,23 @@ type Props = {
  * deliberada. El borrado en cascada lo ejecuta el trigger onDelete del
  * backend (convex/auth.ts → profiles.deleteAllDataForProfile).
  *
- * Better Auth exige sesión fresh (<24h) o contraseña. Si la sesión es vieja
- * (común con passkey), reautenticamos con passkey y reintentamos.
+ * Better Auth exige sesión fresh (<24h) o contraseña. Sin contraseña, un
+ * código por correo refresca la sesión. Polar se cancela en beforeDelete.
  */
-export function SettingsDeleteAccountItem({ className }: Props) {
+export function SettingsDeleteAccountItem({ className, hasPassword = true, email }: Props) {
 	const router = useRouter();
 	const passkeySupport = usePasskeySupport();
 	const [open, setOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [password, setPassword] = useState("");
+	const [otp, setOtp] = useState("");
+	const [needsOtp, setNeedsOtp] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const resetLocalState = () => {
 		setPassword("");
+		setOtp("");
+		setNeedsOtp(false);
 		setErrorMessage(null);
 		setIsDeleting(false);
 	};
@@ -64,12 +72,17 @@ export function SettingsDeleteAccountItem({ className }: Props) {
 		setIsDeleting(true);
 		setErrorMessage(null);
 		const result = await deleteAccount({
-			password,
+			password: hasPassword ? password : undefined,
+			otp: needsOtp ? otp : undefined,
+			email: email ?? undefined,
 			canUsePasskey: passkeySupport.webauthn,
 		}).finally(() => {
 			setIsDeleting(false);
 		});
 		if (!result.ok) {
+			if (result.needsOtp) {
+				setNeedsOtp(true);
+			}
 			setErrorMessage(result.message || SETTINGS_DELETE_ACCOUNT_ERROR);
 			return;
 		}
@@ -77,9 +90,11 @@ export function SettingsDeleteAccountItem({ className }: Props) {
 		router.refresh();
 	};
 
+	const showPasswordField = hasPassword && !needsOtp;
+	const showOtpField = needsOtp;
+
 	return (
 		<>
-			{/* Enlace discreto: la destructiva NO debe ser el CTA con más peso de la página. */}
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
@@ -99,21 +114,40 @@ export function SettingsDeleteAccountItem({ className }: Props) {
 						</AlertDialogTitle>
 						<AlertDialogDescription>{SETTINGS_DELETE_ACCOUNT_BODY}</AlertDialogDescription>
 					</AlertDialogHeader>
-					<div className="space-y-1.5">
-						<label htmlFor="delete-account-password" className="text-[12.5px] text-mute">
-							{SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL}
-						</label>
-						<Input
-							id="delete-account-password"
-							type="password"
-							autoComplete="current-password"
-							value={password}
-							disabled={isDeleting}
-							placeholder={SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER}
-							onChange={(event) => setPassword(event.target.value)}
-							className="h-11 rounded-[11px]"
-						/>
-					</div>
+					{showPasswordField ? (
+						<div className="space-y-1.5">
+							<label htmlFor="delete-account-password" className="text-[12.5px] text-mute">
+								{SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL}
+							</label>
+							<Input
+								id="delete-account-password"
+								type="password"
+								autoComplete="current-password"
+								value={password}
+								disabled={isDeleting}
+								placeholder={SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER}
+								onChange={(event) => setPassword(event.target.value)}
+								className="h-11 rounded-[11px]"
+							/>
+						</div>
+					) : null}
+					{showOtpField ? (
+						<div className="space-y-1.5">
+							<label htmlFor="delete-account-otp" className="text-[12.5px] text-mute">
+								{SETTINGS_DELETE_ACCOUNT_OTP_LABEL}
+							</label>
+							<Input
+								id="delete-account-otp"
+								inputMode="numeric"
+								autoComplete="one-time-code"
+								value={otp}
+								disabled={isDeleting}
+								placeholder={SETTINGS_DELETE_ACCOUNT_OTP_PLACEHOLDER}
+								onChange={(event) => setOtp(event.target.value)}
+								className="h-11 rounded-[11px]"
+							/>
+						</div>
+					) : null}
 					{errorMessage ? (
 						<p className="text-center text-[12.5px] text-danger-ink" role="alert">
 							{errorMessage}
@@ -125,7 +159,7 @@ export function SettingsDeleteAccountItem({ className }: Props) {
 						</AlertDialogCancel>
 						<Button
 							onClick={handleDelete}
-							disabled={isDeleting}
+							disabled={isDeleting || (needsOtp && otp.trim().length === 0)}
 							className="bg-danger text-canvas hover:bg-danger/90"
 						>
 							{isDeleting ? SETTINGS_DELETE_ACCOUNT_WORKING : SETTINGS_DELETE_ACCOUNT_CONFIRM}

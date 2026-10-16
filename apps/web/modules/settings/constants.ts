@@ -73,8 +73,14 @@ export const SETTINGS_DELETE_ACCOUNT_ERROR = "No pudimos eliminar tu cuenta. Int
 export const SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH =
 	"Por seguridad, confirma con passkey o escribe tu contraseña.";
 export const SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD = "La contraseña no es correcta.";
+export const SETTINGS_DELETE_ACCOUNT_ERROR_OTP = "El código no es correcto. Pide uno nuevo.";
+export const SETTINGS_DELETE_ACCOUNT_ERROR_POLAR =
+	"No pudimos cancelar tu suscripción. Intenta de nuevo.";
 export const SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL = "Contraseña (si usas una)";
 export const SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = "Opcional si acabas de entrar";
+export const SETTINGS_DELETE_ACCOUNT_OTP_LABEL = "Código del correo";
+export const SETTINGS_DELETE_ACCOUNT_OTP_PLACEHOLDER = "6 dígitos";
+export const SETTINGS_DELETE_ACCOUNT_OTP_SENT = "Te enviamos un código a tu correo para confirmar.";
 
 export const SETTINGS_SYSTEM_HEADING = "Tu sistema";
 
