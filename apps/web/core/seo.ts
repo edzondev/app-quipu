@@ -121,7 +121,11 @@ export const privateAreaMetadata: Metadata = {
 /** Rutas públicas indexables (sitemap + robots allow). */
 export const publicRoutes = ["/", "/sign-in", "/sign-up", "/terminos", "/privacidad"] as const;
 
-/** Prefijos que no deben indexarse ni aparecer en sitemap. */
+/**
+ * Prefijos que no deben indexarse ni aparecer en sitemap.
+ * Interpret as path segments (`path === prefix || path.startsWith(prefix + "/")`),
+ * not raw `startsWith`, so `/cycle` does not catch `/cycles-info`.
+ */
 export const privateRoutePrefixes = [
 	"/api",
 	"/dashboard",
@@ -136,10 +140,3 @@ export const privateRoutePrefixes = [
 	"/espacios",
 	"/cycle",
 ] as const;
-
-/** Segment-aware: `/cycle` matches `/cycle` and `/cycle/correct`, not `/cycles-info`. */
-export function isPrivateRoute(pathname: string): boolean {
-	return privateRoutePrefixes.some(
-		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-	);
-}
