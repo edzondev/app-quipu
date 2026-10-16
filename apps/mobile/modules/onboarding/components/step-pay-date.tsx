@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { Text, View } from "react-native";
 import { PayDateField } from "@/modules/onboarding/components/pay-date-field";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
@@ -30,7 +30,7 @@ export function StepPayDate() {
 			dispatch({ type: "SET_STEP", payload: 3 });
 		},
 	});
-	const nextPayDate = useStore(form.store, (store) => store.values.nextPayDate);
+	const nextPayDate = useSelector(form.store, (store) => store.values.nextPayDate);
 	const canContinue = isAllowedPayDate(nextPayDate, Date.now());
 
 	return (

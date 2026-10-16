@@ -6,9 +6,13 @@ import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
 const mockUseHomeModel = jest.fn();
 const mockSummary = jest.fn();
 
-jest.mock("@/shared/components/ui/reicon", () => ({
-	ChevronRight: () => null,
-}));
+jest.mock("@/shared/components/ui/reicon", () => {
+	const Icon = () => null;
+	return new Proxy(
+		{ __esModule: true },
+		{ get: (target, prop) => (prop in target ? target[prop as keyof typeof target] : Icon) },
+	);
+});
 
 jest.mock("@expo/ui", () => {
 	const { View } = require("react-native");

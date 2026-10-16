@@ -1,12 +1,9 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { Camera } from "reicon-react-native/icons/Camera";
-import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
-import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
 import { ErrorText } from "@/shared/components/forms/field-error";
-import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
+import { ChevronLeft, ChevronRight } from "@/shared/components/ui/reicon";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
 import type { FrequentExpense } from "@/shared/lib/expenses/expense-record";
 import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
@@ -62,8 +59,8 @@ export function ExpenseDetailForm({
 		defaultValues: initial,
 		onSubmit: ({ value }) => onSubmit(value),
 	});
-	const amountRaw = useStore(form.store, (state) => state.values.amountRaw);
-	const envelopeType = useStore(form.store, (state) => state.values.envelopeType);
+	const amountRaw = useSelector(form.store, (state) => state.values.amountRaw);
+	const envelopeType = useSelector(form.store, (state) => state.values.envelopeType);
 	const [envelopeOpen, setEnvelopeOpen] = useState(false);
 	const remaining =
 		dailyCents == null
@@ -85,7 +82,7 @@ export function ExpenseDetailForm({
 						hitSlop={HIT_SLOP}
 						onPress={onBack}
 					>
-						<ChevronLeft size={22} color="#1A1A1A" />
+						<ChevronLeft size={22} colorClassName="accent-foreground" />
 					</Pressable>
 					<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
 						{mode === "edit" ? "EDITAR GASTO" : "REGISTRAR GASTO"}
@@ -127,7 +124,7 @@ export function ExpenseDetailForm({
 									onChangeText={field.handleChange}
 									onBlur={field.handleBlur}
 									placeholder="Opcional"
-									placeholderTextColor="#8C8880"
+									placeholderTextColorClassName="accent-foreground/45"
 									maxLength={120}
 									accessibilityLabel="Comercio"
 									className="min-w-[140px] flex-1 text-right font-hanken-semibold text-[15.5px] text-foreground"
@@ -151,7 +148,7 @@ export function ExpenseDetailForm({
 							<Text className="font-hanken-semibold text-[15.5px] text-foreground">
 								{envelopeChoiceLabel(envelopeType)}
 							</Text>
-							<ChevronRight size={16} color="#9A968C" />
+							<ChevronRight size={16} colorClassName="accent-foreground/45" />
 						</Pressable>
 					</DetailRow>
 					{envelopeOpen ? (
@@ -173,11 +170,6 @@ export function ExpenseDetailForm({
 							{formatExpenseWhen(timestamp)}
 						</Text>
 					</DetailRow>
-					{HIDDEN_UNTIL_READY.expenseNote ? null : (
-						<DetailRow label="Nota">
-							<Text className="font-hanken text-[15.5px] text-foreground/35">Opcional</Text>
-						</DetailRow>
-					)}
 				</View>
 
 				{frecuentes.length > 0 ? (
@@ -204,16 +196,6 @@ export function ExpenseDetailForm({
 						</View>
 					</View>
 				) : null}
-
-				{HIDDEN_UNTIL_READY.attachReceipt ? null : (
-					<View className="mt-5 flex-row items-center gap-2.5 rounded-[13px] bg-foreground/5 px-4 py-3.5">
-						<Camera size={19} color="#3C7D6E" />
-						<Text className="font-hanken-semibold text-[13.5px] text-foreground">
-							Adjuntar boleta
-						</Text>
-						<Text className="ml-auto font-geist-mono text-[11.5px] text-foreground/45">OCR</Text>
-					</View>
-				)}
 			</ScrollView>
 
 			<View className="px-[22px] pb-2">

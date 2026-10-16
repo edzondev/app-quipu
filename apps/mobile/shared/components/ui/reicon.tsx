@@ -1,12 +1,26 @@
+import { Backspace as ReiconBackspace } from "reicon-react-native/icons/Backspace";
+import { ChartBar as ReiconChartBar } from "reicon-react-native/icons/ChartBar";
 import { Check as ReiconCheck } from "reicon-react-native/icons/Check";
 import { ChevronLeft as ReiconChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { ChevronRight as ReiconChevronRight } from "reicon-react-native/icons/ChevronRight";
+import { Envelope as ReiconEnvelope } from "reicon-react-native/icons/Envelope";
+import { Home as ReiconHome } from "reicon-react-native/icons/Home";
+import { Lock as ReiconLock } from "reicon-react-native/icons/Lock";
+import { ReceiptText as ReiconReceiptText } from "reicon-react-native/icons/ReceiptText";
+import { Search as ReiconSearch } from "reicon-react-native/icons/Search";
 import { WifiOff as ReiconWifiOff } from "reicon-react-native/icons/WifiOff";
 import { X as ReiconX } from "reicon-react-native/icons/X";
 import { withUniwind } from "uniwind";
 
+export const Backspace = withUniwind(ReiconBackspace);
+export const ChartBar = withUniwind(ReiconChartBar);
 export const Check = withUniwind(ReiconCheck);
 export const ChevronLeft = withUniwind(ReiconChevronLeft);
 export const ChevronRight = withUniwind(ReiconChevronRight);
+export const Envelope = withUniwind(ReiconEnvelope);
+export const Home = withUniwind(ReiconHome);
+export const Lock = withUniwind(ReiconLock);
+export const ReceiptText = withUniwind(ReiconReceiptText);
+export const Search = withUniwind(ReiconSearch);
 export const WifiOff = withUniwind(ReiconWifiOff);
 export const X = withUniwind(ReiconX);

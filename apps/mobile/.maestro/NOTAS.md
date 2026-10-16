@@ -19,7 +19,7 @@ No están: passkeys, código de correo, sin internet, medianoche, rotación, acc
 
 ## testID que faltan
 
-Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amount-input`, `pay-date-field`, `allocation-percent-needs`, `allocation-increase-needs`, `allocation-reset`, `chip-agua`, `commitment-amount-0`, `commitment-day-0`, `commitments-skip`, `commitments-total`, `confirm-*`, `wizard-back`, `income-mode-new-cycle`, `income-mode-add`, `income-extra-types`, `income-extra-custom`, `income-submit` y `progress-preview-live` (solo si el build es de desarrollo).
+Los flujos ya usan `option-*`, `freq-option-*`, `cycle-pill-*`, `source-*`, `amount-input`, `pay-date-field`, `allocation-percent-needs`, `allocation-increase-needs`, `allocation-reset`, `chip-agua`, `commitment-amount-0`, `commitment-day-0`, `commitments-skip`, `commitments-total`, `confirm-*`, `wizard-back`, `income-mode-new-cycle`, `income-mode-add`, `income-extra-types`, `income-extra-custom` e `income-submit`.
 
 | testID propuesto | Pantalla | Archivo | Elemento | Flujo |
 |---|---|---|---|---|

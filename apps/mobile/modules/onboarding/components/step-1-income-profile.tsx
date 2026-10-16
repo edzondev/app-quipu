@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AmountInput } from "@/modules/onboarding/components/amount-input";
 import { FrequencyPicker } from "@/modules/onboarding/components/frequency-picker";
@@ -111,10 +111,10 @@ export function Step1IncomeProfile() {
 			dispatch({ type: "SET_STEP", payload: 2 });
 		},
 	});
-	const incomeModel = useStore(form.store, (s) => s.values.incomeModel);
-	const payFrequency = useStore(form.store, (s) => s.values.payFrequency);
-	const sources = useStore(form.store, (s) => s.values.sources);
-	const cycleDays = useStore(form.store, (s) => s.values.cycleDurationDays);
+	const incomeModel = useSelector(form.store, (s) => s.values.incomeModel);
+	const payFrequency = useSelector(form.store, (s) => s.values.payFrequency);
+	const sources = useSelector(form.store, (s) => s.values.sources);
+	const cycleDays = useSelector(form.store, (s) => s.values.cycleDurationDays);
 	const asksPayday = incomeModel === "fixed" || incomeModel === "mixed";
 
 	const addSource = () => {

@@ -69,14 +69,12 @@ describe("SobresScreen", () => {
 	});
 
 	it("muestra barra y ritmo, y deja solo registrar gasto", async () => {
-		const onMoveMoney = jest.fn();
 		const onRegisterExpense = jest.fn();
 		const view = await render(
 			<SobresScreen
 				status="ready"
 				screen={screen}
 				onBack={jest.fn()}
-				onMoveMoney={onMoveMoney}
 				onRegisterExpense={onRegisterExpense}
 			/>,
 		);
@@ -105,7 +103,6 @@ describe("SobresScreen", () => {
 		expect(view.queryByText("Mover dinero")).toBeNull();
 		expect(view.queryByRole("button", { name: "Mover dinero" })).toBeNull();
 		await press(view.getByText("Registrar gasto"));
-		expect(onMoveMoney).not.toHaveBeenCalled();
 		expect(onRegisterExpense).toHaveBeenCalledTimes(1);
 	});
 
@@ -115,7 +112,6 @@ describe("SobresScreen", () => {
 				status="loading"
 				screen={null}
 				onBack={jest.fn()}
-				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
 		);
@@ -128,7 +124,6 @@ describe("SobresScreen", () => {
 				status="empty"
 				screen={null}
 				onBack={jest.fn()}
-				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
 		);
@@ -153,7 +148,6 @@ describe("SobresScreen", () => {
 				status="ready"
 				screen={withCarry}
 				onBack={jest.fn()}
-				onMoveMoney={jest.fn()}
 				onRegisterExpense={jest.fn()}
 			/>,
 		);
@@ -164,13 +158,7 @@ describe("SobresScreen", () => {
 	it("vuelve atrás con ChevronLeft", async () => {
 		const onBack = jest.fn();
 		const view = await render(
-			<SobresScreen
-				status="ready"
-				screen={screen}
-				onBack={onBack}
-				onMoveMoney={jest.fn()}
-				onRegisterExpense={jest.fn()}
-			/>,
+			<SobresScreen status="ready" screen={screen} onBack={onBack} onRegisterExpense={jest.fn()} />,
 		);
 		await press(view.getByLabelText("Volver"));
 		expect(onBack).toHaveBeenCalledTimes(1);

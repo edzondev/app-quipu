@@ -1,6 +1,9 @@
 import type { BottomTabBarButtonProps } from "expo-router/tabs";
 import { Pressable } from "react-native";
-import { Add } from "reicon-react-native/icons/Add";
+import { Add as ReiconAdd } from "reicon-react-native/icons/Add";
+import { withUniwind } from "uniwind";
+
+const Add = withUniwind(ReiconAdd);
 
 type Props = BottomTabBarButtonProps & {
 	/** Acción personalizada del FAB. Si se omite, no hace nada. */
@@ -29,7 +32,7 @@ export default function RegistrarTabButton({ onPress: customOnPress, ...props }:
 				boxShadow: "0 6px 14px rgba(0, 0, 0, 0.18)",
 			}}
 		>
-			<Add size={26} color="#FFFFFF" strokeWidth={2} />
+			<Add size={26} colorClassName="accent-background" strokeWidth={2} />
 		</Pressable>
 	);
 }

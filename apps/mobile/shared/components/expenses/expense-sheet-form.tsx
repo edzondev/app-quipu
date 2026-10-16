@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import type { ExpenseDraftInput, ExpenseField } from "@/shared/lib/expenses/draft";
@@ -46,7 +46,7 @@ export function ExpenseSheetForm({
 		defaultValues: DEFAULT_VALUES,
 		onSubmit: ({ value }) => onSubmit(toDraft(value)),
 	});
-	const amountCents = useStore(form.store, (state) => state.values.amountCents);
+	const amountCents = useSelector(form.store, (state) => state.values.amountCents);
 	const remaining = dailyCents == null ? null : remainingAfterExpense(dailyCents, amountCents);
 
 	return (
@@ -79,7 +79,7 @@ export function ExpenseSheetForm({
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Comercio"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							maxLength={120}
 							accessibilityLabel="Comercio"
 							className="flex-1 font-hanken text-[16px] text-foreground"

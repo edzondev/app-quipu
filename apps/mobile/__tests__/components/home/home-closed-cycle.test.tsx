@@ -40,11 +40,13 @@ jest.mock("@/shared/hooks/use-profile-gate", () => ({
 	}),
 }));
 
-jest.mock("@/shared/components/ui/reicon", () => ({
-	ChevronRight: () => null,
-	X: () => null,
-	Check: () => null,
-}));
+jest.mock("@/shared/components/ui/reicon", () => {
+	const Icon = () => null;
+	return new Proxy(
+		{ __esModule: true },
+		{ get: (target, prop) => (prop in target ? target[prop as keyof typeof target] : Icon) },
+	);
+});
 
 jest.mock("@/shared/components/app-shell", () => {
 	const { View } = require("react-native");

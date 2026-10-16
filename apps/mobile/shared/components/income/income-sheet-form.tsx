@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { Pressable, Text, View } from "react-native";
 import { ExpenseKeypad, KeypadAmount } from "@/shared/components/expenses/expense-keypad";
 import { ErrorText } from "@/shared/components/forms/field-error";
@@ -110,12 +110,12 @@ export function IncomeSheetForm({
 				}),
 			),
 	});
-	const amountCents = useStore(form.store, (state) => state.values.amountCents);
-	const occurredAt = useStore(form.store, (state) => state.values.occurredAt);
-	const incomeKind = useStore(form.store, (state) =>
+	const amountCents = useSelector(form.store, (state) => state.values.amountCents);
+	const occurredAt = useSelector(form.store, (state) => state.values.occurredAt);
+	const incomeKind = useSelector(form.store, (state) =>
 		resolveIncomeKind(cycle, startedToday, state.values.incomeKind),
 	);
-	const extraType = useStore(form.store, (state) =>
+	const extraType = useSelector(form.store, (state) =>
 		resolveExtraType(extraTypes, state.values.extraordinaryType),
 	);
 	const asksExtraType = incomeKind === "extraordinary" && extraTypes.length > 1;

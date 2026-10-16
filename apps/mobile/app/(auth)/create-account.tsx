@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -107,8 +107,8 @@ export default function CreateAccountScreen() {
 			continueToOtp(email);
 		},
 	});
-	const email = useStore(form.store, (state) => state.values.email.trim().toLowerCase());
-	const password = useStore(form.store, (state) => state.values.password);
+	const email = useSelector(form.store, (state) => state.values.email.trim().toLowerCase());
+	const password = useSelector(form.store, (state) => state.values.password);
 	const formRef = useRef(form);
 	formRef.current = form;
 	useEffect(() => {

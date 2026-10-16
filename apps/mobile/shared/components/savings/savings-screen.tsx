@@ -1,8 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
-import { Lock } from "reicon-react-native/icons/Lock";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
+import { ChevronLeft, Lock } from "@/shared/components/ui/reicon";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { AhorroScreenModel, FundView, GoalView } from "@/shared/lib/savings/model";
 
@@ -47,7 +46,7 @@ export function SavingsScreen({
 					onPress={onBack}
 					className="mb-3 self-start active:opacity-60"
 				>
-					<ChevronLeft size={22} color="#1A1A1A" />
+					<ChevronLeft size={22} colorClassName="accent-foreground" />
 				</Pressable>
 
 				<View className="flex-row items-baseline justify-between">
@@ -55,7 +54,7 @@ export function SavingsScreen({
 					{model ? (
 						<Text
 							className={`font-geist-mono text-[11px] tracking-[0.12em] tabular-nums ${
-								model.totalMuted ? "text-[#B6B2A8]" : "text-[#8C8880]"
+								model.totalMuted ? "text-foreground/35" : "text-foreground/45"
 							}`}
 						>
 							{`TOTAL ${model.totalLabel}`}
@@ -64,7 +63,7 @@ export function SavingsScreen({
 				</View>
 
 				{model ? (
-					<Text className="mt-2 max-w-[300px] font-hanken text-[14px] leading-[21px] text-[#6B6B6B]">
+					<Text className="mt-2 max-w-[300px] font-hanken text-[14px] leading-[21px] text-foreground/55">
 						{model.cycleSubtitle}
 					</Text>
 				) : null}
@@ -100,14 +99,14 @@ function FundCard({ fund }: { fund: FundView }) {
 		return (
 			<View
 				testID="savings-fund"
-				className="mt-[26px] rounded-2xl border border-dashed border-[#DEDBD2] px-5 py-5"
+				className="mt-[26px] rounded-2xl border border-dashed border-line px-5 py-5"
 			>
 				<View className="flex-row items-center gap-[9px]">
-					<Lock size={17} color="#B6B2A8" />
-					<Text className="font-hanken-semibold text-[15px] text-[#8C8880]">{fund.label}</Text>
+					<Lock size={17} colorClassName="accent-foreground/35" />
+					<Text className="font-hanken-semibold text-[15px] text-foreground/45">{fund.label}</Text>
 				</View>
 				<Amount amountBody={fund.amountBody} symbol={fund.symbol} muted />
-				<Text className="mt-2 font-hanken text-[13px] leading-5 text-[#6B6B6B]">
+				<Text className="mt-2 font-hanken text-[13px] leading-5 text-foreground/55">
 					{fund.targetLine}
 				</Text>
 				<DashedTrack />
@@ -118,7 +117,7 @@ function FundCard({ fund }: { fund: FundView }) {
 	return (
 		<View testID="savings-fund" className="mt-[26px] rounded-2xl bg-savings/10 px-5 py-5">
 			<View className="flex-row items-center gap-[9px]">
-				<Lock size={17} color="#3C7D6E" />
+				<Lock size={17} colorClassName="accent-savings" />
 				<Text className="font-hanken-semibold text-[15px] text-foreground">{fund.label}</Text>
 				<Text className="ml-auto font-geist-mono text-[10.5px] tracking-[0.1em] text-primary">
 					PRIORIDAD
@@ -126,24 +125,24 @@ function FundCard({ fund }: { fund: FundView }) {
 			</View>
 			<Amount amountBody={fund.amountBody} symbol={fund.symbol} muted={false} />
 			{fund.targetLine ? (
-				<Text className="mt-2 font-hanken text-[13px] text-[#6B6B6B]">{fund.targetLine}</Text>
+				<Text className="mt-2 font-hanken text-[13px] text-foreground/55">{fund.targetLine}</Text>
 			) : null}
 			<SavingsBar
 				percent={fund.percent}
 				label={`Avance del fondo, ${fund.percent} por ciento`}
-				trackClass="mt-4 h-[5px] bg-[#E4E1D9]"
+				trackClass="mt-4 h-[5px] bg-foreground/5"
 			/>
 			{fund.monthsLine || fund.cycleLine ? (
 				<View className="mt-2.5 flex-row items-center justify-between gap-3">
 					{fund.monthsLine ? (
-						<Text className="flex-1 font-geist-mono text-[11.5px] text-[#6B6B6B]">
+						<Text className="flex-1 font-geist-mono text-[11.5px] text-foreground/55">
 							{fund.monthsLine}
 						</Text>
 					) : (
 						<View className="flex-1" />
 					)}
 					{fund.cycleLine ? (
-						<Text className="font-geist-mono text-[11.5px] text-[#6B6B6B] tabular-nums">
+						<Text className="font-geist-mono text-[11.5px] text-foreground/55 tabular-nums">
 							{fund.cycleLine}
 						</Text>
 					) : null}
@@ -162,8 +161,8 @@ function Amount({
 	amountBody: string;
 	muted: boolean;
 }) {
-	const color = muted ? "text-[#CFCBC0]" : "text-foreground";
-	const symbolColor = muted ? "text-[#CFCBC0]" : "text-[#6B6B6B]";
+	const color = muted ? "text-foreground/25" : "text-foreground";
+	const symbolColor = muted ? "text-foreground/25" : "text-foreground/55";
 	return (
 		<View className="mt-4 flex-row items-baseline gap-2">
 			<Text className={`font-newsreader text-[17px] leading-none ${symbolColor}`}>{symbol}</Text>
@@ -178,7 +177,7 @@ function DashedTrack() {
 	return (
 		<View className="mt-4 h-[5px] flex-row gap-1.5 overflow-hidden">
 			{DASHES.map((dash) => (
-				<View key={dash} className="h-[5px] w-1.5 rounded-[1px] bg-[#E4E1D9]" />
+				<View key={dash} className="h-[5px] w-1.5 rounded-[1px] bg-foreground/5" />
 			))}
 		</View>
 	);
@@ -198,7 +197,7 @@ function SurplusBanner({
 	onDismiss: () => void;
 }) {
 	return (
-		<View className="mt-[22px] border-l-2 border-[#3C7D6E] pl-[14px]">
+		<View className="mt-[22px] border-l-2 border-savings pl-[14px]">
 			<Text className="font-newsreader text-[15px] leading-[22px] text-foreground">
 				{`Tienes ~${amountLabel} de ingreso extra este ciclo. ¿Los mando al Fondo?`}
 			</Text>
@@ -223,7 +222,7 @@ function SurplusBanner({
 					onPress={onDismiss}
 					className="active:opacity-60"
 				>
-					<Text className="font-hanken-semibold text-[13px] text-[#8C8880]">Ahora no</Text>
+					<Text className="font-hanken-semibold text-[13px] text-foreground/45">Ahora no</Text>
 				</Pressable>
 			</View>
 			{error ? <ErrorText message={error} /> : null}
@@ -245,7 +244,7 @@ function GoalsSection({
 	return (
 		<View className="mt-[26px]">
 			<View className="flex-row items-baseline justify-between">
-				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
 					TUS METAS
 				</Text>
 				{showAdd ? (
@@ -263,13 +262,13 @@ function GoalsSection({
 
 			{goals.length === 0 ? (
 				<View className="mt-[30px]">
-					<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-[#B6B2A8]">
+					<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/35">
 						SIN METAS
 					</Text>
 					<Text className="mt-3.5 font-newsreader text-[23px] leading-8 text-foreground">
 						Tus metas vivirán aquí.
 					</Text>
-					<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
+					<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-foreground/55">
 						Un viaje, una laptop, la inicial del depa. Primero dale tracción al Fondo; las metas
 						vienen después.
 					</Text>
@@ -278,7 +277,7 @@ function GoalsSection({
 							accessibilityRole="button"
 							accessibilityLabel="Crear mi primera meta"
 							onPress={onAddGoal}
-							className="mt-[22px] self-start rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
+							className="mt-[22px] self-start rounded-xl border border-line px-[22px] py-3.5 active:opacity-60"
 						>
 							<Text className="font-hanken-semibold text-[14px] text-foreground">
 								Crear mi primera meta
@@ -299,7 +298,7 @@ function GoalsSection({
 
 function GoalRow({ goal }: { goal: GoalView }) {
 	return (
-		<View className="border-b border-[#E8E6DF] pb-4">
+		<View className="border-b border-line pb-4">
 			<View className="flex-row items-baseline justify-between gap-3">
 				<Text className="min-w-0 flex-1 font-hanken text-[15px] text-foreground" numberOfLines={1}>
 					{goal.name}
@@ -309,7 +308,7 @@ function GoalRow({ goal }: { goal: GoalView }) {
 						{goal.currentLabel}
 					</Text>
 					{goal.targetLabel ? (
-						<Text className="font-hanken text-[13.5px] text-[#B6B2A8] tabular-nums">
+						<Text className="font-hanken text-[13.5px] text-foreground/35 tabular-nums">
 							{goal.targetLabel}
 						</Text>
 					) : null}
@@ -319,10 +318,12 @@ function GoalRow({ goal }: { goal: GoalView }) {
 				<SavingsBar
 					percent={goal.percent}
 					label={`Avance de ${goal.name}, ${goal.percent} por ciento`}
-					trackClass="mt-3 h-1 bg-[#EDEBE4]"
+					trackClass="mt-3 h-1 bg-foreground/5"
 				/>
 			) : null}
-			<Text className="mt-[9px] font-geist-mono text-[11.5px] text-[#8C8880]">{goal.footer}</Text>
+			<Text className="mt-[9px] font-geist-mono text-[11.5px] text-foreground/45">
+				{goal.footer}
+			</Text>
 		</View>
 	);
 }

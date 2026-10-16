@@ -1,4 +1,4 @@
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { ErrorText, FieldError } from "@/shared/components/forms/field-error";
 import { readActionError } from "@/shared/lib/expenses/errors";
@@ -44,8 +44,8 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 			}
 		},
 	});
-	const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
-	const formError = useStore(form.store, (state) => formErrorMessage(state.errorMap.onSubmit));
+	const isSubmitting = useSelector(form.store, (state) => state.isSubmitting);
+	const formError = useSelector(form.store, (state) => formErrorMessage(state.errorMap.onSubmit));
 
 	return (
 		<View className="flex-1 px-[22px] pt-1.5 pb-8">
@@ -72,7 +72,7 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Nombre de la meta"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							maxLength={40}
 							accessibilityLabel="Nombre de la meta"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
@@ -90,7 +90,7 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Meta (opcional)"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							keyboardType="decimal-pad"
 							accessibilityLabel="Meta"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"

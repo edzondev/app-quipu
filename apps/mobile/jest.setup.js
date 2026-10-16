@@ -19,6 +19,9 @@ jest.mock("@/shared/navigation/use-focus-effect", () => {
 // uniwind publica ESM; en Jest solo hace falta dejar pasar el componente.
 jest.mock("uniwind", () => ({
 	withUniwind: (Component) => Component,
+	useCSSVariable: (name) =>
+		Array.isArray(name) ? name.map(() => "oklch(0.5 0 0)") : "oklch(0.5 0 0)",
+	useResolveClassNames: () => ({ color: "oklch(0.5 0 0 / 0.45)" }),
 }));
 
 jest.mock("@expo/ui/community/datetime-picker", () => {

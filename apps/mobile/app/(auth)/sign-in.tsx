@@ -1,8 +1,8 @@
 import { api } from "@quipu/convex-api";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm, useSelector } from "@tanstack/react-form";
 import { useQuery } from "convex/react";
 import { Redirect, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { z } from "zod";
@@ -25,7 +25,7 @@ import {
 import { platformAdmitsPasskeys } from "@/shared/lib/auth/passkey-support";
 import { revalidateOnBlur } from "@/shared/lib/form";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
-import { ACTION_TIMEOUT_MS, assertOnline, withTimeout } from "@/shared/lib/network/await-online";
+import { runAction } from "@/shared/lib/network/run-action";
 
 type SignInView = "welcome" | "backup" | "verify";
 
@@ -46,10 +46,8 @@ function useSignInForm(
 			onError(null);
 			const email = value.email.trim().toLowerCase();
 			try {
-				await assertOnline(CREDENTIALS_MESSAGE);
-				const { error } = await withTimeout(
-					authClient.signIn.email({ email, password: value.password }),
-					ACTION_TIMEOUT_MS,
+				const { error } = await runAction(
+					() => authClient.signIn.email({ email, password: value.password }),
 					CREDENTIALS_MESSAGE,
 				);
 				if (!error) {
@@ -100,15 +98,8 @@ export default function SignInScreen() {
 		},
 		setSubmitError,
 	);
-	const email = useStore(form.store, (state) => state.values.email.trim().toLowerCase());
-	const password = useStore(form.store, (state) => state.values.password);
-	const formRef = useRef(form);
-	formRef.current = form;
-	useEffect(() => {
-		return () => {
-			formRef.current.setFieldValue("password", "");
-		};
-	}, []);
+	const email = useSelector(form.store, (state) => state.values.email.trim().toLowerCase());
+	const password = useSelector(form.store, (state) => state.values.password);
 
 	if (hasSession && profile === undefined) return null;
 	if (hasSession) {

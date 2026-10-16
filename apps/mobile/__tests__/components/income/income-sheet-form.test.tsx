@@ -8,9 +8,13 @@ import { toCreateIncomeEventArgs } from "@/shared/lib/income/draft";
 import { limaStartOfDay } from "@/shared/lib/lima-date";
 import { assertCreateIncomeEventArgs } from "@/test-support/assert-create-income-event-args";
 
-jest.mock("@/shared/components/ui/reicon", () => ({
-	ChevronRight: () => null,
-}));
+jest.mock("@/shared/components/ui/reicon", () => {
+	const Icon = () => null;
+	return new Proxy(
+		{ __esModule: true },
+		{ get: (target, prop) => (prop in target ? target[prop as keyof typeof target] : Icon) },
+	);
+});
 
 const NOW = Date.parse("2026-10-10T02:30:00.000Z");
 const NEW_CYCLE = "income-mode-new-cycle";

@@ -2,12 +2,11 @@ import { api } from "@quipu/convex-api";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import AppShell from "@/shared/components/app-shell";
 import { CommitmentSheet } from "@/shared/components/commitments/commitment-sheet";
 import { CommitmentsScreen } from "@/shared/components/commitments/commitments-screen";
 import { useCommitments } from "@/shared/hooks/use-commitments";
 import type { CreateCommitmentArgs } from "@/shared/lib/commitments/model";
-import { ACTION_TIMEOUT_MS, assertOnline, withTimeout } from "@/shared/lib/network/await-online";
+import { runAction } from "@/shared/lib/network/run-action";
 
 const SAVE_ERROR = "No se pudo guardar el compromiso.";
 
@@ -24,13 +23,12 @@ export default function CompromisosPage() {
 	}
 
 	async function submit(args: CreateCommitmentArgs) {
-		await assertOnline(SAVE_ERROR);
-		await withTimeout(createCommitment(args), ACTION_TIMEOUT_MS, SAVE_ERROR);
+		await runAction(() => createCommitment(args), SAVE_ERROR);
 		setPresented(false);
 	}
 
 	return (
-		<AppShell>
+		<>
 			<CommitmentsScreen
 				status={commitments.status}
 				model={commitments.model}
@@ -43,6 +41,6 @@ export default function CompromisosPage() {
 				onDismiss={() => setPresented(false)}
 				onSubmit={submit}
 			/>
-		</AppShell>
+		</>
 	);
 }

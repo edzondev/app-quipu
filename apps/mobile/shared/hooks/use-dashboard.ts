@@ -19,7 +19,9 @@ export function useHomeModel() {
 	const profileName = summary?.profile.name ?? "";
 	const initial = profileInitial(profileName);
 	if (!summary) return { status: "empty" as const, profileName, profileInitial: initial };
-	if (summary.cycle?.pastEnd && summary.closedCycle) {
+
+	const home = mapDashboardHome(summary);
+	if (summary.closedCycle && (summary.cycle?.pastEnd || !home)) {
 		return {
 			status: "closed" as const,
 			closedCycle: summary.closedCycle,
@@ -28,18 +30,8 @@ export function useHomeModel() {
 			currencySymbol: currencySymbol(summary.profile.currencyCode),
 		};
 	}
-	const home = mapDashboardHome(summary);
 	if (home) {
 		return { status: "ready" as const, home, profileName, profileInitial: initial };
-	}
-	if (summary.closedCycle) {
-		return {
-			status: "closed" as const,
-			closedCycle: summary.closedCycle,
-			profileName,
-			profileInitial: initial,
-			currencySymbol: currencySymbol(summary.profile.currencyCode),
-		};
 	}
 	return { status: "empty" as const, profileName, profileInitial: initial };
 }
