@@ -21,6 +21,7 @@ type RegisterExpenseFn = (args: {
 	amount: number;
 	description: string;
 	envelopeType: ExpenseEnvelopeType;
+	idempotencyKey?: string;
 }) => Promise<{
 	expenseId: string;
 	envelopeType: ExpenseEnvelopeType;
@@ -71,6 +72,11 @@ function ExpenseRegisterFormFields({
 	onSuccess,
 }: Props) {
 	const [serverError, setServerError] = useState<string | null>(null);
+	const [idempotencyKey] = useState(() =>
+		typeof crypto !== "undefined" && "randomUUID" in crypto
+			? crypto.randomUUID()
+			: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`,
+	);
 
 	const form = useForm({
 		defaultValues: {
@@ -91,6 +97,7 @@ function ExpenseRegisterFormFields({
 					amount: value.amountCents,
 					description: value.description.trim(),
 					envelopeType,
+					idempotencyKey,
 				});
 				track(AnalyticsEvents.EXPENSE_REGISTERED, {
 					amount: response.amount,

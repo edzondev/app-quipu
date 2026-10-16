@@ -116,8 +116,29 @@ export function parseToCents(input: string): Cents | null {
 		normalized = cleaned;
 	}
 
-	const num = Number(normalized);
-	if (!Number.isFinite(num) || num < 0) return null;
+	return centsFromNormalized(normalized);
+}
 
-	return Math.round(num * 100);
+/** Parse "1234.56" (and extra decimals) to integer cents. Never multiply a float by 100. */
+function centsFromNormalized(normalized: string): Cents | null {
+	if (normalized.startsWith("-")) return null;
+	const body = normalized.startsWith("+") ? normalized.slice(1) : normalized;
+	if (!/^\d*\.?\d+$/.test(body)) return null;
+
+	const dot = body.indexOf(".");
+	const wholeRaw = dot === -1 ? body : body.slice(0, dot);
+	const fracRaw = dot === -1 ? "" : body.slice(dot + 1);
+	const whole = wholeRaw === "" ? "0" : wholeRaw;
+	if (!/^\d+$/.test(whole)) return null;
+
+	if (fracRaw.length <= 2) {
+		const cents = Number(whole) * 100 + Number(fracRaw.padEnd(2, "0"));
+		return Number.isSafeInteger(cents) ? cents : null;
+	}
+
+	const firstTwo = fracRaw.slice(0, 2);
+	const third = fracRaw[2];
+	let cents = Number(whole) * 100 + Number(firstTwo);
+	if (third !== undefined && third >= "5") cents += 1;
+	return Number.isSafeInteger(cents) ? cents : null;
 }

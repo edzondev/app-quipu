@@ -9,6 +9,13 @@ export const SIGNED_OUT_HREF = "/(onboarding)";
 export const OFFLINE_SIGN_OUT_MESSAGE =
 	"Saliste de este teléfono. No pudimos avisar a Quipu, así que la sesión vencerá sola en unos días.";
 
+/** Expo Router puede mandar el query como string o como lista. */
+export function offlineSignOutNotice(notice: unknown): string | null {
+	const value = Array.isArray(notice) ? notice[0] : notice;
+	if (value !== "offline") return null;
+	return OFFLINE_SIGN_OUT_MESSAGE;
+}
+
 /** Espera máxima a Better Auth antes de decidir que el servidor no se enteró. */
 export const SERVER_SIGN_OUT_WAIT_MS = 3000;
 
@@ -22,7 +29,7 @@ export function clearedAuthSession<T extends AuthSessionSnapshot>(current: T): T
 	return { ...current, data: null, error: null, isPending: false };
 }
 
-export type DeviceSessionDeps = {
+type DeviceSessionDeps = {
 	storagePrefix: string;
 	signOut: () => Promise<unknown>;
 	deleteSecure: (key: string) => Promise<void>;

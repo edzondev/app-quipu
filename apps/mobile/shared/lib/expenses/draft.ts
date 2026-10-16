@@ -27,6 +27,11 @@ export type ExpenseDraftFailure = {
 
 export type ExpenseDraftResult = { ok: true; value: ExpenseDraft } | ExpenseDraftFailure;
 
+/** Id de un borrador. Hermes no trae `crypto.randomUUID`. */
+export function newExpenseDraftKey(): string {
+	return `exp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export class ExpenseValidationError extends Error {
 	readonly field: ExpenseField;
 

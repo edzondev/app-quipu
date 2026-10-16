@@ -67,6 +67,25 @@ describe("useExpenseActions", () => {
 		});
 	});
 
+	it("reenvía la clave de idempotencia del borrador", async () => {
+		await act(async () => {
+			await actions?.register(
+				{
+					amountRaw: "4",
+					description: "Bus",
+					envelopeType: "wants",
+				},
+				"draft-bus-1",
+			);
+		});
+		expect(registerMock).toHaveBeenCalledWith({
+			amount: 400,
+			description: "Bus",
+			envelopeType: "wants",
+			idempotencyKey: "draft-bus-1",
+		});
+	});
+
 	it("actualiza y elimina por id de gasto", async () => {
 		await act(async () => {
 			await actions?.update("exp1", {
