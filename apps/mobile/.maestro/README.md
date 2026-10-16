@@ -34,17 +34,17 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `registrar-gasto-hoja` | Gasto en la hoja |
 | `movimientos` | Lista, filtros y búsqueda |
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
-| `registrar-ingreso` | Sumar al ciclo, sin cerrarlo |
+| `registrar-ingreso` | Sumar al ciclo, sin cerrarlo. Sumar viene marcada |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `ciclo-nuevo-antes-del-fin` | Cierra el ciclo y abre otro. Una vez al día, al final. No está en smoke |
-| `mismo-dia-solo-sumar` | Después de ciclo-nuevo: las dos opciones, Sumar marcada; tocar nuevo ciclo solo suma |
+| `ciclo-nuevo-antes-del-fin` | Si el ciclo no empezó hoy, lo cierra. Si empezó hoy, afirma nuevo ciclo oculto y que CICLO empieza hoy. No está en smoke |
+| `mismo-dia-solo-sumar` | Exige startedToday o falla. Sumar no cierra; el arrastre en Inicio no cambia |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
-`ciclo-nuevo-antes-del-fin` deja un ciclo que empezó hoy. Una segunda corrida el mismo día falla, y también los flujos que necesitan un ciclo empezado antes de hoy. `config.yaml` lo corre al final, y `mismo-dia-solo-sumar` justo después, para usar ese ciclo de hoy: no hay que prepararlo a mano. Smoke usa `config.smoke.yaml`.
+Un ciclo que empezó hoy (día de Lima) oculta «Empieza un nuevo ciclo». No se arma un ciclo de ayer desde la UI, así que cerrar uno anterior es a lo sumo una vez por día. `ciclo-nuevo-antes-del-fin` no omite en silencio: si nuevo ciclo no está, afirma que CICLO empieza hoy. `mismo-dia-solo-sumar` no cierra para armarse; exige startedToday o falla. `config.yaml` deja primero el cierre y después el mismo-día. Smoke usa `config.smoke.yaml`.
 
 ## Fuera de la corrida
 

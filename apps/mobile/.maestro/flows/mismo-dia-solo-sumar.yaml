@@ -6,11 +6,11 @@ tags:
 # Notion 3f486a7356a681239318fa33957072e0
 # Antes: sueldo-cierra-ciclo. El mismo día de Lima el ciclo no se cierra.
 # Misma cuenta que el resto (QUIPU_E2E_EMAIL / QUIPU_E2E_PASSWORD). Sin onboarding.
-# config.yaml lo corre después de ciclo-nuevo-antes-del-fin, que deja un ciclo
-# empezado hoy (día de Lima). No hace falta preparar ese ciclo a mano.
-# Las dos opciones se ven. «Sumar al ciclo actual» viene marcada. Tocar
-# «Empieza un nuevo ciclo» igual solo suma: el rango de CICLO no cambia.
-# No aparece «Saldo que quedó».
+# Exige un ciclo que ya empezó hoy: «Empieza un nuevo ciclo» no está. Si está,
+# este flujo falla (no cierra para armarse). En la corrida, ciclo-nuevo-antes-del-fin
+# va antes y puede dejar ese estado.
+# Sumar no cambia el rango de CICLO. «Saldo que quedó»: misma cantidad en Inicio
+# antes y después del add (0 o 1); si el add cierra, el recuento cambia y falla.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -25,6 +25,15 @@ tags:
 - evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
 - tapOn:
     text: "Inicio"
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 15000
+- evalScript: "${output.carryBefore = 0}"
+- runFlow:
+    when:
+      visible: "Saldo que quedó.*"
+    commands:
+      - evalScript: "${output.carryBefore = 1}"
 - tapOn:
     text: "Registrar"
 - tapOn:
@@ -32,37 +41,35 @@ tags:
 - extendedWaitUntil:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
-- assertVisible:
+- extendedWaitUntil:
+    visible:
+      id: income-mode-add
+    timeout: 10000
+- assertNotVisible:
     id: income-mode-new-cycle
 - assertVisible:
     id: income-mode-add
     selected: true
-- tapOn:
-    id: income-mode-new-cycle
-- tapOn:
-    text: "1"
-- tapOn:
-    text: "0"
-- tapOn:
-    text: "0"
-- tapOn:
-    text: "0"
-- assertVisible: "10\\.00"
-- scrollUntilVisible:
-    element:
-      id: income-submit
-    direction: DOWN
-    timeout: 10000
-- tapOn:
-    id: income-submit
-    enabled: true
-- extendedWaitUntil:
-    notVisible: "(?-i)REGISTRAR INGRESO"
-    timeout: 20000
+- runFlow:
+    file: ../subflows/completar-ingreso.yaml
+    env:
+      QUIPU_MODE_ID: income-mode-add
 - runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:
     visible: "${output.cycleBefore} · .*"
     timeout: 20000
+- extendedWaitUntil:
+    visible: "\\+ S/ 10"
+    timeout: 15000
 - tapOn:
     text: "Inicio"
-- assertNotVisible: "Saldo que quedó.*"
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 15000
+- evalScript: "${output.carryAfter = 0}"
+- runFlow:
+    when:
+      visible: "Saldo que quedó.*"
+    commands:
+      - evalScript: "${output.carryAfter = 1}"
+- assertTrue: "${output.carryBefore == output.carryAfter}"

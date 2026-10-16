@@ -4,8 +4,9 @@ tags:
   - registrar
 ---
 # Notion 3f486a7356a6815e9dfcf8f2dd7c1ce4
-# Ciclo abierto: se ven las dos opciones y «Sumar al ciclo actual» viene marcada.
-# Suma S/ 10 y no cierra el ciclo. Misma cuenta que el resto.
+# Ciclo abierto: «Sumar al ciclo actual» está y viene marcada (startedToday o no).
+# Si el ciclo empezó hoy, nuevo ciclo no está; este flujo no lo afirma: suma S/ 10
+# y no cierra. Misma cuenta que el resto.
 # (?-i) separa el título «REGISTRAR INGRESO» del botón «Registrar ingreso».
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -25,11 +26,10 @@ tags:
 - extendedWaitUntil:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
-- assertVisible:
-    id: income-mode-new-cycle
-- assertVisible:
-    id: income-mode-add
-# Ciclo abierto, no vencido: viene marcada «Sumar al ciclo actual».
+- extendedWaitUntil:
+    visible:
+      id: income-mode-add
+    timeout: 10000
 - assertVisible:
     id: income-mode-add
     selected: true

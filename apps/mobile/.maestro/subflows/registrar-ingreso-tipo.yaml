@@ -11,37 +11,7 @@ appId: com.quipu.finance
 - extendedWaitUntil:
     visible: "(?-i)REGISTRAR INGRESO"
     timeout: 10000
-- tapOn:
-    id: ${QUIPU_MODE_ID}
 - runFlow:
-    when:
-      visible:
-        id: income-extra-types
-    commands:
-      - scrollUntilVisible:
-          element:
-            id: income-extra-custom
-          direction: DOWN
-          timeout: 10000
-      - tapOn:
-          id: income-extra-custom
-- tapOn:
-    text: "1"
-- tapOn:
-    text: "0"
-- tapOn:
-    text: "0"
-- tapOn:
-    text: "0"
-- assertVisible: "10\\.00"
-- scrollUntilVisible:
-    element:
-      id: income-submit
-    direction: DOWN
-    timeout: 10000
-- tapOn:
-    id: income-submit
-    enabled: true
-- extendedWaitUntil:
-    notVisible: "(?-i)REGISTRAR INGRESO"
-    timeout: 20000
+    file: completar-ingreso.yaml
+    env:
+      QUIPU_MODE_ID: ${QUIPU_MODE_ID}

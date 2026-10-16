@@ -6,10 +6,11 @@ tags:
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
 # «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro
-# que empieza hoy. config.yaml lo corre al final de la suite, justo antes de
-# mismo-dia-solo-sumar. Una segunda corrida el mismo día no cierra, y los flujos
-# que necesitan un ciclo empezado antes de hoy también fallan. No está en smoke.
-# Deja el ciclo empezado hoy que usa después mismo-dia-solo-sumar.
+# que empieza hoy. No hay time travel ni semilla: un ciclo de ayer no se arma
+# desde la UI. El cierre real es a lo sumo una vez por día de Lima.
+# Si ya empezó hoy: no se omite en silencio. Se afirma nuevo ciclo oculto y que
+# el rango de CICLO empieza hoy (scripts/ciclo-empieza-hoy.js). Si eso no se
+# cumple, el flujo falla.
 # El arrastre («Saldo que quedó») depende del historial.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -23,22 +24,57 @@ tags:
 - copyTextFrom:
     text: "CICLO .*"
 - evalScript: "${output.cycleBefore = maestro.copiedText.split(' · ')[0]}"
+- runScript: ../scripts/ciclo-empieza-hoy.js
 - tapOn:
     text: "Inicio"
-- runFlow:
-    file: ../subflows/registrar-ingreso-tipo.yaml
-    env:
-      QUIPU_MODE_ID: income-mode-new-cycle
-- runFlow: ../subflows/abrir-movimientos.yaml
-# Ingreso en soles enteros: «+ S/ 10», sin decimales (shared/lib/movements/model.ts).
+- tapOn:
+    text: "Registrar"
+- tapOn:
+    text: "Ingreso"
 - extendedWaitUntil:
-    visible: "\\+ S/ 10"
-    timeout: 20000
-- assertNotVisible: "${output.cycleBefore} · .*"
-- assertVisible: "CICLO .*"
-- tapOn:
-    text: "Inicio"
-- assertVisible: "Hoy puedes gastar"
-- assertVisible:
-    text: "Saldo que quedó.*"
-    optional: true
+    visible: "(?-i)REGISTRAR INGRESO"
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: income-mode-add
+    timeout: 10000
+# Primero startedToday (verificar, no omitir). Cancelar deja la hoja fuera
+# para que el cierre no entre por un notVisible residual.
+- runFlow:
+    when:
+      notVisible:
+        id: income-mode-new-cycle
+    commands:
+      - assertNotVisible:
+          id: income-mode-new-cycle
+      - assertVisible:
+          id: income-mode-add
+          selected: true
+      - assertTrue: "${output.cycleStartsToday}"
+      - tapOn: "Cancelar"
+      - extendedWaitUntil:
+          notVisible: "(?-i)REGISTRAR INGRESO"
+          timeout: 10000
+      - assertVisible: "Hoy puedes gastar"
+- runFlow:
+    when:
+      visible:
+        id: income-mode-new-cycle
+    commands:
+      - runFlow:
+          file: ../subflows/completar-ingreso.yaml
+          env:
+            QUIPU_MODE_ID: income-mode-new-cycle
+      - runFlow: ../subflows/abrir-movimientos.yaml
+      # Ingreso en soles enteros: «+ S/ 10», sin decimales (shared/lib/movements/model.ts).
+      - extendedWaitUntil:
+          visible: "\\+ S/ 10"
+          timeout: 20000
+      - assertNotVisible: "${output.cycleBefore} · .*"
+      - assertVisible: "CICLO .*"
+      - tapOn:
+          text: "Inicio"
+      - assertVisible: "Hoy puedes gastar"
+      - assertVisible:
+          text: "Saldo que quedó.*"
+          optional: true
