@@ -1,6 +1,6 @@
 # Notas de Maestro
 
-Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`). Si el ciclo empezó hoy (día de Lima), la hoja de ingreso oculta `income-mode-new-cycle` y solo muestra `income-mode-add`. `ciclo-nuevo-antes-del-fin` y `mismo-dia-solo-sumar` se arman solos y se pueden repetir el mismo día.
+Una sola cuenta: `QUIPU_E2E_EMAIL` y `QUIPU_E2E_PASSWORD`. Nunca producción (`patient-chihuahua-640`). Si el ciclo empezó hoy (día de Lima), la hoja oculta `income-mode-new-cycle` y solo muestra `income-mode-add`. `ciclo-nuevo-antes-del-fin` afirma eso con el rango de CICLO (empieza hoy) o cierra si nuevo ciclo sigue visible. `mismo-dia-solo-sumar` no cierra para armarse: si nuevo ciclo está, falla. En la corrida va después de `ciclo-nuevo-antes-del-fin`. «Saldo que quedó» en ese flujo se cuenta en Inicio antes y después del add; no se afirma ausencia absoluta (un cierre previo el mismo día puede dejar la línea).
 
 Opcional, solo en el dev `perceptive-elk-229` y nunca `--prod`: `devSeed:seedVerifiedAccount` crea una cuenta verificada sin perfil; `devSeed:seedProfileNoCycle` crea una con perfil y sin ciclo (`home-vacio`, `sin-ciclo-solo-ciclo-nuevo`, `home-primer-ingreso`). La contraseña es `DEV_SEED_PASSWORD`. Para un flujo `cuenta-nueva` apunta esas dos variables a esa cuenta.
 

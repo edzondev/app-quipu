@@ -34,17 +34,17 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `registrar-gasto-hoja` | Gasto en la hoja |
 | `movimientos` | Lista, filtros y búsqueda |
 | `movimientos-editar-eliminar` | Editar y borrar un gasto |
-| `registrar-ingreso` | Sumar al ciclo, sin cerrarlo. Las dos opciones solo si el ciclo no empezó hoy |
+| `registrar-ingreso` | Sumar al ciclo, sin cerrarlo. Sumar viene marcada |
 | `sumar-no-cierra` | El rango del ciclo no cambia al sumar |
-| `ciclo-nuevo-antes-del-fin` | Si el ciclo no empezó hoy, lo cierra y abre otro. Si ya empezó hoy, afirma solo Sumar. No está en smoke |
-| `mismo-dia-solo-sumar` | Armado startedToday si hace falta; luego solo Sumar, no cierra, sin «Saldo que quedó» nuevo |
+| `ciclo-nuevo-antes-del-fin` | Si el ciclo no empezó hoy, lo cierra. Si empezó hoy, afirma nuevo ciclo oculto y que CICLO empieza hoy. No está en smoke |
+| `mismo-dia-solo-sumar` | Exige startedToday o falla. Sumar no cierra; el arrastre en Inicio no cambia |
 | `plan-sobres` | Plan y sobres |
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
 | `controles-escondidos` | Lo que todavía no se muestra |
 
-Un ciclo que empezó hoy (día de Lima) oculta «Empieza un nuevo ciclo». No se arma un ciclo de ayer desde la UI, así que cerrar uno anterior es a lo sumo una vez por día. `ciclo-nuevo-antes-del-fin` y `mismo-dia-solo-sumar` son autónomos y no fallan en una segunda corrida el mismo día: el primero omite el cierre si ya empezó hoy; el segundo arma startedToday si nuevo ciclo sigue visible y después afirma solo Sumar. `config.yaml` aún los deja al final. Smoke usa `config.smoke.yaml`.
+Un ciclo que empezó hoy (día de Lima) oculta «Empieza un nuevo ciclo». No se arma un ciclo de ayer desde la UI, así que cerrar uno anterior es a lo sumo una vez por día. `ciclo-nuevo-antes-del-fin` no omite en silencio: si nuevo ciclo no está, afirma que CICLO empieza hoy. `mismo-dia-solo-sumar` no cierra para armarse; exige startedToday o falla. `config.yaml` deja primero el cierre y después el mismo-día. Smoke usa `config.smoke.yaml`.
 
 ## Fuera de la corrida
 

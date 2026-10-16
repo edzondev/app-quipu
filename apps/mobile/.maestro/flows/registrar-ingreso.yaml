@@ -4,11 +4,9 @@ tags:
   - registrar
 ---
 # Notion 3f486a7356a6815e9dfcf8f2dd7c1ce4
-# Ciclo abierto: siempre está «Sumar al ciclo actual». Las dos opciones solo si
-# el ciclo no empezó hoy (día de Lima). Si startedToday, la app oculta
-# «Empieza un nuevo ciclo» (choicesFor en income-sheet-form.tsx). No se arma un
-# ciclo de ayer desde la UI: esa rama corre cuando la cuenta aún no empezó hoy.
-# Suma S/ 10 y no cierra el ciclo. Misma cuenta que el resto.
+# Ciclo abierto: «Sumar al ciclo actual» está y viene marcada (startedToday o no).
+# Si el ciclo empezó hoy, nuevo ciclo no está; este flujo no lo afirma: suma S/ 10
+# y no cierra. Misma cuenta que el resto.
 # (?-i) separa el título «REGISTRAR INGRESO» del botón «Registrar ingreso».
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -32,28 +30,9 @@ tags:
     visible:
       id: income-mode-add
     timeout: 10000
-# Ciclo abierto, no empezó hoy: las dos opciones. Sumar viene marcada.
-- runFlow:
-    when:
-      visible:
-        id: income-mode-new-cycle
-    commands:
-      - assertVisible:
-          id: income-mode-new-cycle
-      - assertVisible:
-          id: income-mode-add
-          selected: true
-# Ciclo que empezó hoy: solo Sumar (selected). No está nuevo ciclo.
-- runFlow:
-    when:
-      notVisible:
-        id: income-mode-new-cycle
-    commands:
-      - assertVisible:
-          id: income-mode-add
-          selected: true
-      - assertNotVisible:
-          id: income-mode-new-cycle
+- assertVisible:
+    id: income-mode-add
+    selected: true
 - tapOn:
     text: "Gasto"
 - assertVisible: "NUEVO GASTO"

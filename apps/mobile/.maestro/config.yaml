@@ -4,9 +4,10 @@
 # https://github.com/mobile-dev-inc/Maestro/issues/1681).
 # Lo listado en flowsOrder corre primero, en orden
 # (https://docs.maestro.dev/maestro-flows/workspace-management/sequential-execution).
-# ciclo-nuevo-antes-del-fin y luego mismo-dia-solo-sumar van al final
-# (el cierre real es a lo sumo una vez por día de Lima). Ambos son autónomos:
-# startedToday oculta nuevo ciclo y no fallan en una segunda corrida el mismo día.
+# ciclo-nuevo-antes-del-fin y luego mismo-dia-solo-sumar van al final.
+# El primero cierra si el ciclo no empezó hoy; si ya empezó hoy afirma
+# nuevo ciclo oculto y que CICLO empieza hoy (Lima). El segundo exige
+# startedToday (no cierra para armarse).
 flows:
   - "flows/*"
 excludeTags:

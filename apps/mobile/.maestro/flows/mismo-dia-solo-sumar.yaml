@@ -6,53 +6,16 @@ tags:
 # Notion 3f486a7356a681239318fa33957072e0
 # Antes: sueldo-cierra-ciclo. El mismo día de Lima el ciclo no se cierra.
 # Misma cuenta que el resto (QUIPU_E2E_EMAIL / QUIPU_E2E_PASSWORD). Sin onboarding.
-# Regla actual (choicesFor / startedToday): si el ciclo empezó hoy, la hoja
-# oculta «Empieza un nuevo ciclo» y solo ofrece Sumar. Ya no se toca nuevo
-# ciclo para «igual solo sumar»: esa opción no está.
-# Si el ciclo no empezó hoy, este flujo lo cierra una vez para armar
-# startedToday y después afirma el modo solo-sumar. Autónomo y repetible
-# el mismo día: la segunda corrida ya entra con startedToday.
+# Exige un ciclo que ya empezó hoy: «Empieza un nuevo ciclo» no está. Si está,
+# este flujo falla (no cierra para armarse). En la corrida, ciclo-nuevo-antes-del-fin
+# va antes y puede dejar ese estado.
+# Sumar no cambia el rango de CICLO. «Saldo que quedó»: misma cantidad en Inicio
+# antes y después del add (0 o 1); si el add cierra, el recuento cambia y falla.
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
       QUIPU_EMAIL: ${QUIPU_E2E_EMAIL}
       QUIPU_PASSWORD: ${QUIPU_E2E_PASSWORD}
-- extendedWaitUntil:
-    visible: "Hoy puedes gastar"
-    timeout: 30000
-- tapOn:
-    text: "Registrar"
-- tapOn:
-    text: "Ingreso"
-- extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
-    timeout: 10000
-- extendedWaitUntil:
-    visible:
-      id: income-mode-add
-    timeout: 10000
-# Armar startedToday si aún está nuevo ciclo (el ciclo no empezó hoy).
-- runFlow:
-    when:
-      visible:
-        id: income-mode-new-cycle
-    commands:
-      - runFlow:
-          file: ../subflows/completar-ingreso.yaml
-          env:
-            QUIPU_MODE_ID: income-mode-new-cycle
-      - extendedWaitUntil:
-          visible: "Hoy puedes gastar"
-          timeout: 30000
-# Si ya empezó hoy, la hoja sigue abierta: cancelar y seguir desde Inicio.
-- runFlow:
-    when:
-      visible: "(?-i)REGISTRAR INGRESO"
-    commands:
-      - tapOn: "Cancelar"
-      - extendedWaitUntil:
-          notVisible: "(?-i)REGISTRAR INGRESO"
-          timeout: 10000
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 30000
@@ -65,14 +28,12 @@ tags:
 - extendedWaitUntil:
     visible: "Hoy puedes gastar"
     timeout: 15000
-# El add de abajo no debe crear arrastre. Si un cierre previo (incluso el
-# armado de arriba) ya dejó la línea, no se afirma su ausencia.
-- evalScript: "${output.expectNoCarry = true}"
+- evalScript: "${output.carryBefore = 0}"
 - runFlow:
     when:
       visible: "Saldo que quedó.*"
     commands:
-      - evalScript: "${output.expectNoCarry = false}"
+      - evalScript: "${output.carryBefore = 1}"
 - tapOn:
     text: "Registrar"
 - tapOn:
@@ -102,8 +63,13 @@ tags:
     timeout: 15000
 - tapOn:
     text: "Inicio"
+- extendedWaitUntil:
+    visible: "Hoy puedes gastar"
+    timeout: 15000
+- evalScript: "${output.carryAfter = 0}"
 - runFlow:
     when:
-      true: ${output.expectNoCarry === true || output.expectNoCarry == "true"}
+      visible: "Saldo que quedó.*"
     commands:
-      - assertNotVisible: "Saldo que quedó.*"
+      - evalScript: "${output.carryAfter = 1}"
+- assertTrue: "${output.carryBefore == output.carryAfter}"
