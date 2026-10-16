@@ -5,7 +5,7 @@ import { AppLayoutShell } from "@/shared/components/layout/app-layout-shell";
 
 export const metadata: Metadata = privateAreaMetadata;
 
-/** Auth gates live in each `page.tsx` via `requireOnboardedProfile` (QUIPU-MASTER §5.4). Espacios intentionally uses a different guard. */
+/** Auth gates live in each `page.tsx` via `requireOnboardedProfile` (QUIPU-MASTER §5.4). Espacios uses session/stub-profile guards so invitees can join before personal onboarding. */
 export default function AppLayout({ children }: { children: ReactNode }) {
 	return <AppLayoutShell>{children}</AppLayoutShell>;
 }
