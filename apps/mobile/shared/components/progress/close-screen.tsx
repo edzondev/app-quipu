@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
+import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import type { CloseScreenModel, CloseSegmentTone } from "@/shared/lib/progress/model";
 
@@ -30,9 +30,9 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 					onPress={onBack}
 					className="active:opacity-60"
 				>
-					<ChevronLeft size={22} color="#1A1A1A" />
+					<ChevronLeft size={22} colorClassName="accent-foreground" />
 				</Pressable>
-				<Text className="flex-1 text-center font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+				<Text className="flex-1 text-center font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
 					{model?.eyebrow ?? "CICLO CERRADO"}
 				</Text>
 				<View className="w-[22px]" />
@@ -49,7 +49,7 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 						{model.title}
 					</Text>
 					{model.subtitle ? (
-						<Text className="mt-3 font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
+						<Text className="mt-3 font-hanken text-[14.5px] leading-6 text-foreground/55">
 							{model.subtitle}
 						</Text>
 					) : null}
@@ -69,23 +69,25 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 					) : null}
 
 					<View className="mt-2.5 flex-row items-center justify-between">
-						<Text className="font-geist-mono text-[10.5px] text-[#8C8880]">{model.spentLabel}</Text>
+						<Text className="font-geist-mono text-[10.5px] text-foreground/45">
+							{model.spentLabel}
+						</Text>
 						{model.surplusLabel ? (
-							<Text className="font-geist-mono text-[10.5px] text-[#8C8880]">
+							<Text className="font-geist-mono text-[10.5px] text-foreground/45">
 								{model.surplusLabel}
 							</Text>
 						) : null}
 					</View>
 
-					<View className="mt-[26px] border-t border-[#E8E6DF]">
+					<View className="mt-[26px] border-t border-line">
 						{model.rows.map((row, index) => (
 							<View
 								key={row.label}
 								className={`flex-row items-center justify-between py-3.5 ${
-									index === model.rows.length - 1 ? "" : "border-b border-[#F0EEE8]"
+									index === model.rows.length - 1 ? "" : "border-b border-line"
 								}`}
 							>
-								<Text className="font-hanken text-[14.5px] text-[#6B6B6B]">{row.label}</Text>
+								<Text className="font-hanken text-[14.5px] text-foreground/55">{row.label}</Text>
 								<Text className="font-hanken-semibold text-[14.5px] text-foreground tabular-nums">
 									{row.amountLabel}
 								</Text>
@@ -100,14 +102,14 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 					<Text className="text-center font-newsreader text-[23px] leading-8 text-foreground">
 						Aún no hay un cierre.
 					</Text>
-					<Text className="mt-3 max-w-[300px] text-center font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
+					<Text className="mt-3 max-w-[300px] text-center font-hanken text-[14.5px] leading-6 text-foreground/55">
 						El resumen aparece al cerrar un ciclo.
 					</Text>
 					<Pressable
 						accessibilityRole="button"
 						accessibilityLabel="Volver a Progreso"
 						onPress={onBack}
-						className="mt-[22px] rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
+						className="mt-[22px] rounded-xl border border-line px-[22px] py-3.5 active:opacity-60"
 					>
 						<Text className="font-hanken-semibold text-[14px] text-foreground">
 							Volver a Progreso

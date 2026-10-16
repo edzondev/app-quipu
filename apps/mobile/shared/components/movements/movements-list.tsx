@@ -2,8 +2,8 @@ import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown } from "react-native-reanimated";
-import { Search } from "reicon-react-native/icons/Search";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
+import { Search } from "@/shared/components/ui/reicon";
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
 import {
 	MOVEMENT_FILTERS,
@@ -81,7 +81,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 					onPress={toggleSearch}
 					className="active:scale-90 active:opacity-60"
 				>
-					<Search size={20} color="#6B6B6B" />
+					<Search size={20} colorClassName="accent-foreground/55" />
 				</Pressable>
 			</View>
 
@@ -164,7 +164,7 @@ function SearchField({ onChange }: { onChange: (query: string) => void }) {
 						onChangeText={field.handleChange}
 						onBlur={field.handleBlur}
 						placeholder="Buscar"
-						placeholderTextColor="#8C8880"
+						placeholderTextColorClassName="accent-foreground/45"
 						value={field.state.value}
 					/>
 				)}

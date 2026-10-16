@@ -3,18 +3,12 @@
  * pon el flag en false para volver a mostrarlos.
  */
 export const HIDDEN_UNTIL_READY: {
-	moveMoney: boolean;
-	expenseNote: boolean;
-	attachReceipt: boolean;
 	profileAndData: boolean;
 	planAndSubscription: boolean;
 	allocation: boolean;
 	cycleAndIncome: boolean;
 	cycleSplit: boolean;
 } = {
-	moveMoney: true,
-	expenseNote: true,
-	attachReceipt: true,
 	profileAndData: true,
 	planAndSubscription: true,
 	allocation: true,

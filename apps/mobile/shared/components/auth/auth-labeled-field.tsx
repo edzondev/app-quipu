@@ -2,7 +2,7 @@ import type { AnyFieldApi } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import type { TextInputProps } from "react-native";
 import { Text, TextInput, View } from "react-native";
-import FieldError from "@/shared/components/auth/field-error";
+import { FieldError } from "@/shared/components/forms/field-error";
 
 type AuthLabeledFieldProps = {
 	label: string;

@@ -30,9 +30,6 @@ tags:
       QUIPU_MODE_ID: income-mode-new-cycle
 - tapOn:
     text: "Progreso"
-- tapOn:
-    id: progress-preview-live
-    optional: true
 - extendedWaitUntil:
     visible: "CICLOS CERRADOS EN VERDE"
     timeout: 20000

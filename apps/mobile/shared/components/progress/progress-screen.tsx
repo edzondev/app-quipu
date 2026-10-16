@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { Check } from "reicon-react-native/icons/Check";
-import { ChevronRight } from "reicon-react-native/icons/ChevronRight";
+import { useCSSVariable } from "uniwind";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
+import { Check, ChevronRight } from "@/shared/components/ui/reicon";
 import type {
 	AchievementRowView,
 	ProgressBarView,
@@ -54,11 +54,11 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 					>
 						<Text
 							testID="progress-closed-cycle"
-							className="font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]"
+							className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55"
 						>
 							{model.closeEntry.label}
 						</Text>
-						<ChevronRight size={16} color="#9A968C" />
+						<ChevronRight size={16} colorClassName="accent-foreground/45" />
 					</Pressable>
 				) : null}
 
@@ -76,14 +76,14 @@ function EmptyProgress({ onOpenPlan }: { onOpenPlan: () => void }) {
 			<Text className="text-center font-newsreader text-[23px] leading-8 text-foreground">
 				Aún no cierras un ciclo.
 			</Text>
-			<Text className="mt-3 max-w-[300px] text-center font-hanken text-[14.5px] leading-6 text-[#6B6B6B]">
+			<Text className="mt-3 max-w-[300px] text-center font-hanken text-[14.5px] leading-6 text-foreground/55">
 				La constancia aparece cuando el primero queda cerrado. Sin medallas ni apuro.
 			</Text>
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Ir a Plan"
 				onPress={onOpenPlan}
-				className="mt-[22px] rounded-xl border border-[#DAD7CE] px-[22px] py-3.5 active:opacity-60"
+				className="mt-[22px] rounded-xl border border-line px-[22px] py-3.5 active:opacity-60"
 			>
 				<Text className="font-hanken-semibold text-[14px] text-foreground">Ir a Plan</Text>
 			</Pressable>
@@ -96,7 +96,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 		<View>
 			<Text
 				testID="progress-closed-count"
-				className="mt-8 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]"
+				className="mt-8 font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55"
 			>
 				CICLOS CERRADOS EN VERDE
 			</Text>
@@ -104,7 +104,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 				<Text className="font-newsreader text-[58px] leading-none tracking-tight text-foreground tabular-nums">
 					{model.streakLabel}
 				</Text>
-				<Text className="font-newsreader text-[18px] text-[#6B6B6B]">seguidos</Text>
+				<Text className="font-newsreader text-[18px] text-foreground/55">seguidos</Text>
 			</View>
 
 			{model.bars.length > 0 ? (
@@ -129,7 +129,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 
 			{model.achievements.length > 0 ? (
 				<View className="mt-7">
-					<Text className="mb-2 font-geist-mono text-[10.5px] tracking-[0.14em] text-[#6B6B6B]">
+					<Text className="mb-2 font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
 						LOGROS
 					</Text>
 					{model.achievements.map((row, index) => (
@@ -143,7 +143,7 @@ function FilledProgress({ model }: { model: ProgressScreenModel }) {
 			) : null}
 
 			{model.rewardText ? (
-				<View className="mt-5 rounded-[14px] bg-[#F3F1EB] px-[18px] py-4">
+				<View className="mt-5 rounded-[14px] bg-foreground/5 px-[18px] py-4">
 					<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-primary">
 						RECOMPENSA
 					</Text>
@@ -175,10 +175,11 @@ function CycleBar({ bar }: { bar: ProgressBarView }) {
 
 /** Bloque claro con rayas diagonales (mismo patrón del mock). */
 function CurrentCycleBar() {
+	const stripe = useCSSVariable("--color-foreground") as string;
 	return (
 		<View
 			accessibilityLabel="Ciclo en curso"
-			className="h-[34px] overflow-hidden rounded-[5px] bg-[#F7F5EF]"
+			className="h-[34px] overflow-hidden rounded-[5px] bg-foreground/5"
 		>
 			{Array.from({ length: 20 }, (_, index) => (
 				<View
@@ -189,7 +190,8 @@ function CurrentCycleBar() {
 						left: index * 14 - 28,
 						width: 5,
 						height: 78,
-						backgroundColor: "#EDEAE1",
+						backgroundColor: stripe,
+						opacity: 0.12,
 						transform: [{ rotate: "45deg" }],
 					}}
 				/>
@@ -216,19 +218,17 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function AchievementRow({ row, isLast }: { row: AchievementRowView; isLast: boolean }) {
 	return (
-		<View
-			className={`flex-row items-center gap-3 py-3.5 ${isLast ? "" : "border-b border-[#F0EEE8]"}`}
-		>
+		<View className={`flex-row items-center gap-3 py-3.5 ${isLast ? "" : "border-b border-line"}`}>
 			<View
 				className={`h-[30px] w-[30px] items-center justify-center rounded-full ${
-					row.done ? "bg-savings/15" : "border border-dashed border-[#DAD7CE]"
+					row.done ? "bg-savings/15" : "border border-dashed border-line"
 				}`}
 			>
-				{row.done ? <Check size={15} color="#3C7D6E" /> : null}
+				{row.done ? <Check size={15} colorClassName="accent-savings" /> : null}
 			</View>
 			<View className="min-w-0 flex-1">
 				<Text
-					className={`font-hanken text-[14.5px] ${row.done ? "text-foreground" : "text-[#8C8880]"}`}
+					className={`font-hanken text-[14.5px] ${row.done ? "text-foreground" : "text-foreground/45"}`}
 					numberOfLines={2}
 				>
 					{row.title}
@@ -236,7 +236,7 @@ function AchievementRow({ row, isLast }: { row: AchievementRowView; isLast: bool
 				{row.detail ? (
 					<Text
 						className={`mt-[5px] font-geist-mono text-[11.5px] ${
-							row.done ? "text-[#8C8880]" : "text-[#B6B2A8]"
+							row.done ? "text-foreground/45" : "text-foreground/35"
 						}`}
 					>
 						{row.detail}

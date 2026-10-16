@@ -2,7 +2,6 @@ import { api } from "@quipu/convex-api";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import AppShell from "@/shared/components/app-shell";
 import { GoalSheet } from "@/shared/components/savings/goal-sheet";
 import { SavingsScreen } from "@/shared/components/savings/savings-screen";
 import { useAhorro } from "@/shared/hooks/use-ahorro";
@@ -46,7 +45,7 @@ export default function AhorroPage() {
 	}
 
 	return (
-		<AppShell>
+		<>
 			<SavingsScreen
 				status={ahorro.status}
 				model={ahorro.model}
@@ -64,6 +63,6 @@ export default function AhorroPage() {
 				onDismiss={() => setPresented(false)}
 				onSubmit={submit}
 			/>
-		</AppShell>
+		</>
 	);
 }

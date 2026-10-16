@@ -79,7 +79,7 @@ export function ExpenseSheetForm({
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Comercio"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							maxLength={120}
 							accessibilityLabel="Comercio"
 							className="flex-1 font-hanken text-[16px] text-foreground"

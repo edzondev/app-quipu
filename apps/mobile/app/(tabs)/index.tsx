@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import AppShell from "@/shared/components/app-shell";
 import { HomeClosedCycle } from "@/shared/components/home/home-closed-cycle";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty, HomeLoading } from "@/shared/components/home/home-empty";
@@ -12,7 +11,7 @@ export default function HomePage() {
 	const { openCreate } = useRegistrar();
 
 	return (
-		<AppShell>
+		<>
 			{model.status === "loading" ? <HomeLoading /> : null}
 			{model.status === "empty" ? (
 				<HomeEmpty
@@ -41,6 +40,6 @@ export default function HomePage() {
 					onViewAllMovements={() => router.push("/(tabs)/movements")}
 				/>
 			) : null}
-		</AppShell>
+		</>
 	);
 }

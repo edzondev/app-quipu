@@ -92,7 +92,7 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("SEP")).toBeTruthy();
 		const current = view.getByLabelText("Ciclo en curso");
 		expect(current).toBeTruthy();
-		expect(current.props.className).toContain("bg-[#F7F5EF]");
+		expect(current.props.className).toContain("bg-foreground/5");
 		expect(view.getByText("DESDE MAYO")).toBeTruthy();
 	});
 

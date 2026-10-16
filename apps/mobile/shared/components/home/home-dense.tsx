@@ -31,8 +31,8 @@ const STATUS_TEXT: Record<BadgeTone, string> = {
 };
 
 const VISIBLE_COMMITMENTS = 3;
-const TRACK = "bg-[#EDEBE4]";
-const ROW_RULE = "border-[#F0EEE8]";
+const TRACK = "bg-foreground/5";
+const ROW_RULE = "border-line";
 
 function HeroAmount({ cents, symbol }: { cents: number; symbol: string }) {
 	const negative = cents < 0;

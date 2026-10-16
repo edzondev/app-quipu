@@ -2,7 +2,6 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { EnvelopeCarryLine } from "@/shared/components/envelope-carry-line";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
-import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type {
 	SobresEnvelopeView,
 	SobresScreenModel,
@@ -29,11 +28,10 @@ type Props = {
 	status: "loading" | "empty" | "ready";
 	screen: SobresScreenModel | null;
 	onBack: () => void;
-	onMoveMoney: () => void;
 	onRegisterExpense: () => void;
 };
 
-export function SobresScreen({ status, screen, onBack, onMoveMoney, onRegisterExpense }: Props) {
+export function SobresScreen({ status, screen, onBack, onRegisterExpense }: Props) {
 	return (
 		<View className="flex-1">
 			<ScrollView
@@ -84,19 +82,10 @@ export function SobresScreen({ status, screen, onBack, onMoveMoney, onRegisterEx
 			</ScrollView>
 
 			{screen ? (
-				<View className="flex-row gap-2.5 pt-4">
-					{HIDDEN_UNTIL_READY.moveMoney ? null : (
-						<Pressable
-							accessibilityRole="button"
-							className="flex-1 items-center rounded-xl border border-[#DAD7CE] py-3.5"
-							onPress={onMoveMoney}
-						>
-							<Text className="font-hanken-semibold text-[14px] text-foreground">Mover dinero</Text>
-						</Pressable>
-					)}
+				<View className="pt-4">
 					<Pressable
 						accessibilityRole="button"
-						className="flex-1 items-center rounded-xl bg-foreground py-3.5"
+						className="items-center rounded-xl bg-foreground py-3.5"
 						onPress={onRegisterExpense}
 					>
 						<Text className="font-hanken-semibold text-[14px] text-background">
@@ -151,7 +140,7 @@ function EnvelopeBlock({
 				accessibilityRole="progressbar"
 				accessibilityLabel={envelope.label}
 				accessibilityValue={{ min: 0, max: 100, now: envelope.progress }}
-				className="mt-3.5 h-1 overflow-hidden rounded-xs bg-[#EDEBE4]"
+				className="mt-3.5 h-1 overflow-hidden rounded-xs bg-foreground/5"
 			>
 				<View
 					className={`h-full rounded-xs ${DOT[envelope.tone]}`}

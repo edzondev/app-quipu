@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
+import { ChevronLeft } from "@/shared/components/ui/reicon";
 import type {
 	CommitmentRowView,
 	CommitmentStatusTone,
@@ -40,7 +40,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 					onPress={onBack}
 					className="mb-3 self-start active:opacity-60"
 				>
-					<ChevronLeft size={22} color="#1A1A1A" />
+					<ChevronLeft size={22} colorClassName="accent-foreground" />
 				</Pressable>
 				<Text className="font-newsreader text-[27px] leading-8 text-foreground">Compromisos</Text>
 				<Text className="mt-2 max-w-[300px] font-hanken text-[14px] leading-[21px] text-foreground/55">
@@ -90,7 +90,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 					accessibilityRole="button"
 					accessibilityLabel="Agregar compromiso"
 					onPress={onAdd}
-					className="mt-4 items-center rounded-xl border border-[#DAD7CE] py-[15px] active:opacity-60"
+					className="mt-4 items-center rounded-xl border border-line py-[15px] active:opacity-60"
 				>
 					<Text className="font-hanken-semibold text-[14px] text-foreground">
 						Agregar compromiso
@@ -117,7 +117,7 @@ function ReservedBlock({ model, empty }: { model: CommitmentsScreenModel; empty:
 					{model.totalLabel}
 				</Text>
 			</View>
-			<View className="mt-3.5 h-[5px] overflow-hidden rounded-[3px] bg-[#E4E1D9]">
+			<View className="mt-3.5 h-[5px] overflow-hidden rounded-[3px] bg-foreground/5">
 				{/* El tramo pagado es un % de datos: Uniwind no tiene clase para ese ancho. */}
 				<View className="h-full bg-primary" style={{ width: `${model.paidPercent}%` }} />
 			</View>
@@ -137,7 +137,7 @@ function CommitmentLine({ row, isLast }: { row: CommitmentRowView; isLast: boole
 	return (
 		<View
 			className={`flex-row items-center justify-between py-[15px] ${
-				isLast ? "" : "border-b border-[#F0EEE8]"
+				isLast ? "" : "border-b border-line"
 			}`}
 		>
 			<View className="min-w-0 flex-1 pr-3">

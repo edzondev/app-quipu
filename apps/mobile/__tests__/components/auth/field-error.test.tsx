@@ -1,6 +1,6 @@
 import type { AnyFieldApi } from "@tanstack/react-form";
 import { render } from "@testing-library/react-native";
-import FieldError from "@/shared/components/auth/field-error";
+import { FieldError } from "@/shared/components/forms/field-error";
 
 function makeField(errors: unknown[]) {
 	return { state: { meta: { errors } } } as unknown as AnyFieldApi;

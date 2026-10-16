@@ -46,7 +46,7 @@ export function signedOutHref(serverNotified: boolean) {
 	return {
 		pathname: SIGNED_OUT_HREF,
 		params: { notice: "offline" },
-	};
+	} as const;
 }
 
 function secureKeysFor(prefix: string) {

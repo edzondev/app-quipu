@@ -72,7 +72,7 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Nombre de la meta"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							maxLength={40}
 							accessibilityLabel="Nombre de la meta"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
@@ -90,7 +90,7 @@ export function GoalForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Meta (opcional)"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							keyboardType="decimal-pad"
 							accessibilityLabel="Meta"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"

@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Backspace } from "reicon-react-native/icons/Backspace";
+import { Backspace } from "@/shared/components/ui/reicon";
 import { appendKeypadDigit, backspaceKeypad, keypadFigures } from "@/shared/lib/expenses/keypad";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "backspace"] as const;
@@ -52,7 +52,7 @@ export function ExpenseKeypad({
 							className="items-center py-3.5 active:opacity-40"
 						>
 							{key === "backspace" ? (
-								<Backspace size={22} color="#6B6B6B" />
+								<Backspace size={22} colorClassName="accent-foreground/55" />
 							) : (
 								<Text className="font-hanken text-[23px] text-foreground">{key}</Text>
 							)}

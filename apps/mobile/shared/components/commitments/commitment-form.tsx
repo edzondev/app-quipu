@@ -79,7 +79,7 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Nombre"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							maxLength={80}
 							accessibilityLabel="Nombre"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
@@ -112,7 +112,7 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Monto"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							keyboardType="decimal-pad"
 							accessibilityLabel="Monto"
 							className="mt-6 border-b border-line pb-3 font-hanken text-[16px] text-foreground"
@@ -136,7 +136,7 @@ export function CommitmentForm({ onSubmit, onCancel }: Props) {
 							onChangeText={field.handleChange}
 							onBlur={field.handleBlur}
 							placeholder="Día de vencimiento"
-							placeholderTextColor="#8C8880"
+							placeholderTextColorClassName="accent-foreground/45"
 							keyboardType="number-pad"
 							maxLength={2}
 							accessibilityLabel="Día de vencimiento"
