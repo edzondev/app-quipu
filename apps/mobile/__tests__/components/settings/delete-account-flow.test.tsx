@@ -2,7 +2,14 @@ import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
-import { ACCOUNT_DELETED_MESSAGE } from "@/shared/lib/auth/device-session";
+import {
+	ACCOUNT_DELETED_MESSAGE,
+	OFFLINE_SIGN_OUT_MESSAGE,
+} from "@/shared/lib/auth/device-session";
+import {
+	DELETE_ACCOUNT_ERROR_PASSWORD,
+	DELETE_ACCOUNT_PASSWORD_LABEL,
+} from "@/shared/lib/settings/delete-account";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
@@ -68,6 +75,7 @@ const model: SettingsScreenModel = {
 	planLabel: "Gratis",
 	repartoLabel: "50 / 30 / 20",
 	scheduleCopy: "Mensual · día 1",
+	hasPassword: false,
 };
 
 const ERROR = "No pudimos eliminar tu cuenta. Intenta de nuevo.";
@@ -90,7 +98,7 @@ describe("Eliminar cuenta", () => {
 		mockPasskey.mockReset();
 		getNetworkStateAsync.mockReset();
 		getNetworkStateAsync.mockResolvedValue({ isConnected: true, isInternetReachable: true });
-		mockClear.mockResolvedValue({ serverNotified: true });
+		mockClear.mockResolvedValue({ serverNotified: false });
 	});
 
 	it("en éxito borra en el servidor, limpia el teléfono y avisa en la entrada", async () => {
@@ -117,11 +125,16 @@ describe("Eliminar cuenta", () => {
 			pathname: "/(onboarding)",
 			params: { notice: "deleted" },
 		});
+		expect(mockReplace).not.toHaveBeenCalledWith({
+			pathname: "/(onboarding)",
+			params: { notice: "offline" },
+		});
 		await view.unmount();
 
 		const welcome = await render(<OnboardingIndexScreen />);
 		expect(welcome.getByText("Divide tu dinero antes de gastarlo")).toBeTruthy();
 		expect(welcome.getByText(ACCOUNT_DELETED_MESSAGE)).toBeTruthy();
+		expect(welcome.queryByText(OFFLINE_SIGN_OUT_MESSAGE)).toBeNull();
 		expect(ACCOUNT_DELETED_MESSAGE).toBe("Tu cuenta fue eliminada.");
 		await welcome.unmount();
 	});
@@ -158,6 +171,40 @@ describe("Eliminar cuenta", () => {
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
 		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
+		await view.unmount();
+	});
+
+	it("muestra la contraseña solo si hasPassword y la manda a deleteUser", async () => {
+		const withoutPassword = await openDeleteSheet();
+		expect(withoutPassword.queryByLabelText(DELETE_ACCOUNT_PASSWORD_LABEL)).toBeNull();
+		await withoutPassword.unmount();
+
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={{ ...model, hasPassword: true }}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar cuenta" }));
+		});
+		const password = view.getByLabelText(DELETE_ACCOUNT_PASSWORD_LABEL);
+		expect(password).toBeTruthy();
+		await act(async () => {
+			fireEvent.changeText(password, " secreto ");
+		});
+		mockDeleteUser.mockResolvedValue({
+			error: { code: "INVALID_PASSWORD", message: "invalid password" },
+		});
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(mockDeleteUser).toHaveBeenCalledWith({ password: "secreto" });
+		expect(view.getByText(DELETE_ACCOUNT_ERROR_PASSWORD)).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
 		await view.unmount();
 	});
 });

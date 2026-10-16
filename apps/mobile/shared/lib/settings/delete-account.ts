@@ -1,4 +1,5 @@
 import { authClient } from "@/lib/auth-client";
+import { ACTION_TIMEOUT_MS, assertOnline, withTimeout } from "@/shared/lib/network/await-online";
 
 export const DELETE_ACCOUNT_ERROR = "No pudimos eliminar tu cuenta. Intenta de nuevo.";
 export const DELETE_ACCOUNT_ERROR_REAUTH =
@@ -35,6 +36,9 @@ function isInvalidPasswordError(error: AuthClientError): boolean {
 	);
 }
 
+export const DELETE_ACCOUNT_PASSWORD_LABEL = "Contraseña (si usas una)";
+export const DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = "Opcional si acabas de entrar";
+
 export function mapDeleteAccountError(error: AuthClientError): string {
 	if (isStaleSessionError(error)) {
 		return DELETE_ACCOUNT_ERROR_REAUTH;
@@ -45,6 +49,8 @@ export function mapDeleteAccountError(error: AuthClientError): string {
 	return DELETE_ACCOUNT_ERROR;
 }
 
+type NetworkGuard = <T>(work: () => Promise<T>) => Promise<T>;
+
 /**
  * Same Better Auth `/delete-user` flow as web (`apps/web/modules/settings/lib/delete-account.ts`).
  * Fresh session or password; stale passkey sessions reauth once and retry.
@@ -53,11 +59,13 @@ export function mapDeleteAccountError(error: AuthClientError): string {
 export async function deleteAccount(options?: {
 	password?: string;
 	canUsePasskey?: boolean;
+	guard?: NetworkGuard;
 }): Promise<DeleteAccountResult> {
 	const password = options?.password?.trim();
 	const canUsePasskey = options?.canUsePasskey ?? false;
+	const guard = options?.guard ?? ((work) => work());
 
-	const first = await authClient.deleteUser(password ? { password } : undefined);
+	const first = await guard(() => authClient.deleteUser(password ? { password } : undefined));
 	if (!first.error) return { ok: true };
 
 	if (!password && canUsePasskey && isStaleSessionError(first.error)) {
@@ -69,7 +77,7 @@ export async function deleteAccount(options?: {
 				code: first.error.code,
 			};
 		}
-		const second = await authClient.deleteUser();
+		const second = await guard(() => authClient.deleteUser());
 		if (!second.error) return { ok: true };
 		return {
 			ok: false,
@@ -83,4 +91,16 @@ export async function deleteAccount(options?: {
 		message: mapDeleteAccountError(first.error),
 		code: first.error.code,
 	};
+}
+
+/** Offline + timeout around deleteUser only. The passkey prompt is not timed. */
+export async function deleteAccountOnDevice(options?: {
+	password?: string;
+	canUsePasskey?: boolean;
+}): Promise<DeleteAccountResult> {
+	await assertOnline(DELETE_ACCOUNT_ERROR);
+	return deleteAccount({
+		...options,
+		guard: (work) => withTimeout(work(), ACTION_TIMEOUT_MS, DELETE_ACCOUNT_ERROR),
+	});
 }

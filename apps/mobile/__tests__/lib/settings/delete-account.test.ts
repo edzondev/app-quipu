@@ -10,13 +10,23 @@ jest.mock("@/lib/auth-client", () => ({
 	},
 }));
 
+jest.mock("expo-network", () => ({
+	getNetworkStateAsync: jest.fn(),
+}));
+
+import { ACTION_TIMEOUT_MS, OfflineError, TimeoutError } from "@/shared/lib/network/await-online";
 import {
 	DELETE_ACCOUNT_ERROR,
 	DELETE_ACCOUNT_ERROR_PASSWORD,
 	DELETE_ACCOUNT_ERROR_REAUTH,
 	deleteAccount,
+	deleteAccountOnDevice,
 	mapDeleteAccountError,
 } from "@/shared/lib/settings/delete-account";
+
+const { getNetworkStateAsync } = jest.requireMock("expo-network") as {
+	getNetworkStateAsync: jest.Mock;
+};
 
 describe("mapDeleteAccountError", () => {
 	it("maps stale session codes to reauth copy", () => {
@@ -68,6 +78,31 @@ describe("deleteAccount", () => {
 		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
 	});
 
+	it("guards deleteUser but not the passkey prompt", async () => {
+		const guarded: string[] = [];
+		mockDeleteUser
+			.mockResolvedValueOnce({
+				error: { code: "SESSION_EXPIRED", message: "Session expired" },
+			})
+			.mockResolvedValueOnce({ error: null });
+		mockSignInPasskey.mockImplementation(async () => {
+			expect(guarded).toEqual(["deleteUser"]);
+			return { error: null };
+		});
+
+		await expect(
+			deleteAccount({
+				canUsePasskey: true,
+				guard: async (work) => {
+					guarded.push("deleteUser");
+					return work();
+				},
+			}),
+		).resolves.toEqual({ ok: true });
+		expect(guarded).toEqual(["deleteUser", "deleteUser"]);
+		expect(mockSignInPasskey).toHaveBeenCalledTimes(1);
+	});
+
 	it("does not retry passkey when password was already provided", async () => {
 		mockDeleteUser.mockResolvedValue({
 			error: { code: "SESSION_EXPIRED", message: "Session expired" },
@@ -83,5 +118,33 @@ describe("deleteAccount", () => {
 			code: "SESSION_EXPIRED",
 		});
 		expect(mockSignInPasskey).not.toHaveBeenCalled();
+	});
+});
+
+describe("deleteAccountOnDevice", () => {
+	beforeEach(() => {
+		mockDeleteUser.mockReset();
+		getNetworkStateAsync.mockReset();
+		getNetworkStateAsync.mockResolvedValue({ isConnected: true, isInternetReachable: true });
+	});
+
+	it("no llama a deleteUser si no hay red", async () => {
+		getNetworkStateAsync.mockResolvedValue({ isConnected: false });
+		await expect(deleteAccountOnDevice()).rejects.toEqual(new OfflineError(DELETE_ACCOUNT_ERROR));
+		expect(mockDeleteUser).not.toHaveBeenCalled();
+	});
+
+	it("corta deleteUser por timeout y no envuelve el passkey", async () => {
+		jest.useFakeTimers();
+		try {
+			mockDeleteUser.mockReturnValue(new Promise(() => undefined));
+			const pending = deleteAccountOnDevice();
+			const expectation = expect(pending).rejects.toEqual(new TimeoutError(DELETE_ACCOUNT_ERROR));
+			await jest.advanceTimersByTimeAsync(ACTION_TIMEOUT_MS);
+			await expectation;
+			expect(mockSignInPasskey).not.toHaveBeenCalled();
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 });

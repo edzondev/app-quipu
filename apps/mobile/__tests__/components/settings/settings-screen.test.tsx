@@ -60,6 +60,7 @@ const model: SettingsScreenModel = {
 	planLabel: "Gratis",
 	repartoLabel: "50 / 30 / 20",
 	scheduleCopy: "Mensual · día 1",
+	hasPassword: false,
 };
 
 describe("SettingsScreen", () => {

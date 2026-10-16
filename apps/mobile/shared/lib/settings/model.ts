@@ -14,6 +14,7 @@ export type SettingsScreenModel = {
 	planLabel: string;
 	repartoLabel: string;
 	scheduleCopy: string;
+	hasPassword: boolean;
 };
 
 export function profileInitial(name: string): string {
@@ -46,6 +47,7 @@ export function presentSettings(settings: SettingsOverview): SettingsScreenModel
 		planLabel: settings.account.plan.tier === "free" ? "Gratis" : "Plus",
 		repartoLabel: repartoLabel(settings),
 		scheduleCopy: settings.cycle.scheduleCopy,
+		hasPassword: settings.security.hasPassword,
 	};
 }
 

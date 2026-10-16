@@ -1,8 +1,11 @@
 import { RNHostView } from "@expo/ui";
+import { useForm } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { clearDeviceAfterAccountDeleted } from "@/lib/clear-device-after-delete";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
+import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
@@ -13,8 +16,12 @@ import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import { SIGNED_OUT_HREF, signedOutHref } from "@/shared/lib/auth/device-session";
 import { platformAdmitsPasskeys } from "@/shared/lib/auth/passkey-support";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
-import { runAction } from "@/shared/lib/network/run-action";
-import { DELETE_ACCOUNT_ERROR, deleteAccount } from "@/shared/lib/settings/delete-account";
+import {
+	DELETE_ACCOUNT_ERROR,
+	DELETE_ACCOUNT_PASSWORD_LABEL,
+	DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
+	deleteAccountOnDevice,
+} from "@/shared/lib/settings/delete-account";
 import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL, openLegalUrl } from "@/shared/lib/settings/legal";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
@@ -34,6 +41,13 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 	const pending = useRef(false);
+	const deleteForm = useForm({
+		defaultValues: { password: "" },
+		onSubmit: ({ value }) => {
+			void confirmDeleteAccount(value.password);
+		},
+	});
+	const hasPassword = model?.hasPassword === true;
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
 	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
@@ -53,26 +67,23 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		}
 	}
 
-	async function confirmDeleteAccount() {
+	async function confirmDeleteAccount(password: string) {
 		if (pending.current) return;
 		pending.current = true;
 		setDeleting(true);
 		setDeleteError(null);
 		try {
-			const result = await runAction(
-				() =>
-					deleteAccount({
-						canUsePasskey: platformAdmitsPasskeys(Platform.OS, Platform.Version),
-					}),
-				DELETE_ACCOUNT_ERROR,
-			);
+			const result = await deleteAccountOnDevice({
+				password,
+				canUsePasskey: platformAdmitsPasskeys(Platform.OS, Platform.Version),
+			});
 			if (!result.ok) {
-				setDeleteError(DELETE_ACCOUNT_ERROR);
+				setDeleteError(result.message || DELETE_ACCOUNT_ERROR);
 				pending.current = false;
 				setDeleting(false);
 				return;
 			}
-			await signOutAndClearLocalData();
+			await clearDeviceAfterAccountDeleted();
 			router.replace({ pathname: SIGNED_OUT_HREF, params: { notice: "deleted" } });
 		} catch {
 			setDeleteError(DELETE_ACCOUNT_ERROR);
@@ -185,6 +196,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					hitSlop={HIT_SLOP}
 					onPress={() => {
 						setDeleteError(null);
+						deleteForm.setFieldValue("password", "");
 						setSheet("deleteAccount");
 					}}
 					className="border-t border-line py-3.5 active:opacity-60"
@@ -249,13 +261,29 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 								Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No
 								se puede deshacer.
 							</Text>
+							{hasPassword ? (
+								<View className="mt-5">
+									<deleteForm.Field name="password">
+										{(field) => (
+											<AuthLabeledField
+												label={DELETE_ACCOUNT_PASSWORD_LABEL}
+												field={field}
+												secureTextEntry
+												autoComplete="current-password"
+												editable={!deleting}
+												placeholder={DELETE_ACCOUNT_PASSWORD_PLACEHOLDER}
+											/>
+										)}
+									</deleteForm.Field>
+								</View>
+							) : null}
 							<Pressable
 								accessibilityRole="button"
 								accessibilityLabel="Eliminar mi cuenta"
 								accessibilityState={{ disabled: deleting }}
 								disabled={deleting}
 								onPress={() => {
-									void confirmDeleteAccount();
+									void deleteForm.handleSubmit();
 								}}
 								className="mt-[22px] items-center rounded-xl border border-danger py-4 active:opacity-80"
 							>
