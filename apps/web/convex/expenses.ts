@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { shouldWarnWantsBurn } from "./lib/budgetMath";
 import { buildWantsOverflowNudge, WANTS_OVERFLOW_EVENT } from "./lib/coachState";
 import { requireActiveAccount } from "./lib/entitlements";
@@ -8,13 +9,59 @@ import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview
 
 const RECENT_EXPENSES_LIMIT = 5;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const IDEMPOTENCY_KEY_MAX = 128;
+
+const registerExpenseResult = v.object({
+	expenseId: v.id("expenses"),
+	envelopeType: v.union(v.literal("needs"), v.literal("wants")),
+	amount: v.number(),
+	remainingAmount: v.number(),
+	cycleId: v.id("financialCycles"),
+	daysRemainingInCycle: v.number(),
+});
+
+async function replayRegisteredExpense(
+	ctx: MutationCtx,
+	existing: Doc<"expenses">,
+	fallbackEnvelope: "needs" | "wants",
+) {
+	const envelope = await ctx.db.get(existing.envelopeId);
+	const cycle = await ctx.db.get(existing.cycleId);
+	const envelopeType =
+		envelope?.type === "needs" || envelope?.type === "wants" ? envelope.type : fallbackEnvelope;
+	return {
+		expenseId: existing._id,
+		envelopeType,
+		amount: existing.amount,
+		remainingAmount: envelope?.remainingAmount ?? 0,
+		cycleId: existing.cycleId,
+		daysRemainingInCycle: cycle
+			? Math.max(0, Math.ceil((cycle.endDate - Date.now()) / MS_PER_DAY))
+			: 0,
+	};
+}
+
+function readIdempotencyKey(raw: string | undefined): string | undefined {
+	if (raw === undefined) return undefined;
+	const key = raw.trim();
+	if (key.length === 0 || key.length > IDEMPOTENCY_KEY_MAX) {
+		throw new ConvexError({
+			code: "VALIDATION_ERROR",
+			message: "La clave de idempotencia no es válida.",
+			data: { field: "idempotencyKey" },
+		});
+	}
+	return key;
+}
 
 export const registerExpense = mutation({
 	args: {
 		amount: v.number(),
 		description: v.string(),
 		envelopeType: v.union(v.literal("needs"), v.literal("wants")),
+		idempotencyKey: v.optional(v.string()),
 	},
+	returns: registerExpenseResult,
 	handler: async (ctx, args) => {
 		const profile = await requireActiveAccount(ctx);
 		if (!Number.isInteger(args.amount) || args.amount <= 0) {
@@ -23,6 +70,19 @@ export const registerExpense = mutation({
 				message: "El monto debe ser un entero de céntimos mayor a cero",
 				data: { field: "amount" },
 			});
+		}
+
+		const idempotencyKey = readIdempotencyKey(args.idempotencyKey);
+		if (idempotencyKey) {
+			const existing = await ctx.db
+				.query("expenses")
+				.withIndex("by_profile_idempotencyKey", (q) =>
+					q.eq("profileId", profile._id).eq("idempotencyKey", idempotencyKey),
+				)
+				.unique();
+			if (existing) {
+				return await replayRegisteredExpense(ctx, existing, args.envelopeType);
+			}
 		}
 
 		const activeCycle = await ctx.db
@@ -72,6 +132,7 @@ export const registerExpense = mutation({
 			amount: args.amount,
 			description: args.description,
 			timestamp: now,
+			...(idempotencyKey ? { idempotencyKey } : {}),
 		});
 
 		await markNeedsContentReviewIfSuspicious(ctx, profile._id, [args.description]);

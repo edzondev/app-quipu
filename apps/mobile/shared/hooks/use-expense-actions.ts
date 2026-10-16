@@ -23,7 +23,11 @@ export function useExpenseActions() {
 	const deleteExpense = useMutation(api.expenses.deleteExpense);
 
 	return {
-		register: async (input: ExpenseDraftInput) => registerExpense(parseOrThrow(input)),
+		register: async (input: ExpenseDraftInput, idempotencyKey?: string) =>
+			registerExpense({
+				...parseOrThrow(input),
+				...(idempotencyKey ? { idempotencyKey } : {}),
+			}),
 		update: async (id: string, input: ExpenseDraftInput) =>
 			updateExpense({ expenseId: expenseId(id), ...parseOrThrow(input) }),
 		remove: (id: string) => deleteExpense({ expenseId: expenseId(id) }),

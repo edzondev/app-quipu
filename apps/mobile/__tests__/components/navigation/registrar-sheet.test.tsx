@@ -220,6 +220,34 @@ describe("RegistrarSheet", () => {
 		expect(view.getByTestId("income-mode-add").props.accessibilityState.selected).toBe(true);
 	});
 
+	it("reintenta el mismo borrador con la misma clave", async () => {
+		mockRegister
+			.mockRejectedValueOnce(new Error("Network request failed"))
+			.mockResolvedValueOnce({ expenseId: "e1" });
+		mockSummary.mockReturnValue(summaryWithCycle());
+		home.mockReturnValue(readyHome);
+		const view = await render(
+			<RegistrarSheet isPresented session={{ nonce: 10, intent: "auto" }} onDismiss={jest.fn()} />,
+		);
+
+		await fireEvent.press(view.getByText("4"));
+		await fireEvent.press(view.getByText("2"));
+		await fireEvent.press(view.getByText("0"));
+		await fireEvent.press(view.getByText("0"));
+		await fireEvent.changeText(view.getByLabelText("Comercio"), "Plaza Vea");
+		await fireEvent.press(view.getByText("Gustos"));
+		await fireEvent.press(view.getByText("Registrar gasto"));
+		expect(await view.findByText("Network request failed")).toBeTruthy();
+
+		await fireEvent.press(view.getByText("Registrar gasto"));
+		expect(mockRegister).toHaveBeenCalledTimes(2);
+		const firstKey = mockRegister.mock.calls[0]?.[1];
+		const secondKey = mockRegister.mock.calls[1]?.[1];
+		expect(typeof firstKey).toBe("string");
+		expect(firstKey).toMatch(/^exp-/);
+		expect(secondKey).toBe(firstKey);
+	});
+
 	it("sin red muestra el aviso y no deja el loader", async () => {
 		mockGetNetworkStateAsync.mockResolvedValue({ isConnected: false });
 		mockRegister.mockImplementation(() => new Promise(() => undefined));

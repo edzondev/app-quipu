@@ -212,10 +212,12 @@ export const appTables = {
 		timestamp: v.number(),
 		// P3-5: trazabilidad mínima de edición; _creationTime cubre creación.
 		updatedAt: v.optional(v.number()),
+		idempotencyKey: v.optional(v.string()),
 	})
 		.index("by_cycle_envelope_time", ["cycleId", "envelopeId", "timestamp"])
 		.index("by_cycle_time", ["cycleId", "timestamp"])
-		.index("by_profile_time", ["profileId", "timestamp"]),
+		.index("by_profile_time", ["profileId", "timestamp"])
+		.index("by_profile_idempotencyKey", ["profileId", "idempotencyKey"]),
 
 	// COACH DE IA PROACTIVO: Interacciones interactivas de un click (Opción 2)
 	coachInteractions: defineTable({

@@ -9,7 +9,7 @@ import { useDashboardSummary, useHomeModel } from "@/shared/hooks/use-dashboard"
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useIncomeActions } from "@/shared/hooks/use-income-actions";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
-import { ExpenseValidationError } from "@/shared/lib/expenses/draft";
+import { ExpenseValidationError, newExpenseDraftKey } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { incomeCycleOffer } from "@/shared/lib/income/cycle-offer";
 import {
@@ -49,6 +49,7 @@ export default function RegistrarSheet({ isPresented, session, onDismiss }: Prop
 
 function SheetBody({ session, onDone }: { session: Session; onDone: () => void }) {
 	const { register } = useExpenseActions();
+	const [draftKey] = useState(newExpenseDraftKey);
 	const { register: registerIncome } = useIncomeActions();
 	const summary = useDashboardSummary();
 	const home = useHomeModel();
@@ -135,7 +136,9 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 					fieldError={fieldError}
 					formError={formError}
 					isSubmitting={isSubmitting}
-					onSubmit={(input) => void guard(() => register(input), "No se pudo guardar el gasto.")}
+					onSubmit={(input) =>
+						void guard(() => register(input, draftKey), "No se pudo guardar el gasto.")
+					}
 					onCancel={onDone}
 				/>
 			)}
