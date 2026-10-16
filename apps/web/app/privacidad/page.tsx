@@ -14,8 +14,8 @@ const SECTION_HEADING = "font-serif text-[19px] font-medium text-ink";
 const SECTION_BODY = "mt-2";
 const LIST = "mt-2 list-disc space-y-1 pl-5";
 
-/** Correo para solicitudes de borrado. Un solo cambio cuando exista la dirección. */
-export const ACCOUNT_DELETION_EMAIL = "[CORREO PENDIENTE]";
+/** Correo para solicitudes de borrado. */
+export const ACCOUNT_DELETION_EMAIL = "soportequipu@gmail.com";
 
 export default function PrivacidadPage() {
 	return (
@@ -94,7 +94,10 @@ export default function PrivacidadPage() {
 				<h2 className={SECTION_HEADING}>Eliminar cuenta</h2>
 				<p className={SECTION_BODY}>
 					Puedes eliminar tu cuenta desde la app, en {"Ajustes > Eliminar cuenta"}, o por correo a{" "}
-					{ACCOUNT_DELETION_EMAIL}.
+					<a href={`mailto:${ACCOUNT_DELETION_EMAIL}`} className="underline underline-offset-2">
+						{ACCOUNT_DELETION_EMAIL}
+					</a>
+					.
 				</p>
 				<p className={SECTION_BODY}>Se eliminan tu perfil, ciclos, gastos, metas y sesiones.</p>
 				<p className={SECTION_BODY}>

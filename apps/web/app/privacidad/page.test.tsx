@@ -34,9 +34,12 @@ describe("PrivacidadPage", () => {
 		expect(section).not.toBeNull();
 		const text = section?.textContent ?? "";
 
-		expect(ACCOUNT_DELETION_EMAIL).toBe("[CORREO PENDIENTE]");
+		expect(ACCOUNT_DELETION_EMAIL).toBe("soportequipu@gmail.com");
 		expect(text).toContain("Ajustes > Eliminar cuenta");
+		expect(text).not.toContain("[CORREO PENDIENTE]");
 		expect(text).toContain(ACCOUNT_DELETION_EMAIL);
+		const mail = screen.getByRole("link", { name: ACCOUNT_DELETION_EMAIL });
+		expect(mail.getAttribute("href")).toBe(`mailto:${ACCOUNT_DELETION_EMAIL}`);
 		expect(text).toMatch(/perfil, ciclos, gastos, metas y sesiones/i);
 		expect(text).toMatch(/30 días/);
 		expect(text).toMatch(/sistemas activos/i);
