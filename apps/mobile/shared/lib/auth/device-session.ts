@@ -29,7 +29,7 @@ export function clearedAuthSession<T extends AuthSessionSnapshot>(current: T): T
 	return { ...current, data: null, error: null, isPending: false };
 }
 
-export type DeviceSessionDeps = {
+type DeviceSessionDeps = {
 	storagePrefix: string;
 	signOut: () => Promise<unknown>;
 	deleteSecure: (key: string) => Promise<void>;
