@@ -69,6 +69,7 @@ jest.mock("@expo/ui", () => {
 jest.mock("@/shared/components/ui/reicon", () => ({
 	X: () => null,
 	ChevronRight: () => null,
+	ArrowUpRight: () => null,
 }));
 
 const model: SettingsScreenModel = {

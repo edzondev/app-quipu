@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
-import { ChevronRight } from "@/shared/components/ui/reicon";
+import { ArrowUpRight, ChevronRight } from "@/shared/components/ui/reicon";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
 	dotClass?: string;
 	trailing?: ReactNode;
 	onPress?: () => void;
+	external?: boolean;
 	isLast?: boolean;
 	testID?: string;
 };
@@ -25,6 +26,7 @@ export function ListRow({
 	dotClass,
 	trailing,
 	onPress,
+	external = false,
 	isLast = false,
 	testID,
 }: Props) {
@@ -65,7 +67,13 @@ export function ListRow({
 					</Text>
 				) : null}
 				{trailing}
-				{onPress ? <ChevronRight size={16} colorClassName="text-foreground/45" /> : null}
+				{onPress ? (
+					external ? (
+						<ArrowUpRight size={20} strokeWidth={1.5} colorClassName="text-foreground/45" />
+					) : (
+						<ChevronRight size={16} colorClassName="text-foreground/45" />
+					)
+				) : null}
 			</View>
 		</View>
 	);

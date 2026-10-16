@@ -7,6 +7,7 @@ import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
 const mockClear = jest.fn();
+const mockOpenURL = jest.fn();
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
@@ -16,12 +17,23 @@ jest.mock("expo-router", () => ({
 	useLocalSearchParams: () => ({ notice: "offline" }),
 }));
 
+jest.mock("expo-linking", () => ({
+	openURL: (...args: unknown[]) => mockOpenURL(...args),
+}));
+
 jest.mock("@/shared/hooks/use-profile-gate", () => ({
 	useProfileGate: () => ({ isAuthReady: false, isLoading: false, profile: null }),
 }));
 
 jest.mock("@/lib/device-sign-out", () => ({
 	signOutAndClearLocalData: () => mockClear(),
+}));
+
+jest.mock("@/lib/auth-client", () => ({
+	authClient: {
+		deleteUser: jest.fn(),
+		signIn: { passkey: jest.fn() },
+	},
 }));
 
 jest.mock("@expo/ui", () => {
@@ -37,6 +49,7 @@ jest.mock("@expo/ui", () => {
 jest.mock("@/shared/components/ui/reicon", () => ({
 	X: () => null,
 	ChevronRight: () => null,
+	ArrowUpRight: () => null,
 }));
 
 const model: SettingsScreenModel = {
@@ -83,6 +96,10 @@ describe("SettingsScreen", () => {
 		expect(view.queryByRole("button", { name: "Plan y suscripción" })).toBeNull();
 		expect(view.queryByRole("button", { name: "Reparto" })).toBeNull();
 		expect(view.queryByRole("button", { name: "Ciclo e ingresos" })).toBeNull();
+		expect(view.getByText("LEGAL")).toBeTruthy();
+		expect(view.getByRole("button", { name: "Política de privacidad" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Términos y condiciones" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Eliminar cuenta" })).toBeTruthy();
 
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Cerrar" }));
@@ -221,6 +238,60 @@ describe("SettingsScreen", () => {
 		);
 		expect(view.getByText("Cargando…")).toBeTruthy();
 		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(1);
+		expect(view.getByRole("button", { name: "Eliminar cuenta" })).toBeTruthy();
+		expect(view.getByText("LEGAL")).toBeTruthy();
 		expect(view.queryByText("EN ESTE TELÉFONO")).toBeNull();
+	});
+
+	it("abre privacidad y términos en el navegador", async () => {
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Política de privacidad" }));
+		});
+		expect(mockOpenURL).toHaveBeenCalledWith("https://quipu-finance.app/privacidad");
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Términos y condiciones" }));
+		});
+		expect(mockOpenURL).toHaveBeenCalledWith("https://quipu-finance.app/terminos");
+	});
+
+	it("Eliminar cuenta es la última fila y abre el sheet, cancelar no borra", async () => {
+		mockClear.mockClear();
+		mockReplace.mockClear();
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+			/>,
+		);
+		const labels = view
+			.getAllByRole("button")
+			.map((node) => node.props.accessibilityLabel)
+			.filter((label): label is string => typeof label === "string");
+		expect(labels.indexOf("Cerrar sesión")).toBeLessThan(labels.indexOf("Eliminar cuenta"));
+		expect(labels.at(-1)).toBe("Eliminar cuenta");
+
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar cuenta" }));
+		});
+		expect(view.getByText("ELIMINAR CUENTA")).toBeTruthy();
+		expect(view.getByText("¿Eliminar tu cuenta?")).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+
+		await act(async () => {
+			fireEvent.press(view.getAllByRole("button", { name: "Cancelar" })[0]);
+		});
+		expect(view.queryByText("¿Eliminar tu cuenta?")).toBeNull();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
 	});
 });
