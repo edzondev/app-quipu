@@ -27,4 +27,30 @@ describe("parseToCents", () => {
 		expect(parseToCents("S/ 14.90")).toBe(1490);
 		expect(parseToCents("€4,99")).toBe(499);
 	});
+
+	it("does not lose a cent on float-unsafe two-decimal amounts", () => {
+		expect(parseToCents("10.05")).toBe(1005);
+		expect(parseToCents("1.15")).toBe(115);
+		expect(parseToCents("4.10")).toBe(410);
+		expect(parseToCents("19.99")).toBe(1999);
+		expect(parseToCents("0.29")).toBe(29);
+	});
+
+	it("rounds a third decimal to the nearest cent without float multiply", () => {
+		expect(parseToCents("1.005")).toBe(101);
+		expect(parseToCents("1.004")).toBe(100);
+		expect(parseToCents("2.675")).toBe(268);
+	});
+
+	it("keeps every two-decimal amount from 0.00 to 200.00 exact", () => {
+		for (let cents = 0; cents <= 20_000; cents++) {
+			const raw = (cents / 100).toFixed(2);
+			expect(parseToCents(raw)).toBe(cents);
+		}
+	});
+
+	it("rejects a leading minus instead of rounding it the wrong way", () => {
+		expect(parseToCents("-10.05")).toBeNull();
+		expect(parseToCents("-1.15")).toBeNull();
+	});
 });
