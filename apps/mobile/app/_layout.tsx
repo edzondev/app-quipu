@@ -2,12 +2,15 @@ import { Stack } from "expo-router";
 import "react-native-reanimated";
 import "../global.css";
 import { type AuthClient, ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
+import { useUniwind } from "uniwind";
 import { authClient } from "@/lib/auth-client";
 import { createConvexClient, nextConvexClient, registerConvexReset } from "@/lib/convex";
+import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -15,7 +18,15 @@ export const unstable_settings = {
 	initialRouteName: "(tabs)",
 };
 
+SplashScreen.setOptions({
+	fade: true,
+	duration: 1000,
+});
+
+void SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
+	const { theme } = useUniwind();
 	const [session, setSession] = useState(() => ({ epoch: 0, client: createConvexClient() }));
 	useEffect(() => {
 		return registerConvexReset(() => {
@@ -34,12 +45,21 @@ export default function RootLayout() {
 					client={session.client}
 					authClient={authClient as unknown as AuthClient}
 				>
+					<SplashHider />
 					<RootLayoutNav />
 				</ConvexBetterAuthProvider>
-				<StatusBar animated style="dark" />
+				<StatusBar animated style={theme === "dark" ? "light" : "dark"} />
 			</KeyboardProvider>
 		</SafeAreaProvider>
 	);
+}
+
+function SplashHider() {
+	const { isLoading } = useProfileGate();
+	useEffect(() => {
+		if (!isLoading) SplashScreen.hide();
+	}, [isLoading]);
+	return null;
 }
 
 function RootLayoutNav() {
