@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/convex/lib/supportEmail";
 import { pageMetadata } from "@/core/seo";
 import { LegalShell } from "@/modules/legal/components/legal-shell";
 
@@ -55,8 +56,8 @@ export default function TerminosPage() {
 					Te comprometes a usar Quipu solo para fines lícitos y personales. No está permitido
 					intentar acceder a cuentas ajenas, interferir con el servicio, ni usarlo para registrar
 					actividad ilegal. Si detectas abuso de la plataforma, repórtalo a{" "}
-					<a href="mailto:abuse@quipu-finance.app" className="underline underline-offset-2">
-						abuse@quipu-finance.app
+					<a href={`mailto:${SUPPORT_EMAIL}`} className="underline underline-offset-2">
+						{SUPPORT_EMAIL}
 					</a>
 					.
 				</p>
@@ -97,7 +98,11 @@ export default function TerminosPage() {
 				<h2 className={SECTION_HEADING}>8. Ley aplicable y contacto</h2>
 				<p className={SECTION_BODY}>
 					Estos términos se rigen por las leyes de la República del Perú. Cualquier consulta sobre
-					ellos puede hacerse al correo de soporte: soporte@quipu.pe.
+					ellos puede hacerse al correo de soporte:{" "}
+					<a href={`mailto:${SUPPORT_EMAIL}`} className="underline underline-offset-2">
+						{SUPPORT_EMAIL}
+					</a>
+					.
 				</p>
 			</section>
 		</LegalShell>

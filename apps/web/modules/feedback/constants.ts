@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from "@/convex/lib/supportEmail";
+
 export const FEEDBACK_PAGE_TITLE = "Cuéntanos";
 export const FEEDBACK_PAGE_SUBTITLE = "Problemas, ideas o consultas. Lo leemos en persona.";
 export const FEEDBACK_CATEGORY_LABEL = "¿De qué se trata?";
@@ -11,7 +13,7 @@ export const FEEDBACK_SUBMIT = "Enviar mensaje";
 export const FEEDBACK_SUBMITTING = "Enviando…";
 export const FEEDBACK_SUCCESS = "Gracias. Recibimos tu mensaje.";
 export const FEEDBACK_ERROR = "No pudimos enviar tu mensaje. Intenta de nuevo.";
-export const FEEDBACK_FOOTER = "También puedes escribir a soporte@quipu.pe";
+export const FEEDBACK_FOOTER = `También puedes escribir a ${SUPPORT_EMAIL}`;
 
 export const FEEDBACK_CATEGORY_OPTIONS = [
 	{ value: "problem", label: FEEDBACK_CATEGORY_PROBLEM },

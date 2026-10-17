@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SUPPORT_EMAIL } from "../supportEmail";
 import {
 	buildTeamFeedbackEmail,
 	buildUserFeedbackConfirmationEmail,
@@ -64,6 +65,14 @@ describe("buildUserFeedbackConfirmationEmail", () => {
 		expect(email.html).toContain("Gracias por escribirnos");
 		expect(email.html).toContain("Respondemos pronto");
 		expect(email.text).toContain("Respondemos pronto");
+		expect(email.html).toContain(SUPPORT_EMAIL);
+		expect(email.text).toContain(SUPPORT_EMAIL);
+		expect(email.html).not.toContain("soporte@quipu.pe");
+		expect(email.text).not.toContain("soporte@quipu.pe");
+		expect(email.html).toContain("https://quipu-finance.app");
+		expect(email.text).toContain("https://quipu-finance.app");
+		expect(email.html).not.toContain("app.quipu.pe");
+		expect(email.text).not.toContain("app.quipu.pe");
 		assertNoForbiddenClickCopy(email.html);
 		assertNoForbiddenClickCopy(email.text);
 	});

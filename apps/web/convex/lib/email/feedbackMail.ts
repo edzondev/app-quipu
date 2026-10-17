@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "../supportEmail";
 import { renderAuthEmailHtml } from "./authEmailLayout";
 import { sendOutboundEmail } from "./send";
 
@@ -81,7 +82,7 @@ export function buildTeamFeedbackEmail(ctx: FeedbackSubmissionEmailContext): {
 	const greeting = `De ${ctx.userName.trim()}`;
 	const metadataLines = formatMetadataLines(ctx);
 	const paragraphs = [`Mensaje:\n${ctx.message.trim()}`, metadataLines.join("\n")];
-	const siteUrl = process.env.SITE_URL ?? "https://app.quipu.pe";
+	const siteUrl = process.env.SITE_URL ?? "https://quipu-finance.app";
 	const ctaHref = ctx.userEmail
 		? `mailto:${ctx.userEmail}?subject=${encodeURIComponent(`Re: tu mensaje en Quipu (${categoryLabel})`)}`
 		: siteUrl;
@@ -121,7 +122,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		`Tu mensaje:\n${ctx.message.trim()}`,
 		"Respondemos pronto por correo si hace falta dar seguimiento.",
 	];
-	const siteUrl = process.env.SITE_URL ?? "https://app.quipu.pe";
+	const siteUrl = process.env.SITE_URL ?? "https://quipu-finance.app";
 
 	const html = renderAuthEmailHtml({
 		preheader: "Tu feedback llegó al equipo de Quipu.",
@@ -129,7 +130,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		greeting,
 		paragraphs,
 		cta: { label: "Volver a Quipu", href: siteUrl },
-		footerLines: ["Si no enviaste este mensaje, escríbenos a soporte@quipu.pe."],
+		footerLines: [`Si no enviaste este mensaje, escríbenos a ${SUPPORT_EMAIL}.`],
 	});
 
 	const text = buildPlainText({
@@ -137,7 +138,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		greeting,
 		paragraphs,
 		footerLines: [
-			"Si no enviaste este mensaje, escríbenos a soporte@quipu.pe.",
+			`Si no enviaste este mensaje, escríbenos a ${SUPPORT_EMAIL}.`,
 			"",
 			`Volver a Quipu: ${siteUrl}`,
 		],
@@ -147,7 +148,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 }
 
 function feedbackInboxEmail(): string {
-	return process.env.FEEDBACK_INBOX_EMAIL ?? "soporte@quipu.pe";
+	return process.env.FEEDBACK_INBOX_EMAIL ?? SUPPORT_EMAIL;
 }
 
 export async function sendTeamFeedbackEmail(ctx: FeedbackSubmissionEmailContext): Promise<void> {
