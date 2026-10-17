@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { SUPPORT_EMAIL } from "@/convex/lib/supportEmail";
 import type { TurnstileWidgetApi } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared/components/ui/field";
@@ -75,7 +76,7 @@ export function PasswordStep({
 				<AuthBanner
 					variant="error"
 					title="Cuenta suspendida"
-					description="Tu cuenta no está disponible. Si crees que es un error, escríbenos a soportequipu@gmail.com."
+					description={`Tu cuenta no está disponible. Si crees que es un error, escríbenos a ${SUPPORT_EMAIL}.`}
 				/>
 			)}
 			{error === "unverified" && (

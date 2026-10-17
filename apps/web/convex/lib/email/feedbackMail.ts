@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "../supportEmail";
 import { renderAuthEmailHtml } from "./authEmailLayout";
 import { sendOutboundEmail } from "./send";
 
@@ -129,7 +130,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		greeting,
 		paragraphs,
 		cta: { label: "Volver a Quipu", href: siteUrl },
-		footerLines: ["Si no enviaste este mensaje, escríbenos a soportequipu@gmail.com."],
+		footerLines: [`Si no enviaste este mensaje, escríbenos a ${SUPPORT_EMAIL}.`],
 	});
 
 	const text = buildPlainText({
@@ -137,7 +138,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		greeting,
 		paragraphs,
 		footerLines: [
-			"Si no enviaste este mensaje, escríbenos a soportequipu@gmail.com.",
+			`Si no enviaste este mensaje, escríbenos a ${SUPPORT_EMAIL}.`,
 			"",
 			`Volver a Quipu: ${siteUrl}`,
 		],
@@ -147,7 +148,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 }
 
 function feedbackInboxEmail(): string {
-	return process.env.FEEDBACK_INBOX_EMAIL ?? "soportequipu@gmail.com";
+	return process.env.FEEDBACK_INBOX_EMAIL ?? SUPPORT_EMAIL;
 }
 
 export async function sendTeamFeedbackEmail(ctx: FeedbackSubmissionEmailContext): Promise<void> {

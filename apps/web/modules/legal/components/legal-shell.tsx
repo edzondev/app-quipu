@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { SUPPORT_EMAIL } from "@/convex/lib/supportEmail";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 
 type Props = {
@@ -36,7 +37,7 @@ export function LegalShell({ title, updatedAt, children }: Props) {
 				<Link href="/privacidad" className="hover:text-body">
 					Privacidad
 				</Link>
-				<a href="mailto:soportequipu@gmail.com" className="hover:text-body">
+				<a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-body">
 					Reportar abuso
 				</a>
 			</footer>
