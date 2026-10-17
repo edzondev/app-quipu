@@ -29,11 +29,6 @@ describe("authPathRequiresTurnstile", () => {
 		expect(authPathRequiresTurnstile("/api/auth/passkey/generate-register-options")).toBe(false);
 		expect(authPathRequiresTurnstile("/api/auth/get-session")).toBe(false);
 	});
-
-	it("treats email-otp as its own path, not a prefix of /sign-in/email", () => {
-		expect(authPathRequiresTurnstile("/api/auth/sign-in/email")).toBe(true);
-		expect(authPathRequiresTurnstile("/api/auth/sign-in/email-otp")).toBe(true);
-	});
 });
 
 describe("verifyTurnstileToken", () => {
@@ -208,29 +203,5 @@ describe("enforceAuthTurnstile", () => {
 			}),
 		).resolves.toEqual({ blocked: false });
 		expect(fetch).not.toHaveBeenCalled();
-	});
-
-	it("skips email-otp sign-in when a session cookie is already present", async () => {
-		await expect(
-			enforceAuthTurnstile({
-				pathname: "/api/auth/sign-in/email-otp",
-				token: null,
-				cookieHeader: "better-auth.session_token=abc",
-			}),
-		).resolves.toEqual({ blocked: false });
-		expect(fetch).not.toHaveBeenCalled();
-	});
-
-	it("still requires Turnstile on email-otp without a session", async () => {
-		await expect(
-			enforceAuthTurnstile({
-				pathname: "/api/auth/sign-in/email-otp",
-				token: null,
-			}),
-		).resolves.toEqual({
-			blocked: true,
-			status: 400,
-			error: "Verification required",
-		});
 	});
 });

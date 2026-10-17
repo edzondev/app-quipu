@@ -73,14 +73,16 @@ export const SETTINGS_DELETE_ACCOUNT_ERROR = "No pudimos eliminar tu cuenta. Int
 export const SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH =
 	"Por seguridad, confirma con passkey o escribe tu contraseña.";
 export const SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD = "La contraseña no es correcta.";
-export const SETTINGS_DELETE_ACCOUNT_ERROR_OTP = "El código no es correcto. Pide uno nuevo.";
-export const SETTINGS_DELETE_ACCOUNT_ERROR_POLAR =
-	"No pudimos cancelar tu suscripción. Intenta de nuevo.";
+export const SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE =
+	"Cancela tu suscripción en Polar antes de eliminar la cuenta.";
+export const SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE =
+	"No pudimos comprobar tu suscripción. Intenta de nuevo.";
+export const SETTINGS_DELETE_ACCOUNT_POLAR_TITLE = "Cancela tu suscripción primero";
+export const SETTINGS_DELETE_ACCOUNT_POLAR_BODY =
+	"Tienes Quipu Plus activo. Cancélalo en Polar y espera a que se actualice el plan. Después podrás eliminar la cuenta.";
+export const SETTINGS_DELETE_ACCOUNT_POLAR_PORTAL = "Abrir portal de Polar";
 export const SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL = "Contraseña (si usas una)";
 export const SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = "Opcional si acabas de entrar";
-export const SETTINGS_DELETE_ACCOUNT_OTP_LABEL = "Código del correo";
-export const SETTINGS_DELETE_ACCOUNT_OTP_PLACEHOLDER = "6 dígitos";
-export const SETTINGS_DELETE_ACCOUNT_OTP_SENT = "Te enviamos un código a tu correo para confirmar.";
 
 export const SETTINGS_SYSTEM_HEADING = "Tu sistema";
 

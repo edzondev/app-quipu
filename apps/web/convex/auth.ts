@@ -19,7 +19,7 @@ import {
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
 import { androidApkKeyHashOrigins } from "./lib/passkeyOrigins";
 import { resolvePasskeyRegistrationUser } from "./lib/passkeyRegistration";
-import { cancelPolarSubscriptionForUserId } from "./polar";
+import { polarSubscriptionBlocksAccountDeletion } from "./polar";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
@@ -124,16 +124,23 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				beforeDelete: async (user) => {
 					if (!isActionCtx(ctx) && !isMutationCtx(ctx)) {
 						throw APIError.from("BAD_REQUEST", {
-							message: "No pudimos cancelar tu suscripción. Intenta de nuevo.",
-							code: "POLAR_CANCEL_FAILED",
+							message: "No pudimos comprobar tu suscripción. Intenta de nuevo.",
+							code: "POLAR_STATUS_UNAVAILABLE",
 						});
 					}
+					let blocksDeletion: boolean;
 					try {
-						await cancelPolarSubscriptionForUserId(ctx, user.id);
+						blocksDeletion = await polarSubscriptionBlocksAccountDeletion(ctx, user.id);
 					} catch {
 						throw APIError.from("BAD_REQUEST", {
-							message: "No pudimos cancelar tu suscripción. Intenta de nuevo.",
-							code: "POLAR_CANCEL_FAILED",
+							message: "No pudimos comprobar tu suscripción. Intenta de nuevo.",
+							code: "POLAR_STATUS_UNAVAILABLE",
+						});
+					}
+					if (blocksDeletion) {
+						throw APIError.from("BAD_REQUEST", {
+							message: "Cancela tu suscripción en Polar antes de eliminar la cuenta.",
+							code: "POLAR_SUBSCRIPTION_ACTIVE",
 						});
 					}
 				},

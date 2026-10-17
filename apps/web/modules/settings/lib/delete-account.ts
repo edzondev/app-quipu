@@ -1,11 +1,10 @@
 import { authClient } from "@/auth/auth-client";
 import {
 	SETTINGS_DELETE_ACCOUNT_ERROR,
-	SETTINGS_DELETE_ACCOUNT_ERROR_OTP,
 	SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD,
-	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR,
+	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 	SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH,
-	SETTINGS_DELETE_ACCOUNT_OTP_SENT,
 } from "../constants";
 
 type AuthClientError = {
@@ -13,15 +12,7 @@ type AuthClientError = {
 	message?: string | undefined;
 };
 
-type DeleteAccountSuccess = { ok: true };
-type DeleteAccountFailure = {
-	ok: false;
-	message: string;
-	code?: string;
-	needsOtp?: boolean;
-};
-
-export type DeleteAccountResult = DeleteAccountSuccess | DeleteAccountFailure;
+type DeleteAccountResult = { ok: true } | { ok: false; message: string; code?: string };
 
 function isStaleSessionError(error: AuthClientError): boolean {
 	const code = error.code?.toUpperCase() ?? "";
@@ -46,39 +37,20 @@ function isInvalidPasswordError(error: AuthClientError): boolean {
 	);
 }
 
-function isInvalidOtpError(error: AuthClientError): boolean {
+function polarErrorCopy(error: AuthClientError): string | null {
 	const code = error.code?.toUpperCase() ?? "";
-	const message = error.message?.toLowerCase() ?? "";
-	return (
-		code === "INVALID_OTP" ||
-		code === "OTP_EXPIRED" ||
-		code === "TOO_MANY_ATTEMPTS" ||
-		message.includes("invalid otp") ||
-		message.includes("otp expired")
-	);
-}
-
-function isPolarCancelError(error: AuthClientError): boolean {
-	const code = error.code?.toUpperCase() ?? "";
-	const message = error.message?.toLowerCase() ?? "";
-	return code === "POLAR_CANCEL_FAILED" || message.includes("cancelar tu suscripción");
-}
-
-function failure(error: AuthClientError): DeleteAccountFailure {
-	return {
-		ok: false,
-		message: mapDeleteAccountError(error),
-		code: error.code,
-	};
+	if (code === "POLAR_SUBSCRIPTION_ACTIVE") {
+		return SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE;
+	}
+	if (code === "POLAR_STATUS_UNAVAILABLE") {
+		return SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE;
+	}
+	return null;
 }
 
 export function mapDeleteAccountError(error: AuthClientError): string {
-	if (isPolarCancelError(error)) {
-		return SETTINGS_DELETE_ACCOUNT_ERROR_POLAR;
-	}
-	if (isInvalidOtpError(error)) {
-		return SETTINGS_DELETE_ACCOUNT_ERROR_OTP;
-	}
+	const polar = polarErrorCopy(error);
+	if (polar !== null) return polar;
 	if (isStaleSessionError(error)) {
 		return SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH;
 	}
@@ -88,70 +60,45 @@ export function mapDeleteAccountError(error: AuthClientError): string {
 	return SETTINGS_DELETE_ACCOUNT_ERROR;
 }
 
-async function sendDeleteAccountOtp(email: string): Promise<DeleteAccountResult> {
-	const sent = await authClient.emailOtp.sendVerificationOtp({
-		email,
-		type: "sign-in",
-	});
-	if (sent.error) {
-		return failure(sent.error);
-	}
-	return {
-		ok: false,
-		needsOtp: true,
-		message: SETTINGS_DELETE_ACCOUNT_OTP_SENT,
-	};
-}
-
 /**
  * Better Auth exige sesión "fresh" (creada < freshAge, default 24h) o
  * contraseña para `/delete-user`. Sin eso responde SESSION_EXPIRED.
  *
- * Flujo: intentar borrar → si la sesión es vieja, passkey o OTP de correo
- * (cuentas sin contraseña) y reintentar. Polar se cancela en beforeDelete.
+ * Web: passkey reauth si la sesión es vieja. Polar activo se bloquea en
+ * beforeDelete (POLAR_SUBSCRIPTION_ACTIVE); la UI pide cancelar en el portal.
+ * Teléfono: emailOTP sigue en el servidor para refrescar sesión OTP-only.
  */
 export async function deleteAccount(options?: {
 	password?: string;
-	otp?: string;
-	email?: string;
 	canUsePasskey?: boolean;
-	hasPassword?: boolean;
 }): Promise<DeleteAccountResult> {
 	const password = options?.password?.trim();
-	const otp = options?.otp?.trim();
-	const email = options?.email?.trim().toLowerCase();
 	const canUsePasskey = options?.canUsePasskey ?? false;
-	const passwordAccount = options?.hasPassword === true;
-
-	if (otp && email) {
-		const signedIn = await authClient.signIn.emailOtp({ email, otp });
-		if (signedIn.error) {
-			return failure(signedIn.error);
-		}
-		const deleted = await authClient.deleteUser(undefined);
-		if (!deleted.error) return { ok: true };
-		return failure(deleted.error);
-	}
 
 	const first = await authClient.deleteUser(password ? { password } : undefined);
 	if (!first.error) return { ok: true };
 
 	if (!password && canUsePasskey && isStaleSessionError(first.error)) {
 		const passkey = await authClient.signIn.passkey();
-		if (!passkey.error) {
-			const second = await authClient.deleteUser();
-			if (!second.error) return { ok: true };
-			return failure(second.error);
+		if (passkey.error) {
+			return {
+				ok: false,
+				message: mapDeleteAccountError(first.error),
+				code: first.error.code,
+			};
 		}
-		if (!passwordAccount && email) {
-			return sendDeleteAccountOtp(email);
-		}
-		return failure(first.error);
+		const second = await authClient.deleteUser();
+		if (!second.error) return { ok: true };
+		return {
+			ok: false,
+			message: mapDeleteAccountError(second.error),
+			code: second.error.code,
+		};
 	}
 
-	if (!passwordAccount && email && isStaleSessionError(first.error)) {
-		return sendDeleteAccountOtp(email);
-	}
-
-	return failure(first.error);
+	return {
+		ok: false,
+		message: mapDeleteAccountError(first.error),
+		code: first.error.code,
+	};
 }

@@ -1,7 +1,9 @@
 "use client";
 
+import { useAction } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { api } from "@/convex/_generated/api";
 import { usePasskeySupport } from "@/modules/auth/hooks/use-passkey-support";
 import {
 	AlertDialog,
@@ -21,19 +23,22 @@ import {
 	SETTINGS_DELETE_ACCOUNT_CANCEL,
 	SETTINGS_DELETE_ACCOUNT_CONFIRM,
 	SETTINGS_DELETE_ACCOUNT_ERROR,
-	SETTINGS_DELETE_ACCOUNT_OTP_LABEL,
-	SETTINGS_DELETE_ACCOUNT_OTP_PLACEHOLDER,
 	SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL,
 	SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
+	SETTINGS_DELETE_ACCOUNT_POLAR_BODY,
+	SETTINGS_DELETE_ACCOUNT_POLAR_PORTAL,
+	SETTINGS_DELETE_ACCOUNT_POLAR_TITLE,
 	SETTINGS_DELETE_ACCOUNT_TITLE,
 	SETTINGS_DELETE_ACCOUNT_WORKING,
+	SETTINGS_PLAN_PREPARING,
 } from "../constants";
 import { deleteAccount } from "../lib/delete-account";
+import type { SettingsSubscriptionStatus } from "../types";
 
 type Props = {
 	className?: string;
 	hasPassword?: boolean;
-	email?: string | null;
+	subscriptionStatus?: SettingsSubscriptionStatus;
 };
 
 /**
@@ -42,23 +47,26 @@ type Props = {
  * deliberada. El borrado en cascada lo ejecuta el trigger onDelete del
  * backend (convex/auth.ts → profiles.deleteAllDataForProfile).
  *
- * Better Auth exige sesión fresh (<24h) o contraseña. Sin contraseña, un
- * código por correo refresca la sesión. Polar se cancela en beforeDelete.
+ * Polar activo: no se borra. La UI pide cancelar en el portal; beforeDelete
+ * vuelve a comprobarlo. Web refresca sesión con passkey, no con OTP.
  */
-export function SettingsDeleteAccountItem({ className, hasPassword = true, email }: Props) {
+export function SettingsDeleteAccountItem({
+	className,
+	hasPassword = true,
+	subscriptionStatus = "free",
+}: Props) {
 	const router = useRouter();
 	const passkeySupport = usePasskeySupport();
+	const generatePortal = useAction(api.polar.generateCustomerPortalUrl);
+	const [portalPending, startPortal] = useTransition();
 	const [open, setOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [password, setPassword] = useState("");
-	const [otp, setOtp] = useState("");
-	const [needsOtp, setNeedsOtp] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const polarBlocksDelete = subscriptionStatus === "active";
 
 	const resetLocalState = () => {
 		setPassword("");
-		setOtp("");
-		setNeedsOtp(false);
 		setErrorMessage(null);
 		setIsDeleting(false);
 	};
@@ -69,21 +77,16 @@ export function SettingsDeleteAccountItem({ className, hasPassword = true, email
 	};
 
 	const handleDelete = async () => {
+		if (polarBlocksDelete) return;
 		setIsDeleting(true);
 		setErrorMessage(null);
 		const result = await deleteAccount({
 			password: hasPassword ? password : undefined,
-			otp: needsOtp ? otp : undefined,
-			email: email ?? undefined,
 			canUsePasskey: passkeySupport.webauthn,
-			hasPassword,
 		}).finally(() => {
 			setIsDeleting(false);
 		});
 		if (!result.ok) {
-			if (result.needsOtp) {
-				setNeedsOtp(true);
-			}
 			setErrorMessage(result.message || SETTINGS_DELETE_ACCOUNT_ERROR);
 			return;
 		}
@@ -91,8 +94,18 @@ export function SettingsDeleteAccountItem({ className, hasPassword = true, email
 		router.refresh();
 	};
 
-	const showPasswordField = hasPassword && !needsOtp;
-	const showOtpField = needsOtp;
+	const handleOpenPortal = () => {
+		startPortal(async () => {
+			try {
+				const { url } = await generatePortal({
+					returnUrl: `${window.location.origin}/settings#plan`,
+				});
+				window.open(url, "_blank", "noopener,noreferrer");
+			} catch {
+				setErrorMessage(SETTINGS_DELETE_ACCOUNT_ERROR);
+			}
+		});
+	};
 
 	return (
 		<>
@@ -111,11 +124,17 @@ export function SettingsDeleteAccountItem({ className, hasPassword = true, email
 				<AlertDialogContent className="rounded-[22px] border-t-4 border-t-danger">
 					<AlertDialogHeader>
 						<AlertDialogTitle className="font-serif">
-							{SETTINGS_DELETE_ACCOUNT_TITLE}
+							{polarBlocksDelete
+								? SETTINGS_DELETE_ACCOUNT_POLAR_TITLE
+								: SETTINGS_DELETE_ACCOUNT_TITLE}
 						</AlertDialogTitle>
-						<AlertDialogDescription>{SETTINGS_DELETE_ACCOUNT_BODY}</AlertDialogDescription>
+						<AlertDialogDescription>
+							{polarBlocksDelete
+								? SETTINGS_DELETE_ACCOUNT_POLAR_BODY
+								: SETTINGS_DELETE_ACCOUNT_BODY}
+						</AlertDialogDescription>
 					</AlertDialogHeader>
-					{showPasswordField ? (
+					{hasPassword && !polarBlocksDelete ? (
 						<div className="space-y-1.5">
 							<label htmlFor="delete-account-password" className="text-[12.5px] text-mute">
 								{SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL}
@@ -132,39 +151,32 @@ export function SettingsDeleteAccountItem({ className, hasPassword = true, email
 							/>
 						</div>
 					) : null}
-					{showOtpField ? (
-						<div className="space-y-1.5">
-							<label htmlFor="delete-account-otp" className="text-[12.5px] text-mute">
-								{SETTINGS_DELETE_ACCOUNT_OTP_LABEL}
-							</label>
-							<Input
-								id="delete-account-otp"
-								inputMode="numeric"
-								autoComplete="one-time-code"
-								value={otp}
-								disabled={isDeleting}
-								placeholder={SETTINGS_DELETE_ACCOUNT_OTP_PLACEHOLDER}
-								onChange={(event) => setOtp(event.target.value)}
-								className="h-11 rounded-[11px]"
-							/>
-						</div>
-					) : null}
 					{errorMessage ? (
 						<p className="text-center text-[12.5px] text-danger-ink" role="alert">
 							{errorMessage}
 						</p>
 					) : null}
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>
+						<AlertDialogCancel disabled={isDeleting || portalPending}>
 							{SETTINGS_DELETE_ACCOUNT_CANCEL}
 						</AlertDialogCancel>
-						<Button
-							onClick={handleDelete}
-							disabled={isDeleting || (needsOtp && otp.trim().length === 0)}
-							className="bg-danger text-canvas hover:bg-danger/90"
-						>
-							{isDeleting ? SETTINGS_DELETE_ACCOUNT_WORKING : SETTINGS_DELETE_ACCOUNT_CONFIRM}
-						</Button>
+						{polarBlocksDelete ? (
+							<Button
+								onClick={handleOpenPortal}
+								disabled={portalPending}
+								className="bg-ink text-canvas hover:bg-ink/90"
+							>
+								{portalPending ? SETTINGS_PLAN_PREPARING : SETTINGS_DELETE_ACCOUNT_POLAR_PORTAL}
+							</Button>
+						) : (
+							<Button
+								onClick={handleDelete}
+								disabled={isDeleting}
+								className="bg-danger text-canvas hover:bg-danger/90"
+							>
+								{isDeleting ? SETTINGS_DELETE_ACCOUNT_WORKING : SETTINGS_DELETE_ACCOUNT_CONFIRM}
+							</Button>
+						)}
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>

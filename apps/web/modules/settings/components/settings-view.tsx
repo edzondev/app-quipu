@@ -284,7 +284,10 @@ export function SettingsView() {
 					</div>
 				</div>
 
-				<SettingsAccountActions hasPassword={overview.hasPassword} email={overview.profile.email} />
+				<SettingsAccountActions
+					hasPassword={overview.hasPassword}
+					subscriptionStatus={overview.subscription.status}
+				/>
 			</div>
 		</div>
 	);
