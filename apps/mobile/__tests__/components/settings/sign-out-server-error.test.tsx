@@ -69,6 +69,7 @@ jest.mock("@expo/ui", () => {
 jest.mock("@/shared/components/ui/reicon", () => ({
 	X: () => null,
 	ChevronRight: () => null,
+	ArrowUpRight: () => null,
 }));
 
 const model: SettingsScreenModel = {
@@ -79,6 +80,7 @@ const model: SettingsScreenModel = {
 	planLabel: "Gratis",
 	repartoLabel: "50 / 30 / 20",
 	scheduleCopy: "Mensual · día 1",
+	hasPassword: false,
 };
 
 describe("signOut HTTP error", () => {

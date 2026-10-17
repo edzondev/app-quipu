@@ -10,6 +10,7 @@ type SettingsFixtureOptions = {
 	passkeysSource?: "better_auth" | "unavailable";
 	passkeyCount?: number;
 	currencyCode?: string;
+	hasPassword?: boolean;
 };
 
 export function settingsOverview(options: SettingsFixtureOptions = {}): SettingsOverview {
@@ -76,7 +77,7 @@ export function settingsOverview(options: SettingsFixtureOptions = {}): Settings
 			})),
 			passkeysSource: options.passkeysSource ?? "better_auth",
 			sessions: { count: 0, apiReady: true },
-			hasPassword: true,
+			hasPassword: options.hasPassword ?? true,
 			emailVerified: true,
 		},
 	} satisfies SettingsOverview;
