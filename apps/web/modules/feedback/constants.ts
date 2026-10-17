@@ -11,7 +11,7 @@ export const FEEDBACK_SUBMIT = "Enviar mensaje";
 export const FEEDBACK_SUBMITTING = "Enviando…";
 export const FEEDBACK_SUCCESS = "Gracias. Recibimos tu mensaje.";
 export const FEEDBACK_ERROR = "No pudimos enviar tu mensaje. Intenta de nuevo.";
-export const FEEDBACK_FOOTER = "También puedes escribir a soporte@quipu.pe";
+export const FEEDBACK_FOOTER = "También puedes escribir a soportequipu@gmail.com";
 
 export const FEEDBACK_CATEGORY_OPTIONS = [
 	{ value: "problem", label: FEEDBACK_CATEGORY_PROBLEM },

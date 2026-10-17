@@ -129,7 +129,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		greeting,
 		paragraphs,
 		cta: { label: "Volver a Quipu", href: siteUrl },
-		footerLines: ["Si no enviaste este mensaje, escríbenos a soporte@quipu.pe."],
+		footerLines: ["Si no enviaste este mensaje, escríbenos a soportequipu@gmail.com."],
 	});
 
 	const text = buildPlainText({
@@ -137,7 +137,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		greeting,
 		paragraphs,
 		footerLines: [
-			"Si no enviaste este mensaje, escríbenos a soporte@quipu.pe.",
+			"Si no enviaste este mensaje, escríbenos a soportequipu@gmail.com.",
 			"",
 			`Volver a Quipu: ${siteUrl}`,
 		],
@@ -147,7 +147,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 }
 
 function feedbackInboxEmail(): string {
-	return process.env.FEEDBACK_INBOX_EMAIL ?? "soporte@quipu.pe";
+	return process.env.FEEDBACK_INBOX_EMAIL ?? "soportequipu@gmail.com";
 }
 
 export async function sendTeamFeedbackEmail(ctx: FeedbackSubmissionEmailContext): Promise<void> {

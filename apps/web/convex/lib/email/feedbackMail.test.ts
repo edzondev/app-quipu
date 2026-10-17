@@ -64,6 +64,10 @@ describe("buildUserFeedbackConfirmationEmail", () => {
 		expect(email.html).toContain("Gracias por escribirnos");
 		expect(email.html).toContain("Respondemos pronto");
 		expect(email.text).toContain("Respondemos pronto");
+		expect(email.html).toContain("soportequipu@gmail.com");
+		expect(email.text).toContain("soportequipu@gmail.com");
+		expect(email.html).not.toContain("soporte@quipu.pe");
+		expect(email.text).not.toContain("soporte@quipu.pe");
 		assertNoForbiddenClickCopy(email.html);
 		assertNoForbiddenClickCopy(email.text);
 	});

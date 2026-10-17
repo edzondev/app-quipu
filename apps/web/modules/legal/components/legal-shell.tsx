@@ -36,7 +36,7 @@ export function LegalShell({ title, updatedAt, children }: Props) {
 				<Link href="/privacidad" className="hover:text-body">
 					Privacidad
 				</Link>
-				<a href="mailto:abuse@quipu-finance.app" className="hover:text-body">
+				<a href="mailto:soportequipu@gmail.com" className="hover:text-body">
 					Reportar abuso
 				</a>
 			</footer>

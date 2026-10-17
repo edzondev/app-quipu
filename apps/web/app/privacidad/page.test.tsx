@@ -35,11 +35,19 @@ describe("PrivacidadPage", () => {
 		const text = section?.textContent ?? "";
 
 		expect(ACCOUNT_DELETION_EMAIL).toBe("soportequipu@gmail.com");
+		expect(document.body.textContent ?? "").not.toContain("soporte@quipu.pe");
+		expect(document.body.textContent ?? "").not.toContain("abuse@quipu-finance.app");
+		expect(screen.getByRole("link", { name: "Reportar abuso" }).getAttribute("href")).toBe(
+			`mailto:${ACCOUNT_DELETION_EMAIL}`,
+		);
 		expect(text).toContain("Ajustes > Eliminar cuenta");
 		expect(text).not.toContain("[CORREO PENDIENTE]");
 		expect(text).toContain(ACCOUNT_DELETION_EMAIL);
-		const mail = screen.getByRole("link", { name: ACCOUNT_DELETION_EMAIL });
-		expect(mail.getAttribute("href")).toBe(`mailto:${ACCOUNT_DELETION_EMAIL}`);
+		const mailLinks = screen.getAllByRole("link", { name: ACCOUNT_DELETION_EMAIL });
+		expect(mailLinks.length).toBeGreaterThanOrEqual(2);
+		for (const mail of mailLinks) {
+			expect(mail.getAttribute("href")).toBe(`mailto:${ACCOUNT_DELETION_EMAIL}`);
+		}
 		expect(text).toContain(
 			"Se eliminan tu perfil, ciclos, sobres, movimientos/gastos, compromisos, metas y sesiones.",
 		);

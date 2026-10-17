@@ -75,7 +75,7 @@ export function PasswordStep({
 				<AuthBanner
 					variant="error"
 					title="Cuenta suspendida"
-					description="Tu cuenta no está disponible. Si crees que es un error, escríbenos a abuse@quipu-finance.app."
+					description="Tu cuenta no está disponible. Si crees que es un error, escríbenos a soportequipu@gmail.com."
 				/>
 			)}
 			{error === "unverified" && (

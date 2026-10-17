@@ -23,9 +23,12 @@ export default function PrivacidadPage() {
 			<section>
 				<h2 className={SECTION_HEADING}>1. Responsable del tratamiento</h2>
 				<p className={SECTION_BODY}>
-					El titular del banco de datos personales es Quipu (soporte@quipu.pe). Tratamos tus datos
-					conforme a la Ley N.° 29733, Ley de Protección de Datos Personales del Perú, y su
-					reglamento.
+					El titular del banco de datos personales es Quipu (
+					<a href={`mailto:${ACCOUNT_DELETION_EMAIL}`} className="underline underline-offset-2">
+						{ACCOUNT_DELETION_EMAIL}
+					</a>
+					). Tratamos tus datos conforme a la Ley N.° 29733, Ley de Protección de Datos Personales
+					del Perú, y su reglamento.
 				</p>
 			</section>
 
@@ -117,7 +120,10 @@ export default function PrivacidadPage() {
 				<p className={SECTION_BODY}>
 					Puedes ejercer tus derechos de acceso, rectificación, cancelación y oposición: la
 					exportación completa de tus datos y la eliminación de tu cuenta están disponibles en
-					Ajustes, sin intermediarios. Para cualquier otra solicitud, escríbenos a soporte@quipu.pe
+					Ajustes, sin intermediarios. Para cualquier otra solicitud, escríbenos a{" "}
+					<a href={`mailto:${ACCOUNT_DELETION_EMAIL}`} className="underline underline-offset-2">
+						{ACCOUNT_DELETION_EMAIL}
+					</a>{" "}
 					y responderemos en los plazos de la Ley N.° 29733.
 				</p>
 			</section>

@@ -55,8 +55,8 @@ export default function TerminosPage() {
 					Te comprometes a usar Quipu solo para fines lícitos y personales. No está permitido
 					intentar acceder a cuentas ajenas, interferir con el servicio, ni usarlo para registrar
 					actividad ilegal. Si detectas abuso de la plataforma, repórtalo a{" "}
-					<a href="mailto:abuse@quipu-finance.app" className="underline underline-offset-2">
-						abuse@quipu-finance.app
+					<a href="mailto:soportequipu@gmail.com" className="underline underline-offset-2">
+						soportequipu@gmail.com
 					</a>
 					.
 				</p>
@@ -97,7 +97,11 @@ export default function TerminosPage() {
 				<h2 className={SECTION_HEADING}>8. Ley aplicable y contacto</h2>
 				<p className={SECTION_BODY}>
 					Estos términos se rigen por las leyes de la República del Perú. Cualquier consulta sobre
-					ellos puede hacerse al correo de soporte: soporte@quipu.pe.
+					ellos puede hacerse al correo de soporte:{" "}
+					<a href="mailto:soportequipu@gmail.com" className="underline underline-offset-2">
+						soportequipu@gmail.com
+					</a>
+					.
 				</p>
 			</section>
 		</LegalShell>
