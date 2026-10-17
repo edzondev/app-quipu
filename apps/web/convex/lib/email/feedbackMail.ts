@@ -82,7 +82,7 @@ export function buildTeamFeedbackEmail(ctx: FeedbackSubmissionEmailContext): {
 	const greeting = `De ${ctx.userName.trim()}`;
 	const metadataLines = formatMetadataLines(ctx);
 	const paragraphs = [`Mensaje:\n${ctx.message.trim()}`, metadataLines.join("\n")];
-	const siteUrl = process.env.SITE_URL ?? "https://app.quipu.pe";
+	const siteUrl = process.env.SITE_URL ?? "https://quipu-finance.app";
 	const ctaHref = ctx.userEmail
 		? `mailto:${ctx.userEmail}?subject=${encodeURIComponent(`Re: tu mensaje en Quipu (${categoryLabel})`)}`
 		: siteUrl;
@@ -122,7 +122,7 @@ export function buildUserFeedbackConfirmationEmail(ctx: FeedbackSubmissionEmailC
 		`Tu mensaje:\n${ctx.message.trim()}`,
 		"Respondemos pronto por correo si hace falta dar seguimiento.",
 	];
-	const siteUrl = process.env.SITE_URL ?? "https://app.quipu.pe";
+	const siteUrl = process.env.SITE_URL ?? "https://quipu-finance.app";
 
 	const html = renderAuthEmailHtml({
 		preheader: "Tu feedback llegó al equipo de Quipu.",
