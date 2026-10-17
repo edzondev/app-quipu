@@ -1,3 +1,4 @@
+import { ArrowUpRight as ReiconArrowUpRight } from "reicon-react-native/icons/ArrowUpRight";
 import { Backspace as ReiconBackspace } from "reicon-react-native/icons/Backspace";
 import { ChartBar as ReiconChartBar } from "reicon-react-native/icons/ChartBar";
 import { Check as ReiconCheck } from "reicon-react-native/icons/Check";
@@ -12,6 +13,7 @@ import { WifiOff as ReiconWifiOff } from "reicon-react-native/icons/WifiOff";
 import { X as ReiconX } from "reicon-react-native/icons/X";
 import { withUniwind } from "uniwind";
 
+export const ArrowUpRight = withUniwind(ReiconArrowUpRight);
 export const Backspace = withUniwind(ReiconBackspace);
 export const ChartBar = withUniwind(ReiconChartBar);
 export const Check = withUniwind(ReiconCheck);

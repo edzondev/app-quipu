@@ -1,5 +1,7 @@
 import { nextConvexClient } from "@/lib/convex";
 import {
+	ACCOUNT_DELETED_MESSAGE,
+	accountDeletedNotice,
 	MAX_STORAGE_CHUNKS,
 	OFFLINE_SIGN_OUT_MESSAGE,
 	offlineSignOutNotice,
@@ -43,6 +45,16 @@ describe("offlineSignOutNotice", () => {
 		expect(offlineSignOutNotice(["offline"])).toBe(OFFLINE_SIGN_OUT_MESSAGE);
 		expect(offlineSignOutNotice("online")).toBeNull();
 		expect(offlineSignOutNotice(undefined)).toBeNull();
+	});
+});
+
+describe("accountDeletedNotice", () => {
+	it("usa el aviso breve cuando Expo manda string o lista", () => {
+		expect(ACCOUNT_DELETED_MESSAGE).toBe("Tu cuenta fue eliminada.");
+		expect(accountDeletedNotice("deleted")).toBe(ACCOUNT_DELETED_MESSAGE);
+		expect(accountDeletedNotice(["deleted"])).toBe(ACCOUNT_DELETED_MESSAGE);
+		expect(accountDeletedNotice("offline")).toBeNull();
+		expect(accountDeletedNotice(undefined)).toBeNull();
 	});
 });
 

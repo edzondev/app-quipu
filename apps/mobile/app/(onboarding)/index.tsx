@@ -4,13 +4,16 @@ import { View } from "react-native";
 import { Welcome } from "@/modules/onboarding/components/welcome";
 import { AuthNotice } from "@/shared/components/auth/auth-notice";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
-import { offlineSignOutNotice } from "@/shared/lib/auth/device-session";
+import { accountDeletedNotice, offlineSignOutNotice } from "@/shared/lib/auth/device-session";
 
 export default function OnboardingIndexScreen() {
 	const { isAuthReady, isLoading, profile } = useProfileGate();
 	const focused = useIsFocused();
 	const params = useLocalSearchParams<{ notice?: string }>();
+	const deletedNotice = accountDeletedNotice(params.notice);
 	const offlineNotice = offlineSignOutNotice(params.notice);
+	const welcomeNotice = deletedNotice ?? offlineNotice;
+	const welcomeTone = deletedNotice ? "info" : "warning";
 
 	useEffect(() => {
 		if (focused && isAuthReady && profile?.onboardingComplete) {
@@ -25,9 +28,9 @@ export default function OnboardingIndexScreen() {
 	if (!isAuthReady) {
 		return (
 			<View className="flex-1 bg-background px-0 pt-16">
-				{offlineNotice ? (
+				{welcomeNotice ? (
 					<View className="px-6">
-						<AuthNotice tone="warning" message={offlineNotice} />
+						<AuthNotice tone={welcomeTone} message={welcomeNotice} />
 					</View>
 				) : null}
 				<Welcome />

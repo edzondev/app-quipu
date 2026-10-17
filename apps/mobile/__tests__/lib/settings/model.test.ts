@@ -18,7 +18,9 @@ describe("presentSettings", () => {
 			planLabel: "Gratis",
 			repartoLabel: "50 / 30 / 20",
 			scheduleCopy: "Mensual · día 1",
+			hasPassword: true,
 		});
+		expect(presentSettings(settingsOverview({ hasPassword: false })).hasPassword).toBe(false);
 		expect(presentSettings(settingsOverview({ tier: "premium" })).planLabel).toBe("Plus");
 		expect(presentSettings(settingsOverview({ passkeyCount: 1 })).passkeysLabel).toBe("1 llave");
 		expect(
