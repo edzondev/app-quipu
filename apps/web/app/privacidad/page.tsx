@@ -99,15 +99,15 @@ export default function PrivacidadPage() {
 					</a>
 					.
 				</p>
-				<p className={SECTION_BODY}>Se eliminan tu perfil, ciclos, gastos, metas y sesiones.</p>
+				<p className={SECTION_BODY}>
+					Se eliminan tu perfil, ciclos, sobres, movimientos/gastos, compromisos, metas y sesiones.
+				</p>
 				<p className={SECTION_BODY}>
 					Los datos se borran de inmediato de nuestros sistemas activos y de los respaldos en un
 					plazo máximo de 30 días, salvo que la ley nos obligue a conservar alguno.
 				</p>
 				<p className={SECTION_BODY}>
-					Quipu Plus se gestiona y se cancela en la tienda o en la plataforma de pago. Eliminar la
-					cuenta no cancela automáticamente esa suscripción: debes cancelarla tú en Google Play, App
-					Store o en la plataforma de pago.
+					Al eliminar tu cuenta cancelamos tu suscripción activa y ya no se te cobrará más.
 				</p>
 			</section>
 

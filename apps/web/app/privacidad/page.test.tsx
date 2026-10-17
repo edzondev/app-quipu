@@ -40,14 +40,18 @@ describe("PrivacidadPage", () => {
 		expect(text).toContain(ACCOUNT_DELETION_EMAIL);
 		const mail = screen.getByRole("link", { name: ACCOUNT_DELETION_EMAIL });
 		expect(mail.getAttribute("href")).toBe(`mailto:${ACCOUNT_DELETION_EMAIL}`);
-		expect(text).toMatch(/perfil, ciclos, gastos, metas y sesiones/i);
+		expect(text).toContain(
+			"Se eliminan tu perfil, ciclos, sobres, movimientos/gastos, compromisos, metas y sesiones.",
+		);
 		expect(text).toMatch(/30 días/);
 		expect(text).toMatch(/sistemas activos/i);
 		expect(text).toMatch(/respaldos/i);
-		expect(text).toMatch(/no cancela automáticamente/i);
-		expect(text).toMatch(/Google Play/);
-		expect(text).toMatch(/App Store/);
-		expect(text).toMatch(/plataforma de pago/i);
+		expect(text).toContain(
+			"Al eliminar tu cuenta cancelamos tu suscripción activa y ya no se te cobrará más.",
+		);
+		expect(text).not.toMatch(/no cancela automáticamente/i);
+		expect(text).not.toMatch(/Google Play/);
+		expect(text).not.toMatch(/App Store/);
 	});
 
 	it("fija la conservación de respaldos en 30 días", () => {
