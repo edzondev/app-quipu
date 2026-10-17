@@ -14,9 +14,12 @@ const SECTION_HEADING = "font-serif text-[19px] font-medium text-ink";
 const SECTION_BODY = "mt-2";
 const LIST = "mt-2 list-disc space-y-1 pl-5";
 
+/** Correo para solicitudes de borrado. */
+export const ACCOUNT_DELETION_EMAIL = "soportequipu@gmail.com";
+
 export default function PrivacidadPage() {
 	return (
-		<LegalShell title="Política de privacidad" updatedAt="22 de julio de 2026">
+		<LegalShell title="Política de privacidad" updatedAt="16 de octubre de 2026">
 			<section>
 				<h2 className={SECTION_HEADING}>1. Responsable del tratamiento</h2>
 				<p className={SECTION_BODY}>
@@ -80,9 +83,32 @@ export default function PrivacidadPage() {
 			<section>
 				<h2 className={SECTION_HEADING}>5. Conservación y eliminación</h2>
 				<p className={SECTION_BODY}>
-					Conservamos tus datos mientras tu cuenta exista. Al eliminar tu cuenta desde Ajustes se
-					borran en cascada tu perfil, ciclos, sobres, movimientos, compromisos y metas. Las copias
-					de seguridad se purgan en los ciclos normales de nuestros proveedores.
+					Conservamos tus datos mientras tu cuenta exista. Si eliminas tu cuenta, tus datos
+					personales se borran de nuestros sistemas activos de forma inmediata y de nuestros
+					respaldos en un plazo máximo de 30 días, salvo que la ley nos obligue a conservarlos por
+					más tiempo.
+				</p>
+			</section>
+
+			<section id="eliminar-cuenta">
+				<h2 className={SECTION_HEADING}>Eliminar cuenta</h2>
+				<p className={SECTION_BODY}>
+					Puedes eliminar tu cuenta desde la app, en {"Ajustes > Eliminar cuenta"}, o por correo a{" "}
+					<a href={`mailto:${ACCOUNT_DELETION_EMAIL}`} className="underline underline-offset-2">
+						{ACCOUNT_DELETION_EMAIL}
+					</a>
+					.
+				</p>
+				<p className={SECTION_BODY}>
+					Se eliminan tu perfil, ciclos, sobres, movimientos/gastos, compromisos, metas y sesiones.
+				</p>
+				<p className={SECTION_BODY}>
+					Los datos se borran de inmediato de nuestros sistemas activos y de los respaldos en un
+					plazo máximo de 30 días, salvo que la ley nos obligue a conservar alguno.
+				</p>
+				<p className={SECTION_BODY}>
+					Si tienes una suscripción activa, primero debes cancelarla desde el portal de pagos; luego
+					podrás eliminar tu cuenta.
 				</p>
 			</section>
 
