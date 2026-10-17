@@ -8,6 +8,7 @@ export type SettingsOverview = {
 	/** When false, session management actions stay disabled with honest copy. */
 	sessionsApiReady: boolean;
 	activeSessionCount?: number | null;
+	hasPassword: boolean;
 };
 
 export type SettingsProfileOverview = {

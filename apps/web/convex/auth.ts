@@ -3,7 +3,8 @@ import { passkey } from "@better-auth/passkey";
 import type { AuthFunctions, GenericCtx } from "@convex-dev/better-auth";
 import { createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
-import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
+import { isActionCtx, isMutationCtx, isRunMutationCtx } from "@convex-dev/better-auth/utils";
+import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import { components, internal } from "./_generated/api";
@@ -18,6 +19,7 @@ import {
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
 import { androidApkKeyHashOrigins } from "./lib/passkeyOrigins";
 import { resolvePasskeyRegistrationUser } from "./lib/passkeyRegistration";
+import { polarSubscriptionBlocksAccountDeletion } from "./polar";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
@@ -117,7 +119,32 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 			},
 		},
 		user: {
-			deleteUser: { enabled: true },
+			deleteUser: {
+				enabled: true,
+				beforeDelete: async (user) => {
+					if (!isActionCtx(ctx) && !isMutationCtx(ctx)) {
+						throw APIError.from("BAD_REQUEST", {
+							message: "No pudimos comprobar tu suscripción. Intenta de nuevo.",
+							code: "POLAR_STATUS_UNAVAILABLE",
+						});
+					}
+					let blocksDeletion: boolean;
+					try {
+						blocksDeletion = await polarSubscriptionBlocksAccountDeletion(ctx, user.id);
+					} catch {
+						throw APIError.from("BAD_REQUEST", {
+							message: "No pudimos comprobar tu suscripción. Intenta de nuevo.",
+							code: "POLAR_STATUS_UNAVAILABLE",
+						});
+					}
+					if (blocksDeletion) {
+						throw APIError.from("BAD_REQUEST", {
+							message: "Cancela tu suscripción en Polar antes de eliminar la cuenta.",
+							code: "POLAR_SUBSCRIPTION_ACTIVE",
+						});
+					}
+				},
+			},
 		},
 		plugins: [
 			convex({ authConfig }),

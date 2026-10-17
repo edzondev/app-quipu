@@ -15,6 +15,8 @@ vi.mock("@/auth/auth-client", () => ({
 import {
 	SETTINGS_DELETE_ACCOUNT_ERROR,
 	SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD,
+	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 	SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH,
 } from "../constants";
 import { deleteAccount, mapDeleteAccountError } from "./delete-account";
@@ -32,6 +34,18 @@ describe("mapDeleteAccountError", () => {
 	it("maps invalid password to password copy", () => {
 		expect(mapDeleteAccountError({ code: "INVALID_PASSWORD" })).toBe(
 			SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD,
+		);
+	});
+
+	it("maps an active Polar subscription to portal copy", () => {
+		expect(mapDeleteAccountError({ code: "POLAR_SUBSCRIPTION_ACTIVE" })).toBe(
+			SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+		);
+	});
+
+	it("maps a Polar lookup failure to retryable copy", () => {
+		expect(mapDeleteAccountError({ code: "POLAR_STATUS_UNAVAILABLE" })).toBe(
+			SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 		);
 	});
 
@@ -90,5 +104,20 @@ describe("deleteAccount", () => {
 			code: "SESSION_EXPIRED",
 		});
 		expect(signInPasskey).not.toHaveBeenCalled();
+	});
+
+	it("surfaces an active Polar subscription from deleteUser", async () => {
+		deleteUser.mockResolvedValue({
+			error: {
+				code: "POLAR_SUBSCRIPTION_ACTIVE",
+				message: "Cancela tu suscripción en Polar.",
+			},
+		});
+
+		await expect(deleteAccount()).resolves.toEqual({
+			ok: false,
+			message: SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+			code: "POLAR_SUBSCRIPTION_ACTIVE",
+		});
 	});
 });
