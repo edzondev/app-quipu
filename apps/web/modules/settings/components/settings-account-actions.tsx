@@ -8,21 +8,19 @@ import {
 } from "../constants";
 import { downloadProfileExport } from "../lib/downloadProfileExport";
 import { useExportMyData } from "../queries";
-import type { SettingsSubscriptionStatus } from "../types";
 import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
 import { SettingsExportDataItem } from "./settings-export-data-item";
 
 type Props = {
 	className?: string;
 	hasPassword?: boolean;
-	subscriptionStatus?: SettingsSubscriptionStatus;
 };
 
 /**
  * Pie de cuenta: jerarquía por frecuencia de uso — Cerrar sesión como CTA
  * principal, exportar como fila secundaria, eliminar cuenta en zona sensible.
  */
-export function SettingsAccountActions({ className, hasPassword, subscriptionStatus }: Props) {
+export function SettingsAccountActions({ className, hasPassword }: Props) {
 	const fetchExport = useExportMyData();
 
 	return (
@@ -44,11 +42,7 @@ export function SettingsAccountActions({ className, hasPassword, subscriptionSta
 				</h2>
 				<p className="mb-3 max-w-xl text-[12.5px] text-mute-subtle">{SETTINGS_DANGER_ZONE_HINT}</p>
 				<div className="max-w-sm">
-					<SettingsDeleteAccountItem
-						className="w-full"
-						hasPassword={hasPassword}
-						subscriptionStatus={subscriptionStatus}
-					/>
+					<SettingsDeleteAccountItem className="w-full" hasPassword={hasPassword} />
 				</div>
 			</section>
 		</footer>

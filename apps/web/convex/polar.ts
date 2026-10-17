@@ -2,7 +2,7 @@ import { Polar } from "@convex-dev/polar";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import type { ActionCtx, MutationCtx, QueryCtx } from "./_generated/server";
-import { polarSubscriptionBlocksDeletion } from "./lib/polarDeletionGate";
+import { resolvePolarDeletionBlock } from "./lib/polarDeletionGate";
 
 /**
  * Quipu Plus: 2 productos Polar (mensual + anual).
@@ -57,10 +57,14 @@ export async function polarSubscriptionBlocksAccountDeletion(
 	ctx: QueryCtx | MutationCtx | ActionCtx,
 	userId: string,
 ): Promise<boolean> {
-	const subscription = await polar.getCurrentSubscription(ctx, { userId });
-	if (!subscription) return false;
-	return polarSubscriptionBlocksDeletion({
-		status: subscription.status,
-		cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+	return resolvePolarDeletionBlock({
+		getCurrent: async () => {
+			const subscription = await polar.getCurrentSubscription(ctx, { userId });
+			if (!subscription) return null;
+			return {
+				status: subscription.status,
+				cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+			};
+		},
 	});
 }

@@ -128,10 +128,7 @@ export function SettingsAccountView() {
 				</div>
 			</div>
 
-			<SettingsAccountActions
-				hasPassword={overview.hasPassword}
-				subscriptionStatus={overview.subscription.status}
-			/>
+			<SettingsAccountActions hasPassword={overview.hasPassword} />
 		</AppPageShell>
 	);
 }
