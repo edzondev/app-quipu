@@ -8,6 +8,8 @@ import {
 } from "@/shared/lib/auth/device-session";
 import {
 	DELETE_ACCOUNT_ERROR_PASSWORD,
+	DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+	DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 } from "@/shared/lib/settings/delete-account";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
@@ -171,6 +173,38 @@ describe("Eliminar cuenta", () => {
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
 		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
+		await view.unmount();
+	});
+
+	it("Polar activo muestra el aviso, no limpia y sigue dentro", async () => {
+		mockDeleteUser.mockResolvedValue({
+			error: { code: "POLAR_SUBSCRIPTION_ACTIVE", message: "active raw" },
+		});
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.getByText(DELETE_ACCOUNT_ERROR_POLAR_ACTIVE)).toBeTruthy();
+		expect(view.queryByText("active raw")).toBeNull();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		expect(view.getByText("¿Eliminar tu cuenta?")).toBeTruthy();
+		await view.unmount();
+	});
+
+	it("Polar no disponible muestra el aviso, no limpia y sigue dentro", async () => {
+		mockDeleteUser.mockResolvedValue({
+			error: { code: "POLAR_STATUS_UNAVAILABLE", message: "status raw" },
+		});
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.getByText(DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE)).toBeTruthy();
+		expect(view.queryByText("status raw")).toBeNull();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		expect(view.getByText("¿Eliminar tu cuenta?")).toBeTruthy();
 		await view.unmount();
 	});
 

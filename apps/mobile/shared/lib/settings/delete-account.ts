@@ -5,6 +5,10 @@ export const DELETE_ACCOUNT_ERROR = "No pudimos eliminar tu cuenta. Intenta de n
 export const DELETE_ACCOUNT_ERROR_REAUTH =
 	"Por seguridad, confirma con passkey o escribe tu contraseña.";
 export const DELETE_ACCOUNT_ERROR_PASSWORD = "La contraseña no es correcta.";
+export const DELETE_ACCOUNT_ERROR_POLAR_ACTIVE =
+	"Tienes una suscripción activa. Cancélala primero desde la web en quipu-finance.app y luego podrás eliminar tu cuenta.";
+export const DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE =
+	"No pudimos revisar tu plan. Inténtalo de nuevo.";
 
 type AuthClientError = {
 	code?: string | undefined;
@@ -40,6 +44,13 @@ export const DELETE_ACCOUNT_PASSWORD_LABEL = "Contraseña (si usas una)";
 export const DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = "Opcional si acabas de entrar";
 
 export function mapDeleteAccountError(error: AuthClientError): string {
+	const code = error.code?.toUpperCase() ?? "";
+	if (code === "POLAR_SUBSCRIPTION_ACTIVE") {
+		return DELETE_ACCOUNT_ERROR_POLAR_ACTIVE;
+	}
+	if (code === "POLAR_STATUS_UNAVAILABLE") {
+		return DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE;
+	}
 	if (isStaleSessionError(error)) {
 		return DELETE_ACCOUNT_ERROR_REAUTH;
 	}

@@ -18,6 +18,8 @@ import { ACTION_TIMEOUT_MS, OfflineError, TimeoutError } from "@/shared/lib/netw
 import {
 	DELETE_ACCOUNT_ERROR,
 	DELETE_ACCOUNT_ERROR_PASSWORD,
+	DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+	DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 	DELETE_ACCOUNT_ERROR_REAUTH,
 	deleteAccount,
 	deleteAccountOnDevice,
@@ -36,6 +38,25 @@ describe("mapDeleteAccountError", () => {
 
 	it("maps invalid password to password copy", () => {
 		expect(mapDeleteAccountError({ code: "INVALID_PASSWORD" })).toBe(DELETE_ACCOUNT_ERROR_PASSWORD);
+	});
+
+	it("maps Polar codes by error.code only", () => {
+		expect(mapDeleteAccountError({ code: "POLAR_SUBSCRIPTION_ACTIVE" })).toBe(
+			DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+		);
+		expect(mapDeleteAccountError({ code: "POLAR_STATUS_UNAVAILABLE" })).toBe(
+			DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
+		);
+		expect(
+			mapDeleteAccountError({
+				message: "POLAR_SUBSCRIPTION_ACTIVE polar subscription is active",
+			}),
+		).toBe(DELETE_ACCOUNT_ERROR);
+		expect(
+			mapDeleteAccountError({
+				message: "POLAR_STATUS_UNAVAILABLE could not check plan",
+			}),
+		).toBe(DELETE_ACCOUNT_ERROR);
 	});
 
 	it("falls back to generic copy", () => {
@@ -116,6 +137,30 @@ describe("deleteAccount", () => {
 			ok: false,
 			message: DELETE_ACCOUNT_ERROR_REAUTH,
 			code: "SESSION_EXPIRED",
+		});
+		expect(mockSignInPasskey).not.toHaveBeenCalled();
+	});
+
+	it("returns Polar active copy and does not retry passkey", async () => {
+		mockDeleteUser.mockResolvedValue({
+			error: { code: "POLAR_SUBSCRIPTION_ACTIVE", message: "active" },
+		});
+		await expect(deleteAccount({ canUsePasskey: true })).resolves.toEqual({
+			ok: false,
+			message: DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+			code: "POLAR_SUBSCRIPTION_ACTIVE",
+		});
+		expect(mockSignInPasskey).not.toHaveBeenCalled();
+	});
+
+	it("returns Polar unavailable copy and does not retry passkey", async () => {
+		mockDeleteUser.mockResolvedValue({
+			error: { code: "POLAR_STATUS_UNAVAILABLE", message: "down" },
+		});
+		await expect(deleteAccount({ canUsePasskey: true })).resolves.toEqual({
+			ok: false,
+			message: DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
+			code: "POLAR_STATUS_UNAVAILABLE",
 		});
 		expect(mockSignInPasskey).not.toHaveBeenCalled();
 	});
