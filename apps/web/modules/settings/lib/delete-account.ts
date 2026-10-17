@@ -2,6 +2,8 @@ import { authClient } from "@/auth/auth-client";
 import {
 	SETTINGS_DELETE_ACCOUNT_ERROR,
 	SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD,
+	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
+	SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 	SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH,
 } from "../constants";
 
@@ -35,7 +37,20 @@ function isInvalidPasswordError(error: AuthClientError): boolean {
 	);
 }
 
+function polarErrorCopy(error: AuthClientError): string | null {
+	const code = error.code?.toUpperCase() ?? "";
+	if (code === "POLAR_SUBSCRIPTION_ACTIVE") {
+		return SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_ACTIVE;
+	}
+	if (code === "POLAR_STATUS_UNAVAILABLE") {
+		return SETTINGS_DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE;
+	}
+	return null;
+}
+
 export function mapDeleteAccountError(error: AuthClientError): string {
+	const polar = polarErrorCopy(error);
+	if (polar !== null) return polar;
 	if (isStaleSessionError(error)) {
 		return SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH;
 	}
@@ -47,12 +62,11 @@ export function mapDeleteAccountError(error: AuthClientError): string {
 
 /**
  * Better Auth exige sesión "fresh" (creada < freshAge, default 24h) o
- * contraseña para `/delete-user`. Sin eso responde SESSION_EXPIRED en el
- * HTTP de auth — no llega a mutaciones Convex (por eso "falla en silencio"
- * en el dashboard).
+ * contraseña para `/delete-user`. Sin eso responde SESSION_EXPIRED.
  *
- * Flujo: intentar borrar → si la sesión es vieja y hay passkey, reautenticar
- * y reintentar una vez.
+ * Web: passkey reauth si la sesión es vieja. Polar activo se bloquea en
+ * beforeDelete (POLAR_SUBSCRIPTION_ACTIVE); la UI pide cancelar en el portal.
+ * Teléfono: emailOTP sigue en el servidor para refrescar sesión OTP-only.
  */
 export async function deleteAccount(options?: {
 	password?: string;
