@@ -107,7 +107,8 @@ export default function PrivacidadPage() {
 					plazo máximo de 30 días, salvo que la ley nos obligue a conservar alguno.
 				</p>
 				<p className={SECTION_BODY}>
-					Al eliminar tu cuenta cancelamos tu suscripción activa y ya no se te cobrará más.
+					Si tienes una suscripción activa, primero debes cancelarla desde el portal de pagos; luego
+					podrás eliminar tu cuenta.
 				</p>
 			</section>
 

@@ -47,11 +47,16 @@ describe("PrivacidadPage", () => {
 		expect(text).toMatch(/sistemas activos/i);
 		expect(text).toMatch(/respaldos/i);
 		expect(text).toContain(
+			"Si tienes una suscripción activa, primero debes cancelarla desde el portal de pagos; luego podrás eliminar tu cuenta.",
+		);
+		expect(text).not.toContain(
 			"Al eliminar tu cuenta cancelamos tu suscripción activa y ya no se te cobrará más.",
 		);
 		expect(text).not.toMatch(/no cancela automáticamente/i);
 		expect(text).not.toMatch(/Google Play/);
 		expect(text).not.toMatch(/App Store/);
+		expect(text).not.toMatch(/Polar/i);
+		expect(document.body.textContent ?? "").not.toMatch(/cancelamos tu suscripción/i);
 	});
 
 	it("fija la conservación de respaldos en 30 días", () => {
