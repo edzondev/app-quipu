@@ -53,5 +53,6 @@ export function mapConvexSettingsOverview(data: ConvexSettingsOverview): Setting
 		})),
 		sessionsApiReady: data.security.sessions?.apiReady ?? false,
 		activeSessionCount: data.security.sessions?.count ?? null,
+		hasPassword: data.security.hasPassword,
 	};
 }

@@ -284,7 +284,7 @@ export function SettingsView() {
 					</div>
 				</div>
 
-				<SettingsAccountActions />
+				<SettingsAccountActions hasPassword={overview.hasPassword} />
 			</div>
 		</div>
 	);
