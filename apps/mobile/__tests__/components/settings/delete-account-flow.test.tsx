@@ -85,6 +85,8 @@ const model: SettingsScreenModel = {
 	repartoLabel: "50 / 30 / 20",
 	scheduleCopy: "Mensual · día 1",
 	hasPassword: false,
+	subscriptionStatus: "active",
+	cancelAtPeriodEnd: false,
 };
 
 const ERROR = "No pudimos eliminar tu cuenta. Intenta de nuevo.";
@@ -233,7 +235,7 @@ describe("Eliminar cuenta", () => {
 		await view.unmount();
 	});
 
-	it("al volver a primer plano con Polar sigue activo mantiene el aviso", async () => {
+	it("al volver a primer plano con Polar sigue activo mantiene el aviso sin deleteUser", async () => {
 		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
 		const view = await openDeleteSheet();
 		await act(async () => {
@@ -248,8 +250,7 @@ describe("Eliminar cuenta", () => {
 			emitAppState("active");
 		});
 
-		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
-		expect(mockDeleteUser).toHaveBeenLastCalledWith(undefined);
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
 		expect(view.getByText(POLAR_BODY)).toBeTruthy();
 		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
 		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
@@ -258,26 +259,8 @@ describe("Eliminar cuenta", () => {
 		await view.unmount();
 	});
 
-	it("al volver a primer plano si Polar no se puede revisar mantiene el aviso", async () => {
-		mockDeleteUser.mockResolvedValueOnce(POLAR_ACTIVE).mockResolvedValueOnce({
-			error: { code: "POLAR_STATUS_UNAVAILABLE", message: "status raw" },
-		});
-		const view = await openDeleteSheet();
-		await act(async () => {
-			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
-		});
-		await act(async () => {
-			emitAppState("active");
-		});
-		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
-		expect(view.getByText(POLAR_BODY)).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
-		expect(mockClear).not.toHaveBeenCalled();
-		await view.unmount();
-	});
-
-	it("al volver a primer plano si Polar ya no bloquea vuelve el eliminar", async () => {
-		mockDeleteUser.mockResolvedValueOnce(POLAR_ACTIVE).mockResolvedValueOnce({ error: null });
+	it("al volver a primer plano si el overview ya canceló vuelve el eliminar sin deleteUser", async () => {
+		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
 		const view = await openDeleteSheet();
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
@@ -285,11 +268,26 @@ describe("Eliminar cuenta", () => {
 		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
 
 		await act(async () => {
+			view.rerender(
+				<SettingsScreen
+					status="ready"
+					model={{
+						...model,
+						subscriptionStatus: "canceled_at_period_end",
+						cancelAtPeriodEnd: true,
+					}}
+					onClose={jest.fn()}
+					onOpenSecurity={jest.fn()}
+				/>,
+			);
+		});
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+
+		await act(async () => {
 			emitAppState("active");
 		});
 
-		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
-		expect(mockDeleteUser).toHaveBeenLastCalledWith(undefined);
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
 		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
 		expect(view.queryByRole("button", { name: "Ir a la web" })).toBeNull();
 		expect(

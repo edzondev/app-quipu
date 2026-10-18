@@ -22,7 +22,6 @@ import {
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 	DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
 	deleteAccountOnDevice,
-	isPolarStatusUnavailableCode,
 	isPolarSubscriptionActiveCode,
 } from "@/shared/lib/settings/delete-account";
 import {
@@ -31,7 +30,7 @@ import {
 	openLegalUrl,
 	PLAN_SETTINGS_URL,
 } from "@/shared/lib/settings/legal";
-import type { SettingsScreenModel } from "@/shared/lib/settings/model";
+import { polarOverviewBlocksDeletion, type SettingsScreenModel } from "@/shared/lib/settings/model";
 
 type Props = {
 	status: "loading" | "empty" | "ready";
@@ -50,10 +49,12 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 	const [polarBlocked, setPolarBlocked] = useState(false);
 	const pending = useRef(false);
-	const rechecking = useRef(false);
 	const polarBlockedRef = useRef(false);
 	const sheetRef = useRef<Sheet>(null);
-	const recheckId = useRef(0);
+	const billingRef = useRef<Pick<
+		SettingsScreenModel,
+		"subscriptionStatus" | "cancelAtPeriodEnd"
+	> | null>(null);
 	const deleteForm = useForm({
 		defaultValues: { password: "" },
 		onSubmit: ({ value }) => {
@@ -63,6 +64,12 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const hasPassword = model?.hasPassword === true;
 	polarBlockedRef.current = polarBlocked;
 	sheetRef.current = sheet;
+	billingRef.current = model
+		? {
+				subscriptionStatus: model.subscriptionStatus,
+				cancelAtPeriodEnd: model.cancelAtPeriodEnd,
+			}
+		: null;
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
 	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
@@ -115,7 +122,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 
 	function dismissConfirm() {
 		if (pending.current) return;
-		recheckId.current += 1;
 		setSheet(null);
 		setDeleteError(null);
 		setPolarBlocked(false);
@@ -124,38 +130,12 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	useEffect(() => {
 		const subscription = AppState.addEventListener("change", (state) => {
 			if (state !== "active") return;
-			void (async () => {
-				if (rechecking.current || pending.current) return;
-				if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
-				rechecking.current = true;
-				const id = recheckId.current;
-				try {
-					// No read-only Polar probe on the phone. Retry deleteUser
-					// without password/passkey so a cancelled plan is less
-					// likely to finish deletion. Polar still rejects
-					// POLAR_SUBSCRIPTION_ACTIVE while the web plan is paid.
-					// Success is treated as "no longer blocked" and does not
-					// clear the device; document that tradeoff in the PR.
-					const result = await deleteAccountOnDevice({
-						canUsePasskey: false,
-					});
-					if (id !== recheckId.current) return;
-					if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
-					if (
-						!result.ok &&
-						(isPolarSubscriptionActiveCode(result.code) ||
-							isPolarStatusUnavailableCode(result.code))
-					) {
-						return;
-					}
-					setPolarBlocked(false);
-					setDeleteError(null);
-				} catch {
-					// Keep the Polar notice when the probe cannot finish.
-				} finally {
-					rechecking.current = false;
-				}
-			})();
+			if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
+			const billing = billingRef.current;
+			if (!billing) return;
+			if (polarOverviewBlocksDeletion(billing)) return;
+			setPolarBlocked(false);
+			setDeleteError(null);
 		});
 		return () => subscription.remove();
 	}, []);
@@ -257,7 +237,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					accessibilityLabel="Eliminar cuenta"
 					hitSlop={HIT_SLOP}
 					onPress={() => {
-						recheckId.current += 1;
 						setDeleteError(null);
 						setPolarBlocked(false);
 						deleteForm.setFieldValue("password", "");

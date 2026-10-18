@@ -15,7 +15,15 @@ export type SettingsScreenModel = {
 	repartoLabel: string;
 	scheduleCopy: string;
 	hasPassword: boolean;
+	subscriptionStatus: SettingsOverview["billing"]["subscriptionStatus"];
+	cancelAtPeriodEnd: boolean;
 };
+
+export function polarOverviewBlocksDeletion(
+	billing: Pick<SettingsOverview["billing"], "subscriptionStatus" | "cancelAtPeriodEnd">,
+): boolean {
+	return billing.subscriptionStatus === "active" && !billing.cancelAtPeriodEnd;
+}
 
 export function profileInitial(name: string): string {
 	const first = name.trim()[0];
@@ -48,6 +56,8 @@ export function presentSettings(settings: SettingsOverview): SettingsScreenModel
 		repartoLabel: repartoLabel(settings),
 		scheduleCopy: settings.cycle.scheduleCopy,
 		hasPassword: settings.security.hasPassword,
+		subscriptionStatus: settings.billing.subscriptionStatus,
+		cancelAtPeriodEnd: settings.billing.cancelAtPeriodEnd,
 	};
 }
 
