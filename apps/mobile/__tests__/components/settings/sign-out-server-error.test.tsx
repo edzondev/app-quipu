@@ -76,6 +76,7 @@ const model: SettingsScreenModel = {
 	initial: "E",
 	name: "Edzon Perez",
 	meta: "edzon@correo.com · Perú",
+	email: "edzon@correo.com",
 	passkeysLabel: "2 llaves",
 	planLabel: "Gratis",
 	repartoLabel: "50 / 30 / 20",
