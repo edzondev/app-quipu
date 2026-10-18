@@ -10,6 +10,7 @@ export type SettingsScreenModel = {
 	initial: string;
 	name: string;
 	meta: string | null;
+	email: string | null;
 	passkeysLabel: string | null;
 	planLabel: string;
 	repartoLabel: string;
@@ -43,6 +44,7 @@ export function presentSettings(settings: SettingsOverview): SettingsScreenModel
 		initial: profileInitial(settings.account.name),
 		name: settings.account.name,
 		meta: email && country ? `${email} · ${country}` : (email ?? country),
+		email,
 		passkeysLabel,
 		planLabel: settings.account.plan.tier === "free" ? "Gratis" : "Plus",
 		repartoLabel: repartoLabel(settings),
