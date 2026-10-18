@@ -10,8 +10,6 @@ import {
 	DELETE_ACCOUNT_ERROR_PASSWORD,
 	DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
 	DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
-	DELETE_ACCOUNT_OTP_LABEL,
-	DELETE_ACCOUNT_OTP_SENT,
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 } from "@/shared/lib/settings/delete-account";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
@@ -20,8 +18,6 @@ const mockReplace = jest.fn();
 const mockClear = jest.fn();
 const mockDeleteUser = jest.fn();
 const mockPasskey = jest.fn();
-const mockSignInEmailOtp = jest.fn();
-const mockSendVerificationOtp = jest.fn();
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
@@ -45,16 +41,8 @@ jest.mock("@/lib/auth-client", () => ({
 		deleteUser: (...args: unknown[]) => mockDeleteUser(...args),
 		signIn: {
 			passkey: (...args: unknown[]) => mockPasskey(...args),
-			emailOtp: (...args: unknown[]) => mockSignInEmailOtp(...args),
-		},
-		emailOtp: {
-			sendVerificationOtp: (...args: unknown[]) => mockSendVerificationOtp(...args),
 		},
 	},
-}));
-
-jest.mock("@/shared/lib/auth/passkey-support", () => ({
-	platformAdmitsPasskeys: () => false,
 }));
 
 jest.mock("expo-network", () => ({
@@ -85,7 +73,6 @@ const model: SettingsScreenModel = {
 	initial: "E",
 	name: "Edzon Perez",
 	meta: "edzon@correo.com · Perú",
-	email: "edzon@correo.com",
 	passkeysLabel: "2 llaves",
 	planLabel: "Gratis",
 	repartoLabel: "50 / 30 / 20",
@@ -111,8 +98,6 @@ describe("Eliminar cuenta", () => {
 		mockClear.mockReset();
 		mockDeleteUser.mockReset();
 		mockPasskey.mockReset();
-		mockSignInEmailOtp.mockReset();
-		mockSendVerificationOtp.mockReset();
 		getNetworkStateAsync.mockReset();
 		getNetworkStateAsync.mockResolvedValue({ isConnected: true, isInternetReachable: true });
 		mockClear.mockResolvedValue({ serverNotified: false });
@@ -254,49 +239,6 @@ describe("Eliminar cuenta", () => {
 		expect(view.getByText(DELETE_ACCOUNT_ERROR_PASSWORD)).toBeTruthy();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
-		await view.unmount();
-	});
-
-	it("usuario solo-código con sesión vieja pide el código y elimina al confirmarlo", async () => {
-		mockDeleteUser
-			.mockResolvedValueOnce({
-				error: { code: "SESSION_EXPIRED", message: "Session expired" },
-			})
-			.mockResolvedValueOnce({ error: null });
-		mockSendVerificationOtp.mockResolvedValue({ error: null });
-		mockSignInEmailOtp.mockResolvedValue({ error: null });
-
-		const view = await openDeleteSheet();
-		expect(view.queryByLabelText(DELETE_ACCOUNT_PASSWORD_LABEL)).toBeNull();
-		expect(view.queryByLabelText(DELETE_ACCOUNT_OTP_LABEL)).toBeNull();
-
-		await act(async () => {
-			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
-		});
-
-		expect(mockSendVerificationOtp).toHaveBeenCalledWith({
-			email: "edzon@correo.com",
-			type: "sign-in",
-		});
-		expect(view.getByText(DELETE_ACCOUNT_OTP_SENT)).toBeTruthy();
-		const otp = view.getByLabelText(DELETE_ACCOUNT_OTP_LABEL);
-		await act(async () => {
-			fireEvent.changeText(otp, "482913");
-		});
-		await act(async () => {
-			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
-		});
-
-		expect(mockSignInEmailOtp).toHaveBeenCalledWith({
-			email: "edzon@correo.com",
-			otp: "482913",
-		});
-		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
-		expect(mockClear).toHaveBeenCalledTimes(1);
-		expect(mockReplace).toHaveBeenCalledWith({
-			pathname: "/(onboarding)",
-			params: { notice: "deleted" },
-		});
 		await view.unmount();
 	});
 });
