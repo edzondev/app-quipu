@@ -249,11 +249,30 @@ describe("Eliminar cuenta", () => {
 		});
 
 		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
+		expect(mockDeleteUser).toHaveBeenLastCalledWith(undefined);
 		expect(view.getByText(POLAR_BODY)).toBeTruthy();
 		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
 		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("al volver a primer plano si Polar no se puede revisar mantiene el aviso", async () => {
+		mockDeleteUser.mockResolvedValueOnce(POLAR_ACTIVE).mockResolvedValueOnce({
+			error: { code: "POLAR_STATUS_UNAVAILABLE", message: "status raw" },
+		});
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		await act(async () => {
+			emitAppState("active");
+		});
+		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(mockClear).not.toHaveBeenCalled();
 		await view.unmount();
 	});
 
@@ -270,6 +289,7 @@ describe("Eliminar cuenta", () => {
 		});
 
 		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
+		expect(mockDeleteUser).toHaveBeenLastCalledWith(undefined);
 		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
 		expect(view.queryByRole("button", { name: "Ir a la web" })).toBeNull();
 		expect(

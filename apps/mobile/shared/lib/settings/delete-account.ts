@@ -48,12 +48,16 @@ export function isPolarSubscriptionActiveCode(code?: string): boolean {
 	return code?.toUpperCase() === "POLAR_SUBSCRIPTION_ACTIVE";
 }
 
+export function isPolarStatusUnavailableCode(code?: string): boolean {
+	return code?.toUpperCase() === "POLAR_STATUS_UNAVAILABLE";
+}
+
 export function mapDeleteAccountError(error: AuthClientError): string {
 	const code = error.code?.toUpperCase() ?? "";
 	if (isPolarSubscriptionActiveCode(code)) {
 		return DELETE_ACCOUNT_ERROR_POLAR_ACTIVE;
 	}
-	if (code === "POLAR_STATUS_UNAVAILABLE") {
+	if (isPolarStatusUnavailableCode(code)) {
 		return DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE;
 	}
 	if (isStaleSessionError(error)) {

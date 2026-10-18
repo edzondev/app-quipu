@@ -22,6 +22,7 @@ import {
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 	DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
 	deleteAccountOnDevice,
+	isPolarStatusUnavailableCode,
 	isPolarSubscriptionActiveCode,
 } from "@/shared/lib/settings/delete-account";
 import {
@@ -52,6 +53,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const rechecking = useRef(false);
 	const polarBlockedRef = useRef(false);
 	const sheetRef = useRef<Sheet>(null);
+	const recheckId = useRef(0);
 	const deleteForm = useForm({
 		defaultValues: { password: "" },
 		onSubmit: ({ value }) => {
@@ -113,6 +115,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 
 	function dismissConfirm() {
 		if (pending.current) return;
+		recheckId.current += 1;
 		setSheet(null);
 		setDeleteError(null);
 		setPolarBlocked(false);
@@ -125,16 +128,26 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 				if (rechecking.current || pending.current) return;
 				if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
 				rechecking.current = true;
+				const id = recheckId.current;
 				try {
-					// No read-only Polar probe on the phone. Retry deleteUser:
-					// beforeDelete still rejects POLAR_SUBSCRIPTION_ACTIVE while
-					// the web plan is paid. Success here does not delete locally.
+					// No read-only Polar probe on the phone. Retry deleteUser
+					// without password/passkey so a cancelled plan is less
+					// likely to finish deletion. Polar still rejects
+					// POLAR_SUBSCRIPTION_ACTIVE while the web plan is paid.
+					// Success is treated as "no longer blocked" and does not
+					// clear the device; document that tradeoff in the PR.
 					const result = await deleteAccountOnDevice({
-						password: deleteForm.state.values.password,
 						canUsePasskey: false,
 					});
+					if (id !== recheckId.current) return;
 					if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
-					if (!result.ok && isPolarSubscriptionActiveCode(result.code)) return;
+					if (
+						!result.ok &&
+						(isPolarSubscriptionActiveCode(result.code) ||
+							isPolarStatusUnavailableCode(result.code))
+					) {
+						return;
+					}
 					setPolarBlocked(false);
 					setDeleteError(null);
 				} catch {
@@ -145,7 +158,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 			})();
 		});
 		return () => subscription.remove();
-	}, [deleteForm]);
+	}, []);
 
 	return (
 		<View className="flex-1">
@@ -244,6 +257,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					accessibilityLabel="Eliminar cuenta"
 					hitSlop={HIT_SLOP}
 					onPress={() => {
+						recheckId.current += 1;
 						setDeleteError(null);
 						setPolarBlocked(false);
 						deleteForm.setFieldValue("password", "");
