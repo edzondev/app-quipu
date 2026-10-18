@@ -18,8 +18,6 @@ import { platformAdmitsPasskeys } from "@/shared/lib/auth/passkey-support";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import {
 	DELETE_ACCOUNT_ERROR,
-	DELETE_ACCOUNT_OTP_LABEL,
-	DELETE_ACCOUNT_OTP_PLACEHOLDER,
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 	DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
 	deleteAccountOnDevice,
@@ -42,16 +40,14 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const [closing, setClosing] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
-	const [needsOtp, setNeedsOtp] = useState(false);
 	const pending = useRef(false);
 	const deleteForm = useForm({
-		defaultValues: { password: "", otp: "" },
+		defaultValues: { password: "" },
 		onSubmit: ({ value }) => {
-			void confirmDeleteAccount(value.password, value.otp);
+			void confirmDeleteAccount(value.password);
 		},
 	});
 	const hasPassword = model?.hasPassword === true;
-	const email = model?.email?.trim().toLowerCase() || undefined;
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
 	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
@@ -71,20 +67,17 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		}
 	}
 
-	async function confirmDeleteAccount(password: string, otp: string) {
+	async function confirmDeleteAccount(password: string) {
 		if (pending.current) return;
 		pending.current = true;
 		setDeleting(true);
 		setDeleteError(null);
 		try {
 			const result = await deleteAccountOnDevice({
-				password: hasPassword ? password : undefined,
-				otp: otp.trim() || undefined,
-				email,
+				password,
 				canUsePasskey: platformAdmitsPasskeys(Platform.OS, Platform.Version),
 			});
 			if (!result.ok) {
-				if (result.needsOtp) setNeedsOtp(true);
 				setDeleteError(result.message || DELETE_ACCOUNT_ERROR);
 				pending.current = false;
 				setDeleting(false);
@@ -103,8 +96,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		if (pending.current) return;
 		setSheet(null);
 		setDeleteError(null);
-		setNeedsOtp(false);
-		deleteForm.setFieldValue("otp", "");
 	}
 
 	return (
@@ -205,9 +196,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					hitSlop={HIT_SLOP}
 					onPress={() => {
 						setDeleteError(null);
-						setNeedsOtp(false);
 						deleteForm.setFieldValue("password", "");
-						deleteForm.setFieldValue("otp", "");
 						setSheet("deleteAccount");
 					}}
 					className="border-t border-line py-3.5 active:opacity-60"
@@ -272,7 +261,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 								Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No
 								se puede deshacer.
 							</Text>
-							{hasPassword && !needsOtp ? (
+							{hasPassword ? (
 								<View className="mt-5">
 									<deleteForm.Field name="password">
 										{(field) => (
@@ -283,24 +272,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 												autoComplete="current-password"
 												editable={!deleting}
 												placeholder={DELETE_ACCOUNT_PASSWORD_PLACEHOLDER}
-											/>
-										)}
-									</deleteForm.Field>
-								</View>
-							) : null}
-							{needsOtp ? (
-								<View className="mt-5">
-									<deleteForm.Field name="otp">
-										{(field) => (
-											<AuthLabeledField
-												label={DELETE_ACCOUNT_OTP_LABEL}
-												field={field}
-												inputMode="numeric"
-												keyboardType="number-pad"
-												autoComplete="one-time-code"
-												editable={!deleting}
-												placeholder={DELETE_ACCOUNT_OTP_PLACEHOLDER}
-												maxLength={6}
 											/>
 										)}
 									</deleteForm.Field>
