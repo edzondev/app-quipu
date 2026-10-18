@@ -6,7 +6,7 @@ export const DELETE_ACCOUNT_ERROR_REAUTH =
 	"Por seguridad, confirma con passkey o escribe tu contraseña.";
 export const DELETE_ACCOUNT_ERROR_PASSWORD = "La contraseña no es correcta.";
 export const DELETE_ACCOUNT_ERROR_POLAR_ACTIVE =
-	"Tienes una suscripción activa. Cancélala primero desde la web en quipu-finance.app y luego podrás eliminar tu cuenta.";
+	"Tienes una suscripción activa. Cancélala desde la web.";
 export const DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE =
 	"No pudimos revisar tu plan. Inténtalo de nuevo.";
 
@@ -43,12 +43,21 @@ function isInvalidPasswordError(error: AuthClientError): boolean {
 export const DELETE_ACCOUNT_PASSWORD_LABEL = "Contraseña (si usas una)";
 export const DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = "Opcional si acabas de entrar";
 
+/** Match Polar by error.code only — never by message text. */
+export function isPolarSubscriptionActiveCode(code?: string): boolean {
+	return code?.toUpperCase() === "POLAR_SUBSCRIPTION_ACTIVE";
+}
+
+export function isPolarStatusUnavailableCode(code?: string): boolean {
+	return code?.toUpperCase() === "POLAR_STATUS_UNAVAILABLE";
+}
+
 export function mapDeleteAccountError(error: AuthClientError): string {
 	const code = error.code?.toUpperCase() ?? "";
-	if (code === "POLAR_SUBSCRIPTION_ACTIVE") {
+	if (isPolarSubscriptionActiveCode(code)) {
 		return DELETE_ACCOUNT_ERROR_POLAR_ACTIVE;
 	}
-	if (code === "POLAR_STATUS_UNAVAILABLE") {
+	if (isPolarStatusUnavailableCode(code)) {
 		return DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE;
 	}
 	if (isStaleSessionError(error)) {

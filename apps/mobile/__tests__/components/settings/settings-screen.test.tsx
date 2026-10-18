@@ -61,6 +61,7 @@ const model: SettingsScreenModel = {
 	repartoLabel: "50 / 30 / 20",
 	scheduleCopy: "Mensual · día 1",
 	hasPassword: false,
+	deleteBlockedBySubscription: false,
 };
 
 describe("SettingsScreen", () => {

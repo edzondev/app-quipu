@@ -19,6 +19,10 @@ describe("presentSettings", () => {
 			repartoLabel: "50 / 30 / 20",
 			scheduleCopy: "Mensual · día 1",
 			hasPassword: true,
+			deleteBlockedBySubscription: false,
+		});
+		expect(presentSettings(settingsOverview({ tier: "premium" }))).toMatchObject({
+			deleteBlockedBySubscription: false,
 		});
 		expect(presentSettings(settingsOverview({ hasPassword: false })).hasPassword).toBe(false);
 		expect(presentSettings(settingsOverview({ tier: "premium" })).planLabel).toBe("Plus");
@@ -27,6 +31,24 @@ describe("presentSettings", () => {
 			presentSettings(settingsOverview({ passkeysSource: "unavailable", passkeyCount: 2 }))
 				.passkeysLabel,
 		).toBeNull();
+	});
+
+	it("pasa deleteBlockedBySubscription del overview aunque el status se vea free", () => {
+		const overview = settingsOverview();
+		expect(overview.billing.subscriptionStatus).toBe("free");
+		expect(overview.billing.deleteBlockedBySubscription).toBe(false);
+		expect(presentSettings(overview).deleteBlockedBySubscription).toBe(false);
+		expect(
+			presentSettings({
+				...overview,
+				billing: {
+					...overview.billing,
+					subscriptionStatus: "free",
+					cancelAtPeriodEnd: false,
+					deleteBlockedBySubscription: true,
+				},
+			}).deleteBlockedBySubscription,
+		).toBe(true);
 	});
 
 	it("con email nulo muestra solo el país y no el código crudo", () => {

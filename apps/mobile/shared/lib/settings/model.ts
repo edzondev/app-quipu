@@ -15,6 +15,7 @@ export type SettingsScreenModel = {
 	repartoLabel: string;
 	scheduleCopy: string;
 	hasPassword: boolean;
+	deleteBlockedBySubscription: boolean;
 };
 
 export function profileInitial(name: string): string {
@@ -48,6 +49,7 @@ export function presentSettings(settings: SettingsOverview): SettingsScreenModel
 		repartoLabel: repartoLabel(settings),
 		scheduleCopy: settings.cycle.scheduleCopy,
 		hasPassword: settings.security.hasPassword,
+		deleteBlockedBySubscription: settings.billing.deleteBlockedBySubscription,
 	};
 }
 
