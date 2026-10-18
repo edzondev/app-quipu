@@ -131,6 +131,7 @@ const settingsOverviewValidator = v.union(
 			),
 			cancelAtPeriodEnd: v.boolean(),
 			checkoutAvailable: v.boolean(),
+			deleteBlockedBySubscription: v.boolean(),
 			premiumProductId: v.union(v.string(), v.null()),
 			plusProductIds: v.object({
 				monthly: v.union(v.string(), v.null()),
@@ -245,6 +246,7 @@ export const getSettingsOverview = query({
 				subscriptionStatus: billing.subscriptionStatus,
 				cancelAtPeriodEnd: billing.cancelAtPeriodEnd,
 				checkoutAvailable: billing.checkoutAvailable,
+				deleteBlockedBySubscription: billing.deleteBlockedBySubscription,
 				premiumProductId: billing.premiumProductId,
 				plusProductIds: billing.plusProductIds,
 				monthlyPriceLabel: plusMonthlyPriceLabel(profile.currencyCode),

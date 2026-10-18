@@ -1,4 +1,5 @@
 import type { Doc } from "../_generated/dataModel";
+import { polarSubscriptionBlocksDeletion } from "./polarDeletionGate";
 
 const LIMA_TIMEZONE = "America/Lima";
 const LIMA_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("es-PE", {
@@ -25,6 +26,7 @@ export type BillingOverview = {
 	renewalSummary: string | null;
 	cancelAtPeriodEnd: boolean;
 	checkoutAvailable: boolean;
+	deleteBlockedBySubscription: boolean;
 	/** @deprecated Prefer plusProductIds.monthly */
 	premiumProductId: string | null;
 	plusProductIds: {
@@ -121,6 +123,14 @@ export function buildBillingOverview(
 		renewalSummary: buildRenewalSummary(subscription, allIds, copy),
 		cancelAtPeriodEnd,
 		checkoutAvailable: Boolean(monthly || yearly),
+		deleteBlockedBySubscription: polarSubscriptionBlocksDeletion(
+			subscription === null
+				? null
+				: {
+						status: subscription.status,
+						cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+					},
+		),
 		premiumProductId: monthly,
 		plusProductIds: { monthly, yearly },
 	};

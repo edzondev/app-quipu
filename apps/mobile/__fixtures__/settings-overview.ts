@@ -37,6 +37,7 @@ export function settingsOverview(options: SettingsFixtureOptions = {}): Settings
 			subscriptionStatus: tier === "free" ? "free" : "active",
 			cancelAtPeriodEnd: false,
 			checkoutAvailable: false,
+			deleteBlockedBySubscription: false,
 			premiumProductId: null,
 			plusProductIds: { monthly: null, yearly: null },
 			monthlyPriceLabel: "S/ 14.90",
