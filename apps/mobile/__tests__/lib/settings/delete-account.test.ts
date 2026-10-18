@@ -23,6 +23,7 @@ import {
 	DELETE_ACCOUNT_ERROR_REAUTH,
 	deleteAccount,
 	deleteAccountOnDevice,
+	isPolarSubscriptionActiveCode,
 	mapDeleteAccountError,
 } from "@/shared/lib/settings/delete-account";
 
@@ -41,6 +42,12 @@ describe("mapDeleteAccountError", () => {
 	});
 
 	it("maps Polar codes by error.code only", () => {
+		expect(isPolarSubscriptionActiveCode("POLAR_SUBSCRIPTION_ACTIVE")).toBe(true);
+		expect(isPolarSubscriptionActiveCode("polar_subscription_active")).toBe(true);
+		expect(
+			isPolarSubscriptionActiveCode("POLAR_SUBSCRIPTION_ACTIVE polar subscription is active"),
+		).toBe(false);
+		expect(isPolarSubscriptionActiveCode(undefined)).toBe(false);
 		expect(mapDeleteAccountError({ code: "POLAR_SUBSCRIPTION_ACTIVE" })).toBe(
 			DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
 		);

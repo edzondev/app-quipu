@@ -1,8 +1,8 @@
 import { RNHostView } from "@expo/ui";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AppState, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { clearDeviceAfterAccountDeleted } from "@/lib/clear-device-after-delete";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
@@ -11,18 +11,25 @@ import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
-import { X } from "@/shared/components/ui/reicon";
+import { ArrowUpRight, X } from "@/shared/components/ui/reicon";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import { SIGNED_OUT_HREF, signedOutHref } from "@/shared/lib/auth/device-session";
 import { platformAdmitsPasskeys } from "@/shared/lib/auth/passkey-support";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 import {
 	DELETE_ACCOUNT_ERROR,
+	DELETE_ACCOUNT_ERROR_POLAR_ACTIVE,
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 	DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
 	deleteAccountOnDevice,
+	isPolarSubscriptionActiveCode,
 } from "@/shared/lib/settings/delete-account";
-import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL, openLegalUrl } from "@/shared/lib/settings/legal";
+import {
+	LEGAL_PRIVACY_URL,
+	LEGAL_TERMS_URL,
+	openLegalUrl,
+	PLAN_SETTINGS_URL,
+} from "@/shared/lib/settings/legal";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 type Props = {
@@ -40,7 +47,11 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const [closing, setClosing] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
+	const [polarBlocked, setPolarBlocked] = useState(false);
 	const pending = useRef(false);
+	const rechecking = useRef(false);
+	const polarBlockedRef = useRef(false);
+	const sheetRef = useRef<Sheet>(null);
 	const deleteForm = useForm({
 		defaultValues: { password: "" },
 		onSubmit: ({ value }) => {
@@ -48,6 +59,8 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		},
 	});
 	const hasPassword = model?.hasPassword === true;
+	polarBlockedRef.current = polarBlocked;
+	sheetRef.current = sheet;
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
 	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
@@ -78,7 +91,13 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 				canUsePasskey: platformAdmitsPasskeys(Platform.OS, Platform.Version),
 			});
 			if (!result.ok) {
-				setDeleteError(result.message || DELETE_ACCOUNT_ERROR);
+				if (isPolarSubscriptionActiveCode(result.code)) {
+					setPolarBlocked(true);
+					setDeleteError(null);
+				} else {
+					setPolarBlocked(false);
+					setDeleteError(result.message || DELETE_ACCOUNT_ERROR);
+				}
 				pending.current = false;
 				setDeleting(false);
 				return;
@@ -96,7 +115,37 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		if (pending.current) return;
 		setSheet(null);
 		setDeleteError(null);
+		setPolarBlocked(false);
 	}
+
+	useEffect(() => {
+		const subscription = AppState.addEventListener("change", (state) => {
+			if (state !== "active") return;
+			void (async () => {
+				if (rechecking.current || pending.current) return;
+				if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
+				rechecking.current = true;
+				try {
+					// No read-only Polar probe on the phone. Retry deleteUser:
+					// beforeDelete still rejects POLAR_SUBSCRIPTION_ACTIVE while
+					// the web plan is paid. Success here does not delete locally.
+					const result = await deleteAccountOnDevice({
+						password: deleteForm.state.values.password,
+						canUsePasskey: false,
+					});
+					if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
+					if (!result.ok && isPolarSubscriptionActiveCode(result.code)) return;
+					setPolarBlocked(false);
+					setDeleteError(null);
+				} catch {
+					// Keep the Polar notice when the probe cannot finish.
+				} finally {
+					rechecking.current = false;
+				}
+			})();
+		});
+		return () => subscription.remove();
+	}, [deleteForm]);
 
 	return (
 		<View className="flex-1">
@@ -196,6 +245,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 					hitSlop={HIT_SLOP}
 					onPress={() => {
 						setDeleteError(null);
+						setPolarBlocked(false);
 						deleteForm.setFieldValue("password", "");
 						setSheet("deleteAccount");
 					}}
@@ -258,10 +308,11 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 								</Text>
 							</View>
 							<Text className="mt-3.5 font-hanken text-[14.5px] leading-6 text-foreground/55">
-								Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No
-								se puede deshacer.
+								{polarBlocked
+									? DELETE_ACCOUNT_ERROR_POLAR_ACTIVE
+									: "Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No se puede deshacer."}
 							</Text>
-							{hasPassword ? (
+							{hasPassword && !polarBlocked ? (
 								<View className="mt-5">
 									<deleteForm.Field name="password">
 										{(field) => (
@@ -277,20 +328,36 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 									</deleteForm.Field>
 								</View>
 							) : null}
-							<Pressable
-								accessibilityRole="button"
-								accessibilityLabel="Eliminar mi cuenta"
-								accessibilityState={{ disabled: deleting }}
-								disabled={deleting}
-								onPress={() => {
-									void deleteForm.handleSubmit();
-								}}
-								className="mt-[22px] items-center rounded-xl border border-danger py-4 active:opacity-80"
-							>
-								<Text className="font-hanken-semibold text-[15px] text-danger">
-									{deleting ? "Eliminando…" : "Eliminar mi cuenta"}
-								</Text>
-							</Pressable>
+							{polarBlocked ? (
+								<Pressable
+									accessibilityRole="button"
+									accessibilityLabel="Ir a la web"
+									onPress={() => {
+										void openLegalUrl(PLAN_SETTINGS_URL);
+									}}
+									className="mt-[22px] flex-row items-center justify-center gap-2 rounded-xl bg-foreground py-4 active:opacity-80"
+								>
+									<Text className="font-hanken-semibold text-[15px] text-background">
+										Ir a la web
+									</Text>
+									<ArrowUpRight size={18} strokeWidth={1.8} colorClassName="text-background" />
+								</Pressable>
+							) : (
+								<Pressable
+									accessibilityRole="button"
+									accessibilityLabel="Eliminar mi cuenta"
+									accessibilityState={{ disabled: deleting }}
+									disabled={deleting}
+									onPress={() => {
+										void deleteForm.handleSubmit();
+									}}
+									className="mt-[22px] items-center rounded-xl border border-danger py-4 active:opacity-80"
+								>
+									<Text className="font-hanken-semibold text-[15px] text-danger">
+										{deleting ? "Eliminando…" : "Eliminar mi cuenta"}
+									</Text>
+								</Pressable>
+							)}
 							{deleteError ? <ErrorText message={deleteError} /> : null}
 							<Pressable
 								accessibilityRole="button"

@@ -1,5 +1,6 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import {
@@ -12,12 +13,14 @@ import {
 	DELETE_ACCOUNT_ERROR_POLAR_UNAVAILABLE,
 	DELETE_ACCOUNT_PASSWORD_LABEL,
 } from "@/shared/lib/settings/delete-account";
+import { PLAN_SETTINGS_URL } from "@/shared/lib/settings/legal";
 import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 const mockReplace = jest.fn();
 const mockClear = jest.fn();
 const mockDeleteUser = jest.fn();
 const mockPasskey = jest.fn();
+const mockOpenURL = jest.fn();
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
@@ -43,6 +46,10 @@ jest.mock("@/lib/auth-client", () => ({
 			passkey: (...args: unknown[]) => mockPasskey(...args),
 		},
 	},
+}));
+
+jest.mock("expo-linking", () => ({
+	openURL: (...args: unknown[]) => mockOpenURL(...args),
 }));
 
 jest.mock("expo-network", () => ({
@@ -81,6 +88,12 @@ const model: SettingsScreenModel = {
 };
 
 const ERROR = "No pudimos eliminar tu cuenta. Intenta de nuevo.";
+const POLAR_BODY = "Tienes una suscripción activa. Cancélala desde la web.";
+const POLAR_ACTIVE = {
+	error: { code: "POLAR_SUBSCRIPTION_ACTIVE", message: "active raw" },
+};
+
+let emitAppState: (state: AppStateStatus) => void = () => {};
 
 async function openDeleteSheet() {
 	const view = await render(
@@ -98,9 +111,18 @@ describe("Eliminar cuenta", () => {
 		mockClear.mockReset();
 		mockDeleteUser.mockReset();
 		mockPasskey.mockReset();
+		mockOpenURL.mockReset();
 		getNetworkStateAsync.mockReset();
 		getNetworkStateAsync.mockResolvedValue({ isConnected: true, isInternetReachable: true });
 		mockClear.mockResolvedValue({ serverNotified: false });
+		jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
+			emitAppState = listener;
+			return { remove: jest.fn() };
+		});
+	});
+
+	afterEach(() => {
+		jest.restoreAllMocks();
 	});
 
 	it("en éxito borra en el servidor, limpia el teléfono y avisa en la entrada", async () => {
@@ -176,19 +198,102 @@ describe("Eliminar cuenta", () => {
 		await view.unmount();
 	});
 
-	it("Polar activo muestra el aviso, no limpia y sigue dentro", async () => {
+	it("Polar activo cambia el sheet, oculta eliminar y abre la web", async () => {
+		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.getByText("¿Eliminar tu cuenta?")).toBeTruthy();
+		expect(DELETE_ACCOUNT_ERROR_POLAR_ACTIVE).toBe(POLAR_BODY);
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(
+			view.queryByText(
+				"Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No se puede deshacer.",
+			),
+		).toBeNull();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(view.queryByText("active raw")).toBeNull();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Ir a la web" }));
+		});
+		expect(mockOpenURL).toHaveBeenCalledWith(PLAN_SETTINGS_URL);
+		expect(PLAN_SETTINGS_URL).toBe("https://quipu-finance.app/settings#plan");
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Cancelar" }));
+		});
+		expect(view.queryByText(POLAR_BODY)).toBeNull();
+		expect(mockClear).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("al volver a primer plano con Polar sigue activo mantiene el aviso", async () => {
+		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
+
+		await act(async () => {
+			emitAppState("background");
+		});
+		await act(async () => {
+			emitAppState("active");
+		});
+
+		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("al volver a primer plano si Polar ya no bloquea vuelve el eliminar", async () => {
+		mockDeleteUser.mockResolvedValueOnce(POLAR_ACTIVE).mockResolvedValueOnce({ error: null });
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+
+		await act(async () => {
+			emitAppState("active");
+		});
+
+		expect(mockDeleteUser).toHaveBeenCalledTimes(2);
+		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Ir a la web" })).toBeNull();
+		expect(
+			view.getByText(
+				"Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No se puede deshacer.",
+			),
+		).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("Polar no cambia el sheet si el servidor solo manda el texto", async () => {
 		mockDeleteUser.mockResolvedValue({
-			error: { code: "POLAR_SUBSCRIPTION_ACTIVE", message: "active raw" },
+			error: { message: "POLAR_SUBSCRIPTION_ACTIVE polar subscription is active" },
 		});
 		const view = await openDeleteSheet();
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
 		});
-		expect(view.getByText(DELETE_ACCOUNT_ERROR_POLAR_ACTIVE)).toBeTruthy();
-		expect(view.queryByText("active raw")).toBeNull();
-		expect(mockClear).not.toHaveBeenCalled();
-		expect(mockReplace).not.toHaveBeenCalled();
-		expect(view.getByText("¿Eliminar tu cuenta?")).toBeTruthy();
+		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Ir a la web" })).toBeNull();
+		expect(view.getByText(ERROR)).toBeTruthy();
+		expect(view.queryByText(POLAR_BODY)).toBeNull();
 		await view.unmount();
 	});
 
