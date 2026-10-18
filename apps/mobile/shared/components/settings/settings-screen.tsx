@@ -30,7 +30,7 @@ import {
 	openLegalUrl,
 	PLAN_SETTINGS_URL,
 } from "@/shared/lib/settings/legal";
-import { polarOverviewBlocksDeletion, type SettingsScreenModel } from "@/shared/lib/settings/model";
+import type { SettingsScreenModel } from "@/shared/lib/settings/model";
 
 type Props = {
 	status: "loading" | "empty" | "ready";
@@ -51,10 +51,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const pending = useRef(false);
 	const polarBlockedRef = useRef(false);
 	const sheetRef = useRef<Sheet>(null);
-	const billingRef = useRef<Pick<
-		SettingsScreenModel,
-		"subscriptionStatus" | "cancelAtPeriodEnd"
-	> | null>(null);
+	const billingRef = useRef<Pick<SettingsScreenModel, "deleteBlockedBySubscription"> | null>(null);
 	const deleteForm = useForm({
 		defaultValues: { password: "" },
 		onSubmit: ({ value }) => {
@@ -65,10 +62,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	polarBlockedRef.current = polarBlocked;
 	sheetRef.current = sheet;
 	billingRef.current = model
-		? {
-				subscriptionStatus: model.subscriptionStatus,
-				cancelAtPeriodEnd: model.cancelAtPeriodEnd,
-			}
+		? { deleteBlockedBySubscription: model.deleteBlockedBySubscription }
 		: null;
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
@@ -133,7 +127,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 			if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
 			const billing = billingRef.current;
 			if (!billing) return;
-			if (polarOverviewBlocksDeletion(billing)) return;
+			if (billing.deleteBlockedBySubscription) return;
 			setPolarBlocked(false);
 			setDeleteError(null);
 		});

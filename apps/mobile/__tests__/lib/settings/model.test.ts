@@ -1,7 +1,6 @@
 import { settingsOverview } from "@/__fixtures__/settings-overview";
 import {
 	firstName,
-	polarOverviewBlocksDeletion,
 	presentSettings,
 	profileInitial,
 	repartoLabel,
@@ -20,12 +19,10 @@ describe("presentSettings", () => {
 			repartoLabel: "50 / 30 / 20",
 			scheduleCopy: "Mensual · día 1",
 			hasPassword: true,
-			subscriptionStatus: "free",
-			cancelAtPeriodEnd: false,
+			deleteBlockedBySubscription: false,
 		});
 		expect(presentSettings(settingsOverview({ tier: "premium" }))).toMatchObject({
-			subscriptionStatus: "active",
-			cancelAtPeriodEnd: false,
+			deleteBlockedBySubscription: false,
 		});
 		expect(presentSettings(settingsOverview({ hasPassword: false })).hasPassword).toBe(false);
 		expect(presentSettings(settingsOverview({ tier: "premium" })).planLabel).toBe("Plus");
@@ -36,38 +33,27 @@ describe("presentSettings", () => {
 		).toBeNull();
 	});
 
+	it("pasa deleteBlockedBySubscription del overview aunque el status se vea free", () => {
+		const overview = settingsOverview();
+		expect(overview.billing.subscriptionStatus).toBe("free");
+		expect(overview.billing.deleteBlockedBySubscription).toBe(false);
+		expect(presentSettings(overview).deleteBlockedBySubscription).toBe(false);
+		expect(
+			presentSettings({
+				...overview,
+				billing: {
+					...overview.billing,
+					subscriptionStatus: "free",
+					cancelAtPeriodEnd: false,
+					deleteBlockedBySubscription: true,
+				},
+			}).deleteBlockedBySubscription,
+		).toBe(true);
+	});
+
 	it("con email nulo muestra solo el país y no el código crudo", () => {
 		expect(presentSettings(settingsOverview({ email: null })).meta).toBe("Perú");
 		expect(profileInitial("  ana")).toBe("A");
-	});
-});
-
-describe("polarOverviewBlocksDeletion", () => {
-	it("bloquea solo si el overview sigue active y no canceló", () => {
-		expect(
-			polarOverviewBlocksDeletion({
-				subscriptionStatus: "active",
-				cancelAtPeriodEnd: false,
-			}),
-		).toBe(true);
-		expect(
-			polarOverviewBlocksDeletion({
-				subscriptionStatus: "canceled_at_period_end",
-				cancelAtPeriodEnd: true,
-			}),
-		).toBe(false);
-		expect(
-			polarOverviewBlocksDeletion({
-				subscriptionStatus: "active",
-				cancelAtPeriodEnd: true,
-			}),
-		).toBe(false);
-		expect(
-			polarOverviewBlocksDeletion({
-				subscriptionStatus: "free",
-				cancelAtPeriodEnd: false,
-			}),
-		).toBe(false);
 	});
 });
 

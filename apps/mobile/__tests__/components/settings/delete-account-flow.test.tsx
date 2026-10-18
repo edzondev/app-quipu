@@ -85,8 +85,7 @@ const model: SettingsScreenModel = {
 	repartoLabel: "50 / 30 / 20",
 	scheduleCopy: "Mensual · día 1",
 	hasPassword: false,
-	subscriptionStatus: "active",
-	cancelAtPeriodEnd: false,
+	deleteBlockedBySubscription: true,
 };
 
 const ERROR = "No pudimos eliminar tu cuenta. Intenta de nuevo.";
@@ -259,7 +258,7 @@ describe("Eliminar cuenta", () => {
 		await view.unmount();
 	});
 
-	it("al volver a primer plano si el overview ya canceló vuelve el eliminar sin deleteUser", async () => {
+	it("al volver a primer plano si el overview ya no bloquea vuelve el eliminar sin deleteUser", async () => {
 		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
 		const view = await openDeleteSheet();
 		await act(async () => {
@@ -273,8 +272,7 @@ describe("Eliminar cuenta", () => {
 					status="ready"
 					model={{
 						...model,
-						subscriptionStatus: "canceled_at_period_end",
-						cancelAtPeriodEnd: true,
+						deleteBlockedBySubscription: false,
 					}}
 					onClose={jest.fn()}
 					onOpenSecurity={jest.fn()}
@@ -295,6 +293,43 @@ describe("Eliminar cuenta", () => {
 				"Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No se puede deshacer.",
 			),
 		).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("al volver a primer plano con cobro fallido pero aún cobrable mantiene el aviso sin deleteUser", async () => {
+		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+
+		await act(async () => {
+			view.rerender(
+				<SettingsScreen
+					status="ready"
+					model={{
+						...model,
+						deleteBlockedBySubscription: true,
+					}}
+					onClose={jest.fn()}
+					onOpenSecurity={jest.fn()}
+				/>,
+			);
+		});
+
+		await act(async () => {
+			emitAppState("active");
+		});
+
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Cancelar" })).toBeTruthy();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
 		await view.unmount();
