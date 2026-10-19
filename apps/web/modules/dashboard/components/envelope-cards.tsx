@@ -70,7 +70,15 @@ export function EnvelopeCards({
 					const overspent = !isSavings && envelope.remainingAmount < 0;
 					const displayAmount =
 						isEarlyCycle && !overspent ? envelope.allocatedAmount : envelope.remainingAmount;
-					const percent = clampPercent(envelope.percentRemaining);
+					const assignedPercent =
+						envelope.allocatedAmount > 0
+							? Math.round(
+									(Math.max(0, envelope.allocatedAmount - envelope.remainingAmount) /
+										envelope.allocatedAmount) *
+										100,
+								)
+							: 0;
+					const percent = isSavings ? assignedPercent : clampPercent(envelope.percentRemaining);
 
 					return (
 						<article
@@ -97,24 +105,37 @@ export function EnvelopeCards({
 							<div className="mb-2 flex items-center gap-2 md:mb-3.5">
 								<span className={`size-2 rounded-full ${styles.dot}`} aria-hidden />
 								<h3 className="text-sm font-semibold text-ink">{ENVELOPE_LABELS[envelope.type]}</h3>
+								{isSavings && percent >= 100 ? (
+									<span className="ml-auto rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
+										100%
+									</span>
+								) : null}
 							</div>
 							{isSavings ? (
-								<dl className="space-y-2">
-									<div>
-										<dt className="text-xs text-mute">{SAVINGS_PLANNED_LABEL}</dt>
-										<dd className="font-serif text-xl text-ink md:text-2xl">
-											{formatCents(envelope.allocatedAmount, { currency: currencyCode })}
-										</dd>
-									</div>
-									{savedCents != null ? (
+								<>
+									<dl className="space-y-2">
 										<div>
-											<dt className="text-xs text-mute">{SAVINGS_SAVED_LABEL}</dt>
+											<dt className="text-xs text-mute">{SAVINGS_PLANNED_LABEL}</dt>
 											<dd className="font-serif text-xl text-ink md:text-2xl">
-												{formatCents(savedCents, { currency: currencyCode })}
+												{formatCents(envelope.allocatedAmount, { currency: currencyCode })}
 											</dd>
 										</div>
-									) : null}
-								</dl>
+										{savedCents != null ? (
+											<div>
+												<dt className="text-xs text-mute">{SAVINGS_SAVED_LABEL}</dt>
+												<dd className="font-serif text-xl text-ink md:text-2xl">
+													{formatCents(savedCents, { currency: currencyCode })}
+												</dd>
+											</div>
+										) : null}
+									</dl>
+									<div className="mt-2 h-1.5 overflow-hidden rounded-[4px] bg-qp-track md:mt-3">
+										<div
+											className={`h-full rounded-[4px] ${styles.bar}`}
+											style={{ width: `${percent}%` }}
+										/>
+									</div>
+								</>
 							) : (
 								<>
 									<p className="font-serif text-xl text-ink md:text-2xl">

@@ -62,7 +62,6 @@ export const HERO_CORRECT_HINT = "¿Los números no cuadran con tu dinero real?"
 export const HERO_CORRECT_CTA = "Corregir ciclo";
 
 export const ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY = "completo · aún sin gastos";
-export const ENVELOPE_EARLY_SAVINGS_SUBCOPY = "meta del ciclo · aún por aportar";
 
 export const COMMITMENTS_EMPTY_TITLE = "Aún no tienes compromisos";
 export const COMMITMENTS_EMPTY_BODY =
