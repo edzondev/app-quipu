@@ -9,7 +9,9 @@ import { formatCents } from "@/shared/lib/money";
 import {
 	DASHBOARD_ENVELOPES_SECTION_ID,
 	ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,
-	ENVELOPE_EARLY_SAVINGS_SUBCOPY,
+	ENVELOPE_OVERSPENT_LABEL,
+	SAVINGS_PLANNED_LABEL,
+	SAVINGS_SAVED_LABEL,
 } from "../constants";
 import { clampPercent } from "../lib/dashboard-math";
 import type { DashboardEnvelope } from "../types";
@@ -19,6 +21,8 @@ type Props = {
 	envelopes: DashboardEnvelope[];
 	currencyCode: string;
 	isEarlyCycle?: boolean;
+	/** Fondo de emergencia + metas, from `savings.getOverview.totalSavedCents`. */
+	savedCents?: number;
 };
 
 const ENVELOPE_STYLES = {
@@ -39,7 +43,12 @@ const ENVELOPE_STYLES = {
 	},
 } as const;
 
-export function EnvelopeCards({ envelopes, currencyCode, isEarlyCycle = false }: Props) {
+export function EnvelopeCards({
+	envelopes,
+	currencyCode,
+	isEarlyCycle = false,
+	savedCents,
+}: Props) {
 	const { open } = useExpenseRegister();
 
 	function handleEnvelopeClick(type: "needs" | "wants" | "savings") {
@@ -57,26 +66,19 @@ export function EnvelopeCards({ envelopes, currencyCode, isEarlyCycle = false }:
 			<div className="grid gap-2 md:grid-cols-3 md:gap-3">
 				{envelopes.map((envelope) => {
 					const styles = ENVELOPE_STYLES[envelope.type];
-					// Ahorro en Home: muestra lo aportable del sobre (remaining) cuando
-					// hay ciclo en curso; si remaining es 0 y hay allocated, el dinero
-					// ya se movió al Fondo (no es un segundo total gastable).
 					const isSavings = envelope.type === "savings";
-					const displayAmount = isSavings
-						? envelope.remainingAmount > 0
-							? Math.max(0, envelope.remainingAmount)
-							: envelope.allocatedAmount
-						: isEarlyCycle
-							? envelope.allocatedAmount
-							: Math.max(0, envelope.remainingAmount);
-					const percent = isSavings
-						? envelope.allocatedAmount > 0
+					const overspent = !isSavings && envelope.remainingAmount < 0;
+					const displayAmount =
+						isEarlyCycle && !overspent ? envelope.allocatedAmount : envelope.remainingAmount;
+					const assignedPercent =
+						envelope.allocatedAmount > 0
 							? Math.round(
 									(Math.max(0, envelope.allocatedAmount - envelope.remainingAmount) /
 										envelope.allocatedAmount) *
 										100,
 								)
-							: 0
-						: clampPercent(envelope.percentRemaining);
+							: 0;
+					const percent = isSavings ? assignedPercent : clampPercent(envelope.percentRemaining);
 
 					return (
 						<article
@@ -109,33 +111,62 @@ export function EnvelopeCards({ envelopes, currencyCode, isEarlyCycle = false }:
 									</span>
 								) : null}
 							</div>
-							<p className="font-serif text-xl text-ink md:text-2xl">
-								{formatCents(displayAmount, {
-									currency: currencyCode,
-								})}
-							</p>
-							<p className="mt-1 text-xs text-mute">
-								{isEarlyCycle ? (
-									isSavings ? (
-										ENVELOPE_EARLY_SAVINGS_SUBCOPY
-									) : (
-										ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY
-									)
-								) : (
-									<>
-										{isSavings ? "apartado" : "disponible"} de{" "}
-										{formatCents(envelope.allocatedAmount, {
-											currency: currencyCode,
-										})}
-									</>
-								)}
-							</p>
-							<div className="mt-2 h-1.5 overflow-hidden rounded-[4px] bg-qp-track md:mt-3">
-								<div
-									className={`h-full rounded-[4px] ${styles.bar}`}
-									style={{ width: `${percent}%` }}
-								/>
-							</div>
+							{isSavings ? (
+								<>
+									<dl className="space-y-2">
+										<div>
+											<dt className="text-xs text-mute">{SAVINGS_PLANNED_LABEL}</dt>
+											<dd className="font-serif text-xl text-ink md:text-2xl">
+												{formatCents(envelope.allocatedAmount, { currency: currencyCode })}
+											</dd>
+										</div>
+										{savedCents != null ? (
+											<div>
+												<dt className="text-xs text-mute">{SAVINGS_SAVED_LABEL}</dt>
+												<dd className="font-serif text-xl text-ink md:text-2xl">
+													{formatCents(savedCents, { currency: currencyCode })}
+												</dd>
+											</div>
+										) : null}
+									</dl>
+									<div className="mt-2 h-1.5 overflow-hidden rounded-[4px] bg-qp-track md:mt-3">
+										<div
+											className={`h-full rounded-[4px] ${styles.bar}`}
+											style={{ width: `${percent}%` }}
+										/>
+									</div>
+								</>
+							) : (
+								<>
+									<p className="font-serif text-xl text-ink md:text-2xl">
+										{formatCents(displayAmount, { currency: currencyCode })}
+										{overspent ? (
+											<>
+												{" · "}
+												<span className="text-warning-text">{ENVELOPE_OVERSPENT_LABEL}</span>
+											</>
+										) : null}
+									</p>
+									<p className="mt-1 text-xs text-mute">
+										{isEarlyCycle ? (
+											ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY
+										) : (
+											<>
+												disponible de{" "}
+												{formatCents(envelope.allocatedAmount, {
+													currency: currencyCode,
+												})}
+											</>
+										)}
+									</p>
+									<div className="mt-2 h-1.5 overflow-hidden rounded-[4px] bg-qp-track md:mt-3">
+										<div
+											className={`h-full rounded-[4px] ${styles.bar}`}
+											style={{ width: `${percent}%` }}
+										/>
+									</div>
+								</>
+							)}
 						</article>
 					);
 				})}
