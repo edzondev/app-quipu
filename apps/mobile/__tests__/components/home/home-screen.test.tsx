@@ -1,5 +1,6 @@
-import { fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
 import { envelope, summaryWithCycle } from "@/__fixtures__/dashboard-summary";
+import { savingsOverview } from "@/__fixtures__/savings-overview";
 import HomePage from "@/app/(tabs)";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty } from "@/shared/components/home/home-empty";
@@ -61,20 +62,22 @@ const mockHome: HomeModel = {
 			carryTotalCents: 0,
 		},
 		{
-			label: "Ahorro",
-			shortLabel: "Ahorro",
+			label: "Ahorro planeado",
+			shortLabel: "Ahorro planeado",
 			spentCents: 70000,
 			remainingCents: 70000,
 			remainingPercent: 100,
 			totalCents: 70000,
 			progress: 100,
 			tone: "savings",
-			suffix: "apartado",
+			suffix: "Ahorro planeado",
 			carriedOverCents: 0,
 			incomeCents: 0,
 			carryTotalCents: 0,
 		},
 	],
+	plannedSavings: { label: "Ahorro planeado", amountLabel: "S/ 700" },
+	savedSavings: null,
 	surplusCents: 154300,
 	coachMessage: "Vas bien.",
 	commitments: [
@@ -199,6 +202,39 @@ describe("Home 1d", () => {
 
 		await fireEvent.press(view.getByText("Ver todos"));
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
+	});
+
+	it("pone S/ 560 junto a Ahorro planeado y S/ 4,320 junto a Ahorro ya guardado", async () => {
+		const home = mapDashboardHome(
+			{
+				...summaryWithCycle(),
+				liquidity: {
+					...summaryWithCycle().liquidity,
+					savingsParkedInEnvelopeCents: 56_000,
+				},
+			},
+			{ ...savingsOverview, totalSavedCents: 432_000 },
+		);
+		if (!home) throw new Error("expected home");
+		const view = await render(
+			<HomeDense
+				home={home}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+			/>,
+		);
+		const planned = view.getByTestId("home-savings-planned");
+		expect(within(planned).getByText("Ahorro planeado")).toBeTruthy();
+		expect(within(planned).getByText("S/ 560")).toBeTruthy();
+		expect(within(planned).queryByText("S/ 4,320")).toBeNull();
+		expect(within(planned).queryByText("apartado")).toBeNull();
+		const saved = view.getByTestId("home-savings-saved");
+		expect(within(saved).getByText("Ahorro ya guardado")).toBeTruthy();
+		expect(within(saved).getByText("S/ 4,320")).toBeTruthy();
+		expect(within(saved).queryByText("S/ 560")).toBeNull();
+		expect(view.queryByText("apartado")).toBeNull();
 	});
 
 	it("con «Sobra» negativa dice cuánto se pasó, no S/ 0", async () => {

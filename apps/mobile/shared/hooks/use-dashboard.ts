@@ -14,13 +14,15 @@ export function useDashboardSummary() {
 }
 
 export function useHomeModel() {
+	const { isAuthReady } = useProfileGate();
 	const summary = useDashboardSummary();
+	const overview = useQuery(api.savings.getOverview, isAuthReady ? {} : "skip");
 	if (summary === undefined) return { status: "loading" as const };
 	const profileName = summary?.profile.name ?? "";
 	const initial = profileInitial(profileName);
 	if (!summary) return { status: "empty" as const, profileName, profileInitial: initial };
 
-	const home = mapDashboardHome(summary);
+	const home = mapDashboardHome(summary, overview);
 	if (summary.closedCycle && (summary.cycle?.pastEnd || !home)) {
 		return {
 			status: "closed" as const,

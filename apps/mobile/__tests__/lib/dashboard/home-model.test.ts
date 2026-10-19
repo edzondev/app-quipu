@@ -5,6 +5,7 @@ import {
 	emptyEnvelopeCarry,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
+import { savingsOverview } from "@/__fixtures__/savings-overview";
 import { envelopeCarryLabel, mapDashboardHome } from "@/shared/lib/dashboard/home-model";
 
 const AUGUST_START = Date.UTC(2026, 7, 1, 5, 0, 0);
@@ -31,6 +32,7 @@ function summary(
 	overrides: {
 		hero?: Hero;
 		surplusCents?: number;
+		liquidity?: Partial<ActiveSummary["liquidity"]>;
 		envelopes?: ActiveSummary["envelopes"];
 		movements?: ActiveSummary["movements"];
 		commitments?: ActiveSummary["commitments"];
@@ -65,9 +67,10 @@ function summary(
 			spendableCents: 0,
 			reservedCents: 0,
 			unallocatedCents: 0,
-			savingsParkedInEnvelopeCents: 0,
+			savingsParkedInEnvelopeCents: 70_000,
 			needsOverspentCents: 0,
 			wantsOverspentCents: 0,
+			...overrides.liquidity,
 		},
 		envelopes: overrides.envelopes ?? [
 			{
@@ -177,7 +180,26 @@ describe("mapDashboardHome", () => {
 		});
 	});
 
-	it("muestra gastado contra asignado y deja el ahorro como apartado", () => {
+	it("separa Ahorro planeado del snapshot y Ahorro ya guardado del overview", () => {
+		const home = mapDashboardHome(
+			summary({
+				liquidity: { savingsParkedInEnvelopeCents: 56_000 },
+			}),
+			{ ...savingsOverview, totalSavedCents: 432_000 },
+		);
+		expect(home?.plannedSavings).toEqual({
+			label: "Ahorro planeado",
+			amountLabel: "S/ 560",
+		});
+		expect(home?.savedSavings).toEqual({
+			label: "Ahorro ya guardado",
+			amountLabel: "S/ 4,320",
+		});
+		expect(home?.envelopes.find((row) => row.tone === "savings")?.suffix).not.toBe("apartado");
+		expect(home?.plannedSavings?.amountLabel).not.toBe(home?.savedSavings?.amountLabel);
+	});
+
+	it("muestra gastado contra asignado y etiqueta el ahorro como planeado", () => {
 		const home = mapDashboardHome(summary());
 		expect(home?.envelopes).toEqual([
 			{
@@ -209,15 +231,15 @@ describe("mapDashboardHome", () => {
 				carryTotalCents: 0,
 			},
 			{
-				label: "Ahorro",
-				shortLabel: "Ahorro",
+				label: "Ahorro planeado",
+				shortLabel: "Ahorro planeado",
 				spentCents: 70000,
 				remainingCents: 70000,
 				remainingPercent: 100,
 				totalCents: 70000,
 				progress: 100,
 				tone: "savings",
-				suffix: "apartado",
+				suffix: "Ahorro planeado",
 				carriedOverCents: 0,
 				incomeCents: 0,
 				carryTotalCents: 0,

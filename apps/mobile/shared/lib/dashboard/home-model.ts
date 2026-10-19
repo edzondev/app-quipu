@@ -2,6 +2,13 @@ import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+import {
+	presentPlannedSavings,
+	presentSavedSavings,
+	SAVINGS_PLANNED_LABEL,
+	type SavingsAmountRow,
+} from "@/shared/lib/savings/labels";
+import type { SavingsOverview } from "@/shared/lib/savings/model";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
 type SummaryEnvelope = DashboardSummary["envelopes"][number];
@@ -69,6 +76,10 @@ export type HomeModel = {
 	recentMovements: HomeMovement[];
 	/** Primer ciclo: getSummary.cycle.isOpeningCycle. El dinero de hoy no es arrastre. */
 	isOpeningCycle: boolean;
+	/** Snapshot getSummary.liquidity.savingsParkedInEnvelopeCents. */
+	plannedSavings: SavingsAmountRow | null;
+	/** savings.getOverview.totalSavedCents, igual que Plan. */
+	savedSavings: SavingsAmountRow | null;
 };
 
 const ENVELOPE_LABEL = {
@@ -106,13 +117,19 @@ const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
 const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
 const LIMA = "America/Lima";
 
-export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
+export function mapDashboardHome(
+	summary: DashboardSummary,
+	overview?: SavingsOverview,
+): HomeModel | null {
 	if (!summary.cycle || !summary.hero) return null;
 	const dailyCents = summary.hero.displayDailyCents;
-
-	const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
-	const tone = readBadgeTone(summary.hero.statusBadge);
 	const symbol = marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ?? "S/";
+	const parkedCents = summary.liquidity.savingsParkedInEnvelopeCents;
+
+	const envelopes: HomeEnvelope[] = summary.envelopes.map((row) =>
+		mapEnvelopeRow(row, parkedCents),
+	);
+	const tone = readBadgeTone(summary.hero.statusBadge);
 
 	return {
 		cycleLabel: cycleLabel(summary.cycle.startDate),
@@ -137,6 +154,8 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 			tone: movementTone(movement.kind, movement.envelopeLabel),
 		})),
 		isOpeningCycle: summary.cycle.isOpeningCycle,
+		plannedSavings: presentPlannedSavings(summary, symbol),
+		savedSavings: presentSavedSavings(overview),
 	};
 }
 
@@ -162,7 +181,7 @@ function formatCarryCents(cents: number, symbol: string): string {
 	return formatCentsTrimmed(cents, symbol);
 }
 
-export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
+export function mapEnvelopeRow(envelope: SummaryEnvelope, parkedCents = 0): HomeEnvelope {
 	const carry = {
 		carriedOverCents: envelope.carriedOverCents,
 		incomeCents: envelope.incomeCents,
@@ -172,15 +191,15 @@ export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
 	if (type === "savings") {
 		return {
 			...carry,
-			label: ENVELOPE_LABEL.savings,
-			shortLabel: SHORT_ENVELOPE_LABEL.savings,
+			label: SAVINGS_PLANNED_LABEL,
+			shortLabel: SAVINGS_PLANNED_LABEL,
 			spentCents: envelope.allocatedAmount,
-			remainingCents: envelope.remainingAmount,
+			remainingCents: parkedCents,
 			remainingPercent: clampPercent(envelope.percentRemaining),
 			totalCents: envelope.allocatedAmount,
 			progress: envelope.allocatedAmount > 0 ? 100 : 0,
 			tone: "savings",
-			suffix: "apartado",
+			suffix: SAVINGS_PLANNED_LABEL,
 		};
 	}
 

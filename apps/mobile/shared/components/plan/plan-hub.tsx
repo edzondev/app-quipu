@@ -4,6 +4,7 @@ import { SectionLabel } from "@/shared/components/section-label";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type { PlanHubModel, PlanSegment } from "@/shared/lib/plan/model";
+import { SAVINGS_PLANNED_LABEL, SAVINGS_SAVED_LABEL } from "@/shared/lib/savings/labels";
 import type { AhorroPlanRow } from "@/shared/lib/savings/model";
 
 const DOT = {
@@ -97,14 +98,14 @@ export function PlanHub({
 							<ListRow
 								testID="plan-row-ahorro-planeado"
 								dotClass={DOT.savings}
-								label="Ahorro planeado"
+								label={SAVINGS_PLANNED_LABEL}
 								value={model.plannedSavingsLabel}
 							/>
 						) : null}
 						<ListRow
 							testID="plan-row-ahorro-guardado"
 							dotClass={DOT.savings}
-							label="Ahorro ya guardado"
+							label={SAVINGS_SAVED_LABEL}
 							subtitle="Fondo de emergencia y metas"
 							value={ahorro?.totalLabel ?? null}
 							onPress={onOpenAhorro}
