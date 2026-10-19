@@ -59,6 +59,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		},
 	});
 	const hasPassword = model?.hasPassword === true;
+	const deleteBlockedBySubscription = model?.deleteBlockedBySubscription;
 	polarBlockedRef.current = polarBlocked;
 	sheetRef.current = sheet;
 	billingRef.current = model
@@ -120,6 +121,13 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		setDeleteError(null);
 		setPolarBlocked(false);
 	}
+
+	useEffect(() => {
+		if (sheet !== "deleteAccount" || !polarBlocked) return;
+		if (deleteBlockedBySubscription !== false) return;
+		setPolarBlocked(false);
+		setDeleteError(null);
+	}, [sheet, polarBlocked, deleteBlockedBySubscription]);
 
 	useEffect(() => {
 		const subscription = AppState.addEventListener("change", (state) => {
