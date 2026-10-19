@@ -24,7 +24,9 @@ tags:
 - assertVisible: "Sobres"
 - assertVisible: "Necesidades, Gustos y Ahorro"
 - assertVisible: "Compromisos"
-- assertVisible: "Ahorro y metas"
+- assertVisible: "Ahorro planeado"
+- assertVisible: "Ahorro ya guardado"
+- assertVisible: "Fondo de emergencia y metas"
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
     text: "Sobres"
@@ -39,4 +41,4 @@ tags:
 - assertNotVisible: "Mover dinero"
 - assertVisible: "(Al día|Va rápido|Intacto)"
 - tapOn: "Volver"
-- assertVisible: "Ahorro y metas"
+- assertVisible: "Ahorro ya guardado"

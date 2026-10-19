@@ -65,7 +65,7 @@ tags:
     visible: "Todavía no hay sobres en el ciclo activo."
     timeout: 10000
 - tapOn: "Volver"
-- tapOn: "Ahorro y metas"
+- tapOn: "Ahorro ya guardado"
 - extendedWaitUntil:
     visible: "Fondo de Emergencia"
     timeout: 15000
