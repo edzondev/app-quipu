@@ -28,6 +28,110 @@ describe("computeDailyAvailable", () => {
 	});
 });
 
+/** America/Lima has no DST: civil time is always UTC−5. Values stay in tests. */
+function limaInstant(localDateTime: string): number {
+	return Date.parse(`${localDateTime}-05:00`);
+}
+
+describe("computeCycleDayMetrics Lima calendar days", () => {
+	it("divides spendable by Lima calendar days left, not by 24h windows from birth", () => {
+		const start = limaInstant("2026-10-01T15:00:00");
+		const end = limaInstant("2026-10-31T15:00:00");
+		const now = limaInstant("2026-10-19T10:00:00");
+		const metrics = computeCycleDayMetrics(start, end, now);
+
+		expect(metrics.daysTotal).toBe(30);
+		expect(metrics.daysRemaining).toBe(12);
+		expect(metrics.daysElapsed).toBe(18);
+		// Still the elapsed time fraction (about 59%), not calendar days elapsed.
+		expect(metrics.progressPercent).toBe(59);
+		// S/ 1,200.00 over 12 calendar days is S/ 100.00 (10_000 cents).
+		expect(computeDailyAvailable(120_000, 0, metrics.daysRemaining)).toBe(10_000);
+	});
+
+	it("counts the same remaining days for cycles born at different Lima hours", () => {
+		const now = limaInstant("2026-10-20T12:00:00");
+		const morning = computeCycleDayMetrics(
+			limaInstant("2026-10-01T08:00:00"),
+			limaInstant("2026-10-31T08:00:00"),
+			now,
+		);
+		const evening = computeCycleDayMetrics(
+			limaInstant("2026-10-01T20:00:00"),
+			limaInstant("2026-10-31T20:00:00"),
+			now,
+		);
+
+		expect(morning.daysRemaining).toBe(11);
+		expect(evening.daysRemaining).toBe(11);
+		expect(morning.daysTotal).toBe(30);
+		expect(evening.daysTotal).toBe(30);
+	});
+
+	it("drops exactly one day when Lima midnight passes, at any birth hour", () => {
+		const beforeMidnight = limaInstant("2026-10-19T23:59:00");
+		const afterMidnight = limaInstant("2026-10-20T00:01:00");
+
+		for (const birthTime of ["08:00:00", "15:00:00", "20:00:00"]) {
+			const start = limaInstant(`2026-10-01T${birthTime}`);
+			const end = limaInstant(`2026-10-31T${birthTime}`);
+			const earlier = computeCycleDayMetrics(start, end, beforeMidnight).daysRemaining;
+			const later = computeCycleDayMetrics(start, end, afterMidnight).daysRemaining;
+
+			expect(earlier).toBe(12);
+			expect(later).toBe(11);
+			expect(earlier - later).toBe(1);
+		}
+	});
+
+	it("matches the 24h count when the cycle is born at Lima midnight", () => {
+		const start = limaInstant("2026-10-01T00:00:00");
+		const end = limaInstant("2026-10-31T00:00:00");
+		const now = limaInstant("2026-10-19T10:00:00");
+		const metrics = computeCycleDayMetrics(start, end, now);
+		const windowDaysTotal = Math.max(1, Math.ceil((end - start) / MS_PER_DAY));
+		const windowDaysRemaining = Math.max(0, Math.ceil((end - now) / MS_PER_DAY));
+
+		expect(metrics.daysTotal).toBe(windowDaysTotal);
+		expect(metrics.daysRemaining).toBe(windowDaysRemaining);
+		expect(metrics.daysRemaining).toBe(12);
+		expect(metrics.daysElapsed).toBe(metrics.daysTotal - metrics.daysRemaining);
+	});
+
+	it("counts total length as Lima calendar days between start and end", () => {
+		const start = limaInstant("2026-10-01T08:00:00");
+		const end = limaInstant("2026-10-31T20:00:00");
+		const metrics = computeCycleDayMetrics(start, end, start);
+
+		expect(metrics.daysTotal).toBe(30);
+		expect(metrics.daysRemaining).toBe(30);
+		expect(metrics.daysElapsed).toBe(0);
+		expect(metrics.progressPercent).toBe(0);
+	});
+
+	it("keeps one day left when the cycle still ends later today", () => {
+		const metrics = computeCycleDayMetrics(
+			limaInstant("2026-10-01T15:00:00"),
+			limaInstant("2026-10-19T15:00:00"),
+			limaInstant("2026-10-19T10:00:00"),
+		);
+
+		expect(metrics.daysRemaining).toBe(1);
+		expect(computeDailyAvailable(120_000, 0, metrics.daysRemaining)).toBe(120_000);
+	});
+
+	it("returns zero days left once now reaches the end, and the divisor stays at least 1", () => {
+		const end = limaInstant("2026-10-19T15:00:00");
+		const metrics = computeCycleDayMetrics(limaInstant("2026-10-01T15:00:00"), end, end);
+
+		expect(metrics.daysRemaining).toBe(0);
+		expect(computeDailyAvailable(120_000, 0, metrics.daysRemaining)).toBe(120_000);
+		expect(computeDailyAvailable(120_000, 0, metrics.daysRemaining)).toBe(
+			computeDailyAvailable(120_000, 0, 1),
+		);
+	});
+});
+
 describe("isCyclePastEnd", () => {
 	const endDate = Date.parse("2026-10-09T05:00:00.000Z");
 
