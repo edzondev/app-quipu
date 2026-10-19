@@ -94,7 +94,7 @@ const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
 const SHORT_ENVELOPE_LABEL = {
 	needs: "Necesid.",
 	wants: "Gustos",
-	savings: "Ahorro planeado",
+	savings: "Planeado",
 } as const;
 
 const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {

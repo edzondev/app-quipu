@@ -183,7 +183,7 @@ describe("mapDashboardHome", () => {
 		const savings = home?.envelopes.find((envelope) => envelope.tone === "savings");
 		expect(savings).toMatchObject({
 			label: "Ahorro planeado",
-			shortLabel: "Ahorro planeado",
+			shortLabel: "Planeado",
 			remainingCents: 56_000,
 			suffix: "",
 		});
@@ -223,7 +223,7 @@ describe("mapDashboardHome", () => {
 			},
 			{
 				label: "Ahorro planeado",
-				shortLabel: "Ahorro planeado",
+				shortLabel: "Planeado",
 				spentCents: 70000,
 				remainingCents: 0,
 				remainingPercent: 100,

@@ -62,7 +62,7 @@ const mockHome: HomeModel = {
 		},
 		{
 			label: "Ahorro planeado",
-			shortLabel: "Ahorro planeado",
+			shortLabel: "Planeado",
 			spentCents: 70000,
 			remainingCents: 70000,
 			remainingPercent: 100,
@@ -187,7 +187,7 @@ describe("Home 1d", () => {
 		expect(view.getByText("S/ 612")).toBeTruthy();
 		expect(view.getByText("S/ 231")).toBeTruthy();
 		expect(view.getByText("S/ 700")).toBeTruthy();
-		expect(view.getByText("Ahorro planeado")).toBeTruthy();
+		expect(view.getByText("Planeado")).toBeTruthy();
 		expect(view.queryByText("apartado")).toBeNull();
 		expect(view.getByText("Próximos compromisos")).toBeTruthy();
 		expect(view.getByText(/Alquiler/)).toBeTruthy();
@@ -203,7 +203,7 @@ describe("Home 1d", () => {
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
 	});
 
-	it("en Inicio el S/ 560 del snapshot se lee como Ahorro planeado, no apartado", async () => {
+	it("en Inicio el S/ 560 del snapshot se lee como Planeado, no apartado", async () => {
 		const base = summaryWithCycle();
 		const home = mapDashboardHome({
 			...base,
@@ -222,7 +222,7 @@ describe("Home 1d", () => {
 				onViewAllMovements={jest.fn()}
 			/>,
 		);
-		expect(view.getByText("Ahorro planeado")).toBeTruthy();
+		expect(view.getByText("Planeado")).toBeTruthy();
 		expect(view.getByText("S/ 560")).toBeTruthy();
 		expect(view.queryByText("apartado")).toBeNull();
 		expect(view.queryByText(/^Ahorro$/)).toBeNull();
