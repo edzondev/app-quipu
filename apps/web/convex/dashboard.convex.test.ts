@@ -64,6 +64,25 @@ describe("dashboard.getSummary surplus", () => {
 		expect(surplusOf(summary)).toBe(-10_000);
 	});
 
+	it("returns signed spendable and per-envelope overspend on the snapshot", async () => {
+		const summary = await summaryWithEnvelopes(t, {
+			needs: -47_467,
+			wants: 31_972,
+			savings: 0,
+		});
+		if (summary === null || !("liquidity" in summary) || summary.hero === null) {
+			throw new Error("expected an active cycle");
+		}
+
+		expect(summary.liquidity.spendableCents).toBe(0);
+		expect(summary.liquidity.needsOverspentCents).toBe(47_467);
+		expect(summary.liquidity.wantsOverspentCents).toBe(0);
+		expect(summary.hero.spendableCents).toBe(0);
+		expect(summary.hero.needsOverspentCents).toBe(47_467);
+		expect(summary.hero.wantsOverspentCents).toBe(0);
+		expect(summary.hero.dailyAvailableCents).toBe(0);
+	});
+
 	it("ignores the limaDay cache key and decides with the server clock", async () => {
 		const profileId = await seedProfile(t);
 		await seedActiveCycle(t, profileId, {

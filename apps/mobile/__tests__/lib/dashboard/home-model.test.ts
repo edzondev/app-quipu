@@ -23,6 +23,8 @@ const hero: Hero = {
 	spendableCents: 0,
 	reservedCents: 0,
 	unallocatedCents: 0,
+	needsOverspentCents: 0,
+	wantsOverspentCents: 0,
 };
 
 function summary(
@@ -64,6 +66,8 @@ function summary(
 			reservedCents: 0,
 			unallocatedCents: 0,
 			savingsParkedInEnvelopeCents: 0,
+			needsOverspentCents: 0,
+			wantsOverspentCents: 0,
 		},
 		envelopes: overrides.envelopes ?? [
 			{

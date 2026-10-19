@@ -226,6 +226,8 @@ export const getSummary = query({
 			spendableCents: spendable.spendableCents,
 			reservedCents: spendable.reservedCents,
 			unallocatedCents: spendable.unallocatedCents,
+			needsOverspentCents: spendable.needsOverspentCents,
+			wantsOverspentCents: spendable.wantsOverspentCents,
 		};
 
 		const envelopes = ENVELOPE_ORDER.map((type) => {
@@ -407,6 +409,8 @@ export const getSummary = query({
 				reservedCents: spendable.reservedCents,
 				unallocatedCents: spendable.unallocatedCents,
 				savingsParkedInEnvelopeCents: spendable.savingsParkedInEnvelopeCents,
+				needsOverspentCents: spendable.needsOverspentCents,
+				wantsOverspentCents: spendable.wantsOverspentCents,
 			},
 			envelopes,
 			commitments,
