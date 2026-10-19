@@ -258,13 +258,15 @@ describe("Eliminar cuenta", () => {
 		await view.unmount();
 	});
 
-	it("al volver a primer plano si el overview ya no bloquea vuelve el eliminar sin deleteUser", async () => {
+	it("si Polar deja de bloquear con el sheet abierto vuelve el eliminar sin deleteUser", async () => {
 		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
 		const view = await openDeleteSheet();
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
 		});
 		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
 
 		await act(async () => {
 			view.rerender(
@@ -279,11 +281,6 @@ describe("Eliminar cuenta", () => {
 				/>,
 			);
 		});
-		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
-
-		await act(async () => {
-			emitAppState("active");
-		});
 
 		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
 		expect(view.getByRole("button", { name: "Eliminar mi cuenta" })).toBeTruthy();
@@ -293,6 +290,67 @@ describe("Eliminar cuenta", () => {
 				"Se borran para siempre tus movimientos, sobres, compromisos, ahorro y progreso. No se puede deshacer.",
 			),
 		).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("si el overview sigue bloqueando mantiene el aviso Polar sin deleteUser", async () => {
+		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+
+		await act(async () => {
+			view.rerender(
+				<SettingsScreen
+					status="ready"
+					model={{
+						...model,
+						deleteBlockedBySubscription: true,
+					}}
+					onClose={jest.fn()}
+					onOpenSecurity={jest.fn()}
+				/>,
+			);
+		});
+
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
+		expect(mockClear).not.toHaveBeenCalled();
+		expect(mockReplace).not.toHaveBeenCalled();
+		await view.unmount();
+	});
+
+	it("sin model no desbloquea el aviso Polar", async () => {
+		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
+		const view = await openDeleteSheet();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
+		});
+		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
+
+		await act(async () => {
+			view.rerender(
+				<SettingsScreen
+					status="loading"
+					model={null}
+					onClose={jest.fn()}
+					onOpenSecurity={jest.fn()}
+				/>,
+			);
+		});
+
+		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
+		expect(view.getByText(POLAR_BODY)).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
+		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
 		await view.unmount();
