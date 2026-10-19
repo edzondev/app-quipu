@@ -22,7 +22,7 @@ tags:
 - tapOn:
     text: "Plan"
 - extendedWaitUntil:
-    visible: "Ahorro y metas"
+    visible: "Ahorro ya guardado"
     timeout: 10000
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
