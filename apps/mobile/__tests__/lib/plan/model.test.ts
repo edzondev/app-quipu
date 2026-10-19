@@ -9,33 +9,42 @@ import { settingsOverview } from "@/__fixtures__/settings-overview";
 import { presentPlanHub } from "@/shared/lib/plan/model";
 
 const settings = settingsOverview();
+const NEEDS_OVERSPENT = 47_467;
+
+function withSnapshot(
+	summary: ReturnType<typeof summaryWithCycle>,
+	patch: {
+		needsOverspentCents?: number;
+		wantsOverspentCents?: number;
+		savingsParkedInEnvelopeCents?: number;
+	},
+) {
+	const { savingsParkedInEnvelopeCents, ...overspent } = patch;
+	return {
+		...summary,
+		hero: { ...summary.hero, ...overspent },
+		liquidity: {
+			...summary.liquidity,
+			...overspent,
+			...(savingsParkedInEnvelopeCents == null ? {} : { savingsParkedInEnvelopeCents }),
+		},
+	};
+}
 
 describe("presentPlanHub", () => {
-	it("suma lo que queda y reparte la barra, con un remaining negativo en 0", () => {
+	it("suma lo que queda y reparte la barra cuando ningún sobre se pasó", () => {
 		const model = presentPlanHub(summaryWithCycle(), settings);
 		expect(model.cycleLabel).toBe("CICLO AGOSTO");
 		expect(model.totalLabel).toBe("S/ 2,069");
 		expect(model.envelopeCount).toBe("3");
+		expect(model.overspent).toEqual([]);
+		expect(model.plannedSavingsLabel).toBe("S/ 0");
 		expect(model.segments).toEqual([
 			{ tone: "needs", percent: 55 },
 			{ tone: "wants", percent: 11 },
 			{ tone: "savings", percent: 34 },
 		]);
 		expect(model.repartoSubtitle).toBe("50 / 30 / 20 · Mensual · día 1");
-
-		const clamped = presentPlanHub(
-			summaryWithCycle({
-				envelopes: [envelope("needs", 113800), envelope("wants", -500), envelope("savings", 70000)],
-			}),
-			null,
-		);
-		expect(clamped.totalLabel).toBe("S/ 1,838");
-		expect(clamped.segments).toEqual([
-			{ tone: "needs", percent: 62 },
-			{ tone: "wants", percent: 0 },
-			{ tone: "savings", percent: 38 },
-		]);
-		expect(clamped.repartoSubtitle).toBeNull();
 
 		const thirds = presentPlanHub(
 			summaryWithCycle({
@@ -48,6 +57,53 @@ describe("presentPlanHub", () => {
 			{ tone: "wants", percent: 33 },
 			{ tone: "savings", percent: 33 },
 		]);
+		expect(thirds.overspent).toEqual([]);
+	});
+
+	it("no inventa Te pasaste si el remaining es negativo y el snapshot trae exceso 0", () => {
+		const model = presentPlanHub(
+			summaryWithCycle({
+				envelopes: [envelope("needs", 113800), envelope("wants", -500), envelope("savings", 70000)],
+			}),
+			null,
+		);
+		expect(model.overspent).toEqual([]);
+		expect(model.totalLabel).toBe("S/ 1,833");
+		expect(model.segments).toEqual([
+			{ tone: "needs", percent: 62 },
+			{ tone: "wants", percent: 0 },
+			{ tone: "savings", percent: 38 },
+		]);
+	});
+
+	it("lee el exceso del snapshot: Necesidades −S/ 474.67, sin recalcular remaining", () => {
+		const model = presentPlanHub(
+			withSnapshot(
+				summaryWithCycle({
+					envelopes: [envelope("needs", 0), envelope("wants", 23_100), envelope("savings", 70_000)],
+				}),
+				{ needsOverspentCents: NEEDS_OVERSPENT, wantsOverspentCents: 0 },
+			),
+			null,
+		);
+		expect(model.overspent).toEqual([
+			{ tone: "needs", label: "Necesidades", amountLabel: "\u2212S/ 474.67" },
+		]);
+		expect(model.totalLabel).toBe("S/ 931");
+		expect(model.segments).toEqual([
+			{ tone: "needs", percent: 0 },
+			{ tone: "wants", percent: 25 },
+			{ tone: "savings", percent: 75 },
+		]);
+	});
+
+	it("separa ahorro planeado del snapshot y no lo mezcla con el remaining del sobre", () => {
+		const model = presentPlanHub(
+			withSnapshot(summaryWithCycle(), { savingsParkedInEnvelopeCents: 70_000 }),
+			null,
+		);
+		expect(model.plannedSavingsLabel).toBe("S/ 700");
+		expect(model.totalLabel).toBe("S/ 2,069");
 	});
 
 	it("describe las seis variantes del próximo compromiso", () => {
@@ -114,5 +170,7 @@ describe("presentPlanHub", () => {
 		expect(model.commitmentsSubtitle).toBe("Luz vence hoy");
 		expect(model.commitmentsTotal).toBe("S/ 5");
 		expect(model.repartoSubtitle).toBe("50 / 30 / 20 · Mensual · día 1");
+		expect(model.overspent).toEqual([]);
+		expect(model.plannedSavingsLabel).toBeNull();
 	});
 });
