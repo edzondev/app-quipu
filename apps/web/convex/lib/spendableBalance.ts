@@ -1,11 +1,27 @@
 /**
  * Spendable money rules for Quipu.
  *
- * Spendable = needs remaining + wants remaining.
- * Excludes: active commitment reservations, savings envelope parked,
- * unallocated (must be assigned first), and already consumed movements
- * (already reflected in envelope remaining).
+ * Spendable = max(0, needs remaining + wants remaining).
+ * Signed sum of the needs and wants envelopes, clamped to zero once at the end.
+ * Reservations live in another bucket, already outside the envelopes.
+ * Savings parked and unallocated are not spendable (unallocated must be assigned
+ * first). Already consumed movements are already reflected in envelope remaining.
+ *
+ * Envelope overspend is max(0, −remaining) per envelope
+ * (needsOverspentCents / wantsOverspentCents).
  */
+
+import { type Infer, v } from "convex/values";
+
+export const spendableSnapshotValidator = v.object({
+	spendableCents: v.number(),
+	reservedCents: v.number(),
+	unallocatedCents: v.number(),
+	savingsParkedInEnvelopeCents: v.number(),
+	dailyAvailableCents: v.number(),
+	needsOverspentCents: v.number(),
+	wantsOverspentCents: v.number(),
+});
 
 export type SpendableSnapshotInput = {
 	needsRemainingCents: number;
@@ -16,19 +32,17 @@ export type SpendableSnapshotInput = {
 	daysRemaining: number;
 };
 
-export type SpendableSnapshot = {
-	spendableCents: number;
-	reservedCents: number;
-	unallocatedCents: number;
-	savingsParkedInEnvelopeCents: number;
-	dailyAvailableCents: number;
-};
+export type SpendableSnapshot = Infer<typeof spendableSnapshotValidator>;
 
 export function computeSpendableCents(input: {
 	needsRemainingCents: number;
 	wantsRemainingCents: number;
 }): number {
-	return Math.max(0, input.needsRemainingCents) + Math.max(0, input.wantsRemainingCents);
+	return Math.max(0, input.needsRemainingCents + input.wantsRemainingCents);
+}
+
+export function computeEnvelopeOverspentCents(remainingCents: number): number {
+	return Math.max(0, -remainingCents);
 }
 
 export function computeDailyAvailableFromSpendable(
@@ -49,5 +63,7 @@ export function computeSpendableSnapshot(input: SpendableSnapshotInput): Spendab
 		unallocatedCents: Math.max(0, input.unallocatedCents),
 		savingsParkedInEnvelopeCents: Math.max(0, input.savingsRemainingCents),
 		dailyAvailableCents: computeDailyAvailableFromSpendable(spendableCents, input.daysRemaining),
+		needsOverspentCents: computeEnvelopeOverspentCents(input.needsRemainingCents),
+		wantsOverspentCents: computeEnvelopeOverspentCents(input.wantsRemainingCents),
 	};
 }

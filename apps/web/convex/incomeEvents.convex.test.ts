@@ -56,6 +56,8 @@ describe("createIncomeEvent, extraordinary, through the real validators", () => 
 		);
 		expect(result.isNewCycle).toBe(false);
 		expect(result.distributionApplied).toEqual({ needs: 25_000, wants: 15_000, savings: 10_000 });
+		expect(result.needsOverspentCents).toBe(0);
+		expect(result.wantsOverspentCents).toBe(0);
 		const stored = await t.run((ctx) => ctx.db.get("incomeEvents", result.eventId));
 		expect(stored).toMatchObject({
 			incomeKind: "extraordinary",

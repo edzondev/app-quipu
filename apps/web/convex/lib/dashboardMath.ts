@@ -63,6 +63,12 @@ function daysInMonth(year: number, month: number): number {
 	return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
+/** Whole calendar days since the Unix epoch, in America/Lima. */
+function limaCalendarDayIndex(instant: number): number {
+	const { year, month, day } = getLimaParts(instant);
+	return Date.UTC(year, month - 1, day) / MS_PER_DAY;
+}
+
 /** «Hoy puedes gastar»: Needs + Wants, same helper as the dashboard snapshot. */
 export function computeDailyAvailable(
 	needsRemainingCents: number,
@@ -90,6 +96,11 @@ export function computeCycleProgress(start: number, end: number, now: number): n
 	return Math.min(1, Math.max(0, progress));
 }
 
+/**
+ * Cycle length and days left as Lima calendar days, from midnight.
+ * A cycle that still ends later today counts as 1 day left.
+ * Once `now` reaches `end`, days remaining is 0.
+ */
 export function computeCycleDayMetrics(
 	start: number,
 	end: number,
@@ -100,8 +111,10 @@ export function computeCycleDayMetrics(
 	daysElapsed: number;
 	progressPercent: number;
 } {
-	const daysTotal = Math.max(1, Math.ceil((end - start) / MS_PER_DAY));
-	const daysRemaining = Math.max(0, Math.ceil((end - now) / MS_PER_DAY));
+	const startDay = limaCalendarDayIndex(start);
+	const endDay = limaCalendarDayIndex(end);
+	const daysTotal = Math.max(1, endDay - startDay);
+	const daysRemaining = now >= end ? 0 : Math.max(1, endDay - limaCalendarDayIndex(now));
 	const daysElapsed = Math.max(0, daysTotal - daysRemaining);
 	const progressPercent = Math.round(computeCycleProgress(start, end, now) * 100);
 

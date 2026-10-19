@@ -43,6 +43,9 @@ export const UPCOMING_COMMITMENTS_DUE_TOMORROW = "Vence mañana";
 export const UPCOMING_COMMITMENTS_DUE_IN_DAYS = (days: number) => `Vence en ${days} días`;
 
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
+export const ENVELOPE_OVERSPENT_LABEL = "Te pasaste";
+export const SAVINGS_PLANNED_LABEL = "Ahorro planeado";
+export const SAVINGS_SAVED_LABEL = "Ahorro ya guardado";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
 
 export const HERO_AVAILABLE_LABEL = "Puedes gastar hoy";
@@ -59,7 +62,6 @@ export const HERO_CORRECT_HINT = "¿Los números no cuadran con tu dinero real?"
 export const HERO_CORRECT_CTA = "Corregir ciclo";
 
 export const ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY = "completo · aún sin gastos";
-export const ENVELOPE_EARLY_SAVINGS_SUBCOPY = "meta del ciclo · aún por aportar";
 
 export const COMMITMENTS_EMPTY_TITLE = "Aún no tienes compromisos";
 export const COMMITMENTS_EMPTY_BODY =

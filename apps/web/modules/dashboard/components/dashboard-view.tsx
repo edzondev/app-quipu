@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef } from "react";
 import { AnalyticsEvents, setPersonProperties, track } from "@/core/analytics";
 import { ModuleLoadingCrossfade } from "@/shared/components/layout/module-loading-shell";
 import { formatCycleDayLine } from "../lib/dashboard-math";
-import { useDashboardSummary } from "../queries";
+import { useDashboardSummary, useSavingsOverview } from "../queries";
 import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
 import { CommitmentsList } from "./commitments-list";
@@ -30,7 +30,11 @@ type Props = {
 
 type LoadedSummary = Exclude<ReturnType<typeof useDashboardSummary>, undefined>;
 
-function DashboardLoadedContent({ profileName, summary }: Props & { summary: LoadedSummary }) {
+function DashboardLoadedContent({
+	profileName,
+	summary,
+	savedCents,
+}: Props & { summary: LoadedSummary; savedCents?: number }) {
 	if (summary === null) {
 		return <DashboardError />;
 	}
@@ -69,6 +73,7 @@ function DashboardLoadedContent({ profileName, summary }: Props & { summary: Loa
 						envelopes={summary.envelopes}
 						currencyCode={summary.profile.currencyCode}
 						isEarlyCycle={summary.isEarlyCycle}
+						savedCents={savedCents}
 					/>
 
 					<RecentMovements
@@ -115,6 +120,7 @@ function DashboardLoadedContent({ profileName, summary }: Props & { summary: Loa
 
 function DashboardContent({ profileName }: Props) {
 	const summary = useDashboardSummary();
+	const savingsOverview = useSavingsOverview();
 	const reviewTrackedForCycle = useRef<string | null>(null);
 	const isLoading = summary === undefined;
 
@@ -149,7 +155,11 @@ function DashboardContent({ profileName }: Props) {
 	return (
 		<ModuleLoadingCrossfade isLoading={isLoading} skeleton={<DashboardViewSkeleton />}>
 			{summary !== undefined ? (
-				<DashboardLoadedContent profileName={profileName} summary={summary} />
+				<DashboardLoadedContent
+					profileName={profileName}
+					summary={summary}
+					savedCents={savingsOverview?.totalSavedCents}
+				/>
 			) : null}
 		</ModuleLoadingCrossfade>
 	);

@@ -81,7 +81,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
 						</p>
 					</div>
 					<p className="font-serif text-[40px] font-medium leading-none tracking-[-0.02em] text-ink md:text-[64px] md:tracking-[-0.015em]">
-						{formatCents(hero.displayDailyCents, { currency: currencyCode })}
+						{formatCents(hero.dailyAvailableCents, { currency: currencyCode })}
 					</p>
 					<p className="mt-2 max-w-md text-xs leading-snug text-ink-secondary md:mt-3 md:max-w-sm md:text-sm md:leading-relaxed md:text-[14.5px]">
 						{hero.bodyCopy ? (

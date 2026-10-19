@@ -52,12 +52,16 @@ function summary(
 			spendableCents: 0,
 			reservedCents: 0,
 			unallocatedCents: 0,
+			needsOverspentCents: 0,
+			wantsOverspentCents: 0,
 		},
 		liquidity: {
 			spendableCents: 0,
 			reservedCents: 0,
 			unallocatedCents: 0,
 			savingsParkedInEnvelopeCents: 0,
+			needsOverspentCents: 0,
+			wantsOverspentCents: 0,
 		},
 		envelopes: overrides.envelopes ?? [
 			{

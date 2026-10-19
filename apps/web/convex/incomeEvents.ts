@@ -448,6 +448,8 @@ export const createIncomeEvent = mutation({
 			unallocatedCents: updatedCycle.unallocatedCents ?? 0,
 			reservedCents: spendable.reservedCents,
 			spendableCents: spendable.spendableCents,
+			needsOverspentCents: spendable.needsOverspentCents,
+			wantsOverspentCents: spendable.wantsOverspentCents,
 			source: resolvedSource,
 			description: resolvedDescription,
 			distributionApplied: distribution,

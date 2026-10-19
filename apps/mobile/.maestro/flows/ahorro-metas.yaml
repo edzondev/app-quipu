@@ -20,7 +20,7 @@ tags:
     timeout: 30000
 - tapOn:
     text: "Plan"
-- tapOn: "Ahorro y metas"
+- tapOn: "Ahorro ya guardado"
 - extendedWaitUntil:
     visible: "Fondo de Emergencia"
     timeout: 15000

@@ -36,7 +36,6 @@ export function ExpenseConfirmation({
 }: Props) {
 	const styles = ENVELOPE_EXPENSE_STYLES[envelopeType];
 	const elapsed = formatElapsedSeconds(startedAt, confirmedAt);
-	const displayRemaining = Math.max(0, remainingAmount);
 
 	return (
 		<div className="px-2 py-4 text-center">
@@ -54,7 +53,7 @@ export function ExpenseConfirmation({
 			<div className="mt-5 flex items-center justify-center gap-2 rounded-[12px] border border-line bg-surface-soft px-3 py-3 text-[13.5px] text-ink-secondary">
 				{EXPENSE_REMAINING_PREFIX}{" "}
 				<span className="font-serif text-base text-ink">
-					{formatCents(displayRemaining, { currency: currencyCode })}
+					{formatCents(remainingAmount, { currency: currencyCode })}
 				</span>{" "}
 				en {ENVELOPE_LABELS[envelopeType]} {EXPENSE_REMAINING_SUFFIX}
 			</div>

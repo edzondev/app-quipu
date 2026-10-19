@@ -73,6 +73,18 @@ export function PlanHub({
 							value={model.envelopeCount}
 							onPress={onOpenSobres}
 						/>
+						{model.overspent.map((row) => (
+							<ListRow
+								key={row.tone}
+								testID={`plan-overspent-${row.tone}`}
+								dotClass={DOT[row.tone]}
+								label={row.label}
+								subtitle="Te pasaste"
+								subtitleClass="text-danger"
+								value={row.amountLabel}
+								valueClass="text-danger"
+							/>
+						))}
 						<ListRow
 							dotClass={DOT.commitments}
 							label="Compromisos"
@@ -81,10 +93,19 @@ export function PlanHub({
 							value={model.commitmentsTotal}
 							onPress={onOpenCommitments}
 						/>
+						{model.plannedSavingsLabel != null ? (
+							<ListRow
+								testID="plan-row-ahorro-planeado"
+								dotClass={DOT.savings}
+								label="Ahorro planeado"
+								value={model.plannedSavingsLabel}
+							/>
+						) : null}
 						<ListRow
+							testID="plan-row-ahorro-guardado"
 							dotClass={DOT.savings}
-							label="Ahorro y metas"
-							subtitle={ahorro?.subtitle ?? null}
+							label="Ahorro ya guardado"
+							subtitle="Fondo de emergencia y metas"
 							value={ahorro?.totalLabel ?? null}
 							onPress={onOpenAhorro}
 							isLast={!showCycleSplit}

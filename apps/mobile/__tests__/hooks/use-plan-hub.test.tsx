@@ -80,6 +80,8 @@ describe("usePlanHub mientras Ahorro carga", () => {
 		const view = await render(<HubProbe />);
 		expect(view.getByText("Cargando…")).toBeTruthy();
 		expect(view.queryByText("Ahorro y metas")).toBeNull();
+		expect(view.queryByText("Ahorro planeado")).toBeNull();
+		expect(view.queryByText("Ahorro ya guardado")).toBeNull();
 		expect(view.queryByText("Sobres")).toBeNull();
 	});
 });

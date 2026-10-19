@@ -16,6 +16,12 @@ export function useDashboardSummary() {
 	return useQuery(api.dashboard.getSummary, {});
 }
 
+export type SavingsOverviewQueryResult = FunctionReturnType<typeof api.savings.getOverview>;
+
+export function useSavingsOverview() {
+	return useQuery(api.savings.getOverview, {});
+}
+
 export function useLatestCloseReport() {
 	return useQuery(api.cycleReport.getLatestCloseReport, {});
 }

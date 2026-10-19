@@ -3,6 +3,7 @@ import type { Doc } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";
 import { shouldWarnWantsBurn } from "./lib/budgetMath";
 import { buildWantsOverflowNudge, WANTS_OVERFLOW_EVENT } from "./lib/coachState";
+import { computeCycleDayMetrics } from "./lib/dashboardMath";
 import { requireActiveAccount } from "./lib/entitlements";
 import { isEnvelopeFrozen } from "./lib/envelopeGuards";
 import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
@@ -36,7 +37,7 @@ async function replayRegisteredExpense(
 		remainingAmount: envelope?.remainingAmount ?? 0,
 		cycleId: existing.cycleId,
 		daysRemainingInCycle: cycle
-			? Math.max(0, Math.ceil((cycle.endDate - Date.now()) / MS_PER_DAY))
+			? computeCycleDayMetrics(cycle.startDate, cycle.endDate, Date.now()).daysRemaining
 			: 0,
 	};
 }
@@ -177,7 +178,11 @@ export const registerExpense = mutation({
 			}
 		}
 
-		const daysRemainingInCycle = Math.max(0, Math.ceil((activeCycle.endDate - now) / MS_PER_DAY));
+		const daysRemainingInCycle = computeCycleDayMetrics(
+			activeCycle.startDate,
+			activeCycle.endDate,
+			now,
+		).daysRemaining;
 
 		return {
 			expenseId,
