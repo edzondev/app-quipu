@@ -115,19 +115,14 @@ export function HomeDense({
 							home.currencySymbol,
 							home.isOpeningCycle,
 						);
-						const planned = envelope.tone === "savings" ? home.plannedSavings : null;
 						return (
 							<View key={envelope.label}>
 								<View
-									testID={
-										envelope.tone === "savings"
-											? "home-savings-planned"
-											: `home-envelope-${envelope.tone}`
-									}
+									testID={`home-envelope-${envelope.tone}`}
 									className="flex-row items-center gap-3"
 								>
 									<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
-										{planned?.label ?? envelope.shortLabel}
+										{envelope.shortLabel}
 									</Text>
 									<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
 										<View
@@ -140,36 +135,13 @@ export function HomeDense({
 										style={{ fontVariant: ["tabular-nums"] }}
 										selectable
 									>
-										{planned?.amountLabel ??
-											formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
+										{formatCentsTrimmed(envelope.remainingCents, home.currencySymbol)}
 									</Text>
 								</View>
 								{carry ? <EnvelopeCarryLine testID="home-carry" label={carry} /> : null}
 							</View>
 						);
 					})}
-					{home.savedSavings ? (
-						<View>
-							<View testID="home-savings-saved" className="flex-row items-center gap-3">
-								<Text className="w-[66px] font-hanken-semibold text-[13.5px] text-foreground">
-									{home.savedSavings.label}
-								</Text>
-								<View className={`h-1 flex-1 overflow-hidden rounded-full ${TRACK}`}>
-									<View
-										className={`h-full rounded-full ${TONE_FILL.savings}`}
-										style={{ width: "0%" }}
-									/>
-								</View>
-								<Text
-									className="w-[78px] text-right font-hanken text-[13.5px] text-foreground"
-									style={{ fontVariant: ["tabular-nums"] }}
-									selectable
-								>
-									{home.savedSavings.amountLabel}
-								</Text>
-							</View>
-						</View>
-					) : null}
 				</View>
 			</View>
 

@@ -1,6 +1,5 @@
-import { fireEvent, render, within } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 import { envelope, summaryWithCycle } from "@/__fixtures__/dashboard-summary";
-import { savingsOverview } from "@/__fixtures__/savings-overview";
 import HomePage from "@/app/(tabs)";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty } from "@/shared/components/home/home-empty";
@@ -70,14 +69,12 @@ const mockHome: HomeModel = {
 			totalCents: 70000,
 			progress: 100,
 			tone: "savings",
-			suffix: "Ahorro planeado",
+			suffix: "",
 			carriedOverCents: 0,
 			incomeCents: 0,
 			carryTotalCents: 0,
 		},
 	],
-	plannedSavings: { label: "Ahorro planeado", amountLabel: "S/ 700" },
-	savedSavings: null,
 	surplusCents: 154300,
 	coachMessage: "Vas bien.",
 	commitments: [
@@ -190,6 +187,8 @@ describe("Home 1d", () => {
 		expect(view.getByText("S/ 612")).toBeTruthy();
 		expect(view.getByText("S/ 231")).toBeTruthy();
 		expect(view.getByText("S/ 700")).toBeTruthy();
+		expect(view.getByText("Ahorro planeado")).toBeTruthy();
+		expect(view.queryByText("apartado")).toBeNull();
 		expect(view.getByText("Próximos compromisos")).toBeTruthy();
 		expect(view.getByText(/Alquiler/)).toBeTruthy();
 		expect(view.getByText(/mañana/)).toBeTruthy();
@@ -204,17 +203,15 @@ describe("Home 1d", () => {
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
 	});
 
-	it("pone S/ 560 junto a Ahorro planeado y S/ 4,320 junto a Ahorro ya guardado", async () => {
-		const home = mapDashboardHome(
-			{
-				...summaryWithCycle(),
-				liquidity: {
-					...summaryWithCycle().liquidity,
-					savingsParkedInEnvelopeCents: 56_000,
-				},
+	it("en Inicio el S/ 560 del snapshot se lee como Ahorro planeado, no apartado", async () => {
+		const base = summaryWithCycle();
+		const home = mapDashboardHome({
+			...base,
+			liquidity: {
+				...base.liquidity,
+				savingsParkedInEnvelopeCents: 56_000,
 			},
-			{ ...savingsOverview, totalSavedCents: 432_000 },
-		);
+		});
 		if (!home) throw new Error("expected home");
 		const view = await render(
 			<HomeDense
@@ -225,16 +222,10 @@ describe("Home 1d", () => {
 				onViewAllMovements={jest.fn()}
 			/>,
 		);
-		const planned = view.getByTestId("home-savings-planned");
-		expect(within(planned).getByText("Ahorro planeado")).toBeTruthy();
-		expect(within(planned).getByText("S/ 560")).toBeTruthy();
-		expect(within(planned).queryByText("S/ 4,320")).toBeNull();
-		expect(within(planned).queryByText("apartado")).toBeNull();
-		const saved = view.getByTestId("home-savings-saved");
-		expect(within(saved).getByText("Ahorro ya guardado")).toBeTruthy();
-		expect(within(saved).getByText("S/ 4,320")).toBeTruthy();
-		expect(within(saved).queryByText("S/ 560")).toBeNull();
+		expect(view.getByText("Ahorro planeado")).toBeTruthy();
+		expect(view.getByText("S/ 560")).toBeTruthy();
 		expect(view.queryByText("apartado")).toBeNull();
+		expect(view.queryByText(/^Ahorro$/)).toBeNull();
 	});
 
 	it("con «Sobra» negativa dice cuánto se pasó, no S/ 0", async () => {

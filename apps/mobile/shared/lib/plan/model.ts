@@ -2,7 +2,6 @@ import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
 import { limaMonthName } from "@/shared/lib/lima-date";
 import { currencySymbol, formatCentsTrimmed } from "@/shared/lib/money";
-import { plannedSavingsAmountLabel } from "@/shared/lib/savings/labels";
 import { repartoLabel, type SettingsOverview } from "@/shared/lib/settings/model";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
@@ -56,7 +55,8 @@ export function presentPlanHub(
 		segments: cycle ? sharePercents(remaining) : null,
 		envelopeCount: cycle ? String(summary.envelopes.length) : null,
 		overspent: presentOverspent(snapshot, symbol),
-		plannedSavingsLabel: plannedSavingsAmountLabel(summary, symbol),
+		plannedSavingsLabel:
+			snapshot == null ? null : formatCentsTrimmed(snapshot.savingsParkedInEnvelopeCents, symbol),
 		commitmentsSubtitle: commitments.text,
 		commitmentsTone: commitments.tone,
 		commitmentsTotal: formatCentsTrimmed(commitments.totalCents, symbol),

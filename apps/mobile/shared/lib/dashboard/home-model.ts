@@ -2,13 +2,6 @@ import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
 import { formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
-import {
-	presentPlannedSavings,
-	presentSavedSavings,
-	SAVINGS_PLANNED_LABEL,
-	type SavingsAmountRow,
-} from "@/shared/lib/savings/labels";
-import type { SavingsOverview } from "@/shared/lib/savings/model";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
 type SummaryEnvelope = DashboardSummary["envelopes"][number];
@@ -76,16 +69,12 @@ export type HomeModel = {
 	recentMovements: HomeMovement[];
 	/** Primer ciclo: getSummary.cycle.isOpeningCycle. El dinero de hoy no es arrastre. */
 	isOpeningCycle: boolean;
-	/** Snapshot getSummary.liquidity.savingsParkedInEnvelopeCents. */
-	plannedSavings: SavingsAmountRow | null;
-	/** savings.getOverview.totalSavedCents, igual que Plan. */
-	savedSavings: SavingsAmountRow | null;
 };
 
 const ENVELOPE_LABEL = {
 	needs: "Necesidades",
 	wants: "Gustos",
-	savings: "Ahorro",
+	savings: "Ahorro planeado",
 } as const;
 
 const BADGE_LABEL: Record<BadgeTone, string> = {
@@ -105,7 +94,7 @@ const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
 const SHORT_ENVELOPE_LABEL = {
 	needs: "Necesid.",
 	wants: "Gustos",
-	savings: "Ahorro",
+	savings: "Ahorro planeado",
 } as const;
 
 const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
@@ -117,19 +106,15 @@ const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
 const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
 const LIMA = "America/Lima";
 
-export function mapDashboardHome(
-	summary: DashboardSummary,
-	overview?: SavingsOverview,
-): HomeModel | null {
+export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 	if (!summary.cycle || !summary.hero) return null;
 	const dailyCents = summary.hero.displayDailyCents;
-	const symbol = marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ?? "S/";
-	const parkedCents = summary.liquidity.savingsParkedInEnvelopeCents;
 
-	const envelopes: HomeEnvelope[] = summary.envelopes.map((row) =>
-		mapEnvelopeRow(row, parkedCents),
+	const envelopes: HomeEnvelope[] = summary.envelopes.map((envelope) =>
+		mapEnvelopeRow(envelope, summary.liquidity.savingsParkedInEnvelopeCents),
 	);
 	const tone = readBadgeTone(summary.hero.statusBadge);
+	const symbol = marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ?? "S/";
 
 	return {
 		cycleLabel: cycleLabel(summary.cycle.startDate),
@@ -154,8 +139,6 @@ export function mapDashboardHome(
 			tone: movementTone(movement.kind, movement.envelopeLabel),
 		})),
 		isOpeningCycle: summary.cycle.isOpeningCycle,
-		plannedSavings: presentPlannedSavings(summary, symbol),
-		savedSavings: presentSavedSavings(overview),
 	};
 }
 
@@ -181,7 +164,10 @@ function formatCarryCents(cents: number, symbol: string): string {
 	return formatCentsTrimmed(cents, symbol);
 }
 
-export function mapEnvelopeRow(envelope: SummaryEnvelope, parkedCents = 0): HomeEnvelope {
+export function mapEnvelopeRow(
+	envelope: SummaryEnvelope,
+	savingsParkedInEnvelopeCents: number,
+): HomeEnvelope {
 	const carry = {
 		carriedOverCents: envelope.carriedOverCents,
 		incomeCents: envelope.incomeCents,
@@ -191,15 +177,15 @@ export function mapEnvelopeRow(envelope: SummaryEnvelope, parkedCents = 0): Home
 	if (type === "savings") {
 		return {
 			...carry,
-			label: SAVINGS_PLANNED_LABEL,
-			shortLabel: SAVINGS_PLANNED_LABEL,
+			label: ENVELOPE_LABEL.savings,
+			shortLabel: SHORT_ENVELOPE_LABEL.savings,
 			spentCents: envelope.allocatedAmount,
-			remainingCents: parkedCents,
+			remainingCents: savingsParkedInEnvelopeCents,
 			remainingPercent: clampPercent(envelope.percentRemaining),
 			totalCents: envelope.allocatedAmount,
 			progress: envelope.allocatedAmount > 0 ? 100 : 0,
 			tone: "savings",
-			suffix: SAVINGS_PLANNED_LABEL,
+			suffix: "",
 		};
 	}
 
