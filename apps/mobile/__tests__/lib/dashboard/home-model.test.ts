@@ -34,6 +34,7 @@ function summary(
 		envelopes?: ActiveSummary["envelopes"];
 		movements?: ActiveSummary["movements"];
 		commitments?: ActiveSummary["commitments"];
+		savingsParkedInEnvelopeCents?: number;
 	} = {},
 ): ActiveSummary {
 	return {
@@ -65,7 +66,7 @@ function summary(
 			spendableCents: 0,
 			reservedCents: 0,
 			unallocatedCents: 0,
-			savingsParkedInEnvelopeCents: 0,
+			savingsParkedInEnvelopeCents: overrides.savingsParkedInEnvelopeCents ?? 0,
 			needsOverspentCents: 0,
 			wantsOverspentCents: 0,
 		},
@@ -177,7 +178,19 @@ describe("mapDashboardHome", () => {
 		});
 	});
 
-	it("muestra gastado contra asignado y deja el ahorro como apartado", () => {
+	it("pone S/ 560 en Ahorro planeado desde el snapshot, no como apartado", () => {
+		const home = mapDashboardHome(summary({ savingsParkedInEnvelopeCents: 56_000 }));
+		const savings = home?.envelopes.find((envelope) => envelope.tone === "savings");
+		expect(savings).toMatchObject({
+			label: "Ahorro planeado",
+			shortLabel: "Planeado",
+			remainingCents: 56_000,
+			suffix: "",
+		});
+		expect(JSON.stringify(home)).not.toContain("apartado");
+	});
+
+	it("muestra gastado contra asignado y el ahorro planeado del snapshot", () => {
 		const home = mapDashboardHome(summary());
 		expect(home?.envelopes).toEqual([
 			{
@@ -209,15 +222,15 @@ describe("mapDashboardHome", () => {
 				carryTotalCents: 0,
 			},
 			{
-				label: "Ahorro",
-				shortLabel: "Ahorro",
+				label: "Ahorro planeado",
+				shortLabel: "Planeado",
 				spentCents: 70000,
-				remainingCents: 70000,
+				remainingCents: 0,
 				remainingPercent: 100,
 				totalCents: 70000,
 				progress: 100,
 				tone: "savings",
-				suffix: "apartado",
+				suffix: "",
 				carriedOverCents: 0,
 				incomeCents: 0,
 				carryTotalCents: 0,

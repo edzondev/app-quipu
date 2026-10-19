@@ -74,7 +74,7 @@ export type HomeModel = {
 const ENVELOPE_LABEL = {
 	needs: "Necesidades",
 	wants: "Gustos",
-	savings: "Ahorro",
+	savings: "Ahorro planeado",
 } as const;
 
 const BADGE_LABEL: Record<BadgeTone, string> = {
@@ -94,7 +94,7 @@ const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
 const SHORT_ENVELOPE_LABEL = {
 	needs: "Necesid.",
 	wants: "Gustos",
-	savings: "Ahorro",
+	savings: "Planeado",
 } as const;
 
 const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
@@ -110,7 +110,9 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 	if (!summary.cycle || !summary.hero) return null;
 	const dailyCents = summary.hero.displayDailyCents;
 
-	const envelopes: HomeEnvelope[] = summary.envelopes.map(mapEnvelopeRow);
+	const envelopes: HomeEnvelope[] = summary.envelopes.map((envelope) =>
+		mapEnvelopeRow(envelope, summary.liquidity.savingsParkedInEnvelopeCents),
+	);
 	const tone = readBadgeTone(summary.hero.statusBadge);
 	const symbol = marketFromCurrencyCode(summary.profile.currencyCode)?.currencySymbol ?? "S/";
 
@@ -162,7 +164,10 @@ function formatCarryCents(cents: number, symbol: string): string {
 	return formatCentsTrimmed(cents, symbol);
 }
 
-export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
+export function mapEnvelopeRow(
+	envelope: SummaryEnvelope,
+	savingsParkedInEnvelopeCents: number,
+): HomeEnvelope {
 	const carry = {
 		carriedOverCents: envelope.carriedOverCents,
 		incomeCents: envelope.incomeCents,
@@ -175,12 +180,12 @@ export function mapEnvelopeRow(envelope: SummaryEnvelope): HomeEnvelope {
 			label: ENVELOPE_LABEL.savings,
 			shortLabel: SHORT_ENVELOPE_LABEL.savings,
 			spentCents: envelope.allocatedAmount,
-			remainingCents: envelope.remainingAmount,
+			remainingCents: savingsParkedInEnvelopeCents,
 			remainingPercent: clampPercent(envelope.percentRemaining),
 			totalCents: envelope.allocatedAmount,
 			progress: envelope.allocatedAmount > 0 ? 100 : 0,
 			tone: "savings",
-			suffix: "apartado",
+			suffix: "",
 		};
 	}
 

@@ -61,15 +61,15 @@ const mockHome: HomeModel = {
 			carryTotalCents: 0,
 		},
 		{
-			label: "Ahorro",
-			shortLabel: "Ahorro",
+			label: "Ahorro planeado",
+			shortLabel: "Planeado",
 			spentCents: 70000,
 			remainingCents: 70000,
 			remainingPercent: 100,
 			totalCents: 70000,
 			progress: 100,
 			tone: "savings",
-			suffix: "apartado",
+			suffix: "",
 			carriedOverCents: 0,
 			incomeCents: 0,
 			carryTotalCents: 0,
@@ -187,6 +187,8 @@ describe("Home 1d", () => {
 		expect(view.getByText("S/ 612")).toBeTruthy();
 		expect(view.getByText("S/ 231")).toBeTruthy();
 		expect(view.getByText("S/ 700")).toBeTruthy();
+		expect(view.getByText("Planeado")).toBeTruthy();
+		expect(view.queryByText("apartado")).toBeNull();
 		expect(view.getByText("Próximos compromisos")).toBeTruthy();
 		expect(view.getByText(/Alquiler/)).toBeTruthy();
 		expect(view.getByText(/mañana/)).toBeTruthy();
@@ -199,6 +201,31 @@ describe("Home 1d", () => {
 
 		await fireEvent.press(view.getByText("Ver todos"));
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
+	});
+
+	it("en Inicio el S/ 560 del snapshot se lee como Planeado, no apartado", async () => {
+		const base = summaryWithCycle();
+		const home = mapDashboardHome({
+			...base,
+			liquidity: {
+				...base.liquidity,
+				savingsParkedInEnvelopeCents: 56_000,
+			},
+		});
+		if (!home) throw new Error("expected home");
+		const view = await render(
+			<HomeDense
+				home={home}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+			/>,
+		);
+		expect(view.getByText("Planeado")).toBeTruthy();
+		expect(view.getByText("S/ 560")).toBeTruthy();
+		expect(view.queryByText("apartado")).toBeNull();
+		expect(view.queryByText(/^Ahorro$/)).toBeNull();
 	});
 
 	it("con «Sobra» negativa dice cuánto se pasó, no S/ 0", async () => {
