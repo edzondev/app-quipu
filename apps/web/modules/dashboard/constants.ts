@@ -43,6 +43,9 @@ export const UPCOMING_COMMITMENTS_DUE_TOMORROW = "Vence mañana";
 export const UPCOMING_COMMITMENTS_DUE_IN_DAYS = (days: number) => `Vence en ${days} días`;
 
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
+export const ENVELOPE_OVERSPENT_LABEL = "Te pasaste";
+export const SAVINGS_PLANNED_LABEL = "Ahorro planeado";
+export const SAVINGS_SAVED_LABEL = "Ahorro ya guardado";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
 
 export const HERO_AVAILABLE_LABEL = "Puedes gastar hoy";
