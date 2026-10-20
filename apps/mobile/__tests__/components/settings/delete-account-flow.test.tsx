@@ -1,6 +1,5 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
-import { AppState, type AppStateStatus } from "react-native";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import {
@@ -94,8 +93,6 @@ const POLAR_ACTIVE = {
 	error: { code: "POLAR_SUBSCRIPTION_ACTIVE", message: "active raw" },
 };
 
-let emitAppState: (state: AppStateStatus) => void = () => {};
-
 async function openDeleteSheet() {
 	const view = await render(
 		<SettingsScreen status="ready" model={model} onClose={jest.fn()} onOpenSecurity={jest.fn()} />,
@@ -116,14 +113,6 @@ describe("Eliminar cuenta", () => {
 		getNetworkStateAsync.mockReset();
 		getNetworkStateAsync.mockResolvedValue({ isConnected: true, isInternetReachable: true });
 		mockClear.mockResolvedValue({ serverNotified: false });
-		jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
-			emitAppState = listener;
-			return { remove: jest.fn() };
-		});
-	});
-
-	afterEach(() => {
-		jest.restoreAllMocks();
 	});
 
 	it("en éxito borra en el servidor, limpia el teléfono y avisa en la entrada", async () => {
@@ -234,30 +223,6 @@ describe("Eliminar cuenta", () => {
 		await view.unmount();
 	});
 
-	it("al volver a primer plano con Polar sigue activo mantiene el aviso sin deleteUser", async () => {
-		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
-		const view = await openDeleteSheet();
-		await act(async () => {
-			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
-		});
-		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
-
-		await act(async () => {
-			emitAppState("background");
-		});
-		await act(async () => {
-			emitAppState("active");
-		});
-
-		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
-		expect(view.getByText(POLAR_BODY)).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
-		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
-		expect(mockClear).not.toHaveBeenCalled();
-		expect(mockReplace).not.toHaveBeenCalled();
-		await view.unmount();
-	});
-
 	it("si Polar deja de bloquear con el sheet abierto vuelve el eliminar sin deleteUser", async () => {
 		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
 		const view = await openDeleteSheet();
@@ -351,43 +316,6 @@ describe("Eliminar cuenta", () => {
 		expect(view.getByText(POLAR_BODY)).toBeTruthy();
 		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
 		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
-		expect(mockClear).not.toHaveBeenCalled();
-		expect(mockReplace).not.toHaveBeenCalled();
-		await view.unmount();
-	});
-
-	it("al volver a primer plano con cobro fallido pero aún cobrable mantiene el aviso sin deleteUser", async () => {
-		mockDeleteUser.mockResolvedValue(POLAR_ACTIVE);
-		const view = await openDeleteSheet();
-		await act(async () => {
-			fireEvent.press(view.getByRole("button", { name: "Eliminar mi cuenta" }));
-		});
-		expect(view.getByText(POLAR_BODY)).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
-
-		await act(async () => {
-			view.rerender(
-				<SettingsScreen
-					status="ready"
-					model={{
-						...model,
-						deleteBlockedBySubscription: true,
-					}}
-					onClose={jest.fn()}
-					onOpenSecurity={jest.fn()}
-				/>,
-			);
-		});
-
-		await act(async () => {
-			emitAppState("active");
-		});
-
-		expect(mockDeleteUser).toHaveBeenCalledTimes(1);
-		expect(view.getByText(POLAR_BODY)).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Eliminar mi cuenta" })).toBeNull();
-		expect(view.getByRole("button", { name: "Ir a la web" })).toBeTruthy();
-		expect(view.getByRole("button", { name: "Cancelar" })).toBeTruthy();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
 		await view.unmount();

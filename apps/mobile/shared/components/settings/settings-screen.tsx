@@ -2,7 +2,7 @@ import { RNHostView } from "@expo/ui";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { clearDeviceAfterAccountDeleted } from "@/lib/clear-device-after-delete";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
@@ -49,9 +49,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 	const [polarBlocked, setPolarBlocked] = useState(false);
 	const pending = useRef(false);
-	const polarBlockedRef = useRef(false);
-	const sheetRef = useRef<Sheet>(null);
-	const billingRef = useRef<Pick<SettingsScreenModel, "deleteBlockedBySubscription"> | null>(null);
 	const deleteForm = useForm({
 		defaultValues: { password: "" },
 		onSubmit: ({ value }) => {
@@ -60,11 +57,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 	});
 	const hasPassword = model?.hasPassword === true;
 	const deleteBlockedBySubscription = model?.deleteBlockedBySubscription;
-	polarBlockedRef.current = polarBlocked;
-	sheetRef.current = sheet;
-	billingRef.current = model
-		? { deleteBlockedBySubscription: model.deleteBlockedBySubscription }
-		: null;
 	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
 	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
 	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
@@ -128,19 +120,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 		setPolarBlocked(false);
 		setDeleteError(null);
 	}, [sheet, polarBlocked, deleteBlockedBySubscription]);
-
-	useEffect(() => {
-		const subscription = AppState.addEventListener("change", (state) => {
-			if (state !== "active") return;
-			if (sheetRef.current !== "deleteAccount" || !polarBlockedRef.current) return;
-			const billing = billingRef.current;
-			if (!billing) return;
-			if (billing.deleteBlockedBySubscription) return;
-			setPolarBlocked(false);
-			setDeleteError(null);
-		});
-		return () => subscription.remove();
-	}, []);
 
 	return (
 		<View className="flex-1">
