@@ -80,6 +80,7 @@ import type * as lib_markNeedsContentReview from "../lib/markNeedsContentReview.
 import type * as lib_moneyInvariant from "../lib/moneyInvariant.js";
 import type * as lib_passkeyOrigins from "../lib/passkeyOrigins.js";
 import type * as lib_passkeyRegistration from "../lib/passkeyRegistration.js";
+import type * as lib_polarDeletionGate from "../lib/polarDeletionGate.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
 import type * as lib_resetAppTables from "../lib/resetAppTables.js";
@@ -95,6 +96,7 @@ import type * as lib_spaceContributionsLogic from "../lib/spaceContributionsLogi
 import type * as lib_spaceLifecycle from "../lib/spaceLifecycle.js";
 import type * as lib_spaceParticipation from "../lib/spaceParticipation.js";
 import type * as lib_spendableBalance from "../lib/spendableBalance.js";
+import type * as lib_supportEmail from "../lib/supportEmail.js";
 import type * as lib_upcomingCommitments from "../lib/upcomingCommitments.js";
 import type * as migrations_backfillCommitmentNextDueAt from "../migrations/backfillCommitmentNextDueAt.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
@@ -197,6 +199,7 @@ declare const fullApi: ApiFromModules<{
   "lib/moneyInvariant": typeof lib_moneyInvariant;
   "lib/passkeyOrigins": typeof lib_passkeyOrigins;
   "lib/passkeyRegistration": typeof lib_passkeyRegistration;
+  "lib/polarDeletionGate": typeof lib_polarDeletionGate;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/rescueTransfer": typeof lib_rescueTransfer;
   "lib/resetAppTables": typeof lib_resetAppTables;
@@ -212,6 +215,7 @@ declare const fullApi: ApiFromModules<{
   "lib/spaceLifecycle": typeof lib_spaceLifecycle;
   "lib/spaceParticipation": typeof lib_spaceParticipation;
   "lib/spendableBalance": typeof lib_spendableBalance;
+  "lib/supportEmail": typeof lib_supportEmail;
   "lib/upcomingCommitments": typeof lib_upcomingCommitments;
   "migrations/backfillCommitmentNextDueAt": typeof migrations_backfillCommitmentNextDueAt;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;

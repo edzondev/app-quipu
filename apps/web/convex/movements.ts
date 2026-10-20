@@ -154,6 +154,20 @@ const incomeSourceValidator = v.union(
 	v.literal("other"),
 );
 
+const extraordinaryTypeValidator = v.union(
+	v.literal("gratification_july"),
+	v.literal("gratification_december"),
+	v.literal("cts"),
+	v.literal("corporate_bonus"),
+	v.literal("profit_sharing"),
+	v.literal("custom"),
+);
+
+const distributionPolicyValidator = v.union(
+	v.literal("profile_default"),
+	v.literal("all_to_savings"),
+);
+
 const movementListItemValidator = v.object({
 	id: v.string(),
 	kind: v.union(v.literal("expense"), v.literal("income"), v.literal("contribution")),
@@ -168,6 +182,9 @@ const movementListItemValidator = v.object({
 	occurredAt: v.optional(v.number()),
 	source: v.optional(incomeSourceValidator),
 	incomeKind: v.optional(v.union(v.literal("habitual"), v.literal("extraordinary"))),
+	extraordinaryType: v.optional(extraordinaryTypeValidator),
+	extraordinaryLabel: v.optional(v.string()),
+	distributionPolicy: v.optional(distributionPolicyValidator),
 });
 
 export const listForContext = query({
