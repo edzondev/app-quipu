@@ -204,29 +204,32 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 						}}
 					/>
 				</View>
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Cerrar sesión"
-					hitSlop={HIT_SLOP}
-					onPress={() => setSheet("signOut")}
-					className="mt-4 border-t border-line py-3.5 active:opacity-60"
-				>
-					<Text className="font-hanken text-[15px] text-danger">Cerrar sesión</Text>
-				</Pressable>
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Eliminar cuenta"
-					hitSlop={HIT_SLOP}
-					onPress={() => {
-						setDeleteError(null);
-						setPolarBlocked(false);
-						deleteForm.setFieldValue("password", "");
-						setSheet("deleteAccount");
-					}}
-					className="border-t border-line py-3.5 active:opacity-60"
-				>
-					<Text className="font-hanken text-[15px] text-danger">Eliminar cuenta</Text>
-				</Pressable>
+				<View className="mt-[18px] border-t border-line pt-4">
+					<SectionLabel className="mb-1">SESIÓN</SectionLabel>
+					<Pressable
+						accessibilityRole="button"
+						accessibilityLabel="Cerrar sesión"
+						hitSlop={HIT_SLOP}
+						onPress={() => setSheet("signOut")}
+						className="border-b border-line py-3.5 active:opacity-60"
+					>
+						<Text className="font-hanken text-[15px] text-danger">Cerrar sesión</Text>
+					</Pressable>
+					<Pressable
+						accessibilityRole="button"
+						accessibilityLabel="Eliminar cuenta"
+						hitSlop={HIT_SLOP}
+						onPress={() => {
+							setDeleteError(null);
+							setPolarBlocked(false);
+							deleteForm.setFieldValue("password", "");
+							setSheet("deleteAccount");
+						}}
+						className="py-3.5 active:opacity-60"
+					>
+						<Text className="font-hanken text-[15px] text-danger">Eliminar cuenta</Text>
+					</Pressable>
+				</View>
 			</ScrollView>
 			<BottomSheet
 				isPresented={sheet !== null}
@@ -314,7 +317,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 									<Text className="font-hanken-semibold text-[15px] text-background">
 										Ir a la web
 									</Text>
-									<ArrowUpRight size={18} strokeWidth={1.8} colorClassName="text-background" />
+									<ArrowUpRight size={18} strokeWidth={1.8} colorClassName="accent-background" />
 								</Pressable>
 							) : (
 								<Pressable
