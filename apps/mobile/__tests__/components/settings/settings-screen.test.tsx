@@ -101,6 +101,7 @@ describe("SettingsScreen", () => {
 		expect(view.getByText("LEGAL")).toBeTruthy();
 		expect(view.getByRole("button", { name: "Política de privacidad" })).toBeTruthy();
 		expect(view.getByRole("button", { name: "Términos y condiciones" })).toBeTruthy();
+		expect(view.getByText("SESIÓN")).toBeTruthy();
 		expect(view.getByRole("button", { name: "Eliminar cuenta" })).toBeTruthy();
 
 		await act(async () => {

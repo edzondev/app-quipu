@@ -69,9 +69,9 @@ export function ListRow({
 				{trailing}
 				{onPress ? (
 					external ? (
-						<ArrowUpRight size={20} strokeWidth={1.5} colorClassName="text-foreground/45" />
+						<ArrowUpRight size={14} strokeWidth={1.5} colorClassName="accent-foreground/45" />
 					) : (
-						<ChevronRight size={16} colorClassName="text-foreground/45" />
+						<ChevronRight size={14} colorClassName="accent-foreground/45" />
 					)
 				) : null}
 			</View>

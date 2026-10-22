@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown } from "react-native-reanimated";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
-import { Search } from "@/shared/components/ui/reicon";
+import { Search, X } from "@/shared/components/ui/reicon";
 import type { CycleMovementsResult } from "@/shared/lib/expenses/expense-record";
 import {
 	MOVEMENT_FILTERS,
@@ -76,12 +76,16 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 				<Text className="font-newsreader text-[27px] leading-8 text-foreground">Movimientos</Text>
 				<Pressable
 					accessibilityRole="button"
-					accessibilityLabel="Buscar"
+					accessibilityLabel={searchOpen ? "Cerrar búsqueda" : "Buscar"}
 					hitSlop={12}
 					onPress={toggleSearch}
 					className="active:scale-90 active:opacity-60"
 				>
-					<Search size={20} colorClassName="accent-foreground/55" />
+					{searchOpen ? (
+						<X size={20} colorClassName="accent-foreground/55" />
+					) : (
+						<Search size={20} colorClassName="accent-foreground/55" />
+					)}
 				</Pressable>
 			</View>
 
