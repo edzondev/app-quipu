@@ -41,6 +41,9 @@ internal class NotificationStore(
   @Volatile
   private var sources: Set<String> = emptySet()
 
+  @Volatile
+  private var countsTowardLimit: (String) -> Boolean = { true }
+
   private val queue = ArrayDeque<PendingNotification>()
   private val recentOrder = ArrayDeque<String>()
   private val recentSet = HashSet<String>()
@@ -93,6 +96,10 @@ internal class NotificationStore(
     synchronized(lock) {
       filteredOut += 1
     }
+  }
+
+  fun setCountsTowardLimit(predicate: (String) -> Boolean) {
+    countsTowardLimit = predicate
   }
 
   fun addSource(packageName: String): Boolean {
@@ -248,7 +255,7 @@ internal class NotificationStore(
   private fun applyAdd(packageName: String): Boolean {
     if (!isValidPackageName(packageName)) return false
     if (packageName in sources) return false
-    if (sources.size >= MAX_SOURCES) return false
+    if (sources.count(countsTowardLimit) >= MAX_SOURCES) return false
     sources = sources + packageName
     return true
   }
@@ -407,7 +414,8 @@ private data class Snapshot(
 
 private const val MAGIC = 0x51504E31
 private const val VERSION = 1
-private const val MAX_STORED_SOURCES = NotificationStore.MAX_SOURCES
+// Parked catalog banks stay in the file and do not count toward MAX_SOURCES.
+private val MAX_STORED_SOURCES = NotificationStore.MAX_SOURCES + BankCatalog.banks.size
 private const val MAX_STORED_RECENT = NotificationStore.MAX_RECENT
 private const val MAX_STORED_QUEUE = NotificationStore.MAX_QUEUE
 

@@ -125,6 +125,24 @@ class NotificationStoreTest {
   }
 
   @Test
+  fun parkedSourceDoesNotFillTheCapAndStillReloads() {
+    val (file, store) = startedStore()
+    store.setCountsTowardLimit { it != "com.parked" }
+    assertTrue(store.addSource("com.parked"))
+    repeat(NotificationStore.MAX_SOURCES) { index ->
+      assertTrue(store.addSource("com.bank.n$index"))
+    }
+    assertFalse(store.addSource("com.bank.overflow"))
+    assertEquals(NotificationStore.MAX_SOURCES + 1, store.sources().size)
+    store.flush()
+
+    val reloaded = reload(file)
+    assertEquals(NotificationStore.MAX_SOURCES + 1, reloaded.sources().size)
+    assertTrue(reloaded.sources().contains("com.parked"))
+    assertFalse(reloaded.sources().contains("com.bank.overflow"))
+  }
+
+  @Test
   fun removeSourceIsPersistedAndDoesNotDeleteQueuedItems() {
     val (file, store) = startedStore()
     store.addSource("com.bank.one")

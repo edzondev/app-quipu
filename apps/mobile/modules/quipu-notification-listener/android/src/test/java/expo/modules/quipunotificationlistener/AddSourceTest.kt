@@ -52,6 +52,13 @@ class AddSourceTest {
   }
 
   @Test
+  fun uninstalledCatalogBankDoesNotCountTowardTheLimit() {
+    assertFalse(AddSource.countsTowardLimit(bcp) { false })
+    assertTrue(AddSource.countsTowardLimit(bcp) { true })
+    assertTrue(AddSource.countsTowardLimit(other) { false })
+  }
+
+  @Test
   fun limitReachedDoesNotSave() {
     val decision = AddSource.resolve(other, emptySet(), atCapacity = true) { true }
     assertEquals(AddSource.LIMIT_REACHED, decision.code)

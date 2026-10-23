@@ -15,6 +15,11 @@ internal object AddSource {
 
   fun persists(code: String): Boolean = code == ADDED || code == ADDED_UNVERIFIED
 
+  /** An uninstalled catalog bank can stay saved, and it does not take a slot. */
+  fun countsTowardLimit(packageId: String, isInstalled: (String) -> Boolean): Boolean {
+    return !BankCatalog.contains(packageId) || isInstalled(packageId)
+  }
+
   fun resolve(
     text: String,
     existing: Set<String>,

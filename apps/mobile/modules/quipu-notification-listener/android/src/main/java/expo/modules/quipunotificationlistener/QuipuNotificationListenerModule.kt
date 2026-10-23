@@ -46,10 +46,13 @@ class QuipuNotificationListenerModule : Module() {
       val store = bind() ?: return@AsyncFunction AddSource.INVALID_LINK
       store.awaitReady()
       val sources = store.sources()
+      val atCapacity = sources.count { packageId ->
+        AddSource.countsTowardLimit(packageId, ::isPackageInstalled)
+      } >= NotificationStore.MAX_SOURCES
       val decision = AddSource.resolve(
         input,
         sources.toSet(),
-        sources.size >= NotificationStore.MAX_SOURCES,
+        atCapacity,
       ) { packageId -> isPackageInstalled(packageId) }
       if (AddSource.persists(decision.code)) {
         val packageId = decision.packageId ?: return@AsyncFunction AddSource.INVALID_LINK
@@ -128,6 +131,9 @@ class QuipuNotificationListenerModule : Module() {
   private fun bind(): NotificationStore? {
     boundStore?.let { return it }
     val store = storeOrNull() ?: return null
+    store.setCountsTowardLimit { packageId ->
+      AddSource.countsTowardLimit(packageId, ::isPackageInstalled)
+    }
     store.setListener { item -> sendEvent("onNotification", item.toPayload()) }
     boundStore = store
     return store
