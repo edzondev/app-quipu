@@ -161,7 +161,6 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Siguiente"
-				accessibilityState={{ disabled: !canContinue }}
 				disabled={!canContinue}
 				onPress={() =>
 					isNotificationAccessEnabled() ? onClose() : openNotificationAccessSettings()

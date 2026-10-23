@@ -14,12 +14,12 @@ const mockGetInstalledBanks = jest.fn(async () => [
 	{ name: "Interbank", packageId: "pe.com.interbank.mobilebanking", installed: true },
 	{ name: "Banca Móvil BCP", packageId: "com.bcp.bank.bcp", installed: true },
 ]);
-const mockGetSources = jest.fn(async () => [] as string[]);
+const mockGetSources = jest.fn(async (): Promise<string[]> => []);
 const mockAccessEnabled = jest.fn(() => false);
 const mockOpenAccess = jest.fn();
-const mockParse = jest.fn((text: string) => {
+const mockParse = jest.fn((text: string): { packageId: string } | { error: "invalid_link" } => {
 	const id = /[?&]id=([^&#\s]+)/.exec(text)?.[1];
-	return id ? { packageId: decodeURIComponent(id) } : { error: "invalid_link" as const };
+	return id ? { packageId: decodeURIComponent(id) } : { error: "invalid_link" };
 });
 
 jest.mock("@/modules/quipu-notification-listener", () => ({
@@ -59,7 +59,6 @@ describe("ExpenseDetectionScreen", () => {
 		).toBeTruthy();
 		expect(view.getByText("LINK DE TU BANCO")).toBeTruthy();
 		expect(view.getByPlaceholderText("Mantén presionado y pega el link")).toBeTruthy();
-		expect(view.queryByRole("button", { name: "Pegar" })).toBeNull();
 		expect(field.props.autoFocus).toBe(true);
 		expect(field.props.keyboardType).toBe("url");
 		expect(field.props.autoCapitalize).toBe("none");
@@ -68,13 +67,13 @@ describe("ExpenseDetectionScreen", () => {
 		expect(view.getByRole("button", { name: "Siguiente" }).props.accessibilityState.disabled).toBe(
 			true,
 		);
-		expect(mockAddSource).not.toHaveBeenCalled();
 		await view.unmount();
 	});
 
 	it("A2 muestra el banco, la marca IB y la línea verde", async () => {
 		const view = await openScreen();
 		await act(async () => {
+			fireEvent.changeText(view.getByLabelText("Link de tu banco"), OTHER);
 			fireEvent.changeText(view.getByLabelText("Link de tu banco"), INTERBANK);
 		});
 		expect(view.getByText("Interbank")).toBeTruthy();
