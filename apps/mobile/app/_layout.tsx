@@ -63,11 +63,7 @@ function SplashHider() {
 	// Home unmounts on sign-out, so it cannot clear the last amount itself.
 	useEffect(() => {
 		if (isLoading || isAuthReady) return;
-		updateSpendableWidget({
-			amountCents: null,
-			currencySymbol: "S/",
-			updatedAt: new Date(),
-		});
+		updateSpendableWidget(null);
 	}, [isAuthReady, isLoading]);
 	return null;
 }

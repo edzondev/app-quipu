@@ -2,14 +2,6 @@ import { Column, Spacer, Text } from "@expo/ui/jetpack-compose";
 import { background, fillMaxSize, height, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 import { Platform } from "react-native";
-import { formatCents } from "@/shared/lib/money";
-
-/** Amount Home already shows, plus when this snapshot was pushed. Null amount means no session or no value yet. */
-export type SpendableWidgetData = {
-	amountCents: number | null;
-	currencySymbol: string;
-	updatedAt: Date;
-};
 
 type SpendableWidgetProps = {
 	headline: string;
@@ -35,11 +27,13 @@ function SpendableTodayWidget(props: SpendableWidgetProps, environment: WidgetEn
 			<Text color={ink} style={{ fontSize: 20, fontWeight: "bold" }}>
 				{props.headline}
 			</Text>
-			{props.updated === "" ? null : <Spacer modifiers={[height(6)]} />}
 			{props.updated === "" ? null : (
-				<Text color={muted} style={{ fontSize: 13 }}>
-					{props.updated}
-				</Text>
+				<>
+					<Spacer modifiers={[height(6)]} />
+					<Text color={muted} style={{ fontSize: 13 }}>
+						{props.updated}
+					</Text>
+				</>
 			)}
 		</Column>
 	);
@@ -47,17 +41,16 @@ function SpendableTodayWidget(props: SpendableWidgetProps, environment: WidgetEn
 
 const spendableToday = createWidget("SpendableToday", SpendableTodayWidget, PROMPT);
 
-export function updateSpendableWidget(data: SpendableWidgetData) {
+export function updateSpendableWidget(amount: string | null) {
 	if (Platform.OS !== "android") return;
-	if (data.amountCents == null || !Number.isFinite(data.amountCents)) {
+	if (amount == null) {
 		spendableToday.updateSnapshot(PROMPT);
 		return;
 	}
-	const hours = data.updatedAt.getHours();
-	const minutes = String(data.updatedAt.getMinutes()).padStart(2, "0");
+	const now = new Date();
 	spendableToday.updateSnapshot({
-		headline: `Puedes gastar hoy ${formatCents(data.amountCents, data.currencySymbol)}`,
-		updated: `Actualizado ${hours}:${minutes}`,
+		headline: `Puedes gastar hoy ${amount}`,
+		updated: `Actualizado ${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`,
 	});
 }
 

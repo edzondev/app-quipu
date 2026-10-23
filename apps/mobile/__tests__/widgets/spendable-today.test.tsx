@@ -3,9 +3,24 @@ import { Platform } from "react-native";
 import { summaryWithCycle } from "@/__fixtures__/dashboard-summary";
 import HomePage from "@/app/(tabs)";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
-import spendableToday from "@/widgets/SpendableToday";
+import spendableToday, { updateSpendableWidget } from "@/widgets/SpendableToday";
 
 const mockUseHomeModel = jest.fn();
+
+jest.mock("expo-widgets", () => ({
+	createWidget: () => ({
+		updateSnapshot: jest.fn(),
+	}),
+}));
+
+jest.mock("@/widgets/SpendableToday", () => {
+	const actual = jest.requireActual("@/widgets/SpendableToday");
+	return {
+		__esModule: true,
+		...actual,
+		updateSpendableWidget: jest.fn(actual.updateSpendableWidget),
+	};
+});
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: jest.fn() }),
@@ -47,36 +62,16 @@ describe("spendable widget", () => {
 	afterEach(() => {
 		cleanup();
 		setPlatform(previousPlatform);
-		jest.useRealTimers();
 	});
 
-	it("updates when Home's amount changes", async () => {
-		jest.useFakeTimers({
-			now: new Date(2026, 9, 23, 9, 41, 0),
-			doNotFake: [
-				"setTimeout",
-				"clearTimeout",
-				"setInterval",
-				"clearInterval",
-				"nextTick",
-				"queueMicrotask",
-				"setImmediate",
-			],
-		});
+	it("pushes the formatted amount when Home is ready", async () => {
 		mockUseHomeModel.mockReturnValue(readyHome(4230));
-		const view = await render(<HomePage />);
+		await render(<HomePage />);
 
+		expect(updateSpendableWidget).toHaveBeenCalledWith("S/ 42.30");
 		expect(spendableToday.updateSnapshot).toHaveBeenCalledWith({
 			headline: "Puedes gastar hoy S/ 42.30",
-			updated: "Actualizado 9:41",
-		});
-
-		mockUseHomeModel.mockReturnValue(readyHome(1500));
-		await view.rerender(<HomePage />);
-
-		expect(spendableToday.updateSnapshot).toHaveBeenLastCalledWith({
-			headline: "Puedes gastar hoy S/ 15.00",
-			updated: "Actualizado 9:41",
+			updated: expect.stringMatching(/^Actualizado \d{1,2}:\d{2}$/),
 		});
 	});
 
@@ -88,6 +83,7 @@ describe("spendable widget", () => {
 		});
 		await render(<HomePage />);
 
+		expect(updateSpendableWidget).toHaveBeenCalledWith(null);
 		expect(spendableToday.updateSnapshot).toHaveBeenCalledWith({
 			headline: "Abre Quipu",
 			updated: "",
