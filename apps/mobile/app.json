@@ -42,7 +42,24 @@
 				}
 			],
 			"expo-secure-store",
-			"expo-status-bar"
+			"expo-status-bar",
+			[
+				"expo-widgets",
+				{
+					"enableAndroid": true,
+					"widgets": [
+						{
+							"name": "SpendableToday",
+							"displayName": "Puedes gastar hoy",
+							"description": "Cuánto puedes gastar hoy.",
+							"android": {
+								"resizeMode": "none",
+								"initialLayout": "./widgets/SpendableToday.tsx"
+							}
+						}
+					]
+				}
+			]
 		],
 		"experiments": {
 			"typedRoutes": true,
