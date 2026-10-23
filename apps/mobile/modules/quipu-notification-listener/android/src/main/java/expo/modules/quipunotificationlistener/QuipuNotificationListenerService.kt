@@ -20,9 +20,10 @@ import androidx.core.app.NotificationCompat
  * System entry point. This is not the Expo module: it does not touch JS, and it does
  * not keep an Activity, a React context, or the [StatusBarNotification].
  *
- * [onNotificationPosted] runs on the main thread. The first thing it does with the
- * notification is compare [StatusBarNotification.getPackageName] to the registered set.
- * Anything else — extras, text, dedupe — happens only after that check. While the
+ * [onNotificationPosted] runs on the main thread. Quipu's own package is ignored
+ * first, so a notice this app posts cannot be queued again. Then the package is
+ * compared to the registered set. Anything else — extras, text, dedupe — happens
+ * only after that check. While the
  * on-disk set is still loading, the event is copied into a memory buffer instead of
  * being dropped, then filtered when the load finishes.
  */
@@ -50,6 +51,7 @@ class QuipuNotificationListenerService : NotificationListenerService() {
   override fun onNotificationPosted(sbn: StatusBarNotification) {
     try {
       val packageName = sbn.packageName ?: return
+      if (packageName == this.packageName) return
       val store = currentStore()
       if (store.isReady() && !store.isSource(packageName)) {
         store.noteFiltered()

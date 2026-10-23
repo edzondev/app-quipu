@@ -13,8 +13,10 @@ internal object NotificationExtractor {
   const val MAX_TEXT_CHARS = 500
   private const val MAX_KEY_CHARS = 300
 
-  // One "S/" amount. Comma groups thousands; the dot is cents. Anything else stays empty.
-  private val AMOUNT = Regex("""S/\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)(?![\d,]|\.\d|\s\d)""")
+  // "S/" or "S/.", then a space or NBSP, then a number. Two different amounts stay empty.
+  private val AMOUNT = Regex(
+    "S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)(?![\\d,]|\\.\\d|\\s\\d)",
+  )
 
   fun isRegistered(packageName: String, sources: Set<String>): Boolean {
     return packageName in sources
@@ -62,7 +64,16 @@ internal object NotificationExtractor {
   }
 
   fun readAmountCents(bankText: String): Int? {
-    val token = AMOUNT.find(bankText)?.groupValues?.get(1) ?: return null
+    var found: Int? = null
+    for (match in AMOUNT.findAll(bankText)) {
+      val cents = toCents(match.groupValues[1]) ?: return null
+      if (found != null && cents != found) return null
+      found = cents
+    }
+    return found
+  }
+
+  private fun toCents(token: String): Int? {
     val dot = token.indexOf('.')
     val whole = (if (dot >= 0) token.substring(0, dot) else token).replace(",", "")
     val fractionDigits = if (dot >= 0) token.substring(dot + 1) else ""

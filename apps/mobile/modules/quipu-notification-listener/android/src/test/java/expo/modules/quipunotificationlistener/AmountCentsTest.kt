@@ -44,6 +44,23 @@ class AmountCentsTest {
   }
 
   @Test
+  fun leavesAmountEmptyWhenTwoAmountsDiffer() {
+    assertNull(
+      NotificationExtractor.readAmountCents("Saldo S/ 1,000.00. Compraste S/ 45.90"),
+    )
+  }
+
+  @Test
+  fun readsSolesWithDotAfterTheSymbol() {
+    assertEquals(4_590, NotificationExtractor.readAmountCents("S/. 45.90"))
+  }
+
+  @Test
+  fun readsSolesWithNonBreakingSpace() {
+    assertEquals(4_590, NotificationExtractor.readAmountCents("S/\u00A045.90"))
+  }
+
+  @Test
   fun leavesAmountEmptyWhenTheTextHasNone() {
     assertNull(
       NotificationExtractor.readAmountCents(
