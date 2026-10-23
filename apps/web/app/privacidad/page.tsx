@@ -48,13 +48,15 @@ export default function PrivacidadPage() {
 						incluidos tus saldos.
 					</li>
 					<li>
-						<strong className="font-semibold text-ink">De notificaciones bancarias:</strong> en la
-						app de Android, y solo si das acceso a las notificaciones, Quipu lee el texto de las
-						notificaciones de los bancos que elegiste (por ejemplo, el monto y el comercio). Ese
-						texto se procesa y se guarda solo en tu teléfono hasta que guardes o descartes el gasto.
-						A nuestros servidores solo llegan los gastos que confirmas: el monto, la descripción, el
-						sobre y un identificador de la notificación para evitar duplicados. El resto nunca se
-						envía.
+						<strong className="font-semibold text-ink">De notificaciones bancarias:</strong> en
+						Android agregas cada banco pegando el enlace de Play Store de ese banco. Puedes agregar
+						los que quieras. Con tu permiso de acceso a las notificaciones, Quipu lee en tu teléfono
+						solo las notificaciones de los bancos que agregaste, para detectar un gasto y su monto.
+						Quipu muestra su propio aviso, sin botones: «Detectamos un gasto en {"<banco>"}» y el
+						monto. Si tocas el aviso, se abre la app con el gasto prellenado. Solo se guarda en tu
+						cuenta si lo confirmas eligiendo el sobre. Si descartas el aviso, no se guarda nada en
+						ningún lado. El texto de las notificaciones bancarias no se envía a nuestros servidores.
+						La lista de bancos agregados queda en tu teléfono y se borra al cerrar sesión.
 					</li>
 				</ul>
 			</section>
