@@ -75,6 +75,7 @@ function RootLayoutNav() {
 			<Stack.Screen name="(auth)" options={{ headerShown: false }} />
 			<Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
 			<Stack.Screen name="expense/[id]" options={{ headerShown: false }} />
+			<Stack.Screen name="detected-expense" options={{ headerShown: false }} />
 			<Stack.Screen name="ajustes" options={{ presentation: "modal", headerShown: false }} />
 			<Stack.Screen name="seguridad" options={{ headerShown: false }} />
 			<Stack.Screen name="expense-detection" options={{ headerShown: false }} />

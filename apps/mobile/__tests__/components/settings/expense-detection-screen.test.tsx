@@ -1,7 +1,8 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { Vibration } from "react-native";
+import { PermissionsAndroid, Platform, Vibration } from "react-native";
 import { ExpenseDetectionScreen } from "@/shared/components/settings/expense-detection-screen";
 
+const platform = { os: Platform.OS, version: Platform.Version };
 const NOT_A_BANK = "Este link no es de un banco en Play Store. Cópialo desde la app de tu banco.";
 const INTERBANK = "https://play.google.com/store/apps/details?id=pe.com.interbank.mobilebanking";
 const BCP = "https://play.google.com/store/apps/details?id=com.bcp.bank.bcp";
@@ -50,6 +51,12 @@ describe("ExpenseDetectionScreen", () => {
 		jest.mocked(Vibration.vibrate).mockClear();
 	});
 
+	afterEach(() => {
+		Object.defineProperty(Platform, "OS", { value: platform.os, configurable: true });
+		Object.defineProperty(Platform, "Version", { value: platform.version, configurable: true });
+		jest.restoreAllMocks();
+	});
+
 	it("A1 empieza vacío y Siguiente está apagado", async () => {
 		const view = await openScreen();
 		const field = view.getByLabelText("Link de tu banco");
@@ -80,6 +87,7 @@ describe("ExpenseDetectionScreen", () => {
 		expect(view.getByText("IB")).toBeTruthy();
 		expect(view.getByText("BANCO DETECTADO")).toBeTruthy();
 		expect(view.getByText("Listo, detectamos Interbank.")).toBeTruthy();
+		expect(view.queryByText(NOT_A_BANK)).toBeNull();
 		expect(view.getByLabelText("Link de tu banco").parent?.props.className).toContain(
 			"border-primary",
 		);
@@ -147,6 +155,59 @@ describe("ExpenseDetectionScreen", () => {
 			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
 		});
 		expect(onClose).toHaveBeenCalledTimes(1);
+		await view.unmount();
+	});
+
+	it("en Android 13 Siguiente pide avisar antes de abrir los ajustes", async () => {
+		const request = jest
+			.spyOn(PermissionsAndroid, "request")
+			.mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED);
+		Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+		Object.defineProperty(Platform, "Version", { value: 33, configurable: true });
+		mockGetSources.mockResolvedValue(["com.bcp.bank.bcp"]);
+		const view = await openScreen();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
+			await Promise.all(request.mock.results.map((result) => result.value));
+		});
+		expect(request).toHaveBeenCalledWith(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+		expect(mockOpenAccess).toHaveBeenCalledTimes(1);
+		const requestedAt = request.mock.invocationCallOrder[0] ?? 0;
+		const openedAt = mockOpenAccess.mock.invocationCallOrder[0] ?? 0;
+		expect(requestedAt).toBeLessThan(openedAt);
+		await view.unmount();
+	});
+
+	it("antes de Android 13 Siguiente no pide avisar", async () => {
+		const request = jest
+			.spyOn(PermissionsAndroid, "request")
+			.mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED);
+		Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+		Object.defineProperty(Platform, "Version", { value: 32, configurable: true });
+		mockGetSources.mockResolvedValue(["com.bcp.bank.bcp"]);
+		const view = await openScreen();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
+		});
+		expect(request).not.toHaveBeenCalled();
+		expect(mockOpenAccess).toHaveBeenCalledTimes(1);
+		await view.unmount();
+	});
+
+	it("si se niega avisar, Siguiente igual abre los ajustes", async () => {
+		const request = jest
+			.spyOn(PermissionsAndroid, "request")
+			.mockResolvedValue(PermissionsAndroid.RESULTS.DENIED);
+		Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+		Object.defineProperty(Platform, "Version", { value: 33, configurable: true });
+		mockGetSources.mockResolvedValue(["com.bcp.bank.bcp"]);
+		const view = await openScreen();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
+			await Promise.all(request.mock.results.map((result) => result.value));
+		});
+		expect(request).toHaveBeenCalledWith(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+		expect(mockOpenAccess).toHaveBeenCalledTimes(1);
 		await view.unmount();
 	});
 });

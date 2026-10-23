@@ -20,14 +20,11 @@ class QuipuNotificationListenerModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("QuipuNotificationListener")
 
-    Events("onNotification")
-
     OnCreate {
       bind()
     }
 
     OnDestroy {
-      boundStore?.setListener(null)
       boundStore = null
     }
 
@@ -83,27 +80,6 @@ class QuipuNotificationListenerModule : Module() {
       store.sources()
     }
 
-    AsyncFunction("getPendingNotifications") {
-      val store = bind() ?: return@AsyncFunction emptyList<Map<String, Any?>>()
-      store.awaitReady()
-      store.pending().map { it.toPayload() }
-    }
-
-    AsyncFunction("consumeNotification") { id: String ->
-      val store = bind() ?: return@AsyncFunction false
-      store.awaitReady()
-      val consumed = store.consume(id)
-      store.flush()
-      consumed
-    }
-
-    AsyncFunction("clearPendingNotifications") {
-      val store = bind() ?: return@AsyncFunction Unit
-      store.awaitReady()
-      store.clear()
-      store.flush()
-    }
-
     AsyncFunction("getDiagnostics") {
       val context = applicationContext() ?: return@AsyncFunction null
       if (!isDebuggable(context)) return@AsyncFunction null
@@ -114,13 +90,10 @@ class QuipuNotificationListenerModule : Module() {
         "accessEnabled" to isAccessEnabled(context),
         "loaded" to stats.loaded,
         "sourceCount" to stats.sourceCount,
-        "pendingCount" to stats.pendingCount,
         "recentIdCount" to stats.recentIdCount,
         "filteredOut" to stats.filteredOut,
         "matched" to stats.matched,
-        "enqueued" to stats.enqueued,
         "deduped" to stats.deduped,
-        "consumed" to stats.consumed,
       )
     }
   }
@@ -128,7 +101,6 @@ class QuipuNotificationListenerModule : Module() {
   private fun bind(): NotificationStore? {
     boundStore?.let { return it }
     val store = storeOrNull() ?: return null
-    store.setListener { item -> sendEvent("onNotification", item.toPayload()) }
     boundStore = store
     return store
   }
@@ -177,17 +149,4 @@ private fun openAccessSettings(context: Context) {
   } catch (e: ActivityNotFoundException) {
     Log.w(TAG, "settings screen missing: ${e.javaClass.simpleName}")
   }
-}
-
-private fun PendingNotification.toPayload(): Map<String, Any?> {
-  val payload = linkedMapOf<String, Any?>(
-    "id" to id,
-    "packageName" to packageName,
-    "postedAt" to postedAt,
-    "title" to title,
-    "text" to text,
-  )
-  if (subText != null) payload["subText"] = subText
-  if (bigText != null) payload["bigText"] = bigText
-  return payload
 }

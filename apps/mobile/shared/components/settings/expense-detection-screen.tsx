@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, Vibration, View } from "react-native";
+import {
+	PermissionsAndroid,
+	Platform,
+	Pressable,
+	ScrollView,
+	Text,
+	TextInput,
+	Vibration,
+	View,
+} from "react-native";
 import Animated, { Easing, FadeIn, FadeInDown } from "react-native-reanimated";
 import {
 	addSource,
@@ -87,6 +96,14 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 		});
 	}
 
+	async function onContinue() {
+		if (Platform.OS === "android" && Number(Platform.Version) >= 33) {
+			await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+		}
+		if (isNotificationAccessEnabled()) onClose();
+		else openNotificationAccessSettings();
+	}
+
 	return (
 		<View className="flex-1">
 			<View className="flex-row items-center">
@@ -162,9 +179,9 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 				accessibilityRole="button"
 				accessibilityLabel="Siguiente"
 				disabled={!canContinue}
-				onPress={() =>
-					isNotificationAccessEnabled() ? onClose() : openNotificationAccessSettings()
-				}
+				onPress={() => {
+					void onContinue();
+				}}
 				className={`mt-3 items-center justify-center rounded-xl py-4 ${canContinue ? "bg-foreground active:opacity-80" : "bg-line"}`}
 			>
 				<Text
