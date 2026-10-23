@@ -1,5 +1,11 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { AppState, type AppStateStatus, PermissionsAndroid, Platform } from "react-native";
+import {
+	AppState,
+	type AppStateStatus,
+	Clipboard,
+	PermissionsAndroid,
+	Platform,
+} from "react-native";
 import { ExpenseDetectionScreen } from "@/shared/components/settings/expense-detection-screen";
 
 const mockGetInstalledBanks = jest.fn();
@@ -8,6 +14,8 @@ const mockAddSource = jest.fn();
 const mockRemoveSource = jest.fn();
 const mockIsNotificationAccessEnabled = jest.fn();
 const mockOpenNotificationAccessSettings = jest.fn();
+const mockParsePlayStoreLink = jest.fn();
+const mockOpenURL = jest.fn();
 
 jest.mock("@/modules/quipu-notification-listener", () => ({
 	getInstalledBanks: () => mockGetInstalledBanks(),
@@ -16,6 +24,11 @@ jest.mock("@/modules/quipu-notification-listener", () => ({
 	removeSource: (packageName: string) => mockRemoveSource(packageName),
 	isNotificationAccessEnabled: () => mockIsNotificationAccessEnabled(),
 	openNotificationAccessSettings: () => mockOpenNotificationAccessSettings(),
+	parsePlayStoreLink: (text: string) => mockParsePlayStoreLink(text),
+}));
+
+jest.mock("expo-linking", () => ({
+	openURL: (...args: unknown[]) => mockOpenURL(...args),
 }));
 
 jest.mock("@/shared/components/ui/reicon", () => ({
@@ -64,6 +77,10 @@ describe("ExpenseDetectionScreen", () => {
 		mockRemoveSource.mockReset();
 		mockIsNotificationAccessEnabled.mockReset();
 		mockOpenNotificationAccessSettings.mockReset();
+		mockParsePlayStoreLink.mockReset();
+		mockOpenURL.mockReset();
+		mockParsePlayStoreLink.mockReturnValue({ error: "invalid_link" });
+		mockOpenURL.mockResolvedValue(undefined);
 		mockGetInstalledBanks.mockResolvedValue([interbank, yape, bcp]);
 		mockGetSources.mockResolvedValue([customId]);
 		mockAddSource.mockResolvedValue("added");
@@ -242,5 +259,155 @@ describe("ExpenseDetectionScreen", () => {
 		expect(onClose).not.toHaveBeenCalled();
 		os.restore();
 		version.mockRestore();
+	});
+
+	it("reads the clipboard only when Pegar is pressed", async () => {
+		const getString = jest.spyOn(Clipboard, "getString").mockResolvedValue("wa.me/51999888777");
+		const { view, onClose } = await openScreen();
+		expect(getString).not.toHaveBeenCalled();
+		await act(async () => {
+			fireEvent.press(
+				view.getByRole("button", { name: "¿No ves tu banco? Agrégalo con su enlace" }),
+			);
+		});
+		expect(view.getByText("Agrega tu banco con su enlace.")).toBeTruthy();
+		expect(getString).not.toHaveBeenCalled();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Abrir Play Store" }));
+		});
+		expect(mockOpenURL).toHaveBeenCalledWith("https://play.google.com/store/apps");
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Pegar" }));
+		});
+		expect(getString).toHaveBeenCalledTimes(1);
+		expect(view.getByLabelText("ENLACE DE LA APP").props.value).toBe("wa.me/51999888777");
+		expect(
+			view.getByText("Ese enlace no es de la Play Store. Debe empezar con play.google.com."),
+		).toBeTruthy();
+		expect(view.getByRole("button", { name: "Agregar" }).props.accessibilityState.disabled).toBe(
+			true,
+		);
+		await act(async () => {
+			emitAppState("active");
+		});
+		expect(getString).toHaveBeenCalledTimes(1);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Volver" }));
+		});
+		expect(view.getByText("¿Qué apps usas para pagar?")).toBeTruthy();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("confirms an installed catalog app from a pasted Play Store link", async () => {
+		const caja = {
+			name: "Caja Arequipa Móvil",
+			packageId: "com.cmac.cajamovilaqp",
+			installed: true,
+			icon: "aWNvbg==",
+		};
+		const url = "https://play.google.com/store/apps/details?id=com.cmac.cajamovilaqp";
+		mockGetInstalledBanks.mockResolvedValue([caja]);
+		mockGetSources.mockResolvedValue([]);
+		mockParsePlayStoreLink.mockReturnValue({ packageId: caja.packageId });
+		jest.spyOn(Clipboard, "getString").mockResolvedValue(url);
+		const { view } = await openScreen();
+		await act(async () => {
+			fireEvent.press(
+				view.getByRole("button", { name: "¿No ves tu banco? Agrégalo con su enlace" }),
+			);
+		});
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Pegar" }));
+		});
+		expect(view.getByText("¿Es la app de tu banco?")).toBeTruthy();
+		expect(view.getByText("APP ENCONTRADA")).toBeTruthy();
+		expect(view.queryByText("Toca «Abrir Play Store» y busca la app de tu banco.")).toBeNull();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "No" }));
+		});
+		expect(view.queryByText("¿Es la app de tu banco?")).toBeNull();
+		expect(mockAddSource).not.toHaveBeenCalled();
+		mockGetSources.mockResolvedValue([caja.packageId]);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Pegar" }));
+		});
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Sí, agregar" }));
+		});
+		expect(mockAddSource).toHaveBeenCalledWith(url);
+		expect(view.getByRole("checkbox", { name: caja.name }).props.accessibilityState.checked).toBe(
+			true,
+		);
+	});
+
+	it("asks to install a catalog bank that is not on the phone", async () => {
+		const banbif = {
+			name: "Nueva BanBif App",
+			packageId: "pe.com.banbif.pnappmobile",
+			installed: false,
+		};
+		const url = `https://play.google.com/store/apps/details?id=${banbif.packageId}`;
+		mockGetInstalledBanks.mockResolvedValue([banbif]);
+		mockGetSources.mockResolvedValue([]);
+		mockParsePlayStoreLink.mockReturnValue({ packageId: banbif.packageId });
+		jest.spyOn(Clipboard, "getString").mockResolvedValue(url);
+		const { view } = await openScreen();
+		await act(async () => {
+			fireEvent.press(
+				view.getByRole("button", { name: "¿No ves tu banco? Agrégalo con su enlace" }),
+			);
+		});
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Pegar" }));
+		});
+		expect(
+			view.getByText(
+				"Esa app no está en tu teléfono. Instálala primero para que Quipu pueda leer sus avisos.",
+			),
+		).toBeTruthy();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Abrir en Play Store" }));
+		});
+		expect(mockOpenURL).toHaveBeenCalledWith(
+			`https://play.google.com/store/apps/details?id=${banbif.packageId}`,
+		);
+		expect(mockAddSource).not.toHaveBeenCalled();
+		mockGetInstalledBanks.mockResolvedValue([{ ...banbif, installed: true }]);
+		await act(async () => {
+			emitAppState("active");
+		});
+		expect(view.getByText("¿Es la app de tu banco?")).toBeTruthy();
+	});
+
+	it("labels an app outside the catalog as Otra app", async () => {
+		const url = "https://play.google.com/store/apps/details?id=com.whatsapp";
+		mockGetInstalledBanks.mockResolvedValue([yape]);
+		mockGetSources.mockResolvedValue([]);
+		mockParsePlayStoreLink.mockReturnValue({ packageId: "com.whatsapp" });
+		mockAddSource.mockResolvedValue("added_unverified");
+		jest.spyOn(Clipboard, "getString").mockResolvedValue(url);
+		const { view } = await openScreen();
+		await act(async () => {
+			fireEvent.press(
+				view.getByRole("button", { name: "¿No ves tu banco? Agrégalo con su enlace" }),
+			);
+		});
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Pegar" }));
+		});
+		expect(view.getByText("Otra app")).toBeTruthy();
+		expect(view.queryByText("com.whatsapp")).toBeNull();
+		expect(
+			view.getByText("Esa app no parece un banco. ¿Seguro que te avisa de tus gastos?"),
+		).toBeTruthy();
+		mockGetSources.mockResolvedValue(["com.whatsapp"]);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Sí, agregar" }));
+		});
+		expect(mockAddSource).toHaveBeenCalledWith(url);
+		expect(view.getByRole("checkbox", { name: "Otra app" }).props.accessibilityState.checked).toBe(
+			true,
+		);
+		expect(view.queryByText("com.whatsapp")).toBeNull();
 	});
 });

@@ -1,12 +1,15 @@
+import * as Linking from "expo-linking";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
 	AppState,
+	Clipboard,
 	Image,
 	PermissionsAndroid,
 	Platform,
 	Pressable,
 	ScrollView,
 	Text,
+	TextInput,
 	View,
 } from "react-native";
 import {
@@ -16,6 +19,7 @@ import {
 	type InstalledBank,
 	isNotificationAccessEnabled,
 	openNotificationAccessSettings,
+	parsePlayStoreLink,
 	removeSource,
 } from "@/modules/quipu-notification-listener";
 import { ErrorText } from "@/shared/components/forms/field-error";
@@ -25,6 +29,10 @@ import { Check, ChevronLeft } from "@/shared/components/ui/reicon";
 import { useHardwareBack } from "@/shared/hooks/use-hardware-back";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
+const INVALID_LINK = "Ese enlace no es de la Play Store. Debe empezar con play.google.com.";
+const NOT_INSTALLED =
+	"Esa app no está en tu teléfono. Instálala primero para que Quipu pueda leer sus avisos.";
+const NOT_A_BANK = "Esa app no parece un banco. ¿Seguro que te avisa de tus gastos?";
 const LIMIT = "Llegaste al límite de bancos. Quita uno para agregar otro.";
 const OTHER_APP = "Otra app";
 const POSTS_DENIED =
@@ -32,13 +40,19 @@ const POSTS_DENIED =
 const READS =
 	"Solo el monto y el comercio de los avisos de tus bancos. Nunca tus claves, ni tus saldos, ni el resto de tus notificaciones.";
 
+const LINK_STEPS = [
+	"Toca «Abrir Play Store» y busca la app de tu banco.",
+	"En la página de la app toca los tres puntos ⋮ y luego Compartir → Copiar enlace.",
+	"Vuelve aquí y toca Pegar.",
+] as const;
+
 const ACCESS_STEPS = [
 	"Toca «Intentar de nuevo»",
 	"En la lista, busca Quipu",
 	"Activa el interruptor y vuelve",
 ] as const;
 
-type Step = "banks" | "access";
+type Step = "banks" | "link" | "access";
 
 type Props = {
 	onClose: () => void;
@@ -52,6 +66,9 @@ export function ExpenseDetectionScreen({ onClose }: Props) {
 	const [accessOn, setAccessOn] = useState(false);
 	const [returnedWithoutAccess, setReturnedWithoutAccess] = useState(false);
 	const [postsGranted, setPostsGranted] = useState<boolean | null>(null);
+	const [linkText, setLinkText] = useState("");
+	const [addResult, setAddResult] = useState<"limit_reached" | "already_added" | null>(null);
+	const [saving, setSaving] = useState(false);
 	const awaitingReturn = useRef(false);
 	const askToPost = Platform.OS === "android" && Number(Platform.Version) >= 33;
 	const postsOk = !askToPost || postsGranted === true;
@@ -137,6 +154,35 @@ export function ExpenseDetectionScreen({ onClose }: Props) {
 		}
 	}
 
+	function applyLink(text: string) {
+		setLinkText(text);
+		setAddResult(null);
+	}
+
+	async function confirmLink() {
+		if (saving) return;
+		const input = linkText.trim();
+		if (!input) return;
+		setSaving(true);
+		const result = await addSource(input);
+		setSaving(false);
+		if (result === "added" || result === "added_unverified") {
+			setSources(await getSources());
+			setLinkText("");
+			setAddResult(null);
+			setStep("banks");
+			return;
+		}
+		if (result === "limit_reached" || result === "already_added") setAddResult(result);
+	}
+
+	function openPlayStore(packageId?: string) {
+		const url = packageId
+			? `https://play.google.com/store/apps/details?id=${encodeURIComponent(packageId)}`
+			: "https://play.google.com/store/apps";
+		void Linking.openURL(url).catch(() => undefined);
+	}
+
 	if (banks === null) {
 		return (
 			<View className="flex-1">
@@ -169,6 +215,178 @@ export function ExpenseDetectionScreen({ onClose }: Props) {
 				onOpenSettings={openAccessSettings}
 				onClose={onClose}
 			/>
+		);
+	}
+
+	if (step === "link") {
+		const trimmed = linkText.trim();
+		const parsed = trimmed ? parsePlayStoreLink(trimmed) : null;
+		const packageId = parsed && "packageId" in parsed ? parsed.packageId : null;
+		const matched = packageId ? banks.find((bank) => bank.packageId === packageId) : undefined;
+		let linkStatus: "empty" | "invalid" | "missing" | "limit" | "already" | "confirm" = "empty";
+		if (!packageId) linkStatus = trimmed ? "invalid" : "empty";
+		else if (sources.includes(packageId) || addResult === "already_added") linkStatus = "already";
+		else if (matched && !matched.installed) linkStatus = "missing";
+		else if (addResult === "limit_reached") linkStatus = "limit";
+		else linkStatus = "confirm";
+		const border =
+			linkStatus === "invalid" || linkStatus === "missing" || linkStatus === "limit"
+				? "border-danger"
+				: linkStatus === "confirm" || linkStatus === "already"
+					? "border-primary"
+					: "border-line";
+		return (
+			<View className="flex-1">
+				<ScreenHeader title="AGREGAR CON ENLACE" onBack={goBack} />
+				<ScrollView
+					className="flex-1"
+					keyboardShouldPersistTaps="handled"
+					showsVerticalScrollIndicator={false}
+				>
+					<Text className="mt-6 font-newsreader text-[27px] leading-8 text-foreground">
+						Agrega tu banco con su enlace.
+					</Text>
+					{linkStatus === "confirm" ? null : (
+						<>
+							<Text className="mt-2 font-hanken text-[14.5px] leading-6 text-foreground/55">
+								Para apps que no están en la lista. Toma un minuto.
+							</Text>
+							{LINK_STEPS.map((stepText, index) => (
+								<View key={stepText} className="mt-4">
+									<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/45">
+										{String(index + 1).padStart(2, "0")}
+									</Text>
+									<Text className="mt-1 font-hanken text-[14.5px] leading-6 text-foreground">
+										{stepText}
+									</Text>
+									{index === 0 ? (
+										<Pressable
+											accessibilityRole="button"
+											accessibilityLabel="Abrir Play Store"
+											onPress={() => openPlayStore()}
+											className="mt-3 items-center rounded-xl border border-line py-3.5 active:opacity-60"
+										>
+											<Text className="font-hanken-semibold text-[15px] text-foreground">
+												Abrir Play Store
+											</Text>
+										</Pressable>
+									) : null}
+								</View>
+							))}
+						</>
+					)}
+					<View className="mt-6">
+						<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
+							ENLACE DE LA APP
+						</Text>
+						<View className={`mt-1 flex-row items-center gap-3 border-b ${border}`}>
+							<TextInput
+								value={linkText}
+								onChangeText={applyLink}
+								accessibilityLabel="ENLACE DE LA APP"
+								autoCapitalize="none"
+								autoCorrect={false}
+								placeholder="Pega aquí el enlace"
+								className="min-w-0 flex-1 py-2.5 font-hanken text-[15px] text-foreground"
+							/>
+							<Pressable
+								accessibilityRole="button"
+								accessibilityLabel="Pegar"
+								hitSlop={HIT_SLOP}
+								onPress={() => {
+									void Clipboard.getString().then(applyLink);
+								}}
+								className="py-2 active:opacity-60"
+							>
+								<Text className="font-hanken-semibold text-[15px] text-primary">Pegar</Text>
+							</Pressable>
+						</View>
+						{linkStatus === "limit" ? <ErrorText message={LIMIT} /> : null}
+						{linkStatus === "invalid" ? <ErrorText message={INVALID_LINK} /> : null}
+						{linkStatus === "missing" ? <ErrorText message={NOT_INSTALLED} /> : null}
+						{linkStatus === "missing" && packageId ? (
+							<Pressable
+								accessibilityRole="button"
+								accessibilityLabel="Abrir en Play Store"
+								onPress={() => openPlayStore(packageId)}
+								className="mt-2 self-start active:opacity-60"
+							>
+								<Text className="font-hanken-semibold text-[14px] text-primary">
+									Abrir en Play Store
+								</Text>
+							</Pressable>
+						) : null}
+						{linkStatus === "already" ? (
+							<Text className="mt-2 font-hanken text-[13.5px] text-foreground/70">
+								{`${matched?.name ?? OTHER_APP} ya está en tu lista.`}
+							</Text>
+						) : null}
+					</View>
+					{linkStatus === "confirm" ? (
+						<View className="mt-6">
+							{matched?.installed ? (
+								<>
+									<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-primary">
+										APP ENCONTRADA
+									</Text>
+									<View className="mt-3 flex-row items-center gap-3">
+										{matched.icon ? (
+											<Image
+												accessible={false}
+												source={{ uri: `data:image/png;base64,${matched.icon}` }}
+												className="size-9 rounded-lg"
+											/>
+										) : null}
+										<View className="min-w-0 flex-1">
+											<Text className="font-hanken-semibold text-[16px] text-foreground">
+												{matched.name}
+											</Text>
+											<Text className="mt-1 font-geist-mono text-[10.5px] tracking-[0.08em] text-foreground/45">
+												INSTALADA EN TU TELÉFONO
+											</Text>
+										</View>
+									</View>
+									<Text className="mt-3 font-hanken text-[15px] text-foreground">
+										¿Es la app de tu banco?
+									</Text>
+								</>
+							) : (
+								<>
+									<Text className="font-hanken-semibold text-[16px] text-foreground">
+										{OTHER_APP}
+									</Text>
+									<Text className="mt-2 font-hanken text-[14.5px] leading-6 text-foreground/70">
+										{NOT_A_BANK}
+									</Text>
+								</>
+							)}
+						</View>
+					) : null}
+				</ScrollView>
+				<View className="gap-2 pt-3">
+					{linkStatus === "confirm" ? (
+						<>
+							<SolidButton
+								label="Sí, agregar"
+								disabled={saving}
+								onPress={() => {
+									void confirmLink();
+								}}
+							/>
+							<Pressable
+								accessibilityRole="button"
+								accessibilityLabel="No"
+								onPress={() => applyLink("")}
+								className="items-center py-2 active:opacity-60"
+							>
+								<Text className="font-hanken text-[13.5px] text-foreground/55">No</Text>
+							</Pressable>
+						</>
+					) : (
+						<SolidButton label="Agregar" disabled onPress={() => undefined} />
+					)}
+				</View>
+			</View>
 		);
 	}
 
@@ -246,6 +464,16 @@ export function ExpenseDetectionScreen({ onClose }: Props) {
 					disabled={counting.length === 0}
 					onPress={() => setStep("access")}
 				/>
+				<Pressable
+					accessibilityRole="button"
+					accessibilityLabel="¿No ves tu banco? Agrégalo con su enlace"
+					onPress={() => setStep("link")}
+					className="items-center py-1 active:opacity-60"
+				>
+					<Text className="text-center font-hanken-semibold text-[13.5px] text-primary">
+						¿No ves tu banco? Agrégalo con su enlace
+					</Text>
+				</Pressable>
 			</View>
 		</View>
 	);
@@ -378,7 +606,15 @@ function AccessStep({
 	);
 }
 
-function ScreenHeader({ onBack, step }: { onBack: () => void; step?: string }) {
+function ScreenHeader({
+	onBack,
+	step,
+	title = "DETECCIÓN DE GASTOS",
+}: {
+	onBack: () => void;
+	step?: string;
+	title?: string;
+}) {
 	return (
 		<View className="flex-row items-center">
 			<Pressable
@@ -391,7 +627,7 @@ function ScreenHeader({ onBack, step }: { onBack: () => void; step?: string }) {
 				<ChevronLeft size={22} colorClassName="accent-foreground" />
 			</Pressable>
 			<Text className="ml-3 flex-1 font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
-				DETECCIÓN DE GASTOS
+				{title}
 			</Text>
 			{step ? (
 				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/45">
