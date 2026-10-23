@@ -86,7 +86,11 @@ class QuipuNotificationListenerModule : Module() {
       val context = applicationContext()
       store.awaitReady()
       store.setPaused(paused)
-      if (paused && context != null) cancelQuipuNotices(context)
+      if (paused) {
+        context?.getSystemService(NotificationManager::class.java)?.let { manager ->
+          cancelPostedNotices(manager::cancelAll)
+        }
+      }
       store.flush()
     }
 
@@ -95,7 +99,9 @@ class QuipuNotificationListenerModule : Module() {
       val context = applicationContext()
       store.awaitReady()
       store.clear()
-      if (context != null) cancelQuipuNotices(context)
+      context?.getSystemService(NotificationManager::class.java)?.let { manager ->
+        cancelPostedNotices(manager::cancelAll)
+      }
       store.flush()
     }
 
@@ -145,11 +151,6 @@ class QuipuNotificationListenerModule : Module() {
       false
     }
   }
-}
-
-private fun cancelQuipuNotices(context: Context) {
-  val manager = context.getSystemService(NotificationManager::class.java) ?: return
-  cancelPostedNotices(manager::cancelAll)
 }
 
 private fun isDebuggable(context: Context): Boolean {

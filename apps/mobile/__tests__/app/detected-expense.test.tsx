@@ -75,6 +75,13 @@ describe("gasto detectado", () => {
 		expect(view.getByLabelText("Monto").props.children).toBe("0.00");
 	});
 
+	it("mientras carga no abre la hoja", async () => {
+		mockSessionGate.isLoading = true;
+		mockSessionGate.isAuthReady = true;
+		const view = await render(<DetectedExpenseScreen />);
+		expect(view.queryByLabelText("Monto")).toBeNull();
+	});
+
 	it("sin sesión manda a entrar y no abre la hoja", async () => {
 		mockSessionGate.isAuthReady = false;
 		mockSessionGate.isLoading = false;

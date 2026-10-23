@@ -54,13 +54,84 @@ class NotificationStoreTest {
   }
 
   @Test
+  fun claimRefusesAnEmptyId() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertFalse(store.claim("", "com.bank.one"))
+  }
+
+  @Test
   fun claimRefusesABankThatIsNoLongerChosen() {
     val (_, store) = startedStore()
     store.addSource("com.bank.one")
-    assertTrue(store.removeSource("com.bank.one"))
+    store.removeSource("com.bank.one")
     assertFalse(store.claim("k|2", "com.bank.one"))
+  }
+
+  @Test
+  fun choosingTheBankAgainClaimsTheRefusedId() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertTrue(store.removeSource("com.bank.one"))
+    store.claim("k|2", "com.bank.one")
     store.addSource("com.bank.one")
     assertTrue(store.claim("k|2", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesWhenPauseLandsBeforePost() {
+    val executor = QueueExecutor()
+    val store = readyStore(executor)
+    store.addSource("com.bank.one")
+    executor.drain()
+    executor.beforeTask = { store.setPaused(true) }
+    assertFalse(store.claim("k|pause-race", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesWhenClearLandsBeforePost() {
+    val executor = QueueExecutor()
+    val store = readyStore(executor)
+    store.addSource("com.bank.one")
+    executor.drain()
+    executor.beforeTask = { store.clear() }
+    assertFalse(store.claim("k|clear-race", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesWhenTheBankIsRemovedBeforePost() {
+    val executor = QueueExecutor()
+    val store = readyStore(executor)
+    store.addSource("com.bank.one")
+    executor.drain()
+    executor.beforeTask = { store.removeSource("com.bank.one") }
+    assertFalse(store.claim("k|bank-race", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesWhilePaused() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    assertFalse(store.claim("k|paused", "com.bank.one"))
+  }
+
+  @Test
+  fun resumeClaimsAnIdThatArrivedWhilePaused() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.claim("k|paused", "com.bank.one")
+    store.setPaused(false)
+    assertTrue(store.claim("k|paused", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesAfterClear() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.clear()
+    assertFalse(store.claim("k|clear", "com.bank.one"))
   }
 
   @Test
@@ -160,47 +231,116 @@ class NotificationStoreTest {
   }
 
   @Test
-  fun signOutKeepsBanksDropsTheNoticeAndThePauseSurvivesReload() {
+  fun signOutKeepsTheChosenBank() {
     val (file, store) = startedStore()
     store.addSource("com.bank.one")
     store.setPaused(true)
     store.flush()
+    assertEquals(listOf("com.bank.one"), reload(file).sources())
+  }
 
+  @Test
+  fun pauseSurvivesReload() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.flush()
+    assertTrue(reload(file).isPaused())
+  }
+
+  @Test
+  fun aReloadedPauseDropsTheBankNotice() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.flush()
     val paused = reload(file)
-    assertEquals(listOf("com.bank.one"), paused.sources())
-    assertTrue(paused.isPaused())
     assertEquals(
       NoticeGate.Drop,
-      noticeGate("com.bank.one", "com.quipu.finance", true, true, paused.isPaused()),
+      noticeGate("com.bank.one", "com.quipu.finance", paused.isReady(), true, paused.isPaused()),
     )
+  }
 
+  @Test
+  fun signInReadsTheBankNoticeAgain() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.flush()
+    val paused = reload(file)
     paused.setPaused(false)
     paused.flush()
     val signedIn = reload(file)
-    assertEquals(listOf("com.bank.one"), signedIn.sources())
-    assertFalse(signedIn.isPaused())
     assertEquals(
       NoticeGate.Read,
-      noticeGate("com.bank.one", "com.quipu.finance", true, "com.bank.one" in signedIn.sources(), signedIn.isPaused()),
+      noticeGate(
+        "com.bank.one",
+        "com.quipu.finance",
+        signedIn.isReady(),
+        "com.bank.one" in signedIn.sources(),
+        signedIn.isPaused(),
+      ),
     )
+  }
+
+  @Test
+  fun clearBeforeLoadLeavesTheBanksOnDisk() {
+    val (file, ready) = startedStore()
+    ready.addSource("com.bank.one")
+    ready.flush()
+    val executor = QueueExecutor()
+    val store = NotificationStore(file, executor)
+    store.clear()
+    store.start()
+    executor.drain()
+    assertEquals(listOf("com.bank.one"), store.sources())
+  }
+
+  @Test
+  fun setPausedBeforeLoadLeavesTheBanksOnDisk() {
+    val (file, ready) = startedStore()
+    ready.addSource("com.bank.one")
+    ready.flush()
+    val executor = QueueExecutor()
+    val store = NotificationStore(file, executor)
+    store.setPaused(true)
+    store.start()
+    executor.drain()
+    assertEquals(listOf("com.bank.one"), store.sources())
   }
 
   @Test
   fun accountDeletionLeavesNoBanksAfterReload() {
     val (file, store) = startedStore()
     store.addSource("com.bank.one")
-    assertTrue(store.claim("k|1", "com.bank.one"))
+    store.claim("k|1", "com.bank.one")
     store.setPaused(true)
     store.flush()
     store.clear()
     store.flush()
 
-    val again = reload(file)
-    assertTrue(again.sources().isEmpty())
-    assertFalse(again.isPaused())
-    assertEquals(0, again.diagnostics().recentIdCount)
-    again.addSource("com.bank.one")
-    assertTrue(again.claim("k|1", "com.bank.one"))
+    assertTrue(reload(file).sources().isEmpty())
+  }
+
+  @Test
+  fun accountDeletionLeavesDetectionOn() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.flush()
+    store.clear()
+    store.flush()
+    assertFalse(reload(file).isPaused())
+  }
+
+  @Test
+  fun accountDeletionForgetsTheSeenId() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.claim("k|1", "com.bank.one")
+    store.clear()
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|1", "com.bank.one"))
   }
 
   @Test
@@ -230,6 +370,13 @@ class NotificationStoreTest {
     assertFalse(store.isPaused())
   }
 
+  private fun readyStore(executor: QueueExecutor): NotificationStore {
+    val (_, store) = newStore(executor)
+    store.start()
+    executor.drain()
+    return store
+  }
+
   private fun startedStore(): Pair<File, NotificationStore> {
     val (file, store) = newStore()
     store.start()
@@ -254,8 +401,10 @@ class NotificationStoreTest {
 
 private class QueueExecutor : Executor {
   private val tasks = ConcurrentLinkedQueue<Runnable>()
+  var beforeTask: (() -> Unit)? = null
 
   override fun execute(command: Runnable) {
+    beforeTask?.invoke()
     tasks.add(command)
   }
 

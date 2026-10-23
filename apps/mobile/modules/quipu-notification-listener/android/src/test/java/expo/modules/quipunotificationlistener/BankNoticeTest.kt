@@ -5,11 +5,32 @@ import org.junit.Test
 
 class BankNoticeTest {
   @Test
-  fun ownPackageIsDroppedAndOnlyAListedBankIsRead() {
+  fun listedReadyBankIsRead() {
     assertEquals(NoticeGate.Read, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", true, true, false))
+  }
+
+  @Test
+  fun emptyPackageIsFiltered() {
+    assertEquals(NoticeGate.Filter, noticeGate("", "com.quipu.finance", true, true, false))
+  }
+
+  @Test
+  fun unlistedPackageIsFiltered() {
     assertEquals(NoticeGate.Filter, noticeGate("com.whatsapp", "com.quipu.finance", true, false, false))
+  }
+
+  @Test
+  fun notReadyDropsBeforeContent() {
     assertEquals(NoticeGate.Drop, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", false, true, false))
+  }
+
+  @Test
+  fun ownPackageIsDroppedWhenListed() {
     assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, true, false))
+  }
+
+  @Test
+  fun ownPackageIsDroppedWhenUnlisted() {
     assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, false, false))
   }
 

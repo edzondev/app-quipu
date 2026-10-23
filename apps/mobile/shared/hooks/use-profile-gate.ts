@@ -1,8 +1,6 @@
 import { api } from "@quipu/convex-api";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useEffect, useEffectEvent, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
-import { setPaused } from "@/modules/quipu-notification-listener";
 
 export function useProfileGate() {
 	const { data: session, isPending: isSessionPending } = authClient.useSession();
@@ -15,18 +13,7 @@ export function useProfileGate() {
 
 	const isLoading =
 		isSessionPending || isConvexAuthPending || (isAuthReady && profile === undefined);
+	const active = Boolean(isAuthReady || session);
 
-	const sent = useRef<boolean | null>(null);
-	const applyPaused = useEffectEvent((paused: boolean) => {
-		if (sent.current === paused) return;
-		sent.current = paused;
-		void setPaused(paused).catch(() => undefined);
-	});
-
-	useEffect(() => {
-		if (isLoading) return;
-		applyPaused(!(isAuthReady || session));
-	}, [isLoading, isAuthReady, session]);
-
-	return { isAuthReady, isLoading, profile };
+	return { isAuthReady, isLoading, profile, active };
 }

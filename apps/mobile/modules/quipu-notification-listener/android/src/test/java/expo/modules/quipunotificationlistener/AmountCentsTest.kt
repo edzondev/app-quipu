@@ -21,7 +21,14 @@ class AmountCentsTest {
   @Test
   fun merchantKeepsEveryWord() {
     assertEquals("PLAZA VEA", NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA"))
-    assertEquals("PLAZA VEA SAN ISIDRO", NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA SAN ISIDRO"))
+  }
+
+  @Test
+  fun merchantKeepsTheDistrict() {
+    assertEquals(
+      "PLAZA VEA SAN ISIDRO",
+      NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA SAN ISIDRO"),
+    )
   }
 
   @Test
@@ -38,6 +45,11 @@ class AmountCentsTest {
       "Yape",
       NotificationExtractor.readMerchant("Consumo de S/ 45.90 en Yape. Si no reconoces esta operación llama al 311-9000"),
     )
+  }
+
+  @Test
+  fun merchantDropsABlankName() {
+    assertNull(NotificationExtractor.readMerchant("Consumo de S/ 45.90 en   "))
   }
 
   @Test

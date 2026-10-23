@@ -90,31 +90,6 @@ class NotificationExtractorTest {
   }
 
   @Test
-  fun tamboPlusStopsBeforeTheCardDigits() {
-    val notice = joined(
-      text = "Consumo de S/ 45.90 en TAMBO+ con tu tarjeta terminada en 1290.",
-    )
-    assertEquals(4_590, notice.amountCents)
-    assertEquals("TAMBO+", notice.merchant)
-  }
-
-  @Test
-  fun plazaVeaSanIsidroKeepsTheFullName() {
-    val notice = joined(text = "Consumo de S/ 45.90 en PLAZA VEA SAN ISIDRO")
-    assertEquals(4_590, notice.amountCents)
-    assertEquals("PLAZA VEA SAN ISIDRO", notice.merchant)
-  }
-
-  @Test
-  fun yapeStopsAtTheFollowingSentence() {
-    val notice = joined(
-      text = "Consumo de S/ 45.90 en Yape. Si no reconoces esta operación llama al 311-9000",
-    )
-    assertEquals(4_590, notice.amountCents)
-    assertEquals("Yape", notice.merchant)
-  }
-
-  @Test
   fun syntheticBcpJoinedNoticeDropsTheCardLine() {
     val notice = joined(
       packageName = "com.bcp.bank.bcp",

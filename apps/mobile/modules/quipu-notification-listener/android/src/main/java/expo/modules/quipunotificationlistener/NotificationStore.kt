@@ -107,17 +107,17 @@ internal class NotificationStore(
   /** First time this notice id is seen for a bank that is still chosen, remember it. */
   fun claim(id: String, packageName: String): Boolean {
     if (id.isEmpty()) return false
-    val fresh = synchronized(lock) {
-      if (!ready || packageName !in sources) return false
+    synchronized(lock) {
+      if (!ready || paused || packageName !in sources) return false
       if (!remember(id)) {
         deduped += 1
         return false
       }
       matched += 1
-      true
     }
-    if (fresh) scheduleSave()
-    return fresh
+    scheduleSave()
+    // Pause, clear, or removal can land while the id is written.
+    return synchronized(lock) { !paused && packageName in sources }
   }
 
   fun diagnostics(): StoreDiagnostics {
@@ -137,26 +137,23 @@ internal class NotificationStore(
 
   /** Persists whether detection is paused. Chosen banks stay. */
   fun setPaused(value: Boolean) {
-    val changed = synchronized(lock) {
-      if (!ready || paused == value) return
+    synchronized(lock) {
+      if (!ready) return
       paused = value
-      true
     }
-    if (changed) scheduleSave()
+    scheduleSave()
   }
 
   /** Drops chosen banks and seen notice ids. Detection stays on for the next user. */
   fun clear() {
-    val changed = synchronized(lock) {
+    synchronized(lock) {
       if (!ready) return
-      val changed = sources.isNotEmpty() || recentSet.isNotEmpty() || paused
       sources = emptySet()
       recentOrder.clear()
       recentSet.clear()
       paused = false
-      changed
     }
-    if (changed) scheduleSave()
+    scheduleSave()
   }
 
   /** Waits until previously scheduled disk writes have finished. */
