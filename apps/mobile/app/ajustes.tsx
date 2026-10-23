@@ -14,6 +14,7 @@ export default function AjustesPage() {
 				model={settings.model}
 				onClose={() => router.back()}
 				onOpenSecurity={() => router.push("/seguridad")}
+				onOpenDetection={() => router.push("/expense-detection")}
 			/>
 		</AppShell>
 	);
