@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import { summaryWithCycle } from "@/__fixtures__/dashboard-summary";
 import HomePage from "@/app/(tabs)";
 import { mapDashboardHome } from "@/shared/lib/dashboard/home-model";
-import spendableToday, { updateSpendableWidget } from "@/widgets/SpendableToday";
+import spendableToday from "@/widgets/SpendableToday";
 
 const mockUseHomeModel = jest.fn();
 
@@ -13,14 +13,7 @@ jest.mock("expo-widgets", () => ({
 	}),
 }));
 
-jest.mock("@/widgets/SpendableToday", () => {
-	const actual = jest.requireActual("@/widgets/SpendableToday");
-	return {
-		__esModule: true,
-		...actual,
-		updateSpendableWidget: jest.fn(actual.updateSpendableWidget),
-	};
-});
+jest.unmock("@/widgets/SpendableToday");
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: jest.fn() }),
@@ -66,13 +59,18 @@ describe("spendable widget", () => {
 
 	it("pushes the formatted amount when Home is ready", async () => {
 		mockUseHomeModel.mockReturnValue(readyHome(4230));
-		await render(<HomePage />);
+		const view = await render(<HomePage />);
 
-		expect(updateSpendableWidget).toHaveBeenCalledWith("S/ 42.30");
 		expect(spendableToday.updateSnapshot).toHaveBeenCalledWith({
 			headline: "Puedes gastar hoy S/ 42.30",
 			updated: expect.stringMatching(/^Actualizado \d{1,2}:\d{2}$/),
 		});
+
+		mockUseHomeModel.mockReturnValue(readyHome(1500));
+		await view.rerender(<HomePage />);
+		expect(spendableToday.updateSnapshot).toHaveBeenLastCalledWith(
+			expect.objectContaining({ headline: "Puedes gastar hoy S/ 15.00" }),
+		);
 	});
 
 	it("shows Abre Quipu when Home has no amount", async () => {
@@ -83,7 +81,6 @@ describe("spendable widget", () => {
 		});
 		await render(<HomePage />);
 
-		expect(updateSpendableWidget).toHaveBeenCalledWith(null);
 		expect(spendableToday.updateSnapshot).toHaveBeenCalledWith({
 			headline: "Abre Quipu",
 			updated: "",
