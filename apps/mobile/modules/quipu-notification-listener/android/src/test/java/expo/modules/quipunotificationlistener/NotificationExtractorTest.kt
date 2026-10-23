@@ -17,6 +17,13 @@ class NotificationExtractorTest {
   }
 
   @Test
+  fun longKeyStaysWithinIdempotencyLimit() {
+    val pending = extract(key = "k".repeat(400), postTime = Long.MIN_VALUE)
+    assertEquals(128, pending.id.length)
+    assertEquals("k".repeat(107) + "|" + Long.MIN_VALUE, pending.id)
+  }
+
+  @Test
   fun idIncludesKeyAndPostTime() {
     val first = extract(key = "0|com.bank.one|7|tag|0", postTime = 10)
     val sameSlotLater = extract(key = "0|com.bank.one|7|tag|0", postTime = 11)

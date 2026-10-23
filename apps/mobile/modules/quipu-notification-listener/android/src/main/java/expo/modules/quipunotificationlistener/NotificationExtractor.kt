@@ -11,7 +11,9 @@ package expo.modules.quipunotificationlistener
 internal object NotificationExtractor {
   const val ID_SEPARATOR = "|"
   const val MAX_TEXT_CHARS = 500
-  private const val MAX_KEY_CHARS = 300
+  // id is key + "|" + postTime. Long.MIN_VALUE prints as 20 chars, so 107
+  // keeps every id inside the 128-char idempotency key.
+  private const val MAX_KEY_CHARS = 107
 
   // "S/" or "S/.", then a space or NBSP, then a number. Two different amounts stay empty.
   // NBSP in the lookahead is the same guard as a normal space: "1\u00A0250" is not 1 sol.
