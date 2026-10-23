@@ -11,11 +11,16 @@ package expo.modules.quipunotificationlistener
 internal object NotificationExtractor {
   const val ID_SEPARATOR = "|"
   const val MAX_TEXT_CHARS = 500
-  private const val MAX_KEY_CHARS = 300
 
-  fun isRegistered(packageName: String, sources: Set<String>): Boolean {
-    return packageName in sources
-  }
+  // id is key + "|" + postTime. Long.MIN_VALUE prints as 20 chars, so 107
+  // keeps every id inside the 128-char idempotency key.
+  private const val MAX_KEY_CHARS = 107
+
+  // "S/" or "S/.", then a space or NBSP, then one number. Two different amounts stay empty.
+  private val AMOUNT = Regex(
+    "S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)(?![\\d,]|\\.\\d|[\\s\u00A0]\\d)",
+  )
+  private val MERCHANT = Regex("(?i)\\s+en\\s+(.+?)(?=\\s+con\\b|\\s*[.!]|$)")
 
   fun notificationId(key: String, postTime: Long): String {
     return key + ID_SEPARATOR + postTime
@@ -55,6 +60,55 @@ internal object NotificationExtractor {
       subText = subText.ifEmpty { null },
       bigText = bigText.ifEmpty { null },
     )
+  }
+
+  /** Parsed fields only. The raw title and text are not part of the result. */
+  fun detectedNotice(raw: RawNotification): DetectedNotice? {
+    val pending = extract(raw) ?: return null
+    val blob = listOfNotNull(pending.title, pending.text, pending.subText, pending.bigText)
+      .joinToString("\n")
+    return DetectedNotice(
+      id = pending.id,
+      packageName = pending.packageName,
+      postedAt = pending.postedAt,
+      amountCents = readAmountCents(blob),
+      merchant = readMerchant(blob),
+    )
+  }
+
+  fun readAmountCents(bankText: String): Int? {
+    var found: Int? = null
+    for (match in AMOUNT.findAll(bankText)) {
+      val cents = toCents(match.groupValues[1]) ?: return null
+      if (found != null && cents != found) return null
+      found = cents
+    }
+    return found
+  }
+
+  fun readMerchant(bankText: String): String? {
+    val amount = AMOUNT.find(bankText) ?: return null
+    val after = bankText.substring(amount.range.last + 1)
+    val match = MERCHANT.find(after) ?: return null
+    val name = match.groupValues[1].trim()
+    if (name.isEmpty() || name.length > 40) return null
+    return name
+  }
+
+  private fun toCents(token: String): Int? {
+    val dot = token.indexOf('.')
+    val whole = (if (dot >= 0) token.substring(0, dot) else token).replace(",", "")
+    val fractionDigits = if (dot >= 0) token.substring(dot + 1) else ""
+    val soles = whole.toLongOrNull() ?: return null
+    val fraction = when (fractionDigits.length) {
+      0 -> 0
+      1 -> fractionDigits.toInt() * 10
+      2 -> fractionDigits.toInt()
+      else -> return null
+    }
+    val cents = soles * 100 + fraction
+    if (cents > Int.MAX_VALUE) return null
+    return cents.toInt()
   }
 
   private fun normalize(value: String?): String {

@@ -1,30 +1,13 @@
 import { requireOptionalNativeModule } from "expo";
 
-export type PendingNotification = {
-	id: string;
-	packageName: string;
-	postedAt: number;
-	title: string;
-	text: string;
-	subText?: string;
-	bigText?: string;
-};
-
-export type NotificationSubscription = {
-	remove: () => void;
-};
-
 export type NotificationDiagnostics = {
 	accessEnabled: boolean;
 	loaded: boolean;
 	sourceCount: number;
-	pendingCount: number;
 	recentIdCount: number;
 	filteredOut: number;
 	matched: number;
-	enqueued: number;
 	deduped: number;
-	consumed: number;
 };
 
 export type AddSourceResult =
@@ -53,21 +36,11 @@ type NativeNotificationListener = {
 	getSources(): Promise<string[]>;
 	getInstalledBanks(): Promise<InstalledBank[]>;
 	parsePlayStoreLink(text: string): PlayStoreLinkResult;
-	getPendingNotifications(): Promise<PendingNotification[]>;
-	consumeNotification(id: string): Promise<boolean>;
-	clearPendingNotifications(): Promise<void>;
+	dismissNotice(id: string): void;
 	getDiagnostics(): Promise<NotificationDiagnostics | null>;
-	addListener(
-		eventName: "onNotification",
-		listener: (event: PendingNotification) => void,
-	): NotificationSubscription;
 };
 
 const native = requireOptionalNativeModule<NativeNotificationListener>("QuipuNotificationListener");
-
-const noopSubscription: NotificationSubscription = {
-	remove() {},
-};
 
 export function isNotificationAccessEnabled(): boolean {
 	return native?.isNotificationAccessEnabled() ?? false;
@@ -102,26 +75,9 @@ export function parsePlayStoreLink(text: string): PlayStoreLinkResult {
 	return native.parsePlayStoreLink(text);
 }
 
-export async function getPendingNotifications(): Promise<PendingNotification[]> {
-	if (!native) return [];
-	return native.getPendingNotifications();
-}
-
-export async function consumeNotification(id: string): Promise<boolean> {
-	if (!native) return false;
-	return native.consumeNotification(id);
-}
-
-export async function clearPendingNotifications(): Promise<void> {
-	if (!native) return;
-	await native.clearPendingNotifications();
-}
-
-export function addNotificationListener(
-	listener: (event: PendingNotification) => void,
-): NotificationSubscription {
-	if (!native) return noopSubscription;
-	return native.addListener("onNotification", listener);
+export function dismissNotice(id: string): void {
+	if (!native || id.length === 0) return;
+	native.dismissNotice(id);
 }
 
 export async function getDiagnostics(): Promise<NotificationDiagnostics | null> {

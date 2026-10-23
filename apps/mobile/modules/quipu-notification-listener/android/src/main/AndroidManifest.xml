@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <queries>
     <package android:name="com.bcp.bank.bcp" />
     <package android:name="com.bcp.innovacxion.yapeapp" />
@@ -27,5 +28,8 @@
         <action android:name="android.service.notification.NotificationListenerService" />
       </intent-filter>
     </service>
+    <receiver
+      android:name="expo.modules.quipunotificationlistener.NoticeDismissedReceiver"
+      android:exported="false" />
   </application>
 </manifest>

@@ -16,15 +16,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Queue, dedupe, registered packages, and the one on-disk file.
+ * Chosen bank packages and seen notice ids. Notification title and text are not stored.
  *
  * The file is loaded on [io], never inside the notification callback. Until that load
- * finishes, mutations are buffered in memory and then merged. Disk writes also run only
- * on [io], as a full snapshot: temp file, fsync, rename.
- *
- * SharedPreferences and org.json are not used. Both need Android (or Robolectric) to
- * round-trip in a unit test. Room, DataStore, and MMKV are extra dependencies and more
- * machinery than a bounded queue needs.
+ * finishes, source edits are buffered and then merged. A notification that arrives
+ * before the load finishes is dropped by the listener, not buffered. Disk writes run
+ * only on [io], as a full snapshot: temp file, fsync, rename.
  */
 internal class NotificationStore(
   private val file: File,
@@ -41,20 +38,14 @@ internal class NotificationStore(
   @Volatile
   private var sources: Set<String> = emptySet()
 
-  private val queue = ArrayDeque<PendingNotification>()
   private val recentOrder = ArrayDeque<String>()
   private val recentSet = HashSet<String>()
   private val preload = ArrayDeque<Command>()
   private var startRequested = false
 
-  @Volatile
-  private var listener: ((PendingNotification) -> Unit)? = null
-
   private var filteredOut: Long = 0
   private var matched: Long = 0
-  private var enqueued: Long = 0
   private var deduped: Long = 0
-  private var consumed: Long = 0
 
   fun start() {
     synchronized(lock) {
@@ -80,14 +71,6 @@ internal class NotificationStore(
   }
 
   fun isReady(): Boolean = ready
-
-  fun isSource(packageName: String): Boolean {
-    return NotificationExtractor.isRegistered(packageName, sources)
-  }
-
-  fun setListener(listener: ((PendingNotification) -> Unit)?) {
-    this.listener = listener
-  }
 
   fun noteFiltered() {
     synchronized(lock) {
@@ -127,46 +110,20 @@ internal class NotificationStore(
     return synchronized(lock) { sources.toList().sorted() }
   }
 
-  fun offer(item: PendingNotification) {
-    val emit = synchronized(lock) {
-      if (!ready) {
-        bufferOffer(item)
-        return
-      }
-      applyOffer(item)
-    }
-    if (emit != null) {
-      deliver(emit)
-      scheduleSave()
-    }
-  }
-
-  fun pending(): List<PendingNotification> {
-    return synchronized(lock) { queue.toList() }
-  }
-
-  fun consume(id: String): Boolean {
+  /** First time this notice id is seen, remember it. A repeat does not post again. */
+  fun claim(id: String): Boolean {
     if (id.isEmpty()) return false
-    val changed = synchronized(lock) {
-      if (!ready) {
-        preload.addLast(Command.Consume(id))
-        return true
+    val fresh = synchronized(lock) {
+      if (!ready) return false
+      if (!remember(id)) {
+        deduped += 1
+        return false
       }
-      applyConsume(id)
+      matched += 1
+      true
     }
-    if (changed) scheduleSave()
-    return changed
-  }
-
-  fun clear() {
-    val changed = synchronized(lock) {
-      if (!ready) {
-        preload.addLast(Command.Clear)
-        return
-      }
-      applyClear()
-    }
-    if (changed) scheduleSave()
+    if (fresh) scheduleSave()
+    return fresh
   }
 
   fun diagnostics(): StoreDiagnostics {
@@ -174,13 +131,10 @@ internal class NotificationStore(
       StoreDiagnostics(
         loaded = ready,
         sourceCount = sources.size,
-        pendingCount = queue.size,
         recentIdCount = recentSet.size,
         filteredOut = filteredOut,
         matched = matched,
-        enqueued = enqueued,
         deduped = deduped,
-        consumed = consumed,
       )
     }
   }
@@ -194,55 +148,23 @@ internal class NotificationStore(
 
   private fun loadAndMerge() {
     val loaded = readSnapshot(file, onError)
-    val toEmit = ArrayList<PendingNotification>()
-    var dirty = false
+    var dirty = loaded.rewrite
     synchronized(lock) {
-      sources = loaded.sources.toSet()
-      queue.clear()
-      queue.addAll(loaded.queue)
+      sources = loaded.snapshot.sources.toSet()
       recentOrder.clear()
       recentSet.clear()
-      for (id in loaded.recentIds) {
+      for (id in loaded.snapshot.recentIds) {
         remember(id)
-      }
-      for (item in queue) {
-        if (item.id !in recentSet) remember(item.id)
       }
       while (preload.isNotEmpty()) {
         when (val command = preload.removeFirst()) {
           is Command.Add -> if (applyAdd(command.packageName)) dirty = true
           is Command.Remove -> if (applyRemove(command.packageName)) dirty = true
-          is Command.Offer -> {
-            val added = applyOffer(command.item)
-            if (added != null) {
-              dirty = true
-              toEmit.add(added)
-            }
-          }
-          is Command.Consume -> if (applyConsume(command.id)) dirty = true
-          is Command.Clear -> if (applyClear()) dirty = true
         }
       }
       ready = true
     }
-    for (item in toEmit) {
-      deliver(item)
-    }
-    // Queue the snapshot before waking waiters. Otherwise flush() can run
-    // before this save is even scheduled and a reload sees a missing file.
     if (dirty) scheduleSave()
-  }
-
-  private fun bufferOffer(item: PendingNotification) {
-    var offers = 0
-    for (command in preload) {
-      if (command is Command.Offer) offers += 1
-    }
-    if (offers >= MAX_PRELOAD) {
-      val index = preload.indexOfFirst { it is Command.Offer }
-      if (index >= 0) preload.removeAt(index)
-    }
-    preload.addLast(Command.Offer(item))
   }
 
   private fun applyAdd(packageName: String): Boolean {
@@ -259,40 +181,6 @@ internal class NotificationStore(
     return true
   }
 
-  private fun applyOffer(item: PendingNotification): PendingNotification? {
-    if (!NotificationExtractor.isRegistered(item.packageName, sources)) {
-      filteredOut += 1
-      return null
-    }
-    matched += 1
-    if (item.id in recentSet) {
-      deduped += 1
-      return null
-    }
-    remember(item.id)
-    while (queue.size >= MAX_QUEUE) {
-      queue.removeFirst()
-    }
-    queue.addLast(item)
-    enqueued += 1
-    return item
-  }
-
-  private fun applyConsume(id: String): Boolean {
-    val removed = queue.removeAll { it.id == id }
-    if (!removed) return false
-    remember(id)
-    consumed += 1
-    return true
-  }
-
-  private fun applyClear(): Boolean {
-    if (queue.isEmpty()) return false
-    consumed += queue.size.toLong()
-    queue.clear()
-    return true
-  }
-
   private fun remember(id: String): Boolean {
     if (!recentSet.add(id)) return false
     recentOrder.addLast(id)
@@ -301,15 +189,6 @@ internal class NotificationStore(
       recentSet.remove(oldest)
     }
     return true
-  }
-
-  private fun deliver(item: PendingNotification) {
-    val current = listener ?: return
-    try {
-      current(item)
-    } catch (e: Exception) {
-      onError("deliver", e)
-    }
   }
 
   private fun scheduleSave() {
@@ -325,15 +204,12 @@ internal class NotificationStore(
     return Snapshot(
       sources = sources.toList().sorted(),
       recentIds = recentOrder.toList(),
-      queue = queue.toList(),
     )
   }
 
   companion object {
-    const val MAX_QUEUE = 100
     const val MAX_RECENT = 256
     const val MAX_SOURCES = 20
-    const val MAX_PRELOAD = 100
     private const val READY_TIMEOUT_SECONDS = 5L
     private const val DIRECTORY = "quipu-notification-listener"
     private const val FILE_NAME = "state.bin"
@@ -345,8 +221,8 @@ internal class NotificationStore(
     private var shared: NotificationStore? = null
 
     /**
-     * [baseDir] must be `Context.noBackupFilesDir`: the file holds notification text and
-     * must stay out of Auto Backup and device-to-device transfer.
+     * [baseDir] must be `Context.noBackupFilesDir`. The file stores chosen packages
+     * and seen notice ids, not notification text.
      */
     fun shared(baseDir: File): NotificationStore {
       shared?.let { return it }
@@ -376,77 +252,50 @@ internal class NotificationStore(
 internal data class StoreDiagnostics(
   val loaded: Boolean,
   val sourceCount: Int,
-  val pendingCount: Int,
   val recentIdCount: Int,
   val filteredOut: Long,
   val matched: Long,
-  val enqueued: Long,
   val deduped: Long,
-  val consumed: Long,
 )
 
 private sealed interface Command {
   data class Add(val packageName: String) : Command
   data class Remove(val packageName: String) : Command
-  data class Offer(val item: PendingNotification) : Command
-  data class Consume(val id: String) : Command
-  data object Clear : Command
 }
 
 private data class Snapshot(
   val sources: List<String>,
   val recentIds: List<String>,
-  val queue: List<PendingNotification>,
 ) {
   companion object {
-    fun empty() = Snapshot(emptyList(), emptyList(), emptyList())
+    fun empty() = Snapshot(emptyList(), emptyList())
   }
 }
 
+private class LoadedFile(val snapshot: Snapshot, val rewrite: Boolean)
+
 private const val MAGIC = 0x51504E31
-private const val VERSION = 1
+private const val VERSION = 2
 private const val MAX_STORED_SOURCES = NotificationStore.MAX_SOURCES
 private const val MAX_STORED_RECENT = NotificationStore.MAX_RECENT
-private const val MAX_STORED_QUEUE = NotificationStore.MAX_QUEUE
 
-private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): Snapshot {
-  if (!file.isFile) return Snapshot.empty()
+private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): LoadedFile {
+  if (!file.isFile) return LoadedFile(Snapshot.empty(), false)
   return try {
     DataInputStream(BufferedInputStream(FileInputStream(file))).use { input ->
       val magic = input.readInt()
       val version = input.readInt()
-      if (magic != MAGIC || version != VERSION) return Snapshot.empty()
+      if (magic != MAGIC || (version != 1 && version != VERSION)) {
+        return LoadedFile(Snapshot.empty(), false)
+      }
       val sources = readStrings(input, MAX_STORED_SOURCES)
       val recentIds = readStrings(input, MAX_STORED_RECENT)
-      val count = readCount(input, MAX_STORED_QUEUE)
-      val queue = ArrayList<PendingNotification>(count)
-      repeat(count) {
-        val id = input.readUTF()
-        val packageName = input.readUTF()
-        val postedAt = input.readLong()
-        val title = input.readUTF()
-        val text = input.readUTF()
-        val subText = readOptional(input)
-        val bigText = readOptional(input)
-        if (id.isNotEmpty() && packageName.isNotEmpty()) {
-          queue.add(
-            PendingNotification(
-              id = id,
-              packageName = packageName,
-              postedAt = postedAt,
-              title = title,
-              text = text,
-              subText = subText,
-              bigText = bigText,
-            ),
-          )
-        }
-      }
-      Snapshot(sources, recentIds, queue)
+      // Version 1 kept a queue of title and text after the ids. Leave those bytes unread.
+      LoadedFile(Snapshot(sources, recentIds), version != VERSION)
     }
   } catch (e: Exception) {
     onError("read", e)
-    Snapshot.empty()
+    LoadedFile(Snapshot.empty(), false)
   }
 }
 
@@ -458,12 +307,6 @@ private fun readStrings(input: DataInputStream, max: Int): List<String> {
     if (value.isNotEmpty()) values.add(value)
   }
   return values
-}
-
-private fun readOptional(input: DataInputStream): String? {
-  if (!input.readBoolean()) return null
-  val value = input.readUTF()
-  return value.ifEmpty { null }
 }
 
 private fun readCount(input: DataInputStream, max: Int): Int {
@@ -492,16 +335,6 @@ private fun writeAtomically(
         data.writeInt(VERSION)
         writeStrings(data, snapshot.sources)
         writeStrings(data, snapshot.recentIds)
-        data.writeInt(snapshot.queue.size)
-        for (item in snapshot.queue) {
-          data.writeUTF(item.id)
-          data.writeUTF(item.packageName)
-          data.writeLong(item.postedAt)
-          data.writeUTF(item.title)
-          data.writeUTF(item.text)
-          writeOptional(data, item.subText)
-          writeOptional(data, item.bigText)
-        }
         data.flush()
         buffered.flush()
         output.fd.sync()
@@ -526,15 +359,6 @@ private fun writeAtomically(
 private fun writeStrings(data: DataOutputStream, values: List<String>) {
   data.writeInt(values.size)
   for (value in values) {
-    data.writeUTF(value)
-  }
-}
-
-private fun writeOptional(data: DataOutputStream, value: String?) {
-  if (value == null) {
-    data.writeBoolean(false)
-  } else {
-    data.writeBoolean(true)
     data.writeUTF(value)
   }
 }
