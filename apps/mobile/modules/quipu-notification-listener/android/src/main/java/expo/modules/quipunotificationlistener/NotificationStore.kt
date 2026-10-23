@@ -15,14 +15,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Chosen bank packages and seen notice ids. Notification title and text are not stored.
- *
- * The file is loaded on [io], never inside the notification callback. Until that load
- * finishes, source edits are buffered and then merged. A notification that arrives
- * before the load finishes is dropped by the listener, not buffered. Disk writes run
- * only on [io], as a full snapshot: temp file, fsync, rename.
- */
+/** Chosen bank packages and seen notice ids. Notification title and text are not stored. */
 internal class NotificationStore(
   private val file: File,
   private val io: Executor = defaultExecutor(),
@@ -220,10 +213,6 @@ internal class NotificationStore(
     @Volatile
     private var shared: NotificationStore? = null
 
-    /**
-     * [baseDir] must be `Context.noBackupFilesDir`. The file stores chosen packages
-     * and seen notice ids, not notification text.
-     */
     fun shared(baseDir: File): NotificationStore {
       shared?.let { return it }
       return synchronized(gate) {
@@ -285,13 +274,11 @@ private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): Load
     DataInputStream(BufferedInputStream(FileInputStream(file))).use { input ->
       val magic = input.readInt()
       val version = input.readInt()
-      if (magic != MAGIC || (version != 1 && version != VERSION)) {
-        return LoadedFile(Snapshot.empty(), false)
-      }
-      val sources = readStrings(input, MAX_STORED_SOURCES)
-      val recentIds = readStrings(input, MAX_STORED_RECENT)
-      // Version 1 kept a queue of title and text after the ids. Leave those bytes unread.
-      LoadedFile(Snapshot(sources, recentIds), version != VERSION)
+      if (magic != MAGIC || version != VERSION) return LoadedFile(Snapshot.empty(), true)
+      LoadedFile(
+        Snapshot(readStrings(input, MAX_STORED_SOURCES), readStrings(input, MAX_STORED_RECENT)),
+        false,
+      )
     }
   } catch (e: Exception) {
     onError("read", e)

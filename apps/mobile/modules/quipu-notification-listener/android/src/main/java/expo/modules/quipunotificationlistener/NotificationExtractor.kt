@@ -12,15 +12,9 @@ internal object NotificationExtractor {
   const val ID_SEPARATOR = "|"
   const val MAX_TEXT_CHARS = 500
 
-  // id is key + "|" + postTime. Long.MIN_VALUE prints as 20 chars, so 107
-  // keeps every id inside the 128-char idempotency key.
   private const val MAX_KEY_CHARS = 107
-
-  // "S/" or "S/.", then a space or NBSP, then one number. Two different amounts stay empty.
-  private val AMOUNT = Regex(
-    "S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)(?![\\d,]|\\.\\d|[\\s\u00A0]\\d)",
-  )
-  private val MERCHANT = Regex("(?i)\\s+en\\s+(.+?)(?=\\s+con\\b|\\s*[.!]|$)")
+  private val AMOUNT = Regex("S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)")
+  private val MERCHANT = Regex("(?i)\\s+en\\s+(\\S+)")
 
   fun notificationId(key: String, postTime: Long): String {
     return key + ID_SEPARATOR + postTime
@@ -62,7 +56,6 @@ internal object NotificationExtractor {
     )
   }
 
-  /** Parsed fields only. The raw title and text are not part of the result. */
   fun detectedNotice(raw: RawNotification): DetectedNotice? {
     val pending = extract(raw) ?: return null
     val blob = listOfNotNull(pending.title, pending.text, pending.subText, pending.bigText)
@@ -88,11 +81,8 @@ internal object NotificationExtractor {
 
   fun readMerchant(bankText: String): String? {
     val amount = AMOUNT.find(bankText) ?: return null
-    val after = bankText.substring(amount.range.last + 1)
-    val match = MERCHANT.find(after) ?: return null
-    val name = match.groupValues[1].trim()
-    if (name.isEmpty() || name.length > 40) return null
-    return name
+    val name = MERCHANT.find(bankText.substring(amount.range.last + 1))?.groupValues?.get(1) ?: return null
+    return name.trim('.', '!', ',').takeIf { it.isNotEmpty() }
   }
 
   private fun toCents(token: String): Int? {

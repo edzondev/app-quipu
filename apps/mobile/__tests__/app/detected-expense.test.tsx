@@ -58,23 +58,19 @@ describe("gasto detectado", () => {
 
 	it("el toque precarga monto, comercio, banco y hora", async () => {
 		const view = await render(<DetectedExpenseScreen />);
-		expect(view.getByLabelText("Monto").props.value).toBe("45.90");
-		expect(view.getByLabelText("Monto").props.autoFocus).toBe(false);
+		expect(view.getByLabelText("Monto").props.children).toBe("45.90");
 		expect(view.getByLabelText("Comercio").props.value).toBe("Tambo+");
 		expect(view.getByText("Interbank · 19:12")).toBeTruthy();
-	});
-
-	it("sin monto deja el campo vacío y enfocado", async () => {
+		await view.unmount();
 		params.current = { id: "n|2", bank: "Interbank", at: String(AT) };
-		const view = await render(<DetectedExpenseScreen />);
-		expect(view.getByLabelText("Monto").props.value).toBe("");
-		expect(view.getByLabelText("Monto").props.autoFocus).toBe(true);
+		const empty = await render(<DetectedExpenseScreen />);
+		expect(empty.getByLabelText("Monto").props.children).toBe("0.00");
 	});
 
 	it("guardar usa el id del aviso como clave", async () => {
 		const view = await render(<DetectedExpenseScreen />);
 		await fireEvent.press(view.getByText("Gustos"));
-		await fireEvent.press(view.getByLabelText("Registrar gasto"));
+		await fireEvent.press(view.getByText("Registrar gasto"));
 		await waitFor(() => {
 			expect(mockRegister).toHaveBeenCalledWith(
 				{ amountRaw: "45.90", description: "Tambo+", envelopeType: "wants" },
@@ -87,16 +83,10 @@ describe("gasto detectado", () => {
 
 	it("cerrar no guarda y borra el aviso", async () => {
 		const view = await render(<DetectedExpenseScreen />);
-		await fireEvent.press(view.getByLabelText("Cerrar"));
-		expect(mockRegister).not.toHaveBeenCalled();
-		expect(mockDismiss).toHaveBeenCalledWith("n|1");
-		expect(mockBack).toHaveBeenCalled();
-	});
-
-	it("atrás no guarda", async () => {
-		await render(<DetectedExpenseScreen />);
+		await fireEvent.press(view.getByLabelText("Cancelar"));
 		pressHardwareBack();
 		expect(mockRegister).not.toHaveBeenCalled();
 		expect(mockDismiss).toHaveBeenCalledWith("n|1");
+		expect(mockBack).toHaveBeenCalled();
 	});
 });

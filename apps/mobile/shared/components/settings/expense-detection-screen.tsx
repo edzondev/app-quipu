@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Clipboard, Pressable, ScrollView, Text, TextInput, Vibration, View } from "react-native";
+import {
+	Clipboard,
+	PermissionsAndroid,
+	Platform,
+	Pressable,
+	ScrollView,
+	Text,
+	TextInput,
+	Vibration,
+	View,
+} from "react-native";
 import Animated, { Easing, FadeIn, FadeInDown } from "react-native-reanimated";
 import {
 	addSource,
@@ -32,7 +42,7 @@ function mark(name: string) {
 }
 
 export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
-	const catalog = useRef<Bank[]>([]);
+	const [catalog, setCatalog] = useState<Bank[]>([]);
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [text, setText] = useState("");
 	const [rejected, setRejected] = useState(false);
@@ -44,9 +54,7 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 	const packageId = parsed && "packageId" in parsed ? parsed.packageId : "";
 	const shown = banks.find((bank) => bank.packageId === packageId);
 	const invalid =
-		trimmed !== "" &&
-		!shown &&
-		(rejected || !catalog.current.some((bank) => bank.packageId === packageId));
+		trimmed !== "" && !shown && (rejected || !catalog.some((bank) => bank.packageId === packageId));
 	const border = shown ? "border-primary" : invalid ? "border-danger" : "border-line";
 	const canContinue = banks.length > 0;
 
@@ -54,7 +62,7 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 		alive.current = true;
 		void Promise.all([getInstalledBanks(), getSources()]).then(([rows, ids]) => {
 			if (!alive.current) return;
-			catalog.current = rows;
+			setCatalog(rows);
 			setBanks(ids.flatMap((id) => rows.filter((item) => item.packageId === id)));
 		});
 		return () => {
@@ -74,7 +82,7 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 		const link = next.trim() === "" ? null : parsePlayStoreLink(next);
 		const bank =
 			link && "packageId" in link
-				? catalog.current.find((item) => item.packageId === link.packageId)
+				? catalog.find((item) => item.packageId === link.packageId)
 				: undefined;
 		if (!bank) {
 			setRejected(link !== null);
@@ -98,6 +106,14 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 			);
 			if (textRef.current === next) buzzOnce("ok");
 		});
+	}
+
+	async function onContinue() {
+		if (Platform.OS === "android" && Number(Platform.Version) >= 33) {
+			await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+		}
+		if (isNotificationAccessEnabled()) onClose();
+		else openNotificationAccessSettings();
 	}
 
 	return (
@@ -184,9 +200,9 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 				accessibilityLabel="Siguiente"
 				accessibilityState={{ disabled: !canContinue }}
 				disabled={!canContinue}
-				onPress={() =>
-					isNotificationAccessEnabled() ? onClose() : openNotificationAccessSettings()
-				}
+				onPress={() => {
+					void onContinue();
+				}}
 				className={`mt-3 items-center justify-center rounded-xl py-4 ${canContinue ? "bg-foreground active:opacity-80" : "bg-line"}`}
 			>
 				<Text

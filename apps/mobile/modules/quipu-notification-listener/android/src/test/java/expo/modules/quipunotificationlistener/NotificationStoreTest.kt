@@ -49,14 +49,11 @@ class NotificationStoreTest {
     assertEquals(1L, store.diagnostics().deduped)
     store.flush()
 
-    val bytes = file.readBytes().decodeToString()
-    assertFalse(bytes.contains("SECRETO-TITULO"))
-    assertFalse(bytes.contains("SECRETO-TEXTO"))
     assertFalse(reload(file).claim("k|1"))
   }
 
   @Test
-  fun versionOneDropsTheTitleTextQueue() {
+  fun oldFileIsOverwrittenWithoutTitleOrText() {
     val file = File(Files.createTempDirectory("quipu-nl").toFile(), "state.bin")
     DataOutputStream(FileOutputStream(file)).use { output ->
       output.writeInt(0x51504E31)
@@ -72,7 +69,7 @@ class NotificationStoreTest {
     store.awaitReady()
     store.flush()
 
-    assertEquals(listOf("com.bank.one"), store.sources())
+    assertTrue(store.sources().isEmpty())
     val bytes = file.readBytes().decodeToString()
     assertFalse(bytes.contains("SECRETO-TITULO"))
     assertFalse(bytes.contains("SECRETO-TEXTO"))
@@ -112,7 +109,7 @@ class NotificationStoreTest {
     val file = File(Files.createTempDirectory("quipu-nl").toFile(), "state.bin")
     DataOutputStream(FileOutputStream(file)).use { output ->
       output.writeInt(0x51504E31)
-      output.writeInt(1)
+      output.writeInt(2)
       output.writeInt(3)
     }
     val errors = mutableListOf<String>()

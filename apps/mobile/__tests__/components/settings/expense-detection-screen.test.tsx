@@ -1,5 +1,5 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { Clipboard, Vibration } from "react-native";
+import { Clipboard, PermissionsAndroid, Platform, Vibration } from "react-native";
 import { ExpenseDetectionScreen } from "@/shared/components/settings/expense-detection-screen";
 
 const NOT_A_BANK = "Este link no es de un banco en Play Store. Cópialo desde la app de tu banco.";
@@ -143,6 +143,29 @@ describe("ExpenseDetectionScreen", () => {
 			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
 		});
 		expect(onClose).toHaveBeenCalledTimes(1);
+		await view.unmount();
+	});
+
+	it("en Android 13 Siguiente pide avisar antes de abrir los ajustes", async () => {
+		const request = jest
+			.spyOn(PermissionsAndroid, "request")
+			.mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED);
+		const previous = { os: Platform.OS, version: Platform.Version };
+		Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+		Object.defineProperty(Platform, "Version", { value: 33, configurable: true });
+		mockGetSources.mockResolvedValue(["com.bcp.bank.bcp"]);
+		const view = await openScreen();
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
+			await Promise.all(request.mock.results.map((result) => result.value));
+		});
+		expect(request).toHaveBeenCalledWith(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+		expect(mockOpenAccess).toHaveBeenCalledTimes(1);
+		const requestedAt = request.mock.invocationCallOrder[0] ?? 0;
+		const openedAt = mockOpenAccess.mock.invocationCallOrder[0] ?? 0;
+		expect(requestedAt).toBeLessThan(openedAt);
+		Object.defineProperty(Platform, "OS", { value: previous.os, configurable: true });
+		Object.defineProperty(Platform, "Version", { value: previous.version, configurable: true });
 		await view.unmount();
 	});
 });
