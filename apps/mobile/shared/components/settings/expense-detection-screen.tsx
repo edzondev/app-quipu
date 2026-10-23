@@ -13,6 +13,7 @@ import {
 	View,
 } from "react-native";
 import {
+	type AddSourceResult,
 	addSource,
 	getInstalledBanks,
 	getSources,
@@ -164,7 +165,12 @@ export function ExpenseDetectionScreen({ onClose }: Props) {
 		const input = linkText.trim();
 		if (!input) return;
 		setSaving(true);
-		const result = await addSource(input);
+		let result: AddSourceResult | null = null;
+		try {
+			result = await addSource(input);
+		} catch {
+			result = null;
+		}
 		setSaving(false);
 		if (result === "added" || result === "added_unverified") {
 			setSources(await getSources());
@@ -569,7 +575,10 @@ function AccessStep({
 				{granted ? (
 					<View className="flex-row items-center justify-center gap-2 rounded-xl bg-primary py-4">
 						<Check size={18} colorClassName="accent-background" />
-						<Text className="font-hanken-semibold text-[15px] text-background">
+						<Text
+							accessibilityLiveRegion="polite"
+							className="font-hanken-semibold text-[15px] text-background"
+						>
 							Permiso activado
 						</Text>
 					</View>

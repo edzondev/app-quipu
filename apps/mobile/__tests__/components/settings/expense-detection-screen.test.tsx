@@ -222,7 +222,7 @@ describe("ExpenseDetectionScreen", () => {
 		await act(async () => {
 			emitAppState("active");
 		});
-		expect(view.getByText("Permiso activado")).toBeTruthy();
+		expect(view.getByText("Permiso activado").props.accessibilityLiveRegion).toBe("polite");
 		await act(async () => {
 			await jest.advanceTimersByTimeAsync(599);
 		});
