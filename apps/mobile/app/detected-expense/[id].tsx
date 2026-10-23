@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import {
 	getInstalledBanks,
@@ -18,15 +18,20 @@ export default function DetectedExpenseRoute() {
 	const [item, setItem] = useState<PendingNotification | null>(null);
 	const [bankName, setBankName] = useState("");
 
-	const close = useEffectEvent(() => {
+	function close() {
 		if (router.canGoBack()) router.back();
 		else router.replace("/(tabs)");
-	});
+	}
 
 	useHardwareBack(close);
 
 	useEffect(() => {
 		let alive = true;
+		// close is a new function each render, so the effect follows router.
+		function leave() {
+			if (router.canGoBack()) router.back();
+			else router.replace("/(tabs)");
+		}
 		async function load() {
 			let pending: PendingNotification[] | null = null;
 			try {
@@ -37,7 +42,7 @@ export default function DetectedExpenseRoute() {
 			if (!alive) return;
 			const found = pending?.find((entry) => entry.id === id);
 			if (!found) {
-				close();
+				leave();
 				return;
 			}
 			let banks: InstalledBank[] | null = null;
@@ -48,15 +53,15 @@ export default function DetectedExpenseRoute() {
 			}
 			if (!alive) return;
 			const bank = banks?.find((entry) => entry.packageId === found.packageName);
-			setBankName(bank?.label || bank?.name || found.packageName);
+			setBankName(bank?.label || bank?.name || "Otra app");
 			setItem(found);
 		}
 		if (id) void load();
-		else close();
+		else leave();
 		return () => {
 			alive = false;
 		};
-	}, [id]);
+	}, [id, router]);
 
 	if (!item) return <View className="flex-1 bg-background" />;
 
