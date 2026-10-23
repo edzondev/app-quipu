@@ -61,6 +61,11 @@ class AmountCentsTest {
   }
 
   @Test
+  fun leavesAmountEmptyWhenThousandsAreSeparatedByANonBreakingSpace() {
+    assertNull(NotificationExtractor.readAmountCents("S/ 1\u00A0250.00"))
+  }
+
+  @Test
   fun leavesAmountEmptyWhenTheTextHasNone() {
     assertNull(
       NotificationExtractor.readAmountCents(
