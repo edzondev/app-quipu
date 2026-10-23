@@ -18,3 +18,7 @@ overrides:
   "@better-auth/passkey": 1.6.33
   "@better-auth/core": 1.6.33
   "@better-auth/expo": 1.6.33
+  # SDK 58 / React 19.3: one @types/react across web+mobile. Dual 19.2+19.3
+  # breaks ComponentProps<"div"> key (unique symbol vs Key).
+  "@types/react": "19.3.0"
+  "@types/react-dom": "19.3.0"
