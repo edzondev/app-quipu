@@ -37,7 +37,6 @@ se indique otra cosa. `pnpm` resuelve automáticamente el paquete correcto.
 | Metro con cache limpia + QR para Expo Go | `pnpm --filter @quipu/mobile start` |
 | Abrir directamente en Android (requiere emulador/dispositivo) | `pnpm --filter @quipu/mobile android` |
 | Abrir directamente en iOS (requiere simulador) | `pnpm --filter @quipu/mobile ios` |
-| Expo Web (bundle Metro para navegador) | `pnpm --filter @quipu/mobile web` |
 | Regenerar `android/` e `ios/` nativos desde `app.json` | `pnpm --filter @quipu/mobile prebuild` |
 | Typecheck (`tsc --noEmit`) | `pnpm --filter @quipu/mobile typecheck` |
 | Lint (Biome) | `pnpm --filter @quipu/mobile lint` |

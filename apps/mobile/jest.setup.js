@@ -1,6 +1,5 @@
-// Mocks oficiales de Worklets y Reanimated para Jest (módulos nativos).
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
-jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
+require("react-native-reanimated").setUpTests();
 
 // Los tests suelen mockear expo-router entero sin useFocusEffect.
 // Este wrapper se mockea una vez y el hook de atrás nativo sigue funcionando.
