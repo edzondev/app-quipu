@@ -11,6 +11,7 @@ import { useUniwind } from "uniwind";
 import { authClient } from "@/lib/auth-client";
 import { createConvexClient, nextConvexClient, registerConvexReset } from "@/lib/convex";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
+import { updateSpendableWidget } from "@/widgets/SpendableToday";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -55,10 +56,19 @@ export default function RootLayout() {
 }
 
 function SplashHider() {
-	const { isLoading } = useProfileGate();
+	const { isAuthReady, isLoading } = useProfileGate();
 	useEffect(() => {
 		if (!isLoading) SplashScreen.hide();
 	}, [isLoading]);
+	// Home unmounts on sign-out, so it cannot clear the last amount itself.
+	useEffect(() => {
+		if (isLoading || isAuthReady) return;
+		updateSpendableWidget({
+			amountCents: null,
+			currencySymbol: "S/",
+			updatedAt: new Date(),
+		});
+	}, [isAuthReady, isLoading]);
 	return null;
 }
 

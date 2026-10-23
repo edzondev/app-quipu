@@ -19,6 +19,7 @@ import {
 } from "@/shared/lib/navigation/registrar-mode";
 import { runAction } from "@/shared/lib/network/run-action";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
+import { updateSpendableWidget } from "@/widgets/SpendableToday";
 
 type Session = {
 	nonce: number;
@@ -84,6 +85,11 @@ function SheetBody({ session, onDone }: { session: Session; onDone: () => void }
 		setSubmitting(true);
 		try {
 			await runAction(work, fallback);
+			updateSpendableWidget({
+				amountCents: dailyCents,
+				currencySymbol,
+				updatedAt: new Date(),
+			});
 			onDone();
 		} catch (error) {
 			if (error instanceof ExpenseValidationError) {

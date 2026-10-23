@@ -1,14 +1,34 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { HomeClosedCycle } from "@/shared/components/home/home-closed-cycle";
 import { HomeDense } from "@/shared/components/home/home-dense";
 import { HomeEmpty, HomeLoading } from "@/shared/components/home/home-empty";
 import { useRegistrar } from "@/shared/components/navigation/registrar-context";
 import { useHomeModel } from "@/shared/hooks/use-dashboard";
+import { updateSpendableWidget } from "@/widgets/SpendableToday";
 
 export default function HomePage() {
 	const model = useHomeModel();
 	const router = useRouter();
 	const { openCreate } = useRegistrar();
+	const amountCents = model.status === "ready" ? model.home.dailyCents : null;
+	const currencySymbol =
+		model.status === "ready"
+			? model.home.currencySymbol
+			: model.status === "closed"
+				? model.currencySymbol
+				: "S/";
+	const hasSpendable = model.status === "ready";
+	const showPrompt = model.status === "empty" || model.status === "closed";
+
+	useEffect(() => {
+		if (!hasSpendable && !showPrompt) return;
+		updateSpendableWidget({
+			amountCents: hasSpendable ? amountCents : null,
+			currencySymbol,
+			updatedAt: new Date(),
+		});
+	}, [hasSpendable, showPrompt, amountCents, currencySymbol]);
 
 	return (
 		<>
