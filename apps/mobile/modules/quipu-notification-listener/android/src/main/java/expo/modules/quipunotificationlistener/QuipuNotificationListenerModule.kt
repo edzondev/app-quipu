@@ -141,6 +141,7 @@ class QuipuNotificationListenerModule : Module() {
 
   private fun storeOrNull(): NotificationStore? {
     val context = applicationContext() ?: return null
+    noticeContext = context
     return try {
       NotificationStore.shared(context.noBackupFilesDir).also { it.start() }
     } catch (e: Exception) {

@@ -30,6 +30,7 @@ internal class NotificationStore(
   private val file: File,
   private val io: Executor = defaultExecutor(),
   private val onError: (phase: String, error: Exception) -> Unit = { _, _ -> },
+  private val cancelNotices: (ids: List<String>) -> Unit = ::cancelDetectedExpenseNotices,
 ) {
   private val lock = Any()
   private val readyLatch = CountDownLatch(1)
@@ -141,11 +142,10 @@ internal class NotificationStore(
         return
       }
       applyOffer(item)
-    }
-    if (emit != null) {
-      deliver(emit)
-      scheduleSave()
-    }
+    } ?: return
+    if (synchronized(lock) { queue.none { it.id == emit.id } }) return
+    deliver(emit)
+    scheduleSave()
   }
 
   fun pending(): List<PendingNotification> {
@@ -166,14 +166,16 @@ internal class NotificationStore(
   }
 
   fun clear() {
-    val changed = synchronized(lock) {
+    val noticed = synchronized(lock) {
       if (!ready) {
         preload.addLast(Command.Clear)
         return
       }
       applyClear()
-    }
-    if (changed) scheduleSave()
+    } ?: return
+    // Cancel before the save. A crash in between leaves the sources on disk, so the next clear cancels again.
+    cancelNotices(noticed)
+    scheduleSave()
   }
 
   fun diagnostics(): StoreDiagnostics {
@@ -202,6 +204,7 @@ internal class NotificationStore(
   private fun loadAndMerge() {
     val loaded = readSnapshot(file, onError)
     val toEmit = ArrayList<PendingNotification>()
+    val toCancel = ArrayList<String>()
     var dirty = false
     synchronized(lock) {
       sources = loaded.sources.toSet()
@@ -227,11 +230,19 @@ internal class NotificationStore(
             }
           }
           is Command.Consume -> if (applyConsume(command.id)) dirty = true
-          is Command.Clear -> if (applyClear()) dirty = true
+          is Command.Clear -> {
+            val noticed = applyClear()
+            if (noticed != null) {
+              dirty = true
+              toCancel.addAll(noticed)
+            }
+            toEmit.clear()
+          }
         }
       }
       ready = true
     }
+    if (toCancel.isNotEmpty()) cancelNotices(toCancel)
     for (item in toEmit) {
       deliver(item)
     }
@@ -294,11 +305,12 @@ internal class NotificationStore(
     return true
   }
 
-  private fun applyClear(): Boolean {
-    if (queue.isEmpty()) return false
+  private fun applyClear(): List<String>? {
+    if (queue.isEmpty() && sources.isEmpty()) return null
     consumed += queue.size.toLong()
     queue.clear()
-    return true
+    sources = emptySet()
+    return recentOrder.toList()
   }
 
   private fun remember(id: String): Boolean {

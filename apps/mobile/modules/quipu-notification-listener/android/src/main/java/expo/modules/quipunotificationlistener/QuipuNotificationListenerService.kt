@@ -119,7 +119,9 @@ private const val SCHEME = "quipu"
 private const val CHANNEL_ID = "quipu"
 
 @Volatile
-private var noticeContext: Context? = null
+internal var noticeContext: Context? = null
+
+private fun noticeId(itemId: String): Int = itemId.hashCode()
 
 internal fun postDetectedExpenseNotice(item: PendingNotification) {
   val context = noticeContext ?: return
@@ -148,7 +150,7 @@ internal fun postDetectedExpenseNotice(item: PendingNotification) {
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
     val pending = PendingIntent.getActivity(
       context,
-      item.id.hashCode(),
+      noticeId(item.id),
       intent,
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
@@ -160,9 +162,20 @@ internal fun postDetectedExpenseNotice(item: PendingNotification) {
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
     val cents = item.amountCents
     if (cents != null) builder.setContentText(amountText(cents))
-    manager.notify(item.id.hashCode(), builder.build())
+    manager.notify(noticeId(item.id), builder.build())
   } catch (e: Exception) {
     Log.w("QuipuNotificationListener", "notice failed: ${e.javaClass.simpleName}")
+  }
+}
+
+internal fun cancelDetectedExpenseNotices(ids: List<String>) {
+  if (ids.isEmpty()) return
+  val context = noticeContext ?: return
+  try {
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return
+    for (id in ids) manager.cancel(noticeId(id))
+  } catch (e: Exception) {
+    Log.w("QuipuNotificationListener", "notice cancel failed: ${e.javaClass.simpleName}")
   }
 }
 

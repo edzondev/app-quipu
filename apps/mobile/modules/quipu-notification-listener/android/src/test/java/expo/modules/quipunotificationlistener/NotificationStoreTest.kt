@@ -83,6 +83,7 @@ class NotificationStoreTest {
       store.offer(item("com.bank.one", "r$index", index.toLong()))
     }
     store.clear()
+    store.addSource("com.bank.one")
     store.offer(item("com.bank.one", "r0", 0))
     assertEquals(listOf("r0|0"), store.pending().map { it.id })
     val newest = NotificationStore.MAX_RECENT.toLong()
@@ -98,6 +99,7 @@ class NotificationStoreTest {
     store.offer(pending)
     store.clear()
     assertTrue(store.pending().isEmpty())
+    store.addSource("com.bank.one")
     store.offer(pending)
     assertTrue(store.pending().isEmpty())
     assertTrue(store.diagnostics().deduped >= 1L)
@@ -294,17 +296,86 @@ class NotificationStoreTest {
     assertEquals(listOf("k|1"), store.pending().map { it.id })
   }
 
-  private fun startedStore(): Pair<File, NotificationStore> {
-    val (file, store) = newStore()
+  @Test
+  fun clearDropsSourcesRejectsTheNextOfferAndCancelsPostedNotices() {
+    val cancelled = mutableListOf<String>()
+    val (file, store) = startedStore(cancelNotices = { cancelled += it })
+    store.addSource("com.bank.one")
+    val opened = item("com.bank.one", "a", 1)
+    val waiting = item("com.bank.one", "b", 2)
+    store.offer(opened)
+    store.offer(waiting)
+    assertTrue(store.consume(opened.id))
+
+    store.clear()
+    assertTrue(store.sources().isEmpty())
+    assertTrue(store.pending().isEmpty())
+    assertEquals(listOf(opened.id, waiting.id), cancelled)
+
+    store.clear()
+    assertEquals(listOf(opened.id, waiting.id), cancelled)
+
+    store.flush()
+    val reloaded = reload(file)
+    assertTrue(reloaded.sources().isEmpty())
+    assertTrue(reloaded.pending().isEmpty())
+
+    assertTrue(store.addSource("com.bank.one"))
+    val recent = store.diagnostics().recentIdCount
+    val deduped = store.diagnostics().deduped
+    store.offer(waiting)
+    assertTrue(store.pending().isEmpty())
+    assertTrue(store.diagnostics().deduped > deduped)
+    assertEquals(recent, store.diagnostics().recentIdCount)
+  }
+
+  @Test
+  fun clearBufferedBeforeLoadWipesSourcesCancelsAndDeliversNothing() {
+    val (file, first) = startedStore()
+    first.addSource("com.bank.one")
+    val saved = item("com.bank.one", "saved", 1)
+    first.offer(saved)
+    first.flush()
+
+    val cancelled = mutableListOf<String>()
+    val delivered = mutableListOf<String>()
+    val store = NotificationStore(file, cancelNotices = { cancelled += it })
+    store.setListener { delivered += it.id }
+    val before = item("com.bank.one", "before", 2)
+    store.offer(before)
+    store.clear()
+    store.offer(item("com.bank.one", "after", 3))
+    store.start()
+    store.awaitReady()
+    store.flush()
+
+    assertTrue(delivered.isEmpty())
+    assertTrue(store.sources().isEmpty())
+    assertTrue(store.pending().isEmpty())
+    assertEquals(listOf(saved.id, before.id), cancelled)
+    assertTrue(reload(file).sources().isEmpty())
+  }
+
+  private fun startedStore(
+    cancelNotices: (List<String>) -> Unit = {},
+  ): Pair<File, NotificationStore> {
+    val (file, store) = newStore(cancelNotices = cancelNotices)
     store.start()
     store.awaitReady()
     return file to store
   }
 
-  private fun newStore(executor: Executor? = null): Pair<File, NotificationStore> {
+  private fun newStore(
+    executor: Executor? = null,
+    cancelNotices: (List<String>) -> Unit = {},
+  ): Pair<File, NotificationStore> {
     val dir = Files.createTempDirectory("quipu-nl").toFile()
     val file = File(dir, "state.bin")
-    val store = if (executor == null) NotificationStore(file) else NotificationStore(file, executor)
+    val store = if (executor == null) {
+      NotificationStore(file, cancelNotices = cancelNotices)
+    } else {
+      NotificationStore(file, executor, cancelNotices = cancelNotices)
+    }
     return file to store
   }
 
