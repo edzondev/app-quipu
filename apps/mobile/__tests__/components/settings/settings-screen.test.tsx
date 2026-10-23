@@ -1,5 +1,6 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { Platform } from "react-native";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
@@ -296,5 +297,41 @@ describe("SettingsScreen", () => {
 		expect(view.queryByText("¿Eliminar tu cuenta?")).toBeNull();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
+	});
+
+	it("en Android, Detección de gastos abre el flujo", async () => {
+		const os = jest.replaceProperty(Platform, "OS", "android");
+		const onOpenDetection = jest.fn();
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+				onOpenDetection={onOpenDetection}
+			/>,
+		);
+		await act(async () => {
+			fireEvent.press(view.getByRole("button", { name: "Detección de gastos" }));
+		});
+		expect(onOpenDetection).toHaveBeenCalledTimes(1);
+		os.restore();
+		await view.unmount();
+	});
+
+	it("fuera de Android no ofrece detección de gastos", async () => {
+		const os = jest.replaceProperty(Platform, "OS", "ios");
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+				onOpenDetection={jest.fn()}
+			/>,
+		);
+		expect(view.queryByText("Detección de gastos")).toBeNull();
+		os.restore();
+		await view.unmount();
 	});
 });

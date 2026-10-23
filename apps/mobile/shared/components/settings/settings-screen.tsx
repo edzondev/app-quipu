@@ -37,11 +37,12 @@ type Props = {
 	model: SettingsScreenModel | null;
 	onClose: () => void;
 	onOpenSecurity: () => void;
+	onOpenDetection?: () => void;
 };
 
 type Sheet = "signOut" | "deleteAccount" | null;
 
-export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props) {
+export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenDetection }: Props) {
 	const router = useRouter();
 	const [sheet, setSheet] = useState<Sheet>(null);
 	const [closing, setClosing] = useState(false);
@@ -185,6 +186,11 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity }: Props
 							</View>
 						) : null}
 					</>
+				) : null}
+				{Platform.OS === "android" && onOpenDetection ? (
+					<View className="mt-[18px] border-t border-line pt-4">
+						<ListRow label="Detección de gastos" onPress={onOpenDetection} isLast />
+					</View>
 				) : null}
 				<View className="mt-[18px] border-t border-line pt-4">
 					<SectionLabel className="mb-1">LEGAL</SectionLabel>
