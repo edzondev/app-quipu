@@ -8,12 +8,18 @@ internal data class DetectedNotice(
   val merchant: String?,
 )
 
-internal fun mayReadBankNotification(
+internal enum class NoticeGate { Read, Drop, Filter }
+
+internal fun noticeGate(
   packageName: String,
   ownPackage: String,
   ready: Boolean,
   listed: Boolean,
-): Boolean = packageName.isNotEmpty() && packageName != ownPackage && ready && listed
+): NoticeGate {
+  if (!ready || packageName == ownPackage) return NoticeGate.Drop
+  if (packageName.isEmpty() || !listed) return NoticeGate.Filter
+  return NoticeGate.Read
+}
 
 internal fun noticeBankName(packageName: String): String =
   BankCatalog.banks.firstOrNull { it.packageId == packageName }?.name ?: packageName
