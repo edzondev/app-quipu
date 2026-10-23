@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-	Clipboard,
 	PermissionsAndroid,
 	Platform,
 	Pressable,
@@ -15,6 +14,7 @@ import {
 	addSource,
 	getInstalledBanks,
 	getSources,
+	type InstalledBank,
 	isNotificationAccessEnabled,
 	openNotificationAccessSettings,
 	parsePlayStoreLink,
@@ -33,8 +33,6 @@ const CARD_ENTER = FadeInDown.duration(200)
 const ERROR_ENTER = FadeIn.duration(150).easing(EASE);
 const mono = "font-geist-mono text-[10.5px] tracking-[0.14em]";
 
-type Bank = { packageId: string; name: string };
-
 function mark(name: string) {
 	const word = name.trim().split(/\s+/)[0] ?? "";
 	const head = word.toLocaleLowerCase("es-PE").includes("bank") ? `${word[0]}B` : word.slice(0, 2);
@@ -42,32 +40,23 @@ function mark(name: string) {
 }
 
 export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
-	const [catalog, setCatalog] = useState<Bank[]>([]);
-	const [banks, setBanks] = useState<Bank[]>([]);
+	const catalog = useRef<InstalledBank[]>([]);
+	const [banks, setBanks] = useState<InstalledBank[]>([]);
 	const [text, setText] = useState("");
 	const [rejected, setRejected] = useState(false);
-	const alive = useRef(true);
 	const textRef = useRef("");
 	const buzz = useRef<"ok" | "bad" | null>(null);
-	const trimmed = text.trim();
-	const parsed = trimmed === "" ? null : parsePlayStoreLink(text);
-	const packageId = parsed && "packageId" in parsed ? parsed.packageId : "";
+	const parsed = parsePlayStoreLink(text);
+	const packageId = "packageId" in parsed ? parsed.packageId : "";
 	const shown = banks.find((bank) => bank.packageId === packageId);
-	const invalid =
-		trimmed !== "" && !shown && (rejected || !catalog.some((bank) => bank.packageId === packageId));
-	const border = shown ? "border-primary" : invalid ? "border-danger" : "border-line";
+	const border = shown ? "border-primary" : rejected ? "border-danger" : "border-line";
 	const canContinue = banks.length > 0;
 
 	useEffect(() => {
-		alive.current = true;
 		void Promise.all([getInstalledBanks(), getSources()]).then(([rows, ids]) => {
-			if (!alive.current) return;
-			setCatalog(rows);
+			catalog.current = rows;
 			setBanks(ids.flatMap((id) => rows.filter((item) => item.packageId === id)));
 		});
-		return () => {
-			alive.current = false;
-		};
 	}, []);
 
 	function buzzOnce(kind: "ok" | "bad") {
@@ -82,7 +71,7 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 		const link = next.trim() === "" ? null : parsePlayStoreLink(next);
 		const bank =
 			link && "packageId" in link
-				? catalog.find((item) => item.packageId === link.packageId)
+				? catalog.current.find((item) => item.packageId === link.packageId)
 				: undefined;
 		if (!bank) {
 			setRejected(link !== null);
@@ -94,7 +83,6 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 		if (banks.some((item) => item.packageId === bank.packageId)) return;
 		if (buzz.current === "bad") buzz.current = null;
 		void addSource(next).then((result) => {
-			if (!alive.current) return;
 			if (result !== "added" && result !== "already_added") {
 				if (textRef.current !== next) return;
 				setRejected(true);
@@ -139,32 +127,24 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 					Conecta tu banco
 				</Text>
 				<Text className="mt-2 font-hanken text-[14.5px] leading-6 text-foreground/55">
-					Abre tu banco en Play Store, toca Compartir y copia el link. Pégalo aquí.
+					En Play Store, abre tu banco, toca Compartir y copia el link.
 				</Text>
-				<SectionLabel className="mt-[30px] mb-3">Link de tu banco</SectionLabel>
-				<View className={`flex-row items-center gap-3 border-b-2 pb-2.5 ${border}`}>
+				<SectionLabel className="mt-[30px] mb-3">LINK DE TU BANCO</SectionLabel>
+				<View className={`border-b-2 ${border}`}>
 					<TextInput
 						value={text}
 						onChangeText={onLinkChange}
 						accessibilityLabel="Link de tu banco"
+						autoFocus
 						autoCapitalize="none"
 						autoCorrect={false}
 						keyboardType="url"
-						placeholder="Pega aquí el link"
+						placeholder="Mantén presionado y pega el link"
 						placeholderTextColorClassName="accent-foreground/45"
-						className="min-w-0 flex-1 py-2.5 font-hanken text-[15px] text-foreground"
+						className="h-11 w-full font-hanken text-[15px] text-foreground"
 					/>
-					<Pressable
-						accessibilityRole="button"
-						accessibilityLabel="Pegar"
-						hitSlop={HIT_SLOP}
-						onPress={() => void Clipboard.getString().then(onLinkChange)}
-						className="min-h-11 min-w-[76px] items-center justify-center rounded-full border border-line px-[18px] active:opacity-60"
-					>
-						<Text className="font-hanken-semibold text-[14px] text-foreground">Pegar</Text>
-					</Pressable>
 				</View>
-				{invalid ? (
+				{rejected ? (
 					<Animated.View entering={ERROR_ENTER}>
 						<ErrorText message={NOT_A_BANK_LINK} />
 					</Animated.View>
@@ -198,7 +178,6 @@ export function ExpenseDetectionScreen({ onClose }: { onClose: () => void }) {
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Siguiente"
-				accessibilityState={{ disabled: !canContinue }}
 				disabled={!canContinue}
 				onPress={() => {
 					void onContinue();
