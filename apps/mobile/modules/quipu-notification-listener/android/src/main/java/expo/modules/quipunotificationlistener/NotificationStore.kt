@@ -173,7 +173,6 @@ internal class NotificationStore(
       }
       applyClear()
     } ?: return
-    // Cancel before the save. A crash in between leaves the sources on disk, so the next clear cancels again.
     cancelNotices(noticed)
     scheduleSave()
   }
