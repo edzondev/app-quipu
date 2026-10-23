@@ -69,6 +69,8 @@
 			"<rootDir>/jest.setup.js"
 		],
 		"moduleNameMapper": {
+			"^\\./initializers$": "<rootDir>/node_modules/react-native-reanimated/lib/module/initializers.js",
+			"^\\.\\./css/component/AnimatedComponent$": "<rootDir>/node_modules/react-native-reanimated/src/css/component/AnimatedComponent.tsx",
 			"^react-native-keyboard-controller$": "react-native-keyboard-controller/jest",
 			"^reicon-react-native/icons/(.*)$": "<rootDir>/__mocks__/reicon-icon.js",
 			"^@/(.*)$": "<rootDir>/$1"
