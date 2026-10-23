@@ -6,7 +6,6 @@ const mockBack = jest.fn();
 const mockReplace = jest.fn();
 const mockCanGoBack = jest.fn(() => true);
 const mockRegister = jest.fn(async (_input: unknown, _key?: string) => ({ expenseId: "exp_1" }));
-const mockDismiss = jest.fn();
 
 const AT = Date.parse("2026-10-24T00:12:00.000Z");
 const params: { current: Record<string, string> } = { current: {} };
@@ -18,10 +17,6 @@ jest.mock("expo-router", () => ({
 		canGoBack: () => mockCanGoBack(),
 	}),
 	useLocalSearchParams: () => params.current,
-}));
-
-jest.mock("@/modules/quipu-notification-listener", () => ({
-	dismissNotice: (id: string) => mockDismiss(id),
 }));
 
 jest.mock("@/shared/hooks/use-expense-actions", () => ({
@@ -61,10 +56,19 @@ describe("gasto detectado", () => {
 		expect(view.getByLabelText("Monto").props.children).toBe("45.90");
 		expect(view.getByLabelText("Comercio").props.value).toBe("Tambo+");
 		expect(view.getByText("Interbank · 19:12")).toBeTruthy();
-		await view.unmount();
+	});
+
+	it("sin monto abre el teclado en cero", async () => {
 		params.current = { id: "n|2", bank: "Interbank", at: String(AT) };
-		const empty = await render(<DetectedExpenseScreen />);
-		expect(empty.getByLabelText("Monto").props.children).toBe("0.00");
+		const view = await render(<DetectedExpenseScreen />);
+		expect(view.getByLabelText("Monto").props.children).toBe("0.00");
+	});
+
+	it("sin id avisa que no encontramos el gasto", async () => {
+		params.current = {};
+		const view = await render(<DetectedExpenseScreen />);
+		expect(view.getByText("No encontramos este gasto.")).toBeTruthy();
+		expect(mockRegister).not.toHaveBeenCalled();
 	});
 
 	it("guardar usa el id del aviso como clave", async () => {
@@ -77,16 +81,20 @@ describe("gasto detectado", () => {
 				"n|1",
 			);
 		});
-		expect(mockDismiss).toHaveBeenCalledWith("n|1");
 		expect(mockBack).toHaveBeenCalled();
 	});
 
-	it("cerrar no guarda y borra el aviso", async () => {
+	it("cancelar no guarda", async () => {
 		const view = await render(<DetectedExpenseScreen />);
 		await fireEvent.press(view.getByLabelText("Cancelar"));
+		expect(mockRegister).not.toHaveBeenCalled();
+		expect(mockBack).toHaveBeenCalled();
+	});
+
+	it("atrás del sistema no guarda", async () => {
+		await render(<DetectedExpenseScreen />);
 		pressHardwareBack();
 		expect(mockRegister).not.toHaveBeenCalled();
-		expect(mockDismiss).toHaveBeenCalledWith("n|1");
 		expect(mockBack).toHaveBeenCalled();
 	});
 });

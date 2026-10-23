@@ -36,7 +36,6 @@ type NativeNotificationListener = {
 	getSources(): Promise<string[]>;
 	getInstalledBanks(): Promise<InstalledBank[]>;
 	parsePlayStoreLink(text: string): PlayStoreLinkResult;
-	dismissNotice(id: string): void;
 	getDiagnostics(): Promise<NotificationDiagnostics | null>;
 };
 
@@ -73,11 +72,6 @@ export async function getInstalledBanks(): Promise<InstalledBank[]> {
 export function parsePlayStoreLink(text: string): PlayStoreLinkResult {
 	if (!native) return { error: "unavailable" };
 	return native.parsePlayStoreLink(text);
-}
-
-export function dismissNotice(id: string): void {
-	if (!native || id.length === 0) return;
-	native.dismissNotice(id);
 }
 
 export async function getDiagnostics(): Promise<NotificationDiagnostics | null> {

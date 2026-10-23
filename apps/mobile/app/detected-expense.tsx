@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
-import { dismissNotice } from "@/modules/quipu-notification-listener";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useHardwareBack } from "@/shared/hooks/use-hardware-back";
@@ -39,7 +38,6 @@ export default function DetectedExpenseScreen() {
 	const [isSubmitting, setSubmitting] = useState(false);
 
 	function close() {
-		if (id.length > 0) dismissNotice(id);
 		if (router.canGoBack()) router.back();
 		else router.replace("/(tabs)");
 	}

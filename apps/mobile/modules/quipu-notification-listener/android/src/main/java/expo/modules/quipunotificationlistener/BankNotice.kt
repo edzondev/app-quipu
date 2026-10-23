@@ -12,8 +12,8 @@ internal fun mayReadBankNotification(
   packageName: String,
   ownPackage: String,
   ready: Boolean,
-  sources: Set<String>,
-): Boolean = packageName.isNotEmpty() && packageName != ownPackage && ready && packageName in sources
+  listed: Boolean,
+): Boolean = packageName.isNotEmpty() && packageName != ownPackage && ready && listed
 
 internal fun noticeBankName(packageName: String): String =
   BankCatalog.banks.firstOrNull { it.packageId == packageName }?.name ?: packageName
@@ -25,15 +25,4 @@ internal fun expenseNoticeBody(amountCents: Int?, merchant: String?): String {
   val amount = "S/ ${amountCents / 100}.${(amountCents % 100).toString().padStart(2, '0')}"
   val name = merchant?.trim().orEmpty()
   return if (name.isEmpty()) amount else "$amount en $name"
-}
-
-internal object DetectedNotices {
-  const val EXTRA_ID = "id"
-  private val items = LinkedHashMap<String, DetectedNotice>()
-
-  fun put(notice: DetectedNotice) {
-    synchronized(items) { items[notice.id] = notice }
-  }
-
-  fun dismiss(id: String): Boolean = synchronized(items) { items.remove(id) != null }
 }

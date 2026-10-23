@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -49,16 +48,15 @@ class QuipuNotificationListenerService : NotificationListenerService() {
       val packageName = sbn.packageName ?: return
       val store = currentStore()
       val ready = store.isReady()
-      val sources = store.sources().toSet()
-      if (!mayReadBankNotification(packageName, this.packageName, ready, sources)) {
-        if (ready && packageName != this.packageName && packageName !in sources) store.noteFiltered()
+      val own = packageName == this.packageName
+      val listed = packageName in store.sources()
+      if (!mayReadBankNotification(packageName, this.packageName, ready, listed)) {
+        if (ready && !own && !listed) store.noteFiltered()
         return
       }
       val notice = NotificationExtractor.detectedNotice(readRaw(sbn)) ?: return
       if (!store.claim(notice.id)) return
-      val bank = noticeBankName(notice.packageName)
-      DetectedNotices.put(notice)
-      if (!postNotice(this, notice, bank)) DetectedNotices.dismiss(notice.id)
+      postNotice(this, notice, noticeBankName(notice.packageName))
     } catch (e: Exception) {
       logFailure("onNotificationPosted", e)
     }
@@ -114,20 +112,20 @@ private fun Bundle.charSequence(key: String): CharSequence? = getCharSequence(ke
 private const val SCHEME = "quipu"
 private const val CHANNEL_ID = "quipu"
 
-private fun postNotice(context: Context, notice: DetectedNotice, bank: String): Boolean {
+private fun postNotice(context: Context, notice: DetectedNotice, bank: String) {
   try {
     if (Build.VERSION.SDK_INT >= 33 &&
       context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
       PackageManager.PERMISSION_GRANTED
-    ) return false
-    val manager = context.getSystemService(NotificationManager::class.java) ?: return false
+    ) return
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       manager.createNotificationChannel(
         NotificationChannel(CHANNEL_ID, "Quipu", NotificationManager.IMPORTANCE_DEFAULT),
       )
     }
     val icon = context.applicationInfo.icon
-    if (icon == 0) return false
+    if (icon == 0) return
     val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     val open = Intent(Intent.ACTION_VIEW, noticeUri(notice, bank))
       .setPackage(context.packageName)
@@ -143,14 +141,9 @@ private fun postNotice(context: Context, notice: DetectedNotice, bank: String): 
       .setContentText(expenseNoticeBody(notice.amountCents, notice.merchant))
       .setAutoCancel(true)
       .setContentIntent(PendingIntent.getActivity(context, notice.id.hashCode(), open, flags))
-      .setDeleteIntent(PendingIntent.getBroadcast(context, notice.id.hashCode() xor 0x5f3759df,
-        Intent(context, NoticeDismissedReceiver::class.java).putExtra(DetectedNotices.EXTRA_ID, notice.id),
-        flags))
       .build())
-    return true
   } catch (e: Exception) {
     Log.w("QuipuNotificationListener", "notice failed: ${e.javaClass.simpleName}")
-    return false
   }
 }
 
@@ -163,12 +156,4 @@ private fun noticeUri(notice: DetectedNotice, bank: String): Uri {
   val merchant = notice.merchant?.trim().orEmpty()
   if (merchant.isNotEmpty()) uri.appendQueryParameter("merchant", merchant)
   return uri.build()
-}
-
-/** Swiping the notice away drops the in-memory entry and saves nothing. */
-class NoticeDismissedReceiver : BroadcastReceiver() {
-  override fun onReceive(context: Context, intent: Intent) {
-    val id = intent.getStringExtra(DetectedNotices.EXTRA_ID) ?: return
-    DetectedNotices.dismiss(id)
-  }
 }

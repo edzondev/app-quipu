@@ -28,8 +28,5 @@
         <action android:name="android.service.notification.NotificationListenerService" />
       </intent-filter>
     </service>
-    <receiver
-      android:name="expo.modules.quipunotificationlistener.NoticeDismissedReceiver"
-      android:exported="false" />
   </application>
 </manifest>

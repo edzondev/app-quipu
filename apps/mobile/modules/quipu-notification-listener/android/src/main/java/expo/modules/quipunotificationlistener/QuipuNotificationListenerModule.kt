@@ -80,11 +80,6 @@ class QuipuNotificationListenerModule : Module() {
       store.sources()
     }
 
-    Function("dismissNotice") { id: String ->
-      DetectedNotices.dismiss(id)
-      null
-    }
-
     AsyncFunction("getDiagnostics") {
       val context = applicationContext() ?: return@AsyncFunction null
       if (!isDebuggable(context)) return@AsyncFunction null
