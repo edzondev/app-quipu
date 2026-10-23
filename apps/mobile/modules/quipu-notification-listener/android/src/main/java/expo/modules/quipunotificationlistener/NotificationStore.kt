@@ -132,6 +132,19 @@ internal class NotificationStore(
     }
   }
 
+  /** Drops chosen banks and hands posted notice ids to [cancel]. Dedup ids stay. */
+  fun clear(cancel: (List<String>) -> Unit = {}) {
+    val (ids, changed) = synchronized(lock) {
+      if (!ready) return
+      val changed = sources.isNotEmpty()
+      val ids = recentOrder.toList()
+      sources = emptySet()
+      ids to changed
+    }
+    cancel(ids)
+    if (changed) scheduleSave()
+  }
+
   /** Waits until previously scheduled disk writes have finished. */
   fun flush() {
     val done = CountDownLatch(1)

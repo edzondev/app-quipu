@@ -4,6 +4,7 @@ type NativeModule = {
 	addSource: jest.Mock;
 	removeSource: jest.Mock;
 	getSources: jest.Mock;
+	clear: jest.Mock;
 	getInstalledBanks: jest.Mock;
 	parsePlayStoreLink: jest.Mock;
 	getDiagnostics: jest.Mock;
@@ -22,6 +23,7 @@ function nativeDouble() {
 		addSource: jest.fn(async () => "added"),
 		removeSource: jest.fn(async () => true),
 		getSources: jest.fn(async () => ["com.bank.one"]),
+		clear: jest.fn(async () => undefined),
 		getInstalledBanks: jest.fn(async () => [
 			{ name: "Banca Móvil BCP", packageId: "com.bcp.bank.bcp", installed: true },
 		]),
@@ -71,10 +73,12 @@ describe("quipu notification listener wrapper", () => {
 		});
 		await expect(api.removeSource("com.bank.one")).resolves.toBe(true);
 		await expect(api.getSources()).resolves.toEqual(["com.bank.one"]);
+		await expect(api.clear()).resolves.toBeUndefined();
 		await expect(api.getDiagnostics()).resolves.toMatchObject({ sourceCount: 1 });
 
 		expect(native.native.openNotificationAccessSettings).toHaveBeenCalledTimes(1);
 		expect(native.native.addSource).toHaveBeenCalledWith("com.bank.one");
+		expect(native.native.clear).toHaveBeenCalledTimes(1);
 	});
 
 	it("devuelve valores seguros cuando el módulo nativo no está", async () => {
@@ -88,6 +92,7 @@ describe("quipu notification listener wrapper", () => {
 		expect(api.parsePlayStoreLink("com.bcp.bank.bcp")).toEqual({ error: "unavailable" });
 		await expect(api.removeSource("com.bank.one")).resolves.toBe(false);
 		await expect(api.getSources()).resolves.toEqual([]);
+		await expect(api.clear()).resolves.toBeUndefined();
 		await expect(api.getDiagnostics()).resolves.toBeNull();
 	});
 });

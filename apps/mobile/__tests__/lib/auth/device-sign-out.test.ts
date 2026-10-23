@@ -25,6 +25,13 @@ jest.mock("@/lib/convex", () => ({
 	resetConvexClient: () => mockReset(),
 }));
 
+const mockClearBanks = jest.fn(async () => undefined);
+
+jest.mock("@/modules/quipu-notification-listener", () => ({
+	clear: () => mockClearBanks(),
+}));
+
+import { clearDeviceAfterAccountDeleted } from "@/lib/clear-device-after-delete";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { SERVER_SIGN_OUT_WAIT_MS } from "@/shared/lib/auth/device-session";
 
@@ -42,6 +49,7 @@ describe("signOutAndClearLocalData", () => {
 		expect(mockDelete).toHaveBeenCalledWith("quipu_cookie");
 		expect(mockDelete).toHaveBeenCalledWith("quipu_session_data");
 		expect(mockReset).toHaveBeenCalledTimes(1);
+		expect(mockClearBanks).toHaveBeenCalledTimes(1);
 		const signOutOrder = mockSignOut.mock.invocationCallOrder[0] ?? 0;
 		const deleteOrder = mockDelete.mock.invocationCallOrder[0] ?? 0;
 		const resetOrder = mockReset.mock.invocationCallOrder[0] ?? 0;
@@ -62,8 +70,21 @@ describe("signOutAndClearLocalData", () => {
 			expect(mockDelete).toHaveBeenCalledWith("quipu_cookie");
 			expect(mockDelete).toHaveBeenCalledWith("quipu_session_data");
 			expect(mockReset).toHaveBeenCalledTimes(1);
+			expect(mockClearBanks).toHaveBeenCalledTimes(1);
 		} finally {
 			jest.useRealTimers();
 		}
+	});
+
+	it("al borrar la cuenta también borra los bancos y cancela los avisos", async () => {
+		await clearDeviceAfterAccountDeleted();
+		expect(mockClearBanks).toHaveBeenCalledTimes(1);
+		expect(mockReset).toHaveBeenCalledTimes(1);
+	});
+
+	it("si borrar los bancos falla, igual reinicia Convex", async () => {
+		mockClearBanks.mockRejectedValueOnce(new Error("native"));
+		await expect(signOutAndClearLocalData()).resolves.toEqual({ serverNotified: true });
+		expect(mockReset).toHaveBeenCalledTimes(1);
 	});
 });

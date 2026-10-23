@@ -133,6 +133,33 @@ class NotificationStoreTest {
   }
 
   @Test
+  fun clearDropsChosenBanksAndCancelsPostedNotices() {
+    val cancelled = mutableListOf<String>()
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|1"))
+    store.clear { cancelled.addAll(it) }
+    store.flush()
+
+    assertEquals(listOf("k|1"), cancelled)
+    assertTrue(store.sources().isEmpty())
+    assertTrue(reload(file).sources().isEmpty())
+    assertFalse(reload(file).claim("k|1"))
+  }
+
+  @Test
+  fun clearOnAnEmptyStoreStaysEmpty() {
+    val cancelled = mutableListOf<String>()
+    val (file, store) = startedStore()
+    store.clear { cancelled.addAll(it) }
+    store.flush()
+
+    assertTrue(cancelled.isEmpty())
+    assertTrue(store.sources().isEmpty())
+    assertFalse(file.exists())
+  }
+
+  @Test
   fun diskWriteRunsOnTheExecutorNotTheCaller() {
     val executor = QueueExecutor()
     val (file, store) = newStore(executor)

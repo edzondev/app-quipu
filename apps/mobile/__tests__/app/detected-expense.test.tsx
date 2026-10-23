@@ -9,6 +9,7 @@ const mockRegister = jest.fn(async (_input: unknown, _key?: string) => ({ expens
 
 const AT = Date.parse("2026-10-24T00:12:00.000Z");
 const params: { current: Record<string, string> } = { current: {} };
+const sessionGate = { isAuthReady: true, isLoading: false, profile: null };
 
 jest.mock("expo-router", () => ({
 	useRouter: () => ({
@@ -17,6 +18,14 @@ jest.mock("expo-router", () => ({
 		canGoBack: () => mockCanGoBack(),
 	}),
 	useLocalSearchParams: () => params.current,
+	Redirect: ({ href }: { href: string }) => {
+		const { Text } = require("react-native");
+		return <Text>{`redirect:${href}`}</Text>;
+	},
+}));
+
+jest.mock("@/shared/hooks/use-profile-gate", () => ({
+	useProfileGate: () => sessionGate,
 }));
 
 jest.mock("@/shared/hooks/use-expense-actions", () => ({
@@ -36,6 +45,8 @@ describe("gasto detectado", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockCanGoBack.mockReturnValue(true);
+		sessionGate.isAuthReady = true;
+		sessionGate.isLoading = false;
 		params.current = {
 			id: "n|1",
 			cents: "4590",
@@ -49,6 +60,13 @@ describe("gasto detectado", () => {
 	afterEach(() => {
 		cleanup();
 		jest.restoreAllMocks();
+	});
+
+	it("sin sesión manda a entrar y no abre la hoja", async () => {
+		sessionGate.isAuthReady = false;
+		const view = await render(<DetectedExpenseScreen />);
+		expect(view.getByText("redirect:/(auth)/sign-in")).toBeTruthy();
+		expect(view.queryByLabelText("Monto")).toBeNull();
 	});
 
 	it("el toque precarga monto, comercio, banco y hora", async () => {

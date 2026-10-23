@@ -80,6 +80,16 @@ class QuipuNotificationListenerModule : Module() {
       store.sources()
     }
 
+    AsyncFunction("clear") {
+      val store = bind() ?: return@AsyncFunction Unit
+      val context = applicationContext()
+      store.awaitReady()
+      store.clear { ids ->
+        if (context != null) cancelPostedNotices(context, ids)
+      }
+      store.flush()
+    }
+
     AsyncFunction("getDiagnostics") {
       val context = applicationContext() ?: return@AsyncFunction null
       if (!isDebuggable(context)) return@AsyncFunction null
