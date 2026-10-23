@@ -25,12 +25,7 @@ describe("MovementsList search toggle icon", () => {
 
 	it("pasa de lupa a X al abrir el buscador", async () => {
 		const view = await render(
-			<MovementsList
-				status="ready"
-				data={empty}
-				onOpenExpense={jest.fn()}
-				onCreate={jest.fn()}
-			/>,
+			<MovementsList status="ready" data={empty} onOpenExpense={jest.fn()} onCreate={jest.fn()} />,
 		);
 
 		expect(view.getByText("icon:search:20")).toBeTruthy();

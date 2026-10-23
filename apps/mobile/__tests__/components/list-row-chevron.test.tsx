@@ -11,9 +11,7 @@ jest.mock("@/shared/components/ui/reicon", () => {
 
 describe("ListRow trailing icons", () => {
 	it("usa chevron compacto, no el tamaño por defecto de 24", async () => {
-		const view = await render(
-			<ListRow label="Seguridad y Passkeys" onPress={() => undefined} />,
-		);
+		const view = await render(<ListRow label="Seguridad y Passkeys" onPress={() => undefined} />);
 		expect(view.getByText("chevron:14")).toBeTruthy();
 	});
 
