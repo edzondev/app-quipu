@@ -43,7 +43,7 @@ const spendableToday = createWidget("SpendableToday", SpendableTodayWidget, PROM
 
 export function updateSpendableWidget(amount: string | null) {
 	if (Platform.OS !== "android") return;
-	if (amount == null) {
+	if (amount === null) {
 		spendableToday.updateSnapshot(PROMPT);
 		return;
 	}
