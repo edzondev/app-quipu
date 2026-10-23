@@ -49,10 +49,12 @@ export default function PrivacidadPage() {
 					</li>
 					<li>
 						<strong className="font-semibold text-ink">De notificaciones bancarias:</strong> en la
-						app de Android, Quipu lee las notificaciones de los bancos que elegiste (texto como el
-						monto y el nombre del banco). Se procesan solo en tu teléfono. Solo de esos bancos, y
-						solo si das acceso a las notificaciones. A nuestros servidores solo se envían los gastos
-						que confirmas; el resto nunca se envía.
+						app de Android, y solo si das acceso a las notificaciones, Quipu lee el texto de las
+						notificaciones de los bancos que elegiste (por ejemplo, el monto y el comercio). Ese
+						texto se procesa y se guarda solo en tu teléfono hasta que guardes o descartes el gasto.
+						A nuestros servidores solo llegan los gastos que confirmas: el monto, la descripción, el
+						sobre y un identificador de la notificación para evitar duplicados. El resto nunca se
+						envía.
 					</li>
 				</ul>
 			</section>
