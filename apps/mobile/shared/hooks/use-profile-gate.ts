@@ -5,7 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { clearPendingNotifications } from "@/modules/quipu-notification-listener";
 
 export function useProfileGate() {
-	const { isPending: isSessionPending } = authClient.useSession();
+	const { data: session, isPending: isSessionPending } = authClient.useSession();
 	const { isAuthenticated, isLoading: isConvexAuthPending } = useConvexAuth();
 
 	// Convex recién tiene el token cuando la conexión quedó autenticada
@@ -21,9 +21,9 @@ export function useProfileGate() {
 	});
 
 	useEffect(() => {
-		if (isLoading || isAuthReady) return;
+		if (isLoading || isSessionPending || isAuthReady || session) return;
 		clearSignedOutListener();
-	}, [isLoading, isAuthReady]);
+	}, [isLoading, isSessionPending, isAuthReady, session]);
 
 	return { isAuthReady, isLoading, profile };
 }

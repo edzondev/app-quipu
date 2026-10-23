@@ -1,5 +1,8 @@
 const mockClearPending = jest.fn(async () => undefined);
-const mockSession = { isPending: true };
+const mockSession: { isPending: boolean; data: { user: { id: string } } | null } = {
+	isPending: true,
+	data: null,
+};
 const mockConvex = { isAuthenticated: false, isLoading: false };
 const mockProfile: { value: { onboardingComplete: boolean } | undefined } = {
 	value: undefined,
@@ -27,6 +30,7 @@ describe("useProfileGate", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockSession.isPending = true;
+		mockSession.data = null;
 		mockConvex.isAuthenticated = false;
 		mockConvex.isLoading = false;
 		mockProfile.value = undefined;
@@ -52,5 +56,14 @@ describe("useProfileGate", () => {
 
 		await view.rerender(undefined);
 		expect(mockClearPending).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not clear the listener when a cached session remains and Convex is signed out", async () => {
+		mockSession.isPending = false;
+		mockSession.data = { user: { id: "user" } };
+		mockConvex.isAuthenticated = false;
+		mockConvex.isLoading = false;
+		await renderHook(() => useProfileGate());
+		expect(mockClearPending).not.toHaveBeenCalled();
 	});
 });

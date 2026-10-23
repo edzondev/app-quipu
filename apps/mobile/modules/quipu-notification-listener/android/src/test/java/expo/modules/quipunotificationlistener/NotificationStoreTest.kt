@@ -330,6 +330,23 @@ class NotificationStoreTest {
   }
 
   @Test
+  fun clearWithEmptyQueueDropsChosenBanksAndCancelsPostedNotices() {
+    val cancelled = mutableListOf<String>()
+    val (_, store) = startedStore(cancelNotices = { cancelled += it })
+    store.addSource("com.bank.one")
+    val posted = item("com.bank.one", "k", 1)
+    store.offer(posted)
+    assertTrue(store.consume(posted.id))
+    assertTrue(store.pending().isEmpty())
+
+    store.clear()
+
+    assertTrue(store.sources().isEmpty())
+    assertTrue(store.pending().isEmpty())
+    assertEquals(listOf(posted.id), cancelled)
+  }
+
+  @Test
   fun clearBufferedBeforeLoadWipesSourcesCancelsAndDeliversNothing() {
     val (file, first) = startedStore()
     first.addSource("com.bank.one")
