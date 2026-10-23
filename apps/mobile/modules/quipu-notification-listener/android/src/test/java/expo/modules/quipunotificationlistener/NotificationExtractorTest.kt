@@ -8,12 +8,10 @@ import org.junit.Test
 
 class NotificationExtractorTest {
   @Test
-  fun registeredSetMatchesOnlyListedPackages() {
-    val sources = setOf("com.bank.one", "com.bank.two")
-    assertTrue(NotificationExtractor.isRegistered("com.bank.one", sources))
-    assertTrue(NotificationExtractor.isRegistered("com.bank.two", sources))
-    assertFalse(NotificationExtractor.isRegistered("com.bank.three", sources))
-    assertFalse(NotificationExtractor.isRegistered("com.bank", sources))
+  fun longKeyStaysWithinIdempotencyLimit() {
+    val pending = extract(key = "k".repeat(400), postTime = Long.MIN_VALUE)
+    assertEquals(128, pending.id.length)
+    assertEquals("k".repeat(107) + "|" + Long.MIN_VALUE, pending.id)
   }
 
   @Test

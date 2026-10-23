@@ -26,6 +26,7 @@ function toDraft({ amountCents, ...rest }: SheetValues): ExpenseDraftInput {
 type Props = {
 	currencySymbol: string;
 	dailyCents: number | null;
+	initial?: SheetValues;
 	fieldError?: { field: ExpenseField; message: string } | null;
 	formError?: string | null;
 	isSubmitting?: boolean;
@@ -36,6 +37,7 @@ type Props = {
 export function ExpenseSheetForm({
 	currencySymbol,
 	dailyCents,
+	initial,
 	fieldError,
 	formError,
 	isSubmitting = false,
@@ -43,7 +45,7 @@ export function ExpenseSheetForm({
 	onCancel,
 }: Props) {
 	const form = useForm({
-		defaultValues: DEFAULT_VALUES,
+		defaultValues: initial ?? DEFAULT_VALUES,
 		onSubmit: ({ value }) => onSubmit(toDraft(value)),
 	});
 	const amountCents = useSelector(form.store, (state) => state.values.amountCents);

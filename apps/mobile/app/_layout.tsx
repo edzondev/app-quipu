@@ -11,6 +11,7 @@ import { useUniwind } from "uniwind";
 import { authClient } from "@/lib/auth-client";
 import { createConvexClient, nextConvexClient, registerConvexReset } from "@/lib/convex";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
+import { updateSpendableWidget } from "@/widgets/SpendableToday";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -55,10 +56,15 @@ export default function RootLayout() {
 }
 
 function SplashHider() {
-	const { isLoading } = useProfileGate();
+	const { isAuthReady, isLoading } = useProfileGate();
 	useEffect(() => {
 		if (!isLoading) SplashScreen.hide();
 	}, [isLoading]);
+	// Home unmounts on sign-out, so it cannot clear the last amount itself.
+	useEffect(() => {
+		if (isLoading || isAuthReady) return;
+		updateSpendableWidget(null);
+	}, [isAuthReady, isLoading]);
 	return null;
 }
 
@@ -69,8 +75,10 @@ function RootLayoutNav() {
 			<Stack.Screen name="(auth)" options={{ headerShown: false }} />
 			<Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
 			<Stack.Screen name="expense/[id]" options={{ headerShown: false }} />
+			<Stack.Screen name="detected-expense" options={{ headerShown: false }} />
 			<Stack.Screen name="ajustes" options={{ presentation: "modal", headerShown: false }} />
 			<Stack.Screen name="seguridad" options={{ headerShown: false }} />
+			<Stack.Screen name="expense-detection" options={{ headerShown: false }} />
 		</Stack>
 	);
 }

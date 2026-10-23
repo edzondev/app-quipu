@@ -1,7 +1,15 @@
 package expo.modules.quipunotificationlistener
 
 import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -11,11 +19,8 @@ import android.util.Log
  * System entry point. This is not the Expo module: it does not touch JS, and it does
  * not keep an Activity, a React context, or the [StatusBarNotification].
  *
- * [onNotificationPosted] runs on the main thread. The first thing it does with the
- * notification is compare [StatusBarNotification.getPackageName] to the registered set.
- * Anything else — extras, text, dedupe — happens only after that check. While the
- * on-disk set is still loading, the event is copied into a memory buffer instead of
- * being dropped, then filtered when the load finishes.
+ * [onNotificationPosted] compares the posting package with Quipu and the chosen banks
+ * before it reads extras. While the on-disk set is still loading, the event is dropped.
  */
 class QuipuNotificationListenerService : NotificationListenerService() {
   override fun onCreate() {
@@ -42,12 +47,16 @@ class QuipuNotificationListenerService : NotificationListenerService() {
     try {
       val packageName = sbn.packageName ?: return
       val store = currentStore()
-      if (store.isReady() && !store.isSource(packageName)) {
-        store.noteFiltered()
+      val ready = store.isReady()
+      val own = packageName == this.packageName
+      val listed = packageName in store.sources()
+      if (!mayReadBankNotification(packageName, this.packageName, ready, listed)) {
+        if (ready && !own && !listed) store.noteFiltered()
         return
       }
-      val pending = NotificationExtractor.extract(readRaw(sbn)) ?: return
-      store.offer(pending)
+      val notice = NotificationExtractor.detectedNotice(readRaw(sbn)) ?: return
+      if (!store.claim(notice.id)) return
+      postNotice(this, notice, noticeBankName(notice.packageName))
     } catch (e: Exception) {
       logFailure("onNotificationPosted", e)
     }
@@ -98,6 +107,53 @@ class QuipuNotificationListenerService : NotificationListenerService() {
   }
 }
 
-private fun Bundle.charSequence(key: String): CharSequence? {
-  return getCharSequence(key)
+private fun Bundle.charSequence(key: String): CharSequence? = getCharSequence(key)
+
+private const val SCHEME = "quipu"
+private const val CHANNEL_ID = "quipu"
+
+private fun postNotice(context: Context, notice: DetectedNotice, bank: String) {
+  try {
+    if (Build.VERSION.SDK_INT >= 33 &&
+      context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+      PackageManager.PERMISSION_GRANTED
+    ) return
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      manager.createNotificationChannel(
+        NotificationChannel(CHANNEL_ID, "Quipu", NotificationManager.IMPORTANCE_DEFAULT),
+      )
+    }
+    val icon = context.applicationInfo.icon
+    if (icon == 0) return
+    val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    val open = Intent(Intent.ACTION_VIEW, noticeUri(notice, bank))
+      .setPackage(context.packageName)
+      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      Notification.Builder(context, CHANNEL_ID)
+    } else {
+      @Suppress("DEPRECATION")
+      Notification.Builder(context)
+    }
+    manager.notify(notice.id.hashCode(), builder.setSmallIcon(icon)
+      .setContentTitle(expenseNoticeTitle(bank))
+      .setContentText(expenseNoticeBody(notice.amountCents, notice.merchant))
+      .setAutoCancel(true)
+      .setContentIntent(PendingIntent.getActivity(context, notice.id.hashCode(), open, flags))
+      .build())
+  } catch (e: Exception) {
+    Log.w("QuipuNotificationListener", "notice failed: ${e.javaClass.simpleName}")
+  }
+}
+
+private fun noticeUri(notice: DetectedNotice, bank: String): Uri {
+  val uri = Uri.Builder().scheme(SCHEME).authority("detected-expense")
+    .appendQueryParameter("id", notice.id)
+    .appendQueryParameter("bank", bank)
+    .appendQueryParameter("at", notice.postedAt.toString())
+  notice.amountCents?.let { uri.appendQueryParameter("cents", it.toString()) }
+  val merchant = notice.merchant?.trim().orEmpty()
+  if (merchant.isNotEmpty()) uri.appendQueryParameter("merchant", merchant)
+  return uri.build()
 }
