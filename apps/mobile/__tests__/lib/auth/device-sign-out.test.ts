@@ -56,7 +56,7 @@ describe("signOutAndClearLocalData", () => {
 		expect(deleteOrder).toBeLessThan(resetOrder);
 	});
 
-	it("clears the pending notification queue on sign-out and account deletion", async () => {
+	it("ends the listener session on sign-out and account deletion", async () => {
 		const previous = Platform.OS;
 		Platform.OS = "android";
 		try {
@@ -65,6 +65,19 @@ describe("signOutAndClearLocalData", () => {
 
 			await clearDeviceAfterAccountDeleted();
 			expect(mockClearPending).toHaveBeenCalledTimes(2);
+		} finally {
+			Platform.OS = previous;
+		}
+	});
+
+	it("still finishes sign-out and account deletion when the listener clear rejects", async () => {
+		const previous = Platform.OS;
+		Platform.OS = "android";
+		const failure = new Error("listener");
+		mockClearPending.mockRejectedValueOnce(failure).mockRejectedValueOnce(failure);
+		try {
+			await expect(signOutAndClearLocalData()).resolves.toEqual({ serverNotified: true });
+			await expect(clearDeviceAfterAccountDeleted()).resolves.toBeUndefined();
 		} finally {
 			Platform.OS = previous;
 		}

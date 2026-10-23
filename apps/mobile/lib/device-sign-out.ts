@@ -21,7 +21,7 @@ export async function signOutAndClearLocalData() {
 		},
 	});
 	if (Platform.OS === "android") {
-		await clearPendingNotifications();
+		await clearPendingNotifications().catch(() => undefined);
 	}
 	return result;
 }
