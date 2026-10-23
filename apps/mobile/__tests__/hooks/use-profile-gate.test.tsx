@@ -40,17 +40,17 @@ describe("useProfileGate", () => {
 		mockConvex.isAuthenticated = true;
 		mockConvex.isLoading = false;
 		mockProfile.value = { onboardingComplete: true };
-		await view.rerender();
+		await view.rerender(undefined);
 		expect(mockClearPending).not.toHaveBeenCalled();
 
 		mockSession.isPending = false;
 		mockConvex.isAuthenticated = false;
 		mockConvex.isLoading = false;
 		mockProfile.value = undefined;
-		await view.rerender();
+		await view.rerender(undefined);
 		expect(mockClearPending).toHaveBeenCalledTimes(1);
 
-		await view.rerender();
+		await view.rerender(undefined);
 		expect(mockClearPending).toHaveBeenCalledTimes(1);
 	});
 });
