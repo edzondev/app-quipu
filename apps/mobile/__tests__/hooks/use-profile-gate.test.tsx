@@ -1,3 +1,4 @@
+const mockSetPaused = jest.fn(async (_paused: boolean) => undefined);
 const mockClearBanks = jest.fn(async () => undefined);
 const mockSession: { isPending: boolean; data: { user: { id: string } } | null } = {
 	isPending: true,
@@ -9,6 +10,7 @@ const mockProfile: { value: { onboardingComplete: boolean } | undefined } = {
 };
 
 jest.mock("@/modules/quipu-notification-listener", () => ({
+	setPaused: (paused: boolean) => mockSetPaused(paused),
 	clear: () => mockClearBanks(),
 }));
 
@@ -36,35 +38,66 @@ describe("useProfileGate", () => {
 		mockProfile.value = undefined;
 	});
 
-	it("borra los bancos solo cuando ya sabe que no hay sesión", async () => {
-		const view = await renderHook(() => useProfileGate());
+	it("pendiente no pausa", async () => {
+		await renderHook(() => useProfileGate());
+		expect(mockSetPaused).not.toHaveBeenCalled();
 		expect(mockClearBanks).not.toHaveBeenCalled();
+	});
 
+	it("con sesión despausa", async () => {
 		mockSession.isPending = false;
+		mockSession.data = { user: { id: "user" } };
 		mockConvex.isAuthenticated = true;
 		mockConvex.isLoading = false;
 		mockProfile.value = { onboardingComplete: true };
-		await view.rerender(undefined);
+		await renderHook(() => useProfileGate());
+		expect(mockSetPaused).toHaveBeenCalledTimes(1);
+		expect(mockSetPaused).toHaveBeenCalledWith(false);
 		expect(mockClearBanks).not.toHaveBeenCalled();
+	});
 
+	it("sin sesión pausa una vez", async () => {
 		mockSession.isPending = false;
 		mockSession.data = null;
 		mockConvex.isAuthenticated = false;
 		mockConvex.isLoading = false;
-		mockProfile.value = undefined;
-		await view.rerender(undefined);
-		expect(mockClearBanks).toHaveBeenCalledTimes(1);
-
-		await view.rerender(undefined);
-		expect(mockClearBanks).toHaveBeenCalledTimes(1);
+		await renderHook(() => useProfileGate());
+		expect(mockSetPaused).toHaveBeenCalledTimes(1);
+		expect(mockSetPaused).toHaveBeenCalledWith(true);
+		expect(mockClearBanks).not.toHaveBeenCalled();
 	});
 
-	it("no borra los bancos mientras queda una sesión en caché", async () => {
+	it("re-render no repite", async () => {
+		mockSession.isPending = false;
+		const view = await renderHook(() => useProfileGate());
+		expect(mockSetPaused).toHaveBeenCalledTimes(1);
+		mockConvex.isLoading = true;
+		await view.rerender(undefined);
+		mockConvex.isLoading = false;
+		await view.rerender(undefined);
+		expect(mockSetPaused).toHaveBeenCalledTimes(1);
+		expect(mockClearBanks).not.toHaveBeenCalled();
+	});
+
+	it("no pausa ni borra mientras queda una sesión en caché", async () => {
 		mockSession.isPending = false;
 		mockSession.data = { user: { id: "user" } };
 		mockConvex.isAuthenticated = false;
 		mockConvex.isLoading = false;
 		await renderHook(() => useProfileGate());
+		expect(mockSetPaused).toHaveBeenCalledTimes(1);
+		expect(mockSetPaused).toHaveBeenCalledWith(false);
+		expect(mockClearBanks).not.toHaveBeenCalled();
+	});
+
+	it("con Convex listo y sin objeto de sesión despausa", async () => {
+		mockSession.isPending = false;
+		mockSession.data = null;
+		mockConvex.isAuthenticated = true;
+		mockConvex.isLoading = false;
+		mockProfile.value = { onboardingComplete: true };
+		await renderHook(() => useProfileGate());
+		expect(mockSetPaused).toHaveBeenCalledWith(false);
 		expect(mockClearBanks).not.toHaveBeenCalled();
 	});
 });

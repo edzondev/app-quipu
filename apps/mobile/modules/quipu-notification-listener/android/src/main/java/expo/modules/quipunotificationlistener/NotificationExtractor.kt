@@ -14,7 +14,7 @@ internal object NotificationExtractor {
 
   private const val MAX_KEY_CHARS = 107
   private val AMOUNT = Regex("S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)")
-  private val MERCHANT = Regex("(?i)\\s+en\\s+(\\S+(?:\\s+\\S+)*)")
+  private val MERCHANT = Regex("(?i)[ \\t]+en[ \\t]+([^\\n.,;]+?)(?=[ \\t]+(?:con|por)[ \\t]|[.,;\\n]|$)")
 
   fun notificationId(key: String, postTime: Long): String {
     return key + ID_SEPARATOR + postTime
@@ -82,7 +82,7 @@ internal object NotificationExtractor {
   fun readMerchant(bankText: String): String? {
     val amount = AMOUNT.find(bankText) ?: return null
     val name = MERCHANT.find(bankText.substring(amount.range.last + 1))?.groupValues?.get(1) ?: return null
-    return name.trim('.', '!', ',').takeIf { it.isNotEmpty() }
+    return name.trim().take(120).takeIf { it.isNotEmpty() }
   }
 
   private fun toCents(token: String): Int? {

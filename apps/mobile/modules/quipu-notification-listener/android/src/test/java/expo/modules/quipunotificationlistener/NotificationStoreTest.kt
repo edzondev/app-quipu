@@ -44,12 +44,23 @@ class NotificationStoreTest {
   @Test
   fun claimRemembersTheIdWithoutWritingText() {
     val (file, store) = startedStore()
-    assertTrue(store.claim("k|1"))
-    assertFalse(store.claim("k|1"))
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|1", "com.bank.one"))
+    assertFalse(store.claim("k|1", "com.bank.one"))
     assertEquals(1L, store.diagnostics().deduped)
     store.flush()
 
-    assertFalse(reload(file).claim("k|1"))
+    assertFalse(reload(file).claim("k|1", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesABankThatIsNoLongerChosen() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertTrue(store.removeSource("com.bank.one"))
+    assertFalse(store.claim("k|2", "com.bank.one"))
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|2", "com.bank.one"))
   }
 
   @Test
@@ -125,38 +136,11 @@ class NotificationStoreTest {
     val (file, store) = newStore()
     assertFalse(store.isReady())
     store.addSource("com.bank.one")
-    assertFalse(store.claim("early|1"))
+    assertFalse(store.claim("early|1", "com.bank.one"))
     store.start()
     store.awaitReady()
     store.flush()
     assertEquals(listOf("com.bank.one"), reload(file).sources())
-  }
-
-  @Test
-  fun clearDropsChosenBanksAndCancelsPostedNotices() {
-    val cancelled = mutableListOf<String>()
-    val (file, store) = startedStore()
-    store.addSource("com.bank.one")
-    assertTrue(store.claim("k|1"))
-    store.clear { cancelled.addAll(it) }
-    store.flush()
-
-    assertEquals(listOf("k|1"), cancelled)
-    assertTrue(store.sources().isEmpty())
-    assertTrue(reload(file).sources().isEmpty())
-    assertFalse(reload(file).claim("k|1"))
-  }
-
-  @Test
-  fun clearOnAnEmptyStoreStaysEmpty() {
-    val cancelled = mutableListOf<String>()
-    val (file, store) = startedStore()
-    store.clear { cancelled.addAll(it) }
-    store.flush()
-
-    assertTrue(cancelled.isEmpty())
-    assertTrue(store.sources().isEmpty())
-    assertFalse(file.exists())
   }
 
   @Test
@@ -173,6 +157,77 @@ class NotificationStoreTest {
     assertTrue(file.isFile)
     assertFalse(File(file.parentFile, "state.bin.tmp").exists())
     assertEquals(listOf("com.bank.one"), store.sources())
+  }
+
+  @Test
+  fun signOutKeepsBanksDropsTheNoticeAndThePauseSurvivesReload() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.flush()
+
+    val paused = reload(file)
+    assertEquals(listOf("com.bank.one"), paused.sources())
+    assertTrue(paused.isPaused())
+    assertEquals(
+      NoticeGate.Drop,
+      noticeGate("com.bank.one", "com.quipu.finance", true, true, paused.isPaused()),
+    )
+
+    paused.setPaused(false)
+    paused.flush()
+    val signedIn = reload(file)
+    assertEquals(listOf("com.bank.one"), signedIn.sources())
+    assertFalse(signedIn.isPaused())
+    assertEquals(
+      NoticeGate.Read,
+      noticeGate("com.bank.one", "com.quipu.finance", true, "com.bank.one" in signedIn.sources(), signedIn.isPaused()),
+    )
+  }
+
+  @Test
+  fun accountDeletionLeavesNoBanksAfterReload() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|1", "com.bank.one"))
+    store.setPaused(true)
+    store.flush()
+    store.clear()
+    store.flush()
+
+    val again = reload(file)
+    assertTrue(again.sources().isEmpty())
+    assertFalse(again.isPaused())
+    assertEquals(0, again.diagnostics().recentIdCount)
+    again.addSource("com.bank.one")
+    assertTrue(again.claim("k|1", "com.bank.one"))
+  }
+
+  @Test
+  fun clearWithBanksButNoNoticesStillEmptiesTheFile() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.flush()
+    store.clear()
+    store.flush()
+    assertTrue(reload(file).sources().isEmpty())
+  }
+
+  @Test
+  fun versionTwoFileKeepsBanksAndStaysUnpaused() {
+    val file = File(Files.createTempDirectory("quipu-nl").toFile(), "state.bin")
+    DataOutputStream(FileOutputStream(file)).use { output ->
+      output.writeInt(0x51504E31)
+      output.writeInt(2)
+      output.writeInt(1)
+      output.writeUTF("com.bank.one")
+      output.writeInt(0)
+    }
+    val store = NotificationStore(file)
+    store.start()
+    store.awaitReady()
+    assertEquals(listOf("com.bank.one"), store.sources())
+    assertFalse(store.isPaused())
   }
 
   private fun startedStore(): Pair<File, NotificationStore> {

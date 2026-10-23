@@ -33,6 +33,7 @@ internal class NotificationStore(
 
   private val recentOrder = ArrayDeque<String>()
   private val recentSet = HashSet<String>()
+  private var paused = false
   private val preload = ArrayDeque<Command>()
   private var startRequested = false
 
@@ -103,11 +104,11 @@ internal class NotificationStore(
     return synchronized(lock) { sources.toList().sorted() }
   }
 
-  /** First time this notice id is seen, remember it. A repeat does not post again. */
-  fun claim(id: String): Boolean {
+  /** First time this notice id is seen for a bank that is still chosen, remember it. */
+  fun claim(id: String, packageName: String): Boolean {
     if (id.isEmpty()) return false
     val fresh = synchronized(lock) {
-      if (!ready) return false
+      if (!ready || packageName !in sources) return false
       if (!remember(id)) {
         deduped += 1
         return false
@@ -132,16 +133,29 @@ internal class NotificationStore(
     }
   }
 
-  /** Drops chosen banks and hands posted notice ids to [cancel]. Dedup ids stay. */
-  fun clear(cancel: (List<String>) -> Unit = {}) {
-    val (ids, changed) = synchronized(lock) {
-      if (!ready) return
-      val changed = sources.isNotEmpty()
-      val ids = recentOrder.toList()
-      sources = emptySet()
-      ids to changed
+  fun isPaused(): Boolean = synchronized(lock) { paused }
+
+  /** Persists whether detection is paused. Chosen banks stay. */
+  fun setPaused(value: Boolean) {
+    val changed = synchronized(lock) {
+      if (!ready || paused == value) return
+      paused = value
+      true
     }
-    cancel(ids)
+    if (changed) scheduleSave()
+  }
+
+  /** Drops chosen banks and seen notice ids. Detection stays on for the next user. */
+  fun clear() {
+    val changed = synchronized(lock) {
+      if (!ready) return
+      val changed = sources.isNotEmpty() || recentSet.isNotEmpty() || paused
+      sources = emptySet()
+      recentOrder.clear()
+      recentSet.clear()
+      paused = false
+      changed
+    }
     if (changed) scheduleSave()
   }
 
@@ -157,6 +171,7 @@ internal class NotificationStore(
     var dirty = loaded.rewrite
     synchronized(lock) {
       sources = loaded.snapshot.sources.toSet()
+      paused = loaded.snapshot.paused
       recentOrder.clear()
       recentSet.clear()
       for (id in loaded.snapshot.recentIds) {
@@ -210,6 +225,7 @@ internal class NotificationStore(
     return Snapshot(
       sources = sources.toList().sorted(),
       recentIds = recentOrder.toList(),
+      paused = paused,
     )
   }
 
@@ -268,16 +284,18 @@ private sealed interface Command {
 private data class Snapshot(
   val sources: List<String>,
   val recentIds: List<String>,
+  val paused: Boolean,
 ) {
   companion object {
-    fun empty() = Snapshot(emptyList(), emptyList())
+    fun empty() = Snapshot(emptyList(), emptyList(), false)
   }
 }
 
 private class LoadedFile(val snapshot: Snapshot, val rewrite: Boolean)
 
 private const val MAGIC = 0x51504E31
-private const val VERSION = 2
+private const val VERSION = 3
+private const val VERSION_WITHOUT_PAUSE = 2
 private const val MAX_STORED_SOURCES = NotificationStore.MAX_SOURCES
 private const val MAX_STORED_RECENT = NotificationStore.MAX_RECENT
 
@@ -287,11 +305,13 @@ private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): Load
     DataInputStream(BufferedInputStream(FileInputStream(file))).use { input ->
       val magic = input.readInt()
       val version = input.readInt()
-      if (magic != MAGIC || version != VERSION) return LoadedFile(Snapshot.empty(), true)
-      LoadedFile(
-        Snapshot(readStrings(input, MAX_STORED_SOURCES), readStrings(input, MAX_STORED_RECENT)),
-        false,
-      )
+      if (magic != MAGIC || (version != VERSION && version != VERSION_WITHOUT_PAUSE)) {
+        return LoadedFile(Snapshot.empty(), true)
+      }
+      val sources = readStrings(input, MAX_STORED_SOURCES)
+      val recentIds = readStrings(input, MAX_STORED_RECENT)
+      val paused = if (version == VERSION) input.readBoolean() else false
+      LoadedFile(Snapshot(sources, recentIds, paused), false)
     }
   } catch (e: Exception) {
     onError("read", e)
@@ -335,6 +355,7 @@ private fun writeAtomically(
         data.writeInt(VERSION)
         writeStrings(data, snapshot.sources)
         writeStrings(data, snapshot.recentIds)
+        data.writeBoolean(snapshot.paused)
         data.flush()
         buffered.flush()
         output.fd.sync()

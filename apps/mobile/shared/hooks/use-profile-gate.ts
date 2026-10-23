@@ -1,8 +1,8 @@
 import { api } from "@quipu/convex-api";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
-import { clear as clearChosenBanks } from "@/modules/quipu-notification-listener";
+import { setPaused } from "@/modules/quipu-notification-listener";
 
 export function useProfileGate() {
 	const { data: session, isPending: isSessionPending } = authClient.useSession();
@@ -16,14 +16,17 @@ export function useProfileGate() {
 	const isLoading =
 		isSessionPending || isConvexAuthPending || (isAuthReady && profile === undefined);
 
-	const clearSignedOutBanks = useEffectEvent(() => {
-		void clearChosenBanks().catch(() => undefined);
+	const sent = useRef<boolean | null>(null);
+	const applyPaused = useEffectEvent((paused: boolean) => {
+		if (sent.current === paused) return;
+		sent.current = paused;
+		void setPaused(paused).catch(() => undefined);
 	});
 
 	useEffect(() => {
-		if (isLoading || isSessionPending || isAuthReady || session) return;
-		clearSignedOutBanks();
-	}, [isLoading, isSessionPending, isAuthReady, session]);
+		if (isLoading) return;
+		applyPaused(!(isAuthReady || session));
+	}, [isLoading, isAuthReady, session]);
 
 	return { isAuthReady, isLoading, profile };
 }

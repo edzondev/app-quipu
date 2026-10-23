@@ -47,7 +47,7 @@ class QuipuNotificationListenerService : NotificationListenerService() {
     try {
       val packageName = sbn.packageName ?: return
       val store = currentStore()
-      when (noticeGate(packageName, this.packageName, store.isReady(), packageName in store.sources())) {
+      when (noticeGate(packageName, this.packageName, store.isReady(), packageName in store.sources(), store.isPaused())) {
         NoticeGate.Drop -> return
         NoticeGate.Filter -> {
           store.noteFiltered()
@@ -56,7 +56,7 @@ class QuipuNotificationListenerService : NotificationListenerService() {
         NoticeGate.Read -> Unit
       }
       val notice = NotificationExtractor.detectedNotice(readRaw(sbn)) ?: return
-      if (!store.claim(notice.id)) return
+      if (!store.claim(notice.id, notice.packageName)) return
       postNotice(this, notice, noticeBankName(notice.packageName))
     } catch (e: Exception) {
       logFailure("onNotificationPosted", e)
@@ -131,33 +131,20 @@ private fun postNotice(context: Context, notice: DetectedNotice, bank: String) {
     val open = Intent(Intent.ACTION_VIEW, noticeUri(notice, bank))
       .setPackage(context.packageName)
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    val noticeId = postedNoticeId(notice.id)
     val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       Notification.Builder(context, CHANNEL_ID)
     } else {
       @Suppress("DEPRECATION")
       Notification.Builder(context)
     }
-    manager.notify(noticeId, builder.setSmallIcon(icon)
+    manager.notify(notice.id.hashCode(), builder.setSmallIcon(icon)
       .setContentTitle(expenseNoticeTitle(bank))
       .setContentText(expenseNoticeBody(notice.amountCents, notice.merchant))
       .setAutoCancel(true)
-      .setContentIntent(PendingIntent.getActivity(context, noticeId, open, flags))
+      .setContentIntent(PendingIntent.getActivity(context, notice.id.hashCode(), open, flags))
       .build())
   } catch (e: Exception) {
     Log.w("QuipuNotificationListener", "notice failed: ${e.javaClass.simpleName}")
-  }
-}
-
-private fun postedNoticeId(id: String): Int = id.hashCode()
-
-internal fun cancelPostedNotices(context: Context, ids: List<String>) {
-  if (ids.isEmpty()) return
-  try {
-    val manager = context.getSystemService(NotificationManager::class.java) ?: return
-    for (id in ids) manager.cancel(postedNoticeId(id))
-  } catch (e: Exception) {
-    Log.w("QuipuNotificationListener", "notice cancel failed: ${e.javaClass.simpleName}")
   }
 }
 

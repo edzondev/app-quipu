@@ -1,10 +1,12 @@
 import * as SecureStore from "expo-secure-store";
 import { authClient, authStoragePrefix } from "@/lib/auth-client";
 import { resetConvexClient } from "@/lib/convex";
-import { clear as clearChosenBanks } from "@/modules/quipu-notification-listener";
+import { clear as clearChosenBanks, setPaused } from "@/modules/quipu-notification-listener";
 import { clearedAuthSession, signOutAndClearDevice } from "@/shared/lib/auth/device-session";
 
-export function signOutAndClearLocalData() {
+export function signOutAndClearLocalData(action: "pause" | "clear" = "pause") {
+	const settleListener = () =>
+		(action === "clear" ? clearChosenBanks() : setPaused(true)).catch(() => undefined);
 	return signOutAndClearDevice({
 		storagePrefix: authStoragePrefix,
 		signOut: async () => {
@@ -18,6 +20,6 @@ export function signOutAndClearLocalData() {
 			if (!atom) return;
 			atom.set(clearedAuthSession(atom.get()));
 		},
-		clearBanks: () => clearChosenBanks().catch(() => undefined),
+		settleListener,
 	});
 }

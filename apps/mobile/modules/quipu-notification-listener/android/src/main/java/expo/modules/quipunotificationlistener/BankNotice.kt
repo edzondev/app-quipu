@@ -1,5 +1,7 @@
 package expo.modules.quipunotificationlistener
 
+import android.util.Log
+
 internal data class DetectedNotice(
   val id: String,
   val packageName: String,
@@ -15,10 +17,19 @@ internal fun noticeGate(
   ownPackage: String,
   ready: Boolean,
   listed: Boolean,
+  paused: Boolean,
 ): NoticeGate {
-  if (!ready || packageName == ownPackage) return NoticeGate.Drop
+  if (paused || !ready || packageName == ownPackage) return NoticeGate.Drop
   if (packageName.isEmpty() || !listed) return NoticeGate.Filter
   return NoticeGate.Read
+}
+
+internal fun cancelPostedNotices(cancelAll: () -> Unit) {
+  try {
+    cancelAll()
+  } catch (e: Exception) {
+    Log.w("QuipuNotificationListener", "notice cancel failed: ${e.javaClass.simpleName}")
+  }
 }
 
 internal fun noticeBankName(packageName: String): String =

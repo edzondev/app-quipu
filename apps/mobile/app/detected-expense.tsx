@@ -28,7 +28,6 @@ function centsOf(value: unknown): number {
 
 export default function DetectedExpenseScreen() {
 	const router = useRouter();
-	const { isAuthReady, isLoading } = useProfileGate();
 	const params = useLocalSearchParams();
 	const id = routeParam(params.id);
 	const postedAt = Number(routeParam(params.at));
@@ -36,6 +35,7 @@ export default function DetectedExpenseScreen() {
 		Number.isSafeInteger(postedAt) && postedAt > 0 ? LIMA_TIME.format(new Date(postedAt)) : "";
 	const meta = [routeParam(params.bank), when].filter((part) => part.length > 0).join(" · ");
 	const { register } = useExpenseActions();
+	const { isAuthReady, isLoading } = useProfileGate();
 	const [formError, setFormError] = useState<string | null>(null);
 	const [isSubmitting, setSubmitting] = useState(false);
 

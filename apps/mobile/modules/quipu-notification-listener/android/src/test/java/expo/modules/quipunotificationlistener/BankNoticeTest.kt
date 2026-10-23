@@ -6,11 +6,24 @@ import org.junit.Test
 class BankNoticeTest {
   @Test
   fun ownPackageIsDroppedAndOnlyAListedBankIsRead() {
-    assertEquals(NoticeGate.Read, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", true, true))
-    assertEquals(NoticeGate.Filter, noticeGate("com.whatsapp", "com.quipu.finance", true, false))
-    assertEquals(NoticeGate.Drop, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", false, true))
-    assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, true))
-    assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, false))
+    assertEquals(NoticeGate.Read, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", true, true, false))
+    assertEquals(NoticeGate.Filter, noticeGate("com.whatsapp", "com.quipu.finance", true, false, false))
+    assertEquals(NoticeGate.Drop, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", false, true, false))
+    assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, true, false))
+    assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, false, false))
+  }
+
+  @Test
+  fun pausedDropsAListedBankBeforeContent() {
+    assertEquals(NoticeGate.Drop, noticeGate("pe.com.interbank.mobilebanking", "com.quipu.finance", true, true, true))
+  }
+
+  @Test
+  fun cancelAllClearsTheTray() {
+    var calls = 0
+    cancelPostedNotices { calls += 1 }
+    assertEquals(1, calls)
+    cancelPostedNotices { throw IllegalStateException("tray") }
   }
 
   @Test
