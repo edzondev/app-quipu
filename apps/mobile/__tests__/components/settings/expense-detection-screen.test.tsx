@@ -1,5 +1,5 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { Clipboard, Vibration } from "react-native";
+import { Vibration } from "react-native";
 import { ExpenseDetectionScreen } from "@/shared/components/settings/expense-detection-screen";
 
 const NOT_A_BANK = "Este link no es de un banco en Play Store. Cópialo desde la app de tu banco.";
@@ -7,8 +7,9 @@ const INTERBANK = "https://play.google.com/store/apps/details?id=pe.com.interban
 const BCP = "https://play.google.com/store/apps/details?id=com.bcp.bank.bcp";
 const OTHER = "https://play.google.com/store/apps/details?id=com.other.wallet";
 
-const mockGetString = jest.fn(async () => "");
-const mockAddSource = jest.fn(async (_input: string) => "added" as const);
+const mockAddSource = jest.fn(
+	async (_input: string): Promise<"added" | "not_installed" | "limit_reached"> => "added",
+);
 const mockGetInstalledBanks = jest.fn(async () => [
 	{ name: "Interbank", packageId: "pe.com.interbank.mobilebanking", installed: true },
 	{ name: "Banca Móvil BCP", packageId: "com.bcp.bank.bcp", installed: true },
@@ -41,24 +42,32 @@ async function openScreen(onClose = jest.fn()) {
 
 describe("ExpenseDetectionScreen", () => {
 	beforeEach(() => {
-		mockGetString.mockReset().mockResolvedValue("");
 		mockAddSource.mockReset().mockResolvedValue("added");
 		mockGetSources.mockReset().mockResolvedValue([]);
 		mockAccessEnabled.mockReset().mockReturnValue(false);
 		mockOpenAccess.mockReset();
-		jest.spyOn(Clipboard, "getString").mockImplementation(() => mockGetString());
-		jest.mocked(Clipboard.getString).mockClear();
 		jest.spyOn(Vibration, "vibrate").mockImplementation(() => {});
 		jest.mocked(Vibration.vibrate).mockClear();
 	});
 
 	it("A1 empieza vacío y Siguiente está apagado", async () => {
 		const view = await openScreen();
+		const field = view.getByLabelText("Link de tu banco");
 		expect(view.getByText("Conecta tu banco")).toBeTruthy();
+		expect(
+			view.getByText("En Play Store, abre tu banco, toca Compartir y copia el link."),
+		).toBeTruthy();
+		expect(view.getByText("LINK DE TU BANCO")).toBeTruthy();
+		expect(view.getByPlaceholderText("Mantén presionado y pega el link")).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Pegar" })).toBeNull();
+		expect(field.props.autoFocus).toBe(true);
+		expect(field.props.keyboardType).toBe("url");
+		expect(field.props.autoCapitalize).toBe("none");
+		expect(field.props.autoCorrect).toBe(false);
+		expect(field.props.className).toContain("h-11");
 		expect(view.getByRole("button", { name: "Siguiente" }).props.accessibilityState.disabled).toBe(
 			true,
 		);
-		expect(mockGetString).not.toHaveBeenCalled();
 		expect(mockAddSource).not.toHaveBeenCalled();
 		await view.unmount();
 	});
@@ -92,20 +101,18 @@ describe("ExpenseDetectionScreen", () => {
 			"border-danger",
 		);
 		expect(mockAddSource).not.toHaveBeenCalled();
-		expect(mockGetString).not.toHaveBeenCalled();
+		expect(Vibration.vibrate).toHaveBeenCalledWith(30);
 		await view.unmount();
 	});
 
-	it("Pegar lee el portapapeles solo al tocarlo", async () => {
-		mockGetString.mockResolvedValue(INTERBANK);
+	it("banco no instalado o límite alcanzado muestra el aviso A3", async () => {
+		mockAddSource.mockResolvedValue("not_installed");
 		const view = await openScreen();
-		expect(mockGetString).not.toHaveBeenCalled();
 		await act(async () => {
-			fireEvent.press(view.getByRole("button", { name: "Pegar" }));
+			fireEvent.changeText(view.getByLabelText("Link de tu banco"), INTERBANK);
 		});
-		expect(mockGetString).toHaveBeenCalledTimes(1);
-		expect(mockAddSource).toHaveBeenCalledWith(INTERBANK);
-		expect(view.getByText("Interbank")).toBeTruthy();
+		expect(view.getByText(NOT_A_BANK)).toBeTruthy();
+		expect(view.queryByText("BANCO DETECTADO")).toBeNull();
 		await view.unmount();
 	});
 
@@ -136,8 +143,6 @@ describe("ExpenseDetectionScreen", () => {
 		});
 		expect(mockOpenAccess).toHaveBeenCalledTimes(1);
 		expect(onClose).not.toHaveBeenCalled();
-		expect(view.queryByText("ÚLTIMO PASO")).toBeNull();
-		expect(view.queryByText("3 DE 3")).toBeNull();
 		mockAccessEnabled.mockReturnValue(true);
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Siguiente" }));
