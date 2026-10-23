@@ -14,8 +14,9 @@ internal object NotificationExtractor {
   private const val MAX_KEY_CHARS = 300
 
   // "S/" or "S/.", then a space or NBSP, then a number. Two different amounts stay empty.
+  // NBSP in the lookahead is the same guard as a normal space: "1\u00A0250" is not 1 sol.
   private val AMOUNT = Regex(
-    "S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)(?![\\d,]|\\.\\d|\\s\\d)",
+    "S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)(?![\\d,]|\\.\\d|[\\s\u00A0]\\d)",
   )
 
   fun isRegistered(packageName: String, sources: Set<String>): Boolean {
