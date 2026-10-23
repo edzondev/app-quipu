@@ -17,7 +17,7 @@ const LIST = "mt-2 list-disc space-y-1 pl-5";
 
 export default function PrivacidadPage() {
 	return (
-		<LegalShell title="Política de privacidad" updatedAt="16 de octubre de 2026">
+		<LegalShell title="Política de privacidad" updatedAt="23 de octubre de 2026">
 			<section>
 				<h2 className={SECTION_HEADING}>1. Responsable del tratamiento</h2>
 				<p className={SECTION_BODY}>
@@ -47,6 +47,13 @@ export default function PrivacidadPage() {
 						rendimiento (PostHog). La grabación de sesión enmascara los textos del área privada,
 						incluidos tus saldos.
 					</li>
+					<li>
+						<strong className="font-semibold text-ink">De notificaciones bancarias:</strong> en la
+						app de Android, Quipu lee las notificaciones de los bancos que elegiste (texto como el
+						monto y el nombre del banco). Se procesan solo en tu teléfono. Solo de esos bancos, y
+						solo si das acceso a las notificaciones. A nuestros servidores solo se envían los gastos
+						que confirmas; el resto nunca se envía.
+					</li>
 				</ul>
 			</section>
 
@@ -74,7 +81,7 @@ export default function PrivacidadPage() {
 					<li>Polar.sh — procesamiento de pagos de Quipu Plus.</li>
 					<li>PostHog — analítica de uso con enmascaramiento.</li>
 					<li>Resend — correos transaccionales (verificación y recuperación).</li>
-					<li>Sentry — monitoreo de errores en la aplicación.</li>
+					<li>Sentry — monitoreo de errores en la versión web.</li>
 				</ul>
 				<p className={SECTION_BODY}>
 					Al crear una cuenta consientes estas transferencias, necesarias para prestar el servicio.
