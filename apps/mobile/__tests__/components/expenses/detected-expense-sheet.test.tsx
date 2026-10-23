@@ -96,6 +96,23 @@ describe("DetectedExpenseSheet", () => {
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
+	it("shows the amount error and does not register when the amount is empty", async () => {
+		const view = await render(
+			<DetectedExpenseSheet
+				item={{ ...item, amountCents: undefined }}
+				bankName="Yape"
+				onClose={jest.fn()}
+			/>,
+		);
+
+		expect(view.getByLabelText("Monto").props.value).toBe("");
+		await fireEvent.press(view.getByText("Gustos"));
+		await fireEvent.press(view.getByRole("button", { name: "Guardar" }));
+
+		expect(await view.findByText("Ingresa un monto mayor a cero.")).toBeTruthy();
+		expect(registerMock).not.toHaveBeenCalled();
+	});
+
 	it("Descartar only consumes the queue item", async () => {
 		const { view, onClose } = await renderSheet();
 

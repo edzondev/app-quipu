@@ -31,7 +31,7 @@ const detectedExpenseSchema = z
 		if (parsed.ok) return;
 		ctx.addIssue({
 			code: "custom",
-			path: [parsed.error.field],
+			path: [parsed.error.field === "amount" ? "amountRaw" : parsed.error.field],
 			message: parsed.error.message,
 		});
 	});
