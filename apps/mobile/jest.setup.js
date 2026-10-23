@@ -1,3 +1,4 @@
+jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
 require("react-native-reanimated").setUpTests();
 
 // Los tests suelen mockear expo-router entero sin useFocusEffect.
