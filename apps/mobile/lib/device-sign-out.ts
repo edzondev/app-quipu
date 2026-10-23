@@ -1,10 +1,12 @@
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { authClient, authStoragePrefix } from "@/lib/auth-client";
 import { resetConvexClient } from "@/lib/convex";
+import { clearPendingNotifications } from "@/modules/quipu-notification-listener";
 import { clearedAuthSession, signOutAndClearDevice } from "@/shared/lib/auth/device-session";
 
-export function signOutAndClearLocalData() {
-	return signOutAndClearDevice({
+export async function signOutAndClearLocalData() {
+	const result = await signOutAndClearDevice({
 		storagePrefix: authStoragePrefix,
 		signOut: async () => {
 			const result = await authClient.signOut();
@@ -18,4 +20,8 @@ export function signOutAndClearLocalData() {
 			atom.set(clearedAuthSession(atom.get()));
 		},
 	});
+	if (Platform.OS === "android") {
+		await clearPendingNotifications();
+	}
+	return result;
 }

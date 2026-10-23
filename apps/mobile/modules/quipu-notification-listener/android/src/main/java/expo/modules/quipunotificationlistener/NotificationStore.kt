@@ -263,6 +263,7 @@ internal class NotificationStore(
   private fun applyRemove(packageName: String): Boolean {
     if (packageName !in sources) return false
     sources = sources - packageName
+    queue.removeAll { it.packageName == packageName }
     return true
   }
 

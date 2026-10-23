@@ -1,6 +1,11 @@
 const mockSignOut = jest.fn();
 const mockDelete = jest.fn();
 const mockReset = jest.fn();
+const mockClearPending = jest.fn(async () => undefined);
+
+jest.mock("@/modules/quipu-notification-listener", () => ({
+	clearPendingNotifications: () => mockClearPending(),
+}));
 
 jest.mock("@/lib/auth-client", () => ({
 	authClient: {
@@ -25,6 +30,8 @@ jest.mock("@/lib/convex", () => ({
 	resetConvexClient: () => mockReset(),
 }));
 
+import { Platform } from "react-native";
+import { clearDeviceAfterAccountDeleted } from "@/lib/clear-device-after-delete";
 import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { SERVER_SIGN_OUT_WAIT_MS } from "@/shared/lib/auth/device-session";
 
@@ -47,6 +54,20 @@ describe("signOutAndClearLocalData", () => {
 		const resetOrder = mockReset.mock.invocationCallOrder[0] ?? 0;
 		expect(signOutOrder).toBeLessThan(deleteOrder);
 		expect(deleteOrder).toBeLessThan(resetOrder);
+	});
+
+	it("clears the pending notification queue on sign-out and account deletion", async () => {
+		const previous = Platform.OS;
+		Platform.OS = "android";
+		try {
+			await signOutAndClearLocalData();
+			expect(mockClearPending).toHaveBeenCalledTimes(1);
+
+			await clearDeviceAfterAccountDeleted();
+			expect(mockClearPending).toHaveBeenCalledTimes(2);
+		} finally {
+			Platform.OS = previous;
+		}
 	});
 
 	it("si el servidor no responde, igual borra las claves y reinicia Convex", async () => {

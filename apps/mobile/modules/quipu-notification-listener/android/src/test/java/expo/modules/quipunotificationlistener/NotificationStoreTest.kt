@@ -143,18 +143,19 @@ class NotificationStoreTest {
   }
 
   @Test
-  fun removeSourceIsPersistedAndDoesNotDeleteQueuedItems() {
+  fun removeSourceDropsThatPackagesQueuedItemsAndKeepsOthers() {
     val (file, store) = startedStore()
     store.addSource("com.bank.one")
-    store.offer(item("com.bank.one", "k", 1))
+    store.addSource("com.bank.two")
+    store.offer(item("com.bank.one", "gone", 1))
+    store.offer(item("com.bank.two", "kept", 2))
     assertTrue(store.removeSource("com.bank.one"))
-    store.offer(item("com.bank.one", "later", 2))
     store.flush()
 
-    assertEquals(listOf("k|1"), store.pending().map { it.id })
+    assertEquals(listOf("kept|2"), store.pending().map { it.id })
     val reloaded = reload(file)
-    assertTrue(reloaded.sources().isEmpty())
-    assertEquals(listOf("k|1"), reloaded.pending().map { it.id })
+    assertEquals(listOf("com.bank.two"), reloaded.sources())
+    assertEquals(listOf("kept|2"), reloaded.pending().map { it.id })
   }
 
   @Test
