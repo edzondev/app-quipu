@@ -19,6 +19,11 @@ class AmountCentsTest {
   }
 
   @Test
+  fun merchantKeepsEveryWord() {
+    assertEquals("PLAZA VEA", NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA"))
+  }
+
+  @Test
   fun detectedNoticeDropsRawTitleAndText() {
     val notice = NotificationExtractor.detectedNotice(
       RawNotification(

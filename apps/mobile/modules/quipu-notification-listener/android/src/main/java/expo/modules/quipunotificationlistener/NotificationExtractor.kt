@@ -14,7 +14,7 @@ internal object NotificationExtractor {
 
   private const val MAX_KEY_CHARS = 107
   private val AMOUNT = Regex("S/\\.?(?:[\\s\u00A0])*(\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?)")
-  private val MERCHANT = Regex("(?i)\\s+en\\s+(\\S+)")
+  private val MERCHANT = Regex("(?i)\\s+en\\s+(\\S+(?:\\s+\\S+)*)")
 
   fun notificationId(key: String, postTime: Long): String {
     return key + ID_SEPARATOR + postTime
