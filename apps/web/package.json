@@ -60,7 +60,6 @@
 		"babel-plugin-react-compiler": "1.0.0",
 		"convex-test": "^0.0.60",
 		"jsdom": "^29.1.1",
-		"react-doctor": "^0.8.3",
 		"tailwindcss": "^4.3.3",
 		"typescript": "6.0.3",
 		"vitest": "^4.1.10"
