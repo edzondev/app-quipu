@@ -21,7 +21,6 @@ import {
 } from "@/shared/lib/expenses/expense-record";
 import { formatKeypadAmount } from "@/shared/lib/expenses/keypad";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
-import { updateSpendableWidget } from "@/widgets/SpendableToday";
 
 const SafeArea = withUniwind(SafeAreaView);
 
@@ -59,11 +58,6 @@ export default function ExpenseDetailScreen() {
 		setSubmitting(true);
 		try {
 			await update(id, input);
-			updateSpendableWidget({
-				amountCents: dailyCents,
-				currencySymbol: symbol,
-				updatedAt: new Date(),
-			});
 			goBack();
 		} catch (error) {
 			if (error instanceof ExpenseValidationError) {

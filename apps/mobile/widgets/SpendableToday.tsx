@@ -18,10 +18,8 @@ type SpendableWidgetProps = {
 
 const PROMPT: SpendableWidgetProps = { headline: "Abre Quipu", updated: "" };
 
-// Evaluated in the widget runtime, so the React Compiler must leave the function as written.
 function SpendableTodayWidget(props: SpendableWidgetProps, environment: WidgetEnvironment) {
 	"widget";
-	"use no memo";
 	// The widget bundle keeps only this function, so it cannot read global.css.
 	// Hex values are the light/dark tokens already used by the app.
 	const dark = environment.colorScheme === "dark";
