@@ -8,6 +8,7 @@ export type PendingNotification = {
 	text: string;
 	subText?: string;
 	bigText?: string;
+	amountCents?: number;
 };
 
 export type NotificationSubscription = {

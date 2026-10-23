@@ -304,6 +304,8 @@ internal class NotificationStore(
   }
 
   private fun deliver(item: PendingNotification) {
+    // Only a new enqueue reaches here. Disk reload and dedupe do not.
+    postDetectedExpenseNotice(item)
     val current = listener ?: return
     try {
       current(item)
@@ -428,6 +430,7 @@ private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): Snap
         val text = input.readUTF()
         val subText = readOptional(input)
         val bigText = readOptional(input)
+        val amountCents = if (input.readBoolean()) input.readInt() else null
         if (id.isNotEmpty() && packageName.isNotEmpty()) {
           queue.add(
             PendingNotification(
@@ -438,6 +441,7 @@ private fun readSnapshot(file: File, onError: (String, Exception) -> Unit): Snap
               text = text,
               subText = subText,
               bigText = bigText,
+              amountCents = amountCents,
             ),
           )
         }
@@ -501,6 +505,13 @@ private fun writeAtomically(
           data.writeUTF(item.text)
           writeOptional(data, item.subText)
           writeOptional(data, item.bigText)
+          val amountCents = item.amountCents
+          if (amountCents == null) {
+            data.writeBoolean(false)
+          } else {
+            data.writeBoolean(true)
+            data.writeInt(amountCents)
+          }
         }
         data.flush()
         buffered.flush()

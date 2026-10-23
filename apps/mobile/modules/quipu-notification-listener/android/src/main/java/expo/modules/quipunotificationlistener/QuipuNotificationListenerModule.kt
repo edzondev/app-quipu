@@ -189,5 +189,6 @@ private fun PendingNotification.toPayload(): Map<String, Any?> {
   )
   if (subText != null) payload["subText"] = subText
   if (bigText != null) payload["bigText"] = bigText
+  if (amountCents != null) payload["amountCents"] = amountCents
   return payload
 }

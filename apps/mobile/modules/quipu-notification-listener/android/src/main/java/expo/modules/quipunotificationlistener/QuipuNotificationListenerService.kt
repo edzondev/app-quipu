@@ -1,11 +1,20 @@
 package expo.modules.quipunotificationlistener
 
 import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.core.app.NotificationCompat
 
 /**
  * System entry point. This is not the Expo module: it does not touch JS, and it does
@@ -62,6 +71,7 @@ class QuipuNotificationListenerService : NotificationListenerService() {
   }
 
   private fun currentStore(): NotificationStore {
+    noticeContext = applicationContext
     return NotificationStore.shared(applicationContext.noBackupFilesDir).also { it.start() }
   }
 
@@ -100,4 +110,75 @@ class QuipuNotificationListenerService : NotificationListenerService() {
 
 private fun Bundle.charSequence(key: String): CharSequence? {
   return getCharSequence(key)
+}
+
+// expo.scheme in apps/mobile/app.json
+private const val SCHEME = "quipu"
+private const val CHANNEL_ID = "quipu"
+
+@Volatile
+private var noticeContext: Context? = null
+
+internal fun postDetectedExpenseNotice(item: PendingNotification) {
+  val context = noticeContext ?: return
+  try {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+      context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+      PackageManager.PERMISSION_GRANTED
+    ) {
+      return
+    }
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      manager.createNotificationChannel(
+        NotificationChannel(CHANNEL_ID, "Quipu", NotificationManager.IMPORTANCE_DEFAULT),
+      )
+    }
+    val icon = context.applicationInfo.icon
+    if (icon == 0) return
+    val uri = Uri.Builder()
+      .scheme(SCHEME)
+      .authority("detected-expense")
+      .appendPath(item.id)
+      .build()
+    val intent = Intent(Intent.ACTION_VIEW, uri)
+      .setPackage(context.packageName)
+      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    val pending = PendingIntent.getActivity(
+      context,
+      item.id.hashCode(),
+      intent,
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+    val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+      .setSmallIcon(icon)
+      .setContentTitle("Detectamos un gasto en ${appLabel(context, item.packageName)}")
+      .setAutoCancel(true)
+      .setContentIntent(pending)
+      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+    val cents = item.amountCents
+    if (cents != null) builder.setContentText(amountText(cents))
+    manager.notify(item.id.hashCode(), builder.build())
+  } catch (e: Exception) {
+    Log.w("QuipuNotificationListener", "notice failed: ${e.javaClass.simpleName}")
+  }
+}
+
+private fun appLabel(context: Context, packageName: String): String {
+  return try {
+    context.packageManager
+      .getApplicationInfo(packageName, 0)
+      .loadLabel(context.packageManager)
+      .toString()
+      .ifBlank { packageName }
+  } catch (_: PackageManager.NameNotFoundException) {
+    packageName
+  }
+}
+
+private fun amountText(cents: Int): String {
+  val whole = cents / 100
+  val fraction = (cents % 100).toString().padStart(2, '0')
+  val grouped = whole.toString().reversed().chunked(3).joinToString(",").reversed()
+  return "S/ $grouped.$fraction"
 }

@@ -13,6 +13,9 @@ internal object NotificationExtractor {
   const val MAX_TEXT_CHARS = 500
   private const val MAX_KEY_CHARS = 300
 
+  // One "S/" amount. Comma groups thousands; the dot is cents. Anything else stays empty.
+  private val AMOUNT = Regex("""S/\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)(?![\d,]|\.\d|\s\d)""")
+
   fun isRegistered(packageName: String, sources: Set<String>): Boolean {
     return packageName in sources
   }
@@ -54,7 +57,25 @@ internal object NotificationExtractor {
       text = text,
       subText = subText.ifEmpty { null },
       bigText = bigText.ifEmpty { null },
+      amountCents = readAmountCents("$title\n$text\n$subText\n$bigText"),
     )
+  }
+
+  fun readAmountCents(bankText: String): Int? {
+    val token = AMOUNT.find(bankText)?.groupValues?.get(1) ?: return null
+    val dot = token.indexOf('.')
+    val whole = (if (dot >= 0) token.substring(0, dot) else token).replace(",", "")
+    val fractionDigits = if (dot >= 0) token.substring(dot + 1) else ""
+    val soles = whole.toLongOrNull() ?: return null
+    val fraction = when (fractionDigits.length) {
+      0 -> 0
+      1 -> fractionDigits.toInt() * 10
+      2 -> fractionDigits.toInt()
+      else -> return null
+    }
+    val cents = soles * 100 + fraction
+    if (cents > Int.MAX_VALUE) return null
+    return cents.toInt()
   }
 
   private fun normalize(value: String?): String {
@@ -87,4 +108,5 @@ internal data class PendingNotification(
   val text: String,
   val subText: String?,
   val bigText: String?,
+  val amountCents: Int? = null,
 )
