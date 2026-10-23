@@ -20,11 +20,6 @@
 			"predictiveBackGestureEnabled": false,
 			"package": "com.quipu.finance"
 		},
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./assets/images/favicon.png"
-		},
 		"plugins": [
 			"expo-router",
 			[
