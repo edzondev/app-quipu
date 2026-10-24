@@ -91,7 +91,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 
 			{searchOpen ? <SearchField onChange={setQuery} /> : null}
 
-			{model ? (
+			{model?.cycleLine ? (
 				<Text className="mt-2.5 font-geist-mono text-[11px] uppercase tracking-[0.12em] text-foreground/45">
 					{model.cycleLine}
 				</Text>

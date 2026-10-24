@@ -15,7 +15,7 @@ const filled: CommitmentsScreenModel = {
 			metaTone: "soon",
 			amountLabel: "S/ 1,100",
 			amountMuted: false,
-			statusLabel: "",
+			statusLabel: null,
 			statusTone: "calm",
 		},
 		{
@@ -25,7 +25,7 @@ const filled: CommitmentsScreenModel = {
 			metaTone: "muted",
 			amountLabel: "S/ 59",
 			amountMuted: true,
-			statusLabel: "",
+			statusLabel: null,
 			statusTone: "muted",
 		},
 	],

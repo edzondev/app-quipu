@@ -26,7 +26,6 @@ const mockHome: HomeModel = {
 	badgeTone: "stable",
 	cycleStatusLabel: "Ciclo estable",
 	dailyCents: 4230,
-	heroSubtitle: "",
 	currencySymbol: "S/",
 	envelopes: [
 		{
@@ -246,7 +245,7 @@ describe("Home 1d", () => {
 		expect(view.getByText("Ahorro")).toBeTruthy();
 		expect(view.getByText("S/ 560")).toBeTruthy();
 		expect(view.queryByText("apartado")).toBeNull();
-		expect(view.getAllByText("Ahorro").length).toBeGreaterThan(0);
+		expect(view.getAllByText("Ahorro")).toHaveLength(1);
 	});
 
 	it("con «Sobra» negativa dice cuánto se pasó, no S/ 0", async () => {

@@ -141,7 +141,6 @@ describe("mapDashboardHome", () => {
 			badgeTone: "stable",
 			cycleStatusLabel: "Ciclo estable",
 			dailyCents: 4230,
-			heroSubtitle: "",
 			currencySymbol: "S/",
 			surplusCents: 154300,
 			commitments: [],
@@ -158,22 +157,6 @@ describe("mapDashboardHome", () => {
 		).toMatchObject({
 			badgeTone: "risk",
 			cycleStatusLabel: "Ciclo en riesgo",
-		});
-		expect(
-			mapDashboardHome(
-				summary({
-					hero: {
-						...hero,
-						displayDailyCents: 0,
-						statusBadge: "starting",
-						bodyCopy: "Registra tu primer gasto.",
-					},
-				}),
-			),
-		).toMatchObject({
-			badgeTone: "starting",
-			cycleStatusLabel: "Recién empiezas",
-			heroSubtitle: "",
 		});
 	});
 

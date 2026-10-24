@@ -28,7 +28,6 @@ tags:
 - assertVisible: "Divide tu dinero antes de gastarlo"
 - assertVisible: "EJEMPLO · PUEDES GASTAR HOY"
 - assertVisible: "S/ 42\\.30"
-- assertVisible: "Es un ejemplo. Tu número sale del dinero que tienes hoy."
 - assertVisible:
     text: "Crear cuenta"
 - tapOn:

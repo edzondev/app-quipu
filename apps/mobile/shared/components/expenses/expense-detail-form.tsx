@@ -123,8 +123,6 @@ export function ExpenseDetailForm({
 									value={field.state.value}
 									onChangeText={field.handleChange}
 									onBlur={field.handleBlur}
-									placeholder=""
-									placeholderTextColorClassName="accent-foreground/45"
 									maxLength={120}
 									accessibilityLabel="Comercio"
 									className="min-w-[140px] flex-1 text-right font-hanken-semibold text-[15.5px] text-foreground"

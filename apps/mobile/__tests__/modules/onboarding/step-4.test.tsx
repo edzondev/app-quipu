@@ -131,7 +131,7 @@ describe("Step4Commitments — compromisos", () => {
 		expect(screen.queryByTestId("commitment-row-1")).toBeNull();
 	});
 
-	it("suma solo filas válidas:  S/ 1,265", async () => {
+	it("suma solo filas válidas: S/ 1,265", async () => {
 		await renderStep4();
 
 		await pressChip("Agua");

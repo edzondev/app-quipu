@@ -94,14 +94,14 @@ describe("presentCommitments", () => {
 			metaTone: "soon",
 			amountLabel: "S/ 1,100",
 			amountMuted: false,
-			statusLabel: "",
+			statusLabel: null,
 			statusTone: "calm",
 		});
 		expect(screen.rows[1]).toMatchObject({
 			meta: "PAGADO 6 AGO",
 			metaTone: "muted",
 			amountMuted: true,
-			statusLabel: "",
+			statusLabel: null,
 			statusTone: "muted",
 		});
 		const visible = screen.rows
@@ -219,9 +219,9 @@ describe("dueDayHint", () => {
 	const shortMonth = " En meses cortos vence el último día.";
 
 	it("anuncia este mes si el día no pasó y el siguiente si ya pasó", () => {
-		expect(dueDayHint("21", at("2026-10-07"))).toBe("Cada mes · próximo 21 oct.");
-		expect(dueDayHint("5", at("2026-10-07"))).toBe("Cada mes · próximo 5 nov.");
-		expect(dueDayHint("5", at("2026-12-30"))).toBe("Cada mes · próximo 5 ene.");
+		expect(dueDayHint("21", at("2026-10-07"))).toBe("Cada mes · próximo 21 oct");
+		expect(dueDayHint("5", at("2026-10-07"))).toBe("Cada mes · próximo 5 nov");
+		expect(dueDayHint("5", at("2026-12-30"))).toBe("Cada mes · próximo 5 ene");
 	});
 
 	it("lleva los días 29 a 31 al último día de los meses cortos", () => {
@@ -233,7 +233,7 @@ describe("dueDayHint", () => {
 	});
 
 	it("no promete fecha mientras el día no sea válido", () => {
-		expect(dueDayHint("", at("2026-10-07"))).toBe("Cada mes.");
-		expect(dueDayHint("64", at("2026-10-07"))).toBe("Cada mes.");
+		expect(dueDayHint("", at("2026-10-07"))).toBe("Cada mes");
+		expect(dueDayHint("64", at("2026-10-07"))).toBe("Cada mes");
 	});
 });

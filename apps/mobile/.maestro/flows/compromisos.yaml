@@ -9,7 +9,7 @@ tags:
 # después de llenar el nombre. Día del 1 al 31.
 # La hoja es 60% (commitment-sheet.tsx) y scrollea. No se ancla con below del título:
 # al bajar, «NUEVO COMPROMISO» se sale de la vista.
-# El texto de vencimiento depende del día de Lima; se afirma «Se repite cada mes.» y «MENSUAL» o un estado.
+# El aviso del día depende de la fecha de Lima; se afirma «Cada mes · próximo 15 …».
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -95,10 +95,10 @@ tags:
 - inputText: "15"
 - hideKeyboard
 - scrollUntilVisible:
-    element: "Se repite cada mes\\..*"
+    element: "Cada mes · próximo 15 [a-z]{3}"
     direction: UP
     timeout: 10000
-- assertVisible: "Se repite cada mes\\..*"
+- assertVisible: "Cada mes · próximo 15 [a-z]{3}"
 - scrollUntilVisible:
     element: "Monto"
     direction: UP
@@ -119,4 +119,4 @@ tags:
     timeout: 20000
 - assertVisible: "Celular"
 - assertVisible: "S/ 50"
-- assertVisible: "(.*MENSUAL|Cubierto|Parcial|Sin cubrir|VENCE.*)"
+- assertVisible: "(Parcial|Sin cubrir|Vencido|VENCE.*)"

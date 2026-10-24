@@ -52,7 +52,6 @@ jest.mock("@/shared/hooks/use-dashboard", () => ({
 			badgeTone: "stable",
 			cycleStatusLabel: "Ciclo estable",
 			dailyCents: 100,
-			heroSubtitle: "",
 			currencySymbol: "S/",
 			envelopes: [],
 			envelopesBalanceCents: 0,

@@ -18,8 +18,6 @@ const TONE = {
 	muted: "text-foreground/45",
 } as const;
 
-const SUBTITLE = "";
-
 type Props = {
 	status: "loading" | "empty" | "ready";
 	model: PlanHubModel | null;
@@ -51,9 +49,6 @@ export function PlanHub({
 					</Text>
 				) : null}
 			</View>
-			<Text className="mt-2 font-hanken text-[14px] leading-[21px] text-foreground/55">
-				{SUBTITLE}
-			</Text>
 			{status === "loading" ? <InlineLoading /> : null}
 			{model ? (
 				<>
@@ -101,7 +96,6 @@ export function PlanHub({
 							testID="plan-row-ahorro-guardado"
 							dotClass={DOT.savings}
 							label="Ahorro"
-							subtitle=""
 							value={ahorro?.totalLabel ?? null}
 							onPress={onOpenAhorro}
 							isLast

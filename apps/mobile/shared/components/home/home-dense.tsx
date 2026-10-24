@@ -67,7 +67,8 @@ export function HomeDense({
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
 	const statusClass = STATUS_TEXT[home.badgeTone];
-	const showCycleStatus = home.badgeTone !== "stable";
+	const cycleStatus =
+		home.badgeTone === "attention" || home.badgeTone === "risk" ? home.cycleStatusLabel : null;
 
 	return (
 		<ScrollView
@@ -84,21 +85,16 @@ export function HomeDense({
 				<View className="mt-2">
 					<HeroAmount cents={home.dailyCents} symbol={home.currencySymbol} />
 				</View>
-				{home.heroSubtitle ? (
-					<Text className="mt-2.5 font-hanken text-[14px] leading-[20px] text-foreground/55">
-						{home.heroSubtitle}
-					</Text>
-				) : null}
 				<Text
 					testID="home-cycle-day"
 					className="mt-2.5 font-hanken text-[13px] leading-[18px] text-foreground/45"
 				>
 					Día {home.cycleDay}/{home.cycleTotal}
-					{showCycleStatus ? (
+					{cycleStatus ? (
 						<>
 							{" · "}
 							<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
-								{home.cycleStatusLabel}
+								{cycleStatus}
 							</Text>
 						</>
 					) : null}

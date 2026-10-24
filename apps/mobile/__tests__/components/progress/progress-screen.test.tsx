@@ -31,7 +31,7 @@ describe("ProgressScreen", () => {
 		const view = await render(
 			<ProgressScreen
 				{...screenProps}
-				model={presentProgress(progressOverview, progressRewards, savingsOverview, null)}
+				model={presentProgress(progressOverview, progressRewards, null)}
 			/>,
 		);
 
@@ -81,7 +81,6 @@ describe("ProgressScreen", () => {
 						],
 					} satisfies Overview,
 					progressRewards,
-					savingsOverview,
 					null,
 				)}
 			/>,
@@ -119,7 +118,6 @@ describe("ProgressScreen", () => {
 					} satisfies Overview,
 					{ ...progressRewards, rewards: [] } satisfies Rewards,
 					null,
-					null,
 				)}
 			/>,
 		);
@@ -139,7 +137,7 @@ describe("ProgressScreen", () => {
 			<ProgressScreen
 				{...screenProps}
 				onOpenClose={onOpenClose}
-				model={presentProgress(progressOverview, progressRewards, savingsOverview, closeReport)}
+				model={presentProgress(progressOverview, progressRewards, closeReport)}
 			/>,
 		);
 		const card = present.getByLabelText("CICLO CERRADO · JULIO");
@@ -151,7 +149,7 @@ describe("ProgressScreen", () => {
 		const absent = await render(
 			<ProgressScreen
 				{...screenProps}
-				model={presentProgress(progressOverview, progressRewards, savingsOverview, null)}
+				model={presentProgress(progressOverview, progressRewards, null)}
 			/>,
 		);
 		expect(absent.queryByText("CICLO CERRADO · JULIO")).toBeNull();

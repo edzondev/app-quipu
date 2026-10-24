@@ -43,7 +43,6 @@ export type GoalView = {
 	currentLabel: string;
 	targetLabel: string | null;
 	percent: number | null;
-	footer: string;
 };
 
 export type SurplusBannerView = {
@@ -54,7 +53,7 @@ export type SurplusBannerView = {
 export type AhorroScreenModel = {
 	totalLabel: string;
 	totalMuted: boolean;
-	cycleSubtitle: string;
+	cycleSubtitle: string | null;
 	fund: FundView;
 	goals: GoalView[];
 	canCreateGoal: boolean;
@@ -69,9 +68,6 @@ export type AhorroPlanRow = {
 const GOAL_LABEL_MAX = 40;
 const PENDING_SUBTITLE = "Tu 20% empieza a acumularse con el primer ingreso.";
 const PENDING_FUND_COPY = "Meta: 3 meses de gastos. Se calcula con tu primer ingreso.";
-
-/** Convex no trae aporte automático por meta ni mutación para activarlo. */
-export const GOAL_WITHOUT_AUTO_CONTRIBUTION = "";
 
 export function savingsBarPercent(currentCents: number, targetCents: number): number {
 	if (!Number.isFinite(currentCents) || !Number.isFinite(targetCents) || targetCents <= 0) {
@@ -106,7 +102,7 @@ export function presentAhorro(
 	return {
 		totalLabel: formatCentsTrimmed(overview.totalSavedCents, symbol),
 		totalMuted: overview.totalSavedCents === 0,
-		cycleSubtitle: cycleContributionCents > 0 ? "" : PENDING_SUBTITLE,
+		cycleSubtitle: cycleContributionCents > 0 ? null : PENDING_SUBTITLE,
 		fund: toFundView(overview.emergencyFund, symbol),
 		goals: toGoalViews(overview.goals, symbol),
 		canCreateGoal: overview.canCreateGoal,
@@ -231,7 +227,6 @@ function toGoalView(goal: Goal, symbol: string): GoalView {
 		currentLabel: formatCentsTrimmed(goal.currentAmount, symbol),
 		targetLabel: target == null ? null : `de ${solesBody(target)}`,
 		percent: target == null ? null : savingsBarPercent(goal.currentAmount, target),
-		footer: GOAL_WITHOUT_AUTO_CONTRIBUTION,
 	};
 }
 

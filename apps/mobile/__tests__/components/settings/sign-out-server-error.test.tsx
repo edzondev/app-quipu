@@ -102,8 +102,7 @@ describe("signOut HTTP error", () => {
 			/>,
 		);
 		await act(async () => {
-			const signOutButtons = ajustes.getAllByRole("button", { name: "Cerrar sesión" });
-			fireEvent.press(signOutButtons[0]);
+			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
 		});
 		await act(async () => {
 			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
@@ -139,8 +138,7 @@ describe("signOut HTTP error", () => {
 				/>,
 			);
 			await act(async () => {
-				const signOutButtons = ajustes.getAllByRole("button", { name: "Cerrar sesión" });
-				fireEvent.press(signOutButtons[0]);
+				fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
 			});
 			await act(async () => {
 				fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));

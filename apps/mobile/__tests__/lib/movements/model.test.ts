@@ -224,7 +224,7 @@ describe("presentMovementList", () => {
 
 	it("sin ciclo activo no inventa fechas", () => {
 		expect(presentMovementList(null, { filter: "all", query: "", now: NOW })).toMatchObject({
-			cycleLine: "",
+			cycleLine: null,
 			isEmpty: true,
 			groups: [],
 		});

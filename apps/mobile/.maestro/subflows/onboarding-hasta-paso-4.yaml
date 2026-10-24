@@ -44,4 +44,4 @@ appId: com.quipu.finance
     visible: "¿Qué pagas todos los meses?"
     timeout: 10000
 - assertVisible: "TU SISTEMA · 04/05"
-- assertVisible: "Cada compromiso necesita nombre, monto y el día del mes en que vence \\(del 1 al 31\\)\\. Los completos llevan una marca verde\\."
+- assertVisible: "Los reservamos de Necesidades\\."

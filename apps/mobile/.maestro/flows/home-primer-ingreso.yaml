@@ -55,7 +55,7 @@ tags:
     visible: "Hoy puedes gastar"
     timeout: 30000
 - assertNotVisible: "Aún no hay ciclo"
-- assertVisible: "Necesid\\."
+- assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 # Misma línea de Inicio que home-ciclo: «Sobra» o «Te pasaste por» si el saldo quedó negativo.

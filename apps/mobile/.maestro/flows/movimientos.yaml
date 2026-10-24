@@ -50,7 +50,7 @@ tags:
     visible: ${output.merchant}
     timeout: 15000
 - assertVisible: "CICLO .*"
-- assertVisible: "HOY · .*"
+- assertVisible: "HOY"
 - assertVisible: "Todos"
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"

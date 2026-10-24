@@ -16,7 +16,6 @@ import {
 	type SecuritySessionRow,
 } from "@/shared/lib/settings/security-model";
 
-const INTRO = "";
 const UNAVAILABLE = "No disponible";
 
 const SHEET = {
@@ -112,9 +111,6 @@ export function SecurityScreen({
 				>
 					<View className="mt-6.5">
 						<Text className="font-newsreader text-[27px] leading-8 text-foreground">Passkeys</Text>
-						<Text className="mt-2 font-hanken text-[14px] leading-5.25 text-foreground/55">
-							{INTRO}
-						</Text>
 					</View>
 					<PasskeySection
 						passkeys={model.passkeys}

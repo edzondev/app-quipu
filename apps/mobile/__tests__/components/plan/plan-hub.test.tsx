@@ -79,7 +79,6 @@ describe("PlanHub", () => {
 		expect(rowClassName(view.getByText("Ahorro"))).not.toContain("border-b");
 		expect(rowClassName(view.getByText("Ahorro planeado"))).toContain("border-b");
 		expect(view.queryByText("Cubrir el exceso")).toBeNull();
-		expect(view.queryByText("Mover dinero")).toBeNull();
 
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Sobres" }));

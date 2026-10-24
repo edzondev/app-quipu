@@ -20,8 +20,8 @@ tags:
 - assertVisible: "Día .*"
 # f93107b: si el saldo quedó negativo, la misma línea dice «Te pasaste por S/ X» (overspentByLabel).
 - assertVisible: "(.*Sobra .*|.*Te pasaste por .*)"
-- assertVisible: "Sobres · queda"
-- assertVisible: "Necesid\\."
+- assertVisible: "Sobres"
+- assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - assertNotVisible: "\\+ Ingreso"
@@ -59,4 +59,3 @@ tags:
 - tapOn:
     text: "Inicio"
 - assertVisible: "Hoy puedes gastar"
-- assertVisible: "Hola.*"

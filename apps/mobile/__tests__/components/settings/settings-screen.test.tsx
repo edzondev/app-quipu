@@ -180,7 +180,7 @@ describe("SettingsScreen", () => {
 		);
 
 		await act(async () => {
-			fireEvent.press(view.getAllByRole("button", { name: "Cerrar sesión" })[0]);
+			fireEvent.press(view.getByRole("button", { name: "Cerrar sesión" }));
 		});
 		const confirm = view.getByRole("button", { name: "Confirmar cierre de sesión" });
 		await act(async () => {
@@ -210,7 +210,7 @@ describe("SettingsScreen", () => {
 			/>,
 		);
 		await act(async () => {
-			fireEvent.press(ajustes.getAllByRole("button", { name: "Cerrar sesión" })[0]);
+			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
 		});
 		await act(async () => {
 			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));

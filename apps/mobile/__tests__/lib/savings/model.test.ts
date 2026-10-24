@@ -2,7 +2,6 @@ import { fixtureId } from "@/__fixtures__/convex-id";
 import {
 	ahorroPlanRow,
 	emptyAhorro,
-	GOAL_WITHOUT_AUTO_CONTRIBUTION,
 	type MoveSurplusContext,
 	presentAhorro,
 	type SavingsOverview,
@@ -84,7 +83,7 @@ describe("presentAhorro", () => {
 
 		expect(model.totalLabel).toBe("S/ 3,050");
 		expect(model.totalMuted).toBe(false);
-		expect(model.cycleSubtitle).toBe("");
+		expect(model.cycleSubtitle).toBeNull();
 		expect(model.fund).toMatchObject({
 			pending: false,
 			label: "Fondo de emergencia",
@@ -107,7 +106,6 @@ describe("presentAhorro", () => {
 				currentLabel: "S/ 1,200",
 				targetLabel: "de 2,000",
 				percent: 60,
-				footer: GOAL_WITHOUT_AUTO_CONTRIBUTION,
 			},
 		]);
 		expect(JSON.stringify(model.goals)).not.toContain("ACTIVAR");

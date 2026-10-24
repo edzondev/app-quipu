@@ -72,7 +72,7 @@ tags:
 - assertVisible: "S/ 960\\.00"
 - assertNotVisible: "Saldo que quedó.*"
 - assertVisible: "Agua.*"
-- assertVisible: "Necesid\\."
+- assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - tapOn: "Ver todos"

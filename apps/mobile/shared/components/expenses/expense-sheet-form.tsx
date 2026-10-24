@@ -53,8 +53,7 @@ export function ExpenseSheetForm({
 
 	return (
 		<View testID="expense-sheet" className="px-[22px] pt-1.5 pb-8">
-			<View className="flex-row items-center justify-between">
-				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55"></Text>
+			<View className="flex-row items-center justify-end">
 				<Pressable
 					accessibilityRole="button"
 					accessibilityLabel="Cancelar"

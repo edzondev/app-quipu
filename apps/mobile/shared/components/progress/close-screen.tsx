@@ -70,11 +70,6 @@ export function CloseScreen({ status, model, onBack }: Props) {
 						<Text className="font-geist-mono text-[10.5px] text-foreground/45">
 							{model.spentLabel}
 						</Text>
-						{model.surplusLabel ? (
-							<Text className="font-geist-mono text-[10.5px] text-foreground/45">
-								{model.surplusLabel}
-							</Text>
-						) : null}
 					</View>
 
 					<View className="mt-[26px] border-t border-line">

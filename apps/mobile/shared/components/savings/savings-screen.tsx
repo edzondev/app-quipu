@@ -62,7 +62,7 @@ export function SavingsScreen({
 					) : null}
 				</View>
 
-				{model ? (
+				{model?.cycleSubtitle ? (
 					<Text className="mt-2 max-w-[300px] font-hanken text-[14px] leading-[21px] text-foreground/55">
 						{model.cycleSubtitle}
 					</Text>
@@ -314,9 +314,6 @@ function GoalRow({ goal }: { goal: GoalView }) {
 					trackClass="mt-3 h-1 bg-foreground/5"
 				/>
 			) : null}
-			<Text className="mt-[9px] font-geist-mono text-[11.5px] text-foreground/45">
-				{goal.footer}
-			</Text>
 		</View>
 	);
 }

@@ -55,7 +55,7 @@ tags:
       - tapOn: "Cancelar"
       - extendedWaitUntil:
           notVisible:
-      id: income-sheet
+            id: income-sheet
           timeout: 10000
       - assertVisible: "Hoy puedes gastar"
 - runFlow:

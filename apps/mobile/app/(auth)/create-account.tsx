@@ -178,7 +178,6 @@ export default function CreateAccountScreen() {
 
 							<View className="gap-1">
 								<Text className="font-newsreader text-[28px] text-foreground">Crea tu cuenta.</Text>
-								<Text className="font-hanken text-[14px] text-foreground/55"></Text>
 							</View>
 
 							<View className="gap-3">
@@ -321,10 +320,6 @@ export default function CreateAccountScreen() {
 								<View className="h-14 w-14 items-center justify-center rounded-full bg-line">
 									<Check size={28} colorClassName="accent-foreground" />
 								</View>
-							</View>
-
-							<View className="gap-1">
-								<Text className="text-center font-newsreader text-[28px] text-foreground"></Text>
 							</View>
 
 							<View className="gap-3">

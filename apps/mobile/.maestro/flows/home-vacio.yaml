@@ -75,5 +75,5 @@ tags:
     visible: "Fondo de Emergencia"
     timeout: 15000
 - assertVisible: "Tu 20% empieza a acumularse con el primer ingreso."
-- assertVisible: "SIN METAS"
-- assertVisible: "Tus metas vivirán aquí."
+- assertVisible: "TUS METAS"
+- assertVisible: "Aún no tienes metas."

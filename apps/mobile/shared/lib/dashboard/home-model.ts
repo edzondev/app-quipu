@@ -53,10 +53,9 @@ export type HomeModel = {
 	cycleDay: number;
 	cycleTotal: number;
 	badgeTone: BadgeTone;
-	/** Right-column status in Home 1d, e.g. "Ciclo estable". */
-	cycleStatusLabel: string;
+	/** Estado del ciclo en la línea de Inicio. Solo atención y riesgo se muestran. */
+	cycleStatusLabel: string | null;
 	dailyCents: number;
-	heroSubtitle: string;
 	currencySymbol: string;
 	envelopes: HomeEnvelope[];
 	/** «Sobra», tal como lo trae getSummary. Negativo si el ciclo se pasó. */
@@ -73,11 +72,11 @@ const ENVELOPE_LABEL = {
 	savings: "Ahorro planeado",
 } as const;
 
-const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
+const CYCLE_STATUS_LABEL: Record<BadgeTone, string | null> = {
 	stable: "Ciclo estable",
 	attention: "Ciclo en atención",
 	risk: "Ciclo en riesgo",
-	starting: "Recién empiezas",
+	starting: null,
 };
 
 const SHORT_ENVELOPE_LABEL = {
@@ -92,7 +91,6 @@ const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
 	Ahorro: "savings",
 };
 
-const DEFAULT_HERO_SUBTITLE = "";
 const LIMA = "America/Lima";
 
 export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
@@ -112,7 +110,6 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		badgeTone: tone,
 		cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
 		dailyCents,
-		heroSubtitle: DEFAULT_HERO_SUBTITLE,
 		currencySymbol: symbol,
 		envelopes,
 		surplusCents: summary.surplusCents,

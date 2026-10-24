@@ -50,6 +50,6 @@ tags:
     timeout: 40000
 - assertVisible: "S/ 0\\.00"
 - assertNotVisible: "Saldo que quedó.*"
-- assertVisible: "Necesid\\."
+- assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
