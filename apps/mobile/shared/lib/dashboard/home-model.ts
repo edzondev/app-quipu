@@ -52,9 +52,6 @@ export type HomeModel = {
 	cycleLabel: string;
 	cycleDay: number;
 	cycleTotal: number;
-	daysLeft: number;
-	cycleProgress: number;
-	badgeLabel: string;
 	badgeTone: BadgeTone;
 	/** Right-column status in Home 1d, e.g. "Ciclo estable". */
 	cycleStatusLabel: string;
@@ -64,7 +61,6 @@ export type HomeModel = {
 	envelopes: HomeEnvelope[];
 	/** «Sobra», tal como lo trae getSummary. Negativo si el ciclo se pasó. */
 	surplusCents: number;
-	coachMessage: string | null;
 	commitments: HomeCommitment[];
 	recentMovements: HomeMovement[];
 	/** Primer ciclo: getSummary.cycle.isOpeningCycle. El dinero de hoy no es arrastre. */
@@ -76,13 +72,6 @@ const ENVELOPE_LABEL = {
 	wants: "Gustos",
 	savings: "Ahorro planeado",
 } as const;
-
-const BADGE_LABEL: Record<BadgeTone, string> = {
-	stable: "Estable",
-	attention: "Atención",
-	risk: "En riesgo",
-	starting: "Recién empiezas",
-};
 
 const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
 	stable: "Ciclo estable",
@@ -120,9 +109,6 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		cycleLabel: cycleLabel(summary.cycle.startDate),
 		cycleDay: summary.cycle.daysElapsed,
 		cycleTotal: summary.cycle.daysTotal,
-		daysLeft: summary.cycle.daysRemaining,
-		cycleProgress: summary.cycle.progressPercent,
-		badgeLabel: BADGE_LABEL[tone],
 		badgeTone: tone,
 		cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
 		dailyCents,
@@ -130,7 +116,6 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		currencySymbol: symbol,
 		envelopes,
 		surplusCents: summary.surplusCents,
-		coachMessage: summary.coach?.message ?? null,
 		commitments: mapCommitments(summary.commitments),
 		recentMovements: summary.movements.map((movement: SummaryMovement) => ({
 			id: movement.id,

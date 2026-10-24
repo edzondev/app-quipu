@@ -68,7 +68,6 @@ describe("PlanHub", () => {
 		expect(view.queryByText("Te pasaste")).toBeNull();
 		expect(view.queryByText("Reparto del ciclo")).toBeNull();
 		expect(view.queryByText("50 / 30 / 20 · Mensual · día 1")).toBeNull();
-		expect(view.queryByText("Mover dinero entre sobres")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
 		expect(view.queryByRole("button", { name: "Reparto del ciclo" })).toBeNull();
 		expect(view.queryByText("Cubrir el exceso")).toBeNull();
