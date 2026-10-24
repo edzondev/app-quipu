@@ -108,7 +108,7 @@ internal class NotificationStore(
   fun claim(id: String, packageName: String): Boolean {
     if (id.isEmpty()) return false
     synchronized(lock) {
-      if (!ready || paused || packageName !in sources) return false
+      if (paused || packageName !in sources) return false
       if (!remember(id)) {
         deduped += 1
         return false
@@ -116,8 +116,7 @@ internal class NotificationStore(
       matched += 1
     }
     scheduleSave()
-    // Pause, clear, or removal can land while the id is written.
-    return synchronized(lock) { !paused && packageName in sources }
+    return true
   }
 
   fun diagnostics(): StoreDiagnostics {

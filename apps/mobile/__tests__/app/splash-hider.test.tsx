@@ -1,5 +1,4 @@
 const mockSetPaused = jest.fn(async (_paused: boolean) => undefined);
-const mockClearBanks = jest.fn(async () => undefined);
 const mockSession: { isPending: boolean; data: { user: { id: string } } | null } = {
 	isPending: true,
 	data: null,
@@ -13,7 +12,6 @@ jest.mock("../../global.css", () => ({}));
 
 jest.mock("@/modules/quipu-notification-listener", () => ({
 	setPaused: (paused: boolean) => mockSetPaused(paused),
-	clear: () => mockClearBanks(),
 }));
 
 jest.mock("@/lib/auth-client", () => ({
@@ -74,55 +72,46 @@ describe("pausa de detección", () => {
 		mockProfile.value = undefined;
 	});
 
-	it("pendiente no pausa", async () => {
-		await render(<SplashHider />);
-		expect(mockSetPaused).not.toHaveBeenCalled();
-		expect(mockClearBanks).not.toHaveBeenCalled();
+	it("pendiente y luego sin sesión pausa una vez", async () => {
+		const view = await render(<SplashHider />);
+		mockSession.isPending = false;
+		await view.rerender(<SplashHider />);
+		expect(mockSetPaused.mock.calls).toEqual([[true]]);
 	});
 
 	it("con sesión despausa", async () => {
 		mockSession.isPending = false;
 		mockSession.data = { user: { id: "user" } };
 		mockConvex.isAuthenticated = true;
-		mockConvex.isLoading = false;
 		mockProfile.value = { onboardingComplete: true };
 		await render(<SplashHider />);
 		expect(mockSetPaused).toHaveBeenCalledTimes(1);
 		expect(mockSetPaused).toHaveBeenCalledWith(false);
-		expect(mockClearBanks).not.toHaveBeenCalled();
 	});
 
 	it("sin sesión pausa una vez", async () => {
 		mockSession.isPending = false;
-		mockSession.data = null;
 		mockConvex.isAuthenticated = false;
-		mockConvex.isLoading = false;
 		await render(<SplashHider />);
 		expect(mockSetPaused).toHaveBeenCalledTimes(1);
 		expect(mockSetPaused).toHaveBeenCalledWith(true);
-		expect(mockClearBanks).not.toHaveBeenCalled();
 	});
 
 	it("no pausa ni borra mientras queda una sesión en caché", async () => {
 		mockSession.isPending = false;
 		mockSession.data = { user: { id: "user" } };
 		mockConvex.isAuthenticated = false;
-		mockConvex.isLoading = false;
 		await render(<SplashHider />);
 		expect(mockSetPaused).toHaveBeenCalledTimes(1);
 		expect(mockSetPaused).toHaveBeenCalledWith(false);
-		expect(mockClearBanks).not.toHaveBeenCalled();
 	});
 
 	it("con Convex listo y sin objeto de sesión despausa", async () => {
 		mockSession.isPending = false;
-		mockSession.data = null;
 		mockConvex.isAuthenticated = true;
-		mockConvex.isLoading = false;
 		mockProfile.value = { onboardingComplete: true };
 		await render(<SplashHider />);
 		expect(mockSetPaused).toHaveBeenCalledWith(false);
-		expect(mockClearBanks).not.toHaveBeenCalled();
 	});
 
 	it("una salida vista solo mientras carga despausa al volver a entrar", async () => {
@@ -156,9 +145,7 @@ describe("pausa de detección", () => {
 			throw new Error("native");
 		});
 		mockSession.isPending = false;
-		mockSession.data = null;
 		mockConvex.isAuthenticated = false;
-		mockConvex.isLoading = false;
 		try {
 			await render(<SplashHider />);
 			await new Promise<void>((resolve) => {

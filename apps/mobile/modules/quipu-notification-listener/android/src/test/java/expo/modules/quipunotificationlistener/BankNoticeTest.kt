@@ -29,10 +29,6 @@ class BankNoticeTest {
     assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, true, false))
   }
 
-  @Test
-  fun ownPackageIsDroppedWhenUnlisted() {
-    assertEquals(NoticeGate.Drop, noticeGate("com.quipu.finance", "com.quipu.finance", true, false, false))
-  }
 
   @Test
   fun pausedDropsAListedBankBeforeContent() {

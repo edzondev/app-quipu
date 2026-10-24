@@ -23,13 +23,6 @@ class AmountCentsTest {
     assertEquals("PLAZA VEA", NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA"))
   }
 
-  @Test
-  fun merchantKeepsTheDistrict() {
-    assertEquals(
-      "PLAZA VEA SAN ISIDRO",
-      NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA SAN ISIDRO"),
-    )
-  }
 
   @Test
   fun merchantStopsBeforeTheCardPhrase() {

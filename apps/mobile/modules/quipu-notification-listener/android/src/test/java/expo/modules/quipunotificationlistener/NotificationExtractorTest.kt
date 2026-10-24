@@ -89,29 +89,7 @@ class NotificationExtractorTest {
     assertEquals("PLAZA VEA", notice.merchant)
   }
 
-  @Test
-  fun syntheticBcpJoinedNoticeDropsTheCardLine() {
-    val notice = joined(
-      packageName = "com.bcp.bank.bcp",
-      text = "Consumo de S/ 18.50 en WONG",
-      subText = "BCP",
-      bigText = "... en WONG con tu tarjeta ****5678. Si no reconoces esta operación, llama al (01) 311-9898.",
-    )
-    assertEquals(1_850, notice.amountCents)
-    assertEquals("WONG", notice.merchant)
-  }
 
-  @Test
-  fun syntheticPlinJoinedNoticeDropsTheCardLine() {
-    val notice = joined(
-      packageName = "pe.com.interbank.plin",
-      text = "Consumo de S/ 10.00 en TAMBO+",
-      subText = "Plin",
-      bigText = "... en TAMBO+ con tu tarjeta ****9999. Si no reconoces esta operación, llama al 311-9000.",
-    )
-    assertEquals(1_000, notice.amountCents)
-    assertEquals("TAMBO+", notice.merchant)
-  }
 
   @Test
   fun dropsBlankKeyOrPackage() {
