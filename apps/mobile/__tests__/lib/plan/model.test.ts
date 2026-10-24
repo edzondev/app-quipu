@@ -5,10 +5,8 @@ import {
 	summaryWithCycle,
 	summaryWithoutCycle,
 } from "@/__fixtures__/dashboard-summary";
-import { settingsOverview } from "@/__fixtures__/settings-overview";
 import { presentPlanHub } from "@/shared/lib/plan/model";
 
-const settings = settingsOverview();
 const NEEDS_OVERSPENT = 47_467;
 
 function withSnapshot(
@@ -33,7 +31,7 @@ function withSnapshot(
 
 describe("presentPlanHub", () => {
 	it("suma lo que queda y reparte la barra cuando ningún sobre se pasó", () => {
-		const model = presentPlanHub(summaryWithCycle(), settings);
+		const model = presentPlanHub(summaryWithCycle());
 		expect(model.cycleLabel).toBe("CICLO AGOSTO");
 		expect(model.totalLabel).toBe("S/ 2,069");
 		expect(model.envelopeCount).toBe("3");
@@ -44,13 +42,11 @@ describe("presentPlanHub", () => {
 			{ tone: "wants", percent: 11 },
 			{ tone: "savings", percent: 34 },
 		]);
-		expect(model.repartoSubtitle).toBe("50 / 30 / 20 · Mensual · día 1");
 
 		const thirds = presentPlanHub(
 			summaryWithCycle({
 				envelopes: [envelope("needs", 1), envelope("wants", 1), envelope("savings", 1)],
 			}),
-			null,
 		);
 		expect(thirds.segments).toEqual([
 			{ tone: "needs", percent: 33 },
@@ -65,7 +61,6 @@ describe("presentPlanHub", () => {
 			summaryWithCycle({
 				envelopes: [envelope("needs", 113800), envelope("wants", -500), envelope("savings", 70000)],
 			}),
-			null,
 		);
 		expect(model.overspent).toEqual([]);
 		expect(model.totalLabel).toBe("S/ 1,833");
@@ -84,7 +79,6 @@ describe("presentPlanHub", () => {
 				}),
 				{ needsOverspentCents: NEEDS_OVERSPENT, wantsOverspentCents: 0 },
 			),
-			null,
 		);
 		expect(model.overspent).toEqual([
 			{ tone: "needs", label: "Necesidades", amountLabel: "\u2212S/ 474.67" },
@@ -100,7 +94,6 @@ describe("presentPlanHub", () => {
 	it("separa ahorro planeado del snapshot y no lo mezcla con el remaining del sobre", () => {
 		const model = presentPlanHub(
 			withSnapshot(summaryWithCycle(), { savingsParkedInEnvelopeCents: 70_000 }),
-			null,
 		);
 		expect(model.plannedSavingsLabel).toBe("S/ 700");
 		expect(model.totalLabel).toBe("S/ 2,069");
@@ -108,7 +101,7 @@ describe("presentPlanHub", () => {
 
 	it("describe las seis variantes del próximo compromiso", () => {
 		const subtitle = (commitments: ReturnType<typeof commitment>[]) =>
-			presentPlanHub(summaryWithCycle({ commitments }), null);
+			presentPlanHub(summaryWithCycle({ commitments }));
 
 		expect(
 			subtitle([
@@ -162,14 +155,13 @@ describe("presentPlanHub", () => {
 			...summaryWithoutCycle,
 			commitments: [idleCommitment({ id: "today", name: "Luz", amount: 500, daysUntilDue: 0 })],
 		} satisfies typeof summaryWithoutCycle;
-		const model = presentPlanHub(noCycle, settings);
+		const model = presentPlanHub(noCycle);
 		expect(model.cycleLabel).toBeNull();
 		expect(model.totalLabel).toBeNull();
 		expect(model.segments).toBeNull();
 		expect(model.envelopeCount).toBeNull();
 		expect(model.commitmentsSubtitle).toBe("Luz vence hoy");
 		expect(model.commitmentsTotal).toBe("S/ 5");
-		expect(model.repartoSubtitle).toBe("50 / 30 / 20 · Mensual · día 1");
 		expect(model.overspent).toEqual([]);
 		expect(model.plannedSavingsLabel).toBeNull();
 	});

@@ -8,11 +8,9 @@ import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
-import { SectionLabel } from "@/shared/components/section-label";
 import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { ArrowUpRight, X } from "@/shared/components/ui/reicon";
-import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import { SIGNED_OUT_HREF, signedOutHref } from "@/shared/lib/auth/device-session";
 import { platformAdmitsPasskeys } from "@/shared/lib/auth/passkey-support";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
@@ -58,11 +56,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 	});
 	const hasPassword = model?.hasPassword === true;
 	const deleteBlockedBySubscription = model?.deleteBlockedBySubscription;
-	const showProfile = !HIDDEN_UNTIL_READY.profileAndData;
-	const showPlan = !HIDDEN_UNTIL_READY.planAndSubscription;
-	const showAllocation = !HIDDEN_UNTIL_READY.allocation;
-	const showCycle = !HIDDEN_UNTIL_READY.cycleAndIncome;
-	const showSystem = showAllocation || showCycle;
 
 	async function confirmSignOut() {
 		if (pending.current) return;
@@ -162,28 +155,13 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 							</View>
 						</View>
 						<View className="mt-5">
-							{showProfile ? <ListRow label="Perfil y datos" /> : null}
 							<ListRow
 								label="Seguridad y Passkeys"
 								value={model.passkeysLabel}
 								onPress={onOpenSecurity}
-								isLast={!showPlan}
+								isLast
 							/>
-							{showPlan ? (
-								<ListRow label="Plan y suscripción" value={model.planLabel} isLast />
-							) : null}
 						</View>
-						{showSystem ? (
-							<View className="mt-[18px] border-t border-line pt-4">
-								<SectionLabel className="mb-1">TU SISTEMA</SectionLabel>
-								{showAllocation ? (
-									<ListRow label="Reparto" value={model.repartoLabel} isLast={!showCycle} />
-								) : null}
-								{showCycle ? (
-									<ListRow label="Ciclo e ingresos" value={model.scheduleCopy} isLast />
-								) : null}
-							</View>
-						) : null}
 					</>
 				) : null}
 				{Platform.OS === "android" && onOpenDetection ? (

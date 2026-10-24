@@ -27,6 +27,8 @@ tags:
 - assertVisible: "Ahorro planeado"
 - assertVisible: "Ahorro"
 - assertNotVisible: "Reparto del ciclo"
+- assertNotVisible:
+    text: "Mover dinero"
 - tapOn:
     text: "Sobres"
 - extendedWaitUntil:
@@ -37,7 +39,6 @@ tags:
 - assertVisible: "Ahorro"
 - assertVisible: "GASTADO.*"
 - assertVisible: "apartado este ciclo"
-- assertNotVisible: "Mover dinero"
 - assertVisible: "(Al día|Va rápido|Intacto)"
 - tapOn: "Volver"
 - assertVisible: "Ahorro"

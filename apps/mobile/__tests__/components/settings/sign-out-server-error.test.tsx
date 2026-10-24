@@ -77,9 +77,6 @@ const model: SettingsScreenModel = {
 	name: "Edzon Perez",
 	meta: "edzon@correo.com · Perú",
 	passkeysLabel: "2 llaves",
-	planLabel: "Gratis",
-	repartoLabel: "50 / 30 / 20",
-	scheduleCopy: "Mensual · día 1",
 	hasPassword: false,
 	deleteBlockedBySubscription: false,
 };

@@ -99,8 +99,6 @@ describe("SobresScreen", () => {
 			now: 78,
 		});
 
-		expect(view.queryByText("Mover dinero")).toBeNull();
-		expect(view.queryByRole("button", { name: "Mover dinero" })).toBeNull();
 		await press(view.getByText("Registrar gasto"));
 		expect(onRegisterExpense).toHaveBeenCalledTimes(1);
 	});
@@ -115,7 +113,6 @@ describe("SobresScreen", () => {
 			/>,
 		);
 		expect(loading.getByText("Cargando…")).toBeTruthy();
-		expect(loading.queryByText("Mover dinero")).toBeNull();
 		await cleanup();
 
 		const empty = await render(

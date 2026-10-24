@@ -2,7 +2,6 @@ import { ScrollView, Text, View } from "react-native";
 import { ListRow } from "@/shared/components/list-row";
 import { SectionLabel } from "@/shared/components/section-label";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
-import { HIDDEN_UNTIL_READY } from "@/shared/hidden-until-ready";
 import type { PlanHubModel, PlanSegment } from "@/shared/lib/plan/model";
 import type { AhorroPlanRow } from "@/shared/lib/savings/model";
 
@@ -11,7 +10,6 @@ const DOT = {
 	wants: "bg-wants",
 	savings: "bg-savings",
 	commitments: "bg-warning",
-	reparto: "bg-foreground/35",
 } as const;
 
 const TONE = {
@@ -39,8 +37,6 @@ export function PlanHub({
 	onOpenCommitments,
 	onOpenAhorro,
 }: Props) {
-	const showCycleSplit = model?.repartoSubtitle != null && !HIDDEN_UNTIL_READY.cycleSplit;
-
 	return (
 		<ScrollView
 			className="flex-1"
@@ -108,16 +104,8 @@ export function PlanHub({
 							subtitle=""
 							value={ahorro?.totalLabel ?? null}
 							onPress={onOpenAhorro}
-							isLast={!showCycleSplit}
+							isLast
 						/>
-						{showCycleSplit ? (
-							<ListRow
-								dotClass={DOT.reparto}
-								label="Reparto del ciclo"
-								subtitle={model.repartoSubtitle}
-								isLast
-							/>
-						) : null}
 					</View>
 				</>
 			) : null}

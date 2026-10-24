@@ -42,7 +42,7 @@ Resultados: `%USERPROFILE%\.maestro\tests`.
 | `compromisos` | Alta y validación de un compromiso |
 | `ahorro-metas` | Crear una meta |
 | `ajustes-cerrar-sesion` | Seguridad y cierre de sesión |
-| `controles-escondidos` | Lo que todavía no se muestra |
+| `controles-escondidos` | H4–H8: filas ocultas en Ajustes/Plan (Perfil, Plan, Reparto, Ciclo, Reparto del ciclo) y hoja de gasto |
 
 Un ciclo que empezó hoy (día de Lima) oculta «Empieza un nuevo ciclo». No se arma un ciclo de ayer desde la UI, así que cerrar uno anterior es a lo sumo una vez por día. `ciclo-nuevo-antes-del-fin` no omite en silencio: si nuevo ciclo no está, afirma que CICLO empieza hoy. `mismo-dia-solo-sumar` no cierra para armarse; exige startedToday o falla. `config.yaml` deja primero el cierre y después el mismo-día. Smoke usa `config.smoke.yaml`.
 

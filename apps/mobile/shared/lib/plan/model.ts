@@ -2,7 +2,6 @@ import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
 import { limaMonthName } from "@/shared/lib/lima-date";
 import { currencySymbol, formatCentsTrimmed } from "@/shared/lib/money";
-import { repartoLabel, type SettingsOverview } from "@/shared/lib/settings/model";
 
 type DashboardSummary = NonNullable<FunctionReturnType<typeof api.dashboard.getSummary>>;
 type ActiveSummary = Extract<DashboardSummary, { cycle: { startDate: number } }>;
@@ -36,13 +35,9 @@ export type PlanHubModel = {
 	commitmentsSubtitle: string;
 	commitmentsTone: CommitmentSubtitleTone;
 	commitmentsTotal: string;
-	repartoSubtitle: string | null;
 };
 
-export function presentPlanHub(
-	summary: DashboardSummary,
-	settings: SettingsOverview | null,
-): PlanHubModel {
+export function presentPlanHub(summary: DashboardSummary): PlanHubModel {
 	const symbol = currencySymbol(summary.profile.currencyCode);
 	const commitments = presentCommitments(summary.commitments);
 	const cycle = summary.cycle;
@@ -60,7 +55,6 @@ export function presentPlanHub(
 		commitmentsSubtitle: commitments.text,
 		commitmentsTone: commitments.tone,
 		commitmentsTotal: formatCentsTrimmed(commitments.totalCents, symbol),
-		repartoSubtitle: settings ? `${repartoLabel(settings)} · ${settings.cycle.scheduleCopy}` : null,
 	};
 }
 
