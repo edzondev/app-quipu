@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
@@ -16,10 +15,9 @@ type Props = {
 	status: "loading" | "ready";
 	model: CloseScreenModel | null;
 	onBack: () => void;
-	footer?: ReactNode;
 };
 
-export function CloseScreen({ status, model, onBack, footer }: Props) {
+export function CloseScreen({ status, model, onBack }: Props) {
 	return (
 		<View className="flex-1">
 			<View className="flex-row items-center">
@@ -94,7 +92,6 @@ export function CloseScreen({ status, model, onBack, footer }: Props) {
 							</View>
 						))}
 					</View>
-					{footer}
 				</ScrollView>
 			) : null}
 			{status !== "loading" && !model ? (

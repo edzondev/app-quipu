@@ -23,9 +23,6 @@ const mockHome: HomeModel = {
 	cycleLabel: "Ciclo agosto",
 	cycleDay: 15,
 	cycleTotal: 30,
-	daysLeft: 15,
-	cycleProgress: 50,
-	badgeLabel: "Estable",
 	badgeTone: "stable",
 	cycleStatusLabel: "Ciclo estable",
 	dailyCents: 4230,
@@ -76,7 +73,6 @@ const mockHome: HomeModel = {
 		},
 	],
 	surplusCents: 154300,
-	coachMessage: "Vas bien.",
 	commitments: [
 		{
 			id: "rent",

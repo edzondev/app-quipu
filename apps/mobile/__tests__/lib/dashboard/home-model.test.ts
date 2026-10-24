@@ -132,20 +132,16 @@ describe("mapDashboardHome", () => {
 		expect(mapDashboardHome(summaryWithoutCycle)).toBeNull();
 	});
 
-	it("mapea el héroe, el ciclo y el coach sin datos ficticios", () => {
+	it("mapea el héroe y el ciclo sin datos ficticios", () => {
 		const home = mapDashboardHome(summary());
 		expect(home).toMatchObject({
 			cycleLabel: "Ciclo agosto",
 			cycleDay: 15,
 			cycleTotal: 30,
-			daysLeft: 15,
-			cycleProgress: 50,
-			badgeLabel: "Estable",
 			badgeTone: "stable",
 			cycleStatusLabel: "Ciclo estable",
 			dailyCents: 4230,
 			heroSubtitle: "Sin tocar tus compromisos ni tu ahorro.",
-			coachMessage: "Vas bien.",
 			currencySymbol: "S/",
 			surplusCents: 154300,
 			commitments: [],
@@ -158,8 +154,11 @@ describe("mapDashboardHome", () => {
 				summary({
 					hero: { ...hero, displayDailyCents: 0, statusBadge: "risk" },
 				}),
-			)?.badgeLabel,
-		).toBe("En riesgo");
+			),
+		).toMatchObject({
+			badgeTone: "risk",
+			cycleStatusLabel: "Ciclo en riesgo",
+		});
 		expect(
 			mapDashboardHome(
 				summary({
@@ -172,7 +171,7 @@ describe("mapDashboardHome", () => {
 				}),
 			),
 		).toMatchObject({
-			badgeLabel: "Recién empiezas",
+			badgeTone: "starting",
 			cycleStatusLabel: "Recién empiezas",
 			heroSubtitle: "Registra tu primer gasto.",
 		});
