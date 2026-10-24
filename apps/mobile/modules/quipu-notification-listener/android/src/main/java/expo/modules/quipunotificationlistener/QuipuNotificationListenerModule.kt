@@ -1,5 +1,6 @@
 package expo.modules.quipunotificationlistener
 
+import android.app.NotificationManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -80,6 +81,24 @@ class QuipuNotificationListenerModule : Module() {
       store.sources()
     }
 
+    AsyncFunction("setPaused") { paused: Boolean ->
+      val store = bind() ?: return@AsyncFunction Unit
+      val context = applicationContext()
+      store.awaitReady()
+      store.setPaused(paused)
+      if (paused) cancelQuipuNotices(context)
+      store.flush()
+    }
+
+    AsyncFunction("clear") {
+      val store = bind() ?: return@AsyncFunction Unit
+      val context = applicationContext()
+      store.awaitReady()
+      store.clear()
+      cancelQuipuNotices(context)
+      store.flush()
+    }
+
     AsyncFunction("getDiagnostics") {
       val context = applicationContext() ?: return@AsyncFunction null
       if (!isDebuggable(context)) return@AsyncFunction null
@@ -126,6 +145,11 @@ class QuipuNotificationListenerModule : Module() {
       false
     }
   }
+}
+
+private fun cancelQuipuNotices(context: Context?) {
+  val manager = context?.getSystemService(NotificationManager::class.java) ?: return
+  cancelPostedNotices(manager::cancelAll)
 }
 
 private fun isDebuggable(context: Context): Boolean {

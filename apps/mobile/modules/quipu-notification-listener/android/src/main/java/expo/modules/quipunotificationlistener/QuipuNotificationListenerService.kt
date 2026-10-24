@@ -47,15 +47,16 @@ class QuipuNotificationListenerService : NotificationListenerService() {
     try {
       val packageName = sbn.packageName ?: return
       val store = currentStore()
-      val ready = store.isReady()
-      val own = packageName == this.packageName
-      val listed = packageName in store.sources()
-      if (!mayReadBankNotification(packageName, this.packageName, ready, listed)) {
-        if (ready && !own && !listed) store.noteFiltered()
-        return
+      when (noticeGate(packageName, this.packageName, store.isReady(), packageName in store.sources(), store.isPaused())) {
+        NoticeGate.Drop -> return
+        NoticeGate.Filter -> {
+          store.noteFiltered()
+          return
+        }
+        NoticeGate.Read -> Unit
       }
       val notice = NotificationExtractor.detectedNotice(readRaw(sbn)) ?: return
-      if (!store.claim(notice.id)) return
+      if (!store.claim(notice.id, notice.packageName)) return
       postNotice(this, notice, noticeBankName(notice.packageName))
     } catch (e: Exception) {
       logFailure("onNotificationPosted", e)

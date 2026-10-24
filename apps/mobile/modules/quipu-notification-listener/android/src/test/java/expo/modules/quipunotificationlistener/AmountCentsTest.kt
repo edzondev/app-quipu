@@ -19,6 +19,44 @@ class AmountCentsTest {
   }
 
   @Test
+  fun merchantKeepsEveryWord() {
+    assertEquals("PLAZA VEA", NotificationExtractor.readMerchant("Consumo de S/ 45.90 en PLAZA VEA"))
+  }
+
+
+  @Test
+  fun merchantStopsBeforeTheCardPhrase() {
+    assertEquals(
+      "TAMBO+",
+      NotificationExtractor.readMerchant("Consumo de S/ 45.90 en TAMBO+ con tu tarjeta terminada en 1290."),
+    )
+  }
+
+  @Test
+  fun merchantStopsAtTheSentence() {
+    assertEquals(
+      "Yape",
+      NotificationExtractor.readMerchant("Consumo de S/ 45.90 en Yape. Si no reconoces esta operación llama al 311-9000"),
+    )
+  }
+
+  @Test
+  fun merchantDropsABlankName() {
+    assertNull(NotificationExtractor.readMerchant("Consumo de S/ 45.90 en   "))
+  }
+
+  @Test
+  fun merchantDoesNotCrossANewline() {
+    assertNull(NotificationExtractor.readMerchant("Consumo de S/ 45.90\nen PLAZA VEA"))
+  }
+
+  @Test
+  fun merchantCapsAt120Characters() {
+    val name = "A".repeat(130)
+    assertEquals("A".repeat(120), NotificationExtractor.readMerchant("Consumo de S/ 45.90 en $name"))
+  }
+
+  @Test
   fun detectedNoticeDropsRawTitleAndText() {
     val notice = NotificationExtractor.detectedNotice(
       RawNotification(

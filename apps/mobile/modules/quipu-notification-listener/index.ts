@@ -34,6 +34,8 @@ type NativeNotificationListener = {
 	addSource(input: string): Promise<AddSourceResult>;
 	removeSource(packageName: string): Promise<boolean>;
 	getSources(): Promise<string[]>;
+	setPaused(paused: boolean): Promise<void>;
+	clear(): Promise<void>;
 	getInstalledBanks(): Promise<InstalledBank[]>;
 	parsePlayStoreLink(text: string): PlayStoreLinkResult;
 	getDiagnostics(): Promise<NotificationDiagnostics | null>;
@@ -62,6 +64,16 @@ export async function removeSource(packageName: string): Promise<boolean> {
 export async function getSources(): Promise<string[]> {
 	if (!native) return [];
 	return native.getSources();
+}
+
+export async function setPaused(paused: boolean): Promise<void> {
+	if (!native) return;
+	await native.setPaused(paused);
+}
+
+export async function clear(): Promise<void> {
+	if (!native) return;
+	await native.clear();
 }
 
 export async function getInstalledBanks(): Promise<InstalledBank[]> {

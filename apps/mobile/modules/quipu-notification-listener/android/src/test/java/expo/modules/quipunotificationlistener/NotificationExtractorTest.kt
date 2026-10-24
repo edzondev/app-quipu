@@ -78,9 +78,34 @@ class NotificationExtractorTest {
   }
 
   @Test
+  fun interbankJoinedNoticeKeepsPlazaVeaAndTheAmount() {
+    val notice = joined(
+      packageName = "pe.com.interbank.mobilebanking",
+      text = "Consumo de S/ 45.90 en PLAZA VEA",
+      subText = "Interbank",
+      bigText = "... en PLAZA VEA con tu tarjeta ****1234. Si no reconoces esta operación, llama al (01) 311-9000.",
+    )
+    assertEquals(4_590, notice.amountCents)
+    assertEquals("PLAZA VEA", notice.merchant)
+  }
+
+
+
+  @Test
   fun dropsBlankKeyOrPackage() {
     assertNull(NotificationExtractor.extract(raw(packageName = " ", key = "k")))
     assertNull(NotificationExtractor.extract(raw(packageName = "com.bank", key = " ")))
+  }
+
+  private fun joined(
+    packageName: String = "com.bank.one",
+    text: String,
+    subText: String? = null,
+    bigText: String? = null,
+  ): DetectedNotice {
+    return NotificationExtractor.detectedNotice(
+      raw(packageName = packageName, title = null, text = text, subText = subText, bigText = bigText),
+    ) ?: error("expected a notice")
   }
 
   private fun extract(

@@ -5,5 +5,5 @@ import { signOutAndClearLocalData } from "@/lib/device-sign-out";
  * signOut fails. Clear the phone anyway and ignore serverNotified.
  */
 export async function clearDeviceAfterAccountDeleted(): Promise<void> {
-	await signOutAndClearLocalData();
+	await signOutAndClearLocalData("clear");
 }

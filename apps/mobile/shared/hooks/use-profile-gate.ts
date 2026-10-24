@@ -3,7 +3,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { authClient } from "@/lib/auth-client";
 
 export function useProfileGate() {
-	const { isPending: isSessionPending } = authClient.useSession();
+	const { data: session, isPending: isSessionPending } = authClient.useSession();
 	const { isAuthenticated, isLoading: isConvexAuthPending } = useConvexAuth();
 
 	// Convex recién tiene el token cuando la conexión quedó autenticada
@@ -13,6 +13,7 @@ export function useProfileGate() {
 
 	const isLoading =
 		isSessionPending || isConvexAuthPending || (isAuthReady && profile === undefined);
+	const active = Boolean(isAuthReady || session);
 
-	return { isAuthReady, isLoading, profile };
+	return { isAuthReady, isLoading, profile, active };
 }

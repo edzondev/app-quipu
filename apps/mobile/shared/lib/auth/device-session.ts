@@ -46,6 +46,7 @@ type DeviceSessionDeps = {
 	deleteSecure: (key: string) => Promise<void>;
 	resetConvex: () => void;
 	clearMemorySession: () => void;
+	settleListener: () => Promise<void>;
 };
 
 export type DeviceSignOutResult = {
@@ -91,6 +92,7 @@ export async function signOutAndClearDevice(deps: DeviceSessionDeps): Promise<De
 		}),
 	);
 	deps.clearMemorySession();
+	await deps.settleListener();
 	deps.resetConvex();
 	return { serverNotified };
 }

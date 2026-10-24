@@ -44,13 +44,62 @@ class NotificationStoreTest {
   @Test
   fun claimRemembersTheIdWithoutWritingText() {
     val (file, store) = startedStore()
-    assertTrue(store.claim("k|1"))
-    assertFalse(store.claim("k|1"))
+    store.addSource("com.bank.one")
+    store.flush()
+    assertTrue(store.claim("k|1", "com.bank.one"))
+    assertFalse(store.claim("k|1", "com.bank.one"))
     assertEquals(1L, store.diagnostics().deduped)
     store.flush()
 
-    assertFalse(reload(file).claim("k|1"))
+    assertFalse(reload(file).claim("k|1", "com.bank.one"))
   }
+
+  @Test
+  fun claimRefusesAnEmptyId() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertFalse(store.claim("", "com.bank.one"))
+  }
+
+  @Test
+  fun claimRefusesABankThatIsNoLongerChosen() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.removeSource("com.bank.one")
+    assertFalse(store.claim("k|2", "com.bank.one"))
+  }
+
+  @Test
+  fun choosingTheBankAgainClaimsTheRefusedId() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    assertTrue(store.removeSource("com.bank.one"))
+    store.claim("k|2", "com.bank.one")
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|2", "com.bank.one"))
+  }
+
+
+
+
+  @Test
+  fun claimRefusesWhilePaused() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    assertFalse(store.claim("k|paused", "com.bank.one"))
+  }
+
+  @Test
+  fun resumeClaimsAnIdThatArrivedWhilePaused() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.claim("k|paused", "com.bank.one")
+    store.setPaused(false)
+    assertTrue(store.claim("k|paused", "com.bank.one"))
+  }
+
 
   @Test
   fun oldFileIsOverwrittenWithoutTitleOrText() {
@@ -125,7 +174,7 @@ class NotificationStoreTest {
     val (file, store) = newStore()
     assertFalse(store.isReady())
     store.addSource("com.bank.one")
-    assertFalse(store.claim("early|1"))
+    assertFalse(store.claim("early|1", "com.bank.one"))
     store.start()
     store.awaitReady()
     store.flush()
@@ -146,6 +195,96 @@ class NotificationStoreTest {
     assertTrue(file.isFile)
     assertFalse(File(file.parentFile, "state.bin.tmp").exists())
     assertEquals(listOf("com.bank.one"), store.sources())
+  }
+
+
+  @Test
+  fun pauseSurvivesReloadAndKeepsTheBank() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.flush()
+    store.setPaused(true)
+    store.flush()
+    val reloaded = reload(file)
+    assertTrue(reloaded.isPaused())
+    assertEquals(listOf("com.bank.one"), reloaded.sources())
+  }
+
+
+
+  @Test
+  fun clearBeforeLoadLeavesTheBanksOnDisk() {
+    val (file, ready) = startedStore()
+    ready.addSource("com.bank.one")
+    ready.flush()
+    val executor = QueueExecutor()
+    val store = NotificationStore(file, executor)
+    store.clear()
+    store.start()
+    executor.drain()
+    assertEquals(listOf("com.bank.one"), store.sources())
+  }
+
+  @Test
+  fun setPausedBeforeLoadLeavesTheBanksOnDisk() {
+    val (file, ready) = startedStore()
+    ready.addSource("com.bank.one")
+    ready.flush()
+    val executor = QueueExecutor()
+    val store = NotificationStore(file, executor)
+    store.setPaused(true)
+    store.start()
+    executor.drain()
+    assertEquals(listOf("com.bank.one"), store.sources())
+  }
+
+
+  @Test
+  fun accountDeletionLeavesDetectionOn() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.setPaused(true)
+    store.flush()
+    store.clear()
+    store.flush()
+    assertFalse(reload(file).isPaused())
+  }
+
+  @Test
+  fun accountDeletionForgetsTheSeenId() {
+    val (_, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.claim("k|1", "com.bank.one")
+    store.clear()
+    store.addSource("com.bank.one")
+    assertTrue(store.claim("k|1", "com.bank.one"))
+  }
+
+  @Test
+  fun clearWithBanksButNoNoticesStillEmptiesTheFile() {
+    val (file, store) = startedStore()
+    store.addSource("com.bank.one")
+    store.flush()
+    store.clear()
+    store.flush()
+    assertTrue(reload(file).sources().isEmpty())
+  }
+
+  @Test
+  fun versionTwoFileKeepsBanksAndStaysUnpaused() {
+    val file = File(Files.createTempDirectory("quipu-nl").toFile(), "state.bin")
+    DataOutputStream(FileOutputStream(file)).use { output ->
+      output.writeInt(0x51504E31)
+      output.writeInt(2)
+      output.writeInt(1)
+      output.writeUTF("com.bank.one")
+      output.writeInt(0)
+    }
+    val store = NotificationStore(file)
+    store.start()
+    store.awaitReady()
+    assertEquals(listOf("com.bank.one"), store.sources())
+    assertFalse(store.isPaused())
   }
 
   private fun startedStore(): Pair<File, NotificationStore> {

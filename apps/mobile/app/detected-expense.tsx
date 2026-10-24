@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,6 +6,7 @@ import { withUniwind } from "uniwind";
 import { ExpenseSheetForm } from "@/shared/components/expenses/expense-sheet-form";
 import { useExpenseActions } from "@/shared/hooks/use-expense-actions";
 import { useHardwareBack } from "@/shared/hooks/use-hardware-back";
+import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import { type ExpenseDraftInput, ExpenseValidationError } from "@/shared/lib/expenses/draft";
 import { readActionError } from "@/shared/lib/expenses/errors";
 import { routeParam } from "@/shared/lib/expenses/expense-record";
@@ -34,6 +35,7 @@ export default function DetectedExpenseScreen() {
 		Number.isSafeInteger(postedAt) && postedAt > 0 ? LIMA_TIME.format(new Date(postedAt)) : "";
 	const meta = [routeParam(params.bank), when].filter((part) => part.length > 0).join(" · ");
 	const { register } = useExpenseActions();
+	const { isAuthReady, isLoading } = useProfileGate();
 	const [formError, setFormError] = useState<string | null>(null);
 	const [isSubmitting, setSubmitting] = useState(false);
 
@@ -59,6 +61,8 @@ export default function DetectedExpenseScreen() {
 	}
 
 	useHardwareBack(close);
+	if (isLoading) return null;
+	if (!isAuthReady) return <Redirect href="/(auth)/sign-in" />;
 	if (id.length === 0) {
 		return (
 			<SafeArea className="flex-1 bg-background px-[22px] pt-6" edges={["top", "bottom"]}>

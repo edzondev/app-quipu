@@ -10,6 +10,7 @@ import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-c
 import { useUniwind } from "uniwind";
 import { authClient } from "@/lib/auth-client";
 import { createConvexClient, nextConvexClient, registerConvexReset } from "@/lib/convex";
+import { setPaused } from "@/modules/quipu-notification-listener";
 import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 import { updateSpendableWidget } from "@/widgets/SpendableToday";
 
@@ -55,8 +56,11 @@ export default function RootLayout() {
 	);
 }
 
-function SplashHider() {
-	const { isAuthReady, isLoading } = useProfileGate();
+export function SplashHider() {
+	const { isAuthReady, isLoading, active } = useProfileGate();
+	useEffect(() => {
+		if (!isLoading) void setPaused(!active).catch(() => undefined);
+	}, [isLoading, active]);
 	useEffect(() => {
 		if (!isLoading) SplashScreen.hide();
 	}, [isLoading]);

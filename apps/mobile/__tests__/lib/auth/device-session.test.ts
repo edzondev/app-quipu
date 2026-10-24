@@ -32,6 +32,9 @@ function harness() {
 			clearMemorySession: () => {
 				log.push("memory");
 			},
+			settleListener: async () => {
+				log.push("listener");
+			},
 		},
 	};
 }
@@ -78,6 +81,9 @@ describe("signOutAndClearDevice", () => {
 		expect(deleted).toContain(`${PREFIX}_session_data.${MAX_STORAGE_CHUNKS - 1}`);
 		expect(deleted).not.toContain(`${PREFIX}_cookie.${MAX_STORAGE_CHUNKS}`);
 		expect(log).toContain("memory");
+		expect(log).toContain("listener");
+		expect(log.indexOf("listener")).toBeGreaterThan(log.indexOf("memory"));
+		expect(log.indexOf("listener")).toBeLessThan(log.indexOf("reset"));
 	});
 
 	it("borra SecureStore después de que signOut se llama y termina", async () => {
