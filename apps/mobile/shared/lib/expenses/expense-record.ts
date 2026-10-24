@@ -1,6 +1,6 @@
 import type { api } from "@quipu/convex-api";
 import type { FunctionReturnType } from "convex/server";
-import type { ExpenseDraftInput, ExpenseEnvelope } from "./draft";
+import type { ExpenseEnvelope } from "./draft";
 
 export type RecentExpensesResult = FunctionReturnType<typeof api.expenses.getRecentExpenses>;
 
@@ -80,23 +80,6 @@ export function routeParam(value: unknown): string {
 	if (typeof value === "string") return value;
 	if (Array.isArray(value) && typeof value[0] === "string") return value[0];
 	return "";
-}
-
-export function readEnvelopeParam(value: string): ExpenseDraftInput["envelopeType"] {
-	if (value === "needs" || value === "wants" || value === "savings") return value;
-	return null;
-}
-
-export function readCreateDraft(input: {
-	amountRaw: string;
-	description: string;
-	envelopeType: string;
-}): ExpenseDraftInput {
-	return {
-		amountRaw: input.amountRaw,
-		description: input.description,
-		envelopeType: readEnvelopeParam(input.envelopeType),
-	};
 }
 
 function readMovementEnvelope(movement: {
