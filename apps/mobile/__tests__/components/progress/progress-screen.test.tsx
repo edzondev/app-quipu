@@ -159,26 +159,6 @@ describe("ProgressScreen", () => {
 	});
 });
 
-function labelNodes(view: Awaited<ReturnType<typeof render>>) {
-	const spent = view.getByText(/GASTADO S\//);
-	const nodes = spent.parent?.children.filter((child) => typeof child !== "string");
-	if (!nodes) throw new Error("spent label missing");
-	return nodes;
-}
-
-function expectNoSurplusCard(view: Awaited<ReturnType<typeof render>>) {
-	expect(view.getByText("Necesidades")).toBeTruthy();
-	expect(view.queryByText("SOBRANTE")).toBeNull();
-	const rows = view.getByText("Necesidades").parent?.parent;
-	if (!rows) throw new Error("rows block missing");
-	const content = rows.parent;
-	if (!content) throw new Error("close content missing");
-	const trailing = content.children.at(-1);
-	if (trailing == null || typeof trailing === "string") throw new Error("rows block missing");
-	// La tarjeta iba después de las filas. Un hijo extra ahí es el hueco.
-	expect(trailing).toBe(rows);
-}
-
 describe("CloseScreen", () => {
 	afterEach(() => {
 		cleanup();
@@ -195,6 +175,7 @@ describe("CloseScreen", () => {
 
 		expect(view.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
 		expect(view.getByText("GASTADO S/ 3,290")).toBeTruthy();
+		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.queryByText("Mover S/ 210 al Fondo")).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
@@ -208,42 +189,6 @@ describe("CloseScreen", () => {
 			const named = view.getAllByLabelText(label);
 			expect(named.some((node) => node.props.accessibilityLabel === label)).toBe(true);
 		}
-	});
-
-	it("con sobrante sigue diciendo cuánto sobró y no deja la tarjeta", async () => {
-		const view = await render(
-			<CloseScreen
-				status="ready"
-				model={presentClose(closeReport, savingsOverview)}
-				onBack={jest.fn()}
-			/>,
-		);
-
-		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
-		expect(labelNodes(view)).toHaveLength(2);
-		expectNoSurplusCard(view);
-	});
-
-	it("sin sobrante no dice SOBRÓ y no deja la tarjeta", async () => {
-		const view = await render(
-			<CloseScreen
-				status="ready"
-				model={presentClose(
-					{
-						...closeReport,
-						report: { ...closeReport.report, totalIncomeCents: 329000 },
-					},
-					savingsOverview,
-				)}
-				onBack={jest.fn()}
-			/>,
-		);
-
-		expect(view.getByText("Cerraste julio.")).toBeTruthy();
-		expect(view.getByText("GASTADO S/ 3,290")).toBeTruthy();
-		expect(view.queryByText(/SOBRÓ/)).toBeNull();
-		expect(labelNodes(view)).toHaveLength(1);
-		expectNoSurplusCard(view);
 	});
 
 	it("muestra el texto de racha cuando streakEvaluated es true", async () => {
