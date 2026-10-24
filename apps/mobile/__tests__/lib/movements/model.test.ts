@@ -94,14 +94,9 @@ function present(filter: "all" | "needs" | "wants" | "savings" = "all", query = 
 describe("presentMovementList", () => {
 	it("agrupa por día, marca el detectado y reparte el ingreso", () => {
 		const model = present();
-		expect(model.cycleLine).toBe("CICLO 1 – 30 AGO · 7 REGISTROS");
+		expect(model.cycleLine).toBe("1 – 30 AGO");
 		expect(model.isEmpty).toBe(false);
-		expect(model.groups.map((group) => group.title)).toEqual([
-			"HOY · 15 AGO",
-			"AYER · 14 AGO",
-			"10 AGO",
-			"1 AGO",
-		]);
+		expect(model.groups.map((group) => group.title)).toEqual(["HOY", "AYER", "10 AGO", "1 AGO"]);
 		expect(model.groups[0]).toMatchObject({
 			totalLabel: "− S/ 62.00",
 			rows: [
@@ -148,8 +143,8 @@ describe("presentMovementList", () => {
 
 	it("filtra por sobre sin cambiar el conteo del ciclo", () => {
 		const wants = present("wants");
-		expect(wants.cycleLine).toBe("CICLO 1 – 30 AGO · 7 REGISTROS");
-		expect(wants.groups.map((group) => group.title)).toEqual(["HOY · 15 AGO", "AYER · 14 AGO"]);
+		expect(wants.cycleLine).toBe("1 – 30 AGO");
+		expect(wants.groups.map((group) => group.title)).toEqual(["HOY", "AYER"]);
 		expect(wants.groups[0]?.totalLabel).toBe("− S/ 57.00");
 		expect(present("savings").groups[0]?.rows[0]?.label).toBe("Fondo");
 		expect(present("needs").groups.flatMap((group) => group.rows)).toHaveLength(2);
@@ -210,7 +205,7 @@ describe("presentMovementList", () => {
 		);
 		expect(model.isEmpty).toBe(true);
 		expect(model.groups).toEqual([]);
-		expect(model.cycleLine).toBe("CICLO 1 – 30 AGO · 0 REGISTROS");
+		expect(model.cycleLine).toBe("1 – 30 AGO");
 		expect(JSON.stringify(model)).not.toContain("—");
 	});
 
@@ -224,12 +219,12 @@ describe("presentMovementList", () => {
 			},
 			{ filter: "all", query: "", now: NOW },
 		);
-		expect(model.cycleLine).toBe("CICLO 28 JUL – 26 AGO · 0 REGISTROS");
+		expect(model.cycleLine).toBe("28 JUL – 26 AGO");
 	});
 
 	it("sin ciclo activo no inventa fechas", () => {
 		expect(presentMovementList(null, { filter: "all", query: "", now: NOW })).toMatchObject({
-			cycleLine: "0 REGISTROS",
+			cycleLine: null,
 			isEmpty: true,
 			groups: [],
 		});

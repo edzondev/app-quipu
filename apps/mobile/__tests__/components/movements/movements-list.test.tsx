@@ -66,7 +66,7 @@ describe("MovementsList", () => {
 			/>,
 		);
 
-		expect(view.getByText("HOY · 15 AGO")).toBeTruthy();
+		expect(view.getByText("HOY")).toBeTruthy();
 		expect(view.getByText("DETECTADO · 19:12")).toBeTruthy();
 		expect(view.getByText("REPARTIDO")).toBeTruthy();
 		expect(view.queryByText("exp_plaza")).toBeNull();
@@ -94,11 +94,9 @@ describe("MovementsList", () => {
 			/>,
 		);
 
-		expect(view.getByText("Todavía no hay nada registrado en este ciclo.")).toBeTruthy();
-		expect(
-			view.getByText("Cada gasto que registres aparecerá aquí, ordenado por día y con su sobre."),
-		).toBeTruthy();
-		expect(view.getByText("CICLO 1 – 30 AGO · 0 REGISTROS")).toBeTruthy();
+		expect(view.getByText("Aún no hay movimientos.")).toBeTruthy();
+		expect(view.getByText("Tus gastos aparecerán aquí.")).toBeTruthy();
+		expect(view.getByText("1 – 30 AGO")).toBeTruthy();
 		expect(view.queryByText("—")).toBeNull();
 		expect(view.queryByText("Todos")).toBeNull();
 		await press(view.getByText("Registrar gasto"));

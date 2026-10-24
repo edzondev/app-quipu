@@ -16,18 +16,18 @@ const TONE_FILL: Record<"needs" | "wants" | "savings", string> = {
 	savings: "bg-savings",
 };
 
-const MOVEMENT_DOT: Record<HomeTone, string> = {
-	needs: "bg-needs",
-	wants: "bg-wants",
-	savings: "bg-savings",
-	income: "bg-stable",
-};
-
 const STATUS_TEXT: Record<BadgeTone, string> = {
 	stable: "text-stable",
 	attention: "text-warning",
 	risk: "text-danger",
 	starting: "text-foreground/55",
+};
+
+const MOVEMENT_DOT: Record<HomeTone, string> = {
+	needs: "bg-needs",
+	wants: "bg-wants",
+	savings: "bg-savings",
+	income: "bg-stable",
 };
 
 const VISIBLE_COMMITMENTS = 3;
@@ -67,6 +67,8 @@ export function HomeDense({
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
 	const statusClass = STATUS_TEXT[home.badgeTone];
+	const cycleStatus =
+		home.badgeTone === "attention" || home.badgeTone === "risk" ? home.cycleStatusLabel : null;
 
 	return (
 		<ScrollView
@@ -83,20 +85,19 @@ export function HomeDense({
 				<View className="mt-2">
 					<HeroAmount cents={home.dailyCents} symbol={home.currencySymbol} />
 				</View>
-				{home.heroSubtitle ? (
-					<Text className="mt-2.5 font-hanken text-[14px] leading-[20px] text-foreground/55">
-						{home.heroSubtitle}
-					</Text>
-				) : null}
 				<Text
 					testID="home-cycle-day"
 					className="mt-2.5 font-hanken text-[13px] leading-[18px] text-foreground/45"
 				>
 					Día {home.cycleDay}/{home.cycleTotal}
-					{" · "}
-					<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
-						{home.cycleStatusLabel}
-					</Text>
+					{cycleStatus ? (
+						<>
+							{" · "}
+							<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
+								{cycleStatus}
+							</Text>
+						</>
+					) : null}
 					{" · "}
 					{home.surplusCents < 0
 						? overspentByLabel(home.surplusCents, home.currencySymbol)
@@ -105,7 +106,7 @@ export function HomeDense({
 			</View>
 
 			<View className="border-b border-line pb-4 pt-5">
-				<SectionLabel>Sobres · queda</SectionLabel>
+				<SectionLabel>Sobres</SectionLabel>
 				<View className="mt-3.5 gap-3">
 					{home.envelopes.map((envelope) => {
 						const carry = envelopeCarryLabel(
@@ -145,19 +146,15 @@ export function HomeDense({
 				</View>
 			</View>
 
-			<View className="border-b border-line pb-3.5 pt-[15px]">
-				<View className="mb-1 flex-row items-baseline justify-between">
-					<SectionLabel>Próximos compromisos</SectionLabel>
-					<Text className="font-geist-mono text-[11.5px] text-foreground/45">
-						{home.commitments.length}
-					</Text>
-				</View>
-				{commitments.length === 0 ? (
-					<Text className="py-2 font-hanken text-[14px] text-foreground/55">
-						Sin compromisos próximos.
-					</Text>
-				) : (
-					commitments.map((commitment) => (
+			{commitments.length > 0 ? (
+				<View className="border-b border-line pb-3.5 pt-[15px]">
+					<View className="mb-1 flex-row items-baseline justify-between">
+						<SectionLabel>Por pagar</SectionLabel>
+						<Text className="font-geist-mono text-[11.5px] text-foreground/45">
+							{home.commitments.length}
+						</Text>
+					</View>
+					{commitments.map((commitment) => (
 						<View key={commitment.id} className="flex-row items-center justify-between py-[7px]">
 							<Text className="flex-1 pr-3 font-hanken-semibold text-[14px] text-foreground">
 								{commitment.name}
@@ -178,23 +175,19 @@ export function HomeDense({
 								{formatCentsTrimmed(commitment.amountCents, home.currencySymbol)}
 							</Text>
 						</View>
-					))
-				)}
-			</View>
-
-			<View className="pt-[15px]">
-				<View className="mb-1.5 flex-row items-baseline justify-between">
-					<SectionLabel>Movimientos</SectionLabel>
-					<Pressable testID="home-view-movements" hitSlop={8} onPress={onViewAllMovements}>
-						<Text className="font-hanken-semibold text-[12.5px] text-stable">Ver todos</Text>
-					</Pressable>
+					))}
 				</View>
-				{home.recentMovements.length === 0 ? (
-					<Text className="py-2 font-hanken text-[14px] text-foreground/55">
-						Sin movimientos en este ciclo.
-					</Text>
-				) : (
-					home.recentMovements.map((movement, index) => {
+			) : null}
+
+			{home.recentMovements.length > 0 ? (
+				<View className="pt-[15px]">
+					<View className="mb-1.5 flex-row items-baseline justify-between">
+						<SectionLabel>Movimientos</SectionLabel>
+						<Pressable testID="home-view-movements" hitSlop={8} onPress={onViewAllMovements}>
+							<Text className="font-hanken-semibold text-[12.5px] text-stable">Ver todos</Text>
+						</Pressable>
+					</View>
+					{home.recentMovements.map((movement, index) => {
 						const isLast = index === home.recentMovements.length - 1;
 						const inbound = movement.tone === "income";
 						return (
@@ -221,9 +214,9 @@ export function HomeDense({
 								</Text>
 							</View>
 						);
-					})
-				)}
-			</View>
+					})}
+				</View>
+			) : null}
 		</ScrollView>
 	);
 }

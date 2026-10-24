@@ -24,20 +24,17 @@ const CYCLE_CHOICES = [
 	{
 		kind: "habitual",
 		testID: "income-mode-new-cycle",
-		label: "Empieza un nuevo ciclo",
-		hint: "Abre un período nuevo",
+		label: "Nuevo ciclo",
 	},
 	{
 		kind: "extraordinary",
 		testID: "income-mode-add",
-		label: "Sumar al ciclo actual",
-		hint: "Sin cerrar este período",
+		label: "Sumar a este ciclo",
 	},
 ] as const satisfies ReadonlyArray<{
 	kind: IncomeKind;
 	testID: string;
 	label: string;
-	hint: string;
 }>;
 
 type SheetCycle = Exclude<IncomeCycleOffer, "loading">;
@@ -124,10 +121,7 @@ export function IncomeSheetForm({
 
 	return (
 		<View testID="income-sheet" className="px-[22px] pb-8">
-			<View className="mt-4 flex-row items-center justify-between">
-				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
-					REGISTRAR INGRESO
-				</Text>
+			<View className="mt-4 flex-row items-center justify-end">
 				<Pressable
 					accessibilityRole="button"
 					accessibilityLabel="Cancelar"
@@ -152,7 +146,6 @@ export function IncomeSheetForm({
 										testID={option.testID}
 										accessibilityRole="button"
 										accessibilityLabel={option.label}
-										accessibilityHint={option.hint}
 										accessibilityState={{ selected }}
 										onPress={() => field.handleChange(option.kind)}
 										className={`rounded-[13px] border px-3.5 py-3 active:opacity-60 ${
@@ -165,9 +158,6 @@ export function IncomeSheetForm({
 											}`}
 										>
 											{option.label}
-										</Text>
-										<Text className="mt-0.5 font-hanken text-[12px] text-foreground/45">
-											{option.hint}
 										</Text>
 									</Pressable>
 								);

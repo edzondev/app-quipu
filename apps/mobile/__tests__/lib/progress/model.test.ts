@@ -17,7 +17,7 @@ const SEP = Date.parse("2026-09-15T17:00:00.000Z");
 
 describe("presentProgress", () => {
 	it("arma la racha, los meses cortos, DESDE y los contadores", () => {
-		const model = presentProgress(progressOverview, progressRewards, savingsOverview, null);
+		const model = presentProgress(progressOverview, progressRewards, null);
 
 		expect(model.empty).toBe(false);
 		expect(model.streakLabel).toBe("3");
@@ -26,7 +26,6 @@ describe("presentProgress", () => {
 			{ key: String(SEP), tone: "warning", monthLabel: "SEP" },
 		]);
 		expect(model.sinceLabel).toBe("DESDE MAYO");
-		expect(model.savedLabel).toBe("S/ 4,320");
 		expect(model.registeredExpenseLabel).toBe("312");
 		expect(model.daysWithoutSkippingLabel).toBe("46");
 		expect(model.achievements).toEqual([
@@ -67,7 +66,6 @@ describe("presentProgress", () => {
 				],
 			} satisfies Overview,
 			progressRewards,
-			savingsOverview,
 			null,
 		);
 
@@ -110,7 +108,6 @@ describe("presentProgress", () => {
 				],
 			} satisfies Overview,
 			progressRewards,
-			savingsOverview,
 			null,
 		);
 
@@ -141,7 +138,6 @@ describe("presentProgress", () => {
 				],
 			} satisfies Overview,
 			progressRewards,
-			savingsOverview,
 			null,
 		);
 
@@ -170,7 +166,6 @@ describe("presentProgress", () => {
 				...progressRewards,
 				rewards: progressRewards.rewards.map((reward) => ({ ...reward, unlocked: true })),
 			} satisfies Rewards,
-			null,
 			null,
 		);
 
@@ -201,23 +196,17 @@ describe("presentProgress", () => {
 				rewards: progressRewards.rewards.map((reward) => ({ ...reward, unlocked: true })),
 			} satisfies Rewards,
 			null,
-			null,
 		);
 
 		expect(model.empty).toBe(true);
 		expect(model.bars).toEqual([]);
 		expect(model.sinceLabel).toBeNull();
-		expect(model.savedLabel).toBeNull();
 		expect(model.rewardText).toBeNull();
 	});
 
 	it("muestra el cierre solo cuando el query trae reporte", () => {
-		expect(
-			presentProgress(progressOverview, progressRewards, savingsOverview, null).closeEntry,
-		).toBeNull();
-		expect(
-			presentProgress(progressOverview, progressRewards, savingsOverview, closeReport).closeEntry,
-		).toEqual({
+		expect(presentProgress(progressOverview, progressRewards, null).closeEntry).toBeNull();
+		expect(presentProgress(progressOverview, progressRewards, closeReport).closeEntry).toEqual({
 			label: "CICLO CERRADO · JULIO",
 			highlighted: true,
 		});
@@ -231,7 +220,6 @@ describe("presentClose", () => {
 		expect(model?.title).toBe("Cerraste julio con S/ 210 de sobra.");
 		expect(model?.subtitle).toBe("3 ciclos seguidos.");
 		expect(model?.spentLabel).toBe("GASTADO S/ 3,290");
-		expect(model?.surplusLabel).toBe("SOBRÓ S/ 210");
 		expect(model?.rows.map((row) => row.amountLabel)).toEqual(["S/ 2,000", "S/ 1,000", "S/ 290"]);
 		expect(model?.segments.map((segment) => segment.percent)).toEqual([57, 29, 8, 6]);
 		expect(model?.segments.map((segment) => segment.label)).toEqual([
@@ -315,7 +303,6 @@ describe("presentClose", () => {
 		);
 
 		expect(model?.title).toBe("Cerraste julio.");
-		expect(model?.surplusLabel).toBeNull();
 	});
 
 	it("devuelve null sin reporte", () => {

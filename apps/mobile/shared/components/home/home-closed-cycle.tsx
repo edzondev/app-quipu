@@ -11,16 +11,15 @@ type ClosedCycleSummary = NonNullable<Summary["closedCycle"]>;
 function closedCycleMessage(cycle: ClosedCycleSummary, symbol: string): string {
 	const start = limaDayLabel(cycle.startDate);
 	const end = limaDayLabel(inclusiveEndDate(cycle.endDate));
-	const ended = `Tu ciclo del ${start} al ${end} terminó.`;
-	const kept = "Tus movimientos siguen guardados.";
+	const header = `CICLO ${start}–${end} · CERRADO`;
 	if (cycle.surplusCents > 0) {
 		const left = formatCentsTrimmed(cycle.surplusCents, symbol);
-		return `${ended} Te quedaron ${left} y se suman a tu próximo ingreso. ${kept}`;
+		return `${header}\nTe quedaron ${left}\nPasan a tu próximo ciclo.`;
 	}
 	if (cycle.surplusCents < 0) {
-		return `${ended} ${overspentByLabel(cycle.surplusCents, symbol)} y se descuenta de tu próximo ingreso. ${kept}`;
+		return `${header}\n${overspentByLabel(cycle.surplusCents, symbol)}\nSe descuenta de tu próximo ingreso.`;
 	}
-	return `${ended} ${kept}`;
+	return header;
 }
 
 export function HomeClosedCycle({
@@ -47,12 +46,12 @@ export function HomeClosedCycle({
 				</Text>
 				<Pressable
 					accessibilityRole="button"
-					accessibilityLabel="Registrar nuevo ingreso"
+					accessibilityLabel="Registrar ingreso"
 					onPress={onRegisterIncome}
 					className="mt-3 items-center rounded-[13px] border border-line py-4 active:opacity-80"
 				>
 					<Text className="font-hanken-semibold text-[15px] text-foreground">
-						Registrar nuevo ingreso
+						Registrar ingreso
 					</Text>
 				</Pressable>
 			</View>

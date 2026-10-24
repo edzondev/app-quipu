@@ -75,8 +75,6 @@ describe("IncomeSheetForm", () => {
 
 		expect(view.getByTestId(NEW_CYCLE)).toBeTruthy();
 		expect(view.getByTestId(ADD_TO_CYCLE)).toBeTruthy();
-		expect(view.getByTestId(NEW_CYCLE).props.accessibilityHint).toBe("Abre un período nuevo");
-		expect(view.getByTestId(ADD_TO_CYCLE).props.accessibilityHint).toBe("Sin cerrar este período");
 		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
 		expect(selected(view, NEW_CYCLE)).toBe(false);
 		expect(view.queryByText("Tu sueldo empieza un ciclo nuevo")).toBeNull();
@@ -313,8 +311,8 @@ describe("IncomeSheetForm", () => {
 		);
 
 		expect(view.queryByTestId(NEW_CYCLE)).toBeNull();
-		expect(view.queryByText("Empieza un nuevo ciclo")).toBeNull();
-		expect(view.getByText("Sumar al ciclo actual")).toBeTruthy();
+		expect(view.queryByText("Nuevo ciclo")).toBeNull();
+		expect(view.getByText("Sumar a este ciclo")).toBeTruthy();
 		expect(selected(view, ADD_TO_CYCLE)).toBe(true);
 
 		await fireEvent.press(view.getByText("5"));

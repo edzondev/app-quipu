@@ -24,7 +24,7 @@ export function useProgress() {
 
 	return {
 		status: "ready" as const,
-		progress: presentProgress(overview, rewards, savings, closeReport),
+		progress: presentProgress(overview, rewards, closeReport),
 		close: presentClose(closeReport, savings),
 	};
 }

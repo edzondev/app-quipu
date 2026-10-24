@@ -16,14 +16,13 @@ import {
 	type SecuritySessionRow,
 } from "@/shared/lib/settings/security-model";
 
-const INTRO = "Cada dispositivo tiene su propia llave. Puedes quitar la que ya no uses.";
 const UNAVAILABLE = "No disponible";
 
 const SHEET = {
 	passkey: {
 		eyebrow: "ELIMINAR PASSKEY",
-		title: (name: string) => `Vas a quitar la llave de ${name}.`,
-		body: "Ese dispositivo dejará de entrar con esta Passkey. Podrás volver a crearla cuando quieras.",
+		title: (name: string) => `¿Quitar la llave de ${name}?`,
+		body: "Ese dispositivo ya no entrará con ella.",
 		confirm: "Eliminar Passkey",
 		error: SECURITY_ERROR.remove,
 	},
@@ -112,9 +111,6 @@ export function SecurityScreen({
 				>
 					<View className="mt-6.5">
 						<Text className="font-newsreader text-[27px] leading-8 text-foreground">Passkeys</Text>
-						<Text className="mt-2 font-hanken text-[14px] leading-5.25 text-foreground/55">
-							{INTRO}
-						</Text>
 					</View>
 					<PasskeySection
 						passkeys={model.passkeys}

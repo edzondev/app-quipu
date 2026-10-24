@@ -20,42 +20,47 @@ tags:
 - extendedWaitUntil:
     visible: "Aún no hay ciclo"
     timeout: 30000
-- assertVisible: "Registra tu primer ingreso para ver cuánto puedes gastar hoy."
+- assertVisible: "Registra tu ingreso para ver cuánto puedes gastar hoy."
 - assertVisible: "Registrar ingreso"
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible:
+      id: income-sheet
     timeout: 10000
 - tapOn:
     text: "Gasto"
-- assertVisible: "(?-i)REGISTRAR INGRESO"
-- assertNotVisible: "NUEVO GASTO"
+- assertVisible:
+    id: expense-sheet
+- assertNotVisible:
+    id: income-sheet
 - tapOn: "Cancelar"
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible:
+      id: income-sheet
     timeout: 10000
-- assertNotVisible: "NUEVO GASTO"
+- assertNotVisible:
+      id: expense-sheet
 - tapOn: "Cancelar"
 - tapOn:
     text: "Movimientos"
 - extendedWaitUntil:
-    visible: "Todavía no hay nada registrado en este ciclo."
+    visible: "Aún no hay movimientos."
     timeout: 15000
-- assertVisible: "Cada gasto que registres aparecerá aquí, ordenado por día y con su sobre."
+- assertVisible: "Tus gastos aparecerán aquí."
 - assertVisible: "Registrar ingreso"
 - assertNotVisible:
     text: "Todos"
 - tapOn:
     text: "Plan"
 - extendedWaitUntil:
-    visible: "Dónde está tu dinero antes de que lo gastes."
+    visible: "Plan"
     timeout: 10000
-- assertNotVisible: "TOTAL REPARTIDO"
+- assertNotVisible: "EN TUS SOBRES"
 - tapOn: "Compromisos"
 - extendedWaitUntil:
-    visible: "SIN COMPROMISOS"
+    visible: "Aún no registras tus pagos fijos."
     timeout: 15000
 - assertVisible: "Aún no registras tus pagos fijos."
 - tapOn: "Volver"
@@ -65,10 +70,10 @@ tags:
     visible: "Todavía no hay sobres en el ciclo activo."
     timeout: 10000
 - tapOn: "Volver"
-- tapOn: "Ahorro ya guardado"
+- tapOn: "Ahorro"
 - extendedWaitUntil:
     visible: "Fondo de Emergencia"
     timeout: 15000
 - assertVisible: "Tu 20% empieza a acumularse con el primer ingreso."
-- assertVisible: "SIN METAS"
-- assertVisible: "Tus metas vivirán aquí."
+- assertVisible: "TUS METAS"
+- assertVisible: "Aún no tienes metas."

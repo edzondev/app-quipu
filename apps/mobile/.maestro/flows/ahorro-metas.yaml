@@ -20,7 +20,7 @@ tags:
     timeout: 30000
 - tapOn:
     text: "Plan"
-- tapOn: "Ahorro ya guardado"
+- tapOn: "Ahorro"
 - extendedWaitUntil:
     visible: "Fondo de Emergencia"
     timeout: 15000
@@ -87,7 +87,6 @@ tags:
           notVisible: "(?-i)NUEVA META"
           timeout: 20000
 - assertVisible: "Meta E2E"
-- assertVisible: "SIN APORTE AUTOMÁTICO"
 - assertVisible: ".*de 2,000"
 - runFlow:
     when:

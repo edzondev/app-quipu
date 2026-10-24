@@ -35,5 +35,6 @@ appId: com.quipu.finance
     id: income-submit
     enabled: true
 - extendedWaitUntil:
-    notVisible: "(?-i)REGISTRAR INGRESO"
+    notVisible:
+      id: income-sheet
     timeout: 20000

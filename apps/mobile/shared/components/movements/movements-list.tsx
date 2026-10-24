@@ -21,8 +21,8 @@ const SEARCH_ENTERING = FadeInDown.duration(180)
 	.easing(Easing.bezier(0.23, 1, 0.32, 1))
 	.withInitialValues({ opacity: 0, transform: [{ translateY: -6 }] });
 
-const EMPTY_TITLE = "Todavía no hay nada registrado en este ciclo.";
-const EMPTY_BODY = "Cada gasto que registres aparecerá aquí, ordenado por día y con su sobre.";
+const EMPTY_TITLE = "Aún no hay movimientos.";
+const EMPTY_BODY = "Tus gastos aparecerán aquí.";
 const FILTER_EMPTY = "Ningún movimiento con ese criterio.";
 
 const DOT: Record<MovementTone, string> = {
@@ -91,7 +91,7 @@ export function MovementsList({ status, data, now, onOpenExpense, onCreate }: Pr
 
 			{searchOpen ? <SearchField onChange={setQuery} /> : null}
 
-			{model ? (
+			{model?.cycleLine ? (
 				<Text className="mt-2.5 font-geist-mono text-[11px] uppercase tracking-[0.12em] text-foreground/45">
 					{model.cycleLine}
 				</Text>

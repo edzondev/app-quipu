@@ -20,8 +20,8 @@ tags:
 - assertVisible: "Día .*"
 # f93107b: si el saldo quedó negativo, la misma línea dice «Te pasaste por S/ X» (overspentByLabel).
 - assertVisible: "(.*Sobra .*|.*Te pasaste por .*)"
-- assertVisible: "Sobres · queda"
-- assertVisible: "Necesid\\."
+- assertVisible: "Sobres"
+- assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - assertNotVisible: "\\+ Ingreso"
@@ -42,13 +42,15 @@ tags:
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible:
+      id: income-sheet
     timeout: 10000
 - assertVisible:
     id: income-mode-add
 - tapOn: "Cancelar"
 - extendedWaitUntil:
-    notVisible: "(?-i)REGISTRAR INGRESO"
+    notVisible:
+      id: income-sheet
     timeout: 10000
 - tapOn: "Ver todos"
 - extendedWaitUntil:
@@ -57,4 +59,3 @@ tags:
 - tapOn:
     text: "Inicio"
 - assertVisible: "Hoy puedes gastar"
-- assertVisible: "Hola.*"

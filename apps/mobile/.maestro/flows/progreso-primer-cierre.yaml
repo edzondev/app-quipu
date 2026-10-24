@@ -14,7 +14,7 @@ tags:
 # Hace falta un ciclo de apertura empezado antes de hoy y sin cierres en verde.
 # Apunta QUIPU_E2E_EMAIL a esa cuenta. El ingreso de ciclo nuevo deja otro ciclo activo.
 # No corre por defecto.
-# El cierre entra en el historial de Progreso. No cuenta en «CICLOS CERRADOS EN VERDE» ni en la racha.
+# El cierre entra en el historial de Progreso. No cuenta en «CICLOS EN VERDE» ni en la racha.
 # La racha cuenta 24 horas reales entre el inicio y el cierre, y nunca el ciclo de apertura.
 - runFlow:
     file: ../subflows/entrar.yaml
@@ -31,10 +31,10 @@ tags:
 - tapOn:
     text: "Progreso"
 - extendedWaitUntil:
-    visible: "CICLOS CERRADOS EN VERDE"
+    visible: "CICLOS EN VERDE"
     timeout: 20000
 - assertVisible: "CICLO CERRADO · .*"
 - assertVisible:
     text: "0"
-    below: "CICLOS CERRADOS EN VERDE"
+    below: "CICLOS EN VERDE"
 - assertNotVisible: "Aún no cierras un ciclo."

@@ -20,8 +20,8 @@ tags:
     text: "Plan"
 - tapOn: "Compromisos"
 - extendedWaitUntil:
-    visible: "SIN COMPROMISOS"
+    visible: "Aún no registras tus pagos fijos."
     timeout: 15000
 - assertVisible: "Aún no registras tus pagos fijos."
 - assertVisible: "Agregar compromiso"
-- assertVisible: "RESERVADO ESTE CICLO"
+- assertVisible: "ESTE CICLO"

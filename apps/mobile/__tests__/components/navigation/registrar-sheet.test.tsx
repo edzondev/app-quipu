@@ -116,7 +116,6 @@ describe("RegistrarSheet", () => {
 		expect(view.getByRole("button", { name: "Ingreso" }).props.accessibilityState.selected).toBe(
 			true,
 		);
-		expect(view.queryByText("NUEVO GASTO")).toBeNull();
 	});
 
 	it("sin ciclo no deja elegir Gasto ni abrir el detalle", async () => {
@@ -137,7 +136,6 @@ describe("RegistrarSheet", () => {
 		const gasto = view.getByRole("button", { name: "Gasto" });
 		expect(gasto.props.accessibilityState.disabled).toBe(true);
 		await fireEvent.press(gasto);
-		expect(view.queryByText("NUEVO GASTO")).toBeNull();
 		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
 		expect(view.getByText("Registrar ingreso")).toBeTruthy();
 		expect(view.getByTestId("income-mode-new-cycle")).toBeTruthy();
@@ -152,7 +150,6 @@ describe("RegistrarSheet", () => {
 			<RegistrarSheet isPresented session={{ nonce: 2, intent: "auto" }} onDismiss={jest.fn()} />,
 		);
 
-		expect(view.getByText("NUEVO GASTO")).toBeTruthy();
 		expect(view.queryByLabelText("Abrir detalle del gasto")).toBeNull();
 		expect(view.getByRole("button", { name: "Gasto" }).props.accessibilityState.selected).toBe(
 			true,
@@ -219,8 +216,8 @@ describe("RegistrarSheet", () => {
 		);
 
 		expect(view.queryByTestId("income-mode-new-cycle")).toBeNull();
-		expect(view.queryByText("Empieza un nuevo ciclo")).toBeNull();
-		expect(view.getByText("Sumar al ciclo actual")).toBeTruthy();
+		expect(view.queryByText("Nuevo ciclo")).toBeNull();
+		expect(view.getByText("Sumar a este ciclo")).toBeTruthy();
 		expect(view.getByTestId("income-mode-add").props.accessibilityState.selected).toBe(true);
 	});
 

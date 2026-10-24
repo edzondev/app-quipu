@@ -19,7 +19,7 @@ const SEP = Date.parse("2026-09-15T17:00:00.000Z");
 const screenProps = {
 	status: "ready" as const,
 	onOpenClose: jest.fn(),
-	onOpenPlan: jest.fn(),
+	onRegisterExpense: jest.fn(),
 };
 
 describe("ProgressScreen", () => {
@@ -31,7 +31,7 @@ describe("ProgressScreen", () => {
 		const view = await render(
 			<ProgressScreen
 				{...screenProps}
-				model={presentProgress(progressOverview, progressRewards, savingsOverview, null)}
+				model={presentProgress(progressOverview, progressRewards, null)}
 			/>,
 		);
 
@@ -42,15 +42,14 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("MAY")).toBeTruthy();
 		expect(view.getByText("SEP")).toBeTruthy();
 		expect(view.getByText("MAYO")).toBeTruthy();
-		expect(view.getByText("AHORRADO\nTOTAL")).toBeTruthy();
-		expect(view.getByText("S/ 4,320")).toBeTruthy();
+		expect(view.queryByText("AHORRADO\nTOTAL")).toBeNull();
+		expect(view.queryByText("S/ 4,320")).toBeNull();
 		expect(view.getByText("GASTOS\nREGISTRADOS").parent?.props.className ?? "").toContain("flex-1");
 		expect(view.getByText("GASTOS\nREGISTRADOS")).toBeTruthy();
 		expect(view.getByText("312")).toBeTruthy();
 		expect(view.getByText("DÍAS SIN\nSALTAR")).toBeTruthy();
 		expect(view.getByText("46")).toBeTruthy();
 		expect(view.getByText("Primer ciclo cerrado")).toBeTruthy();
-		expect(view.getByText("RECOMPENSA")).toBeTruthy();
 		expect(view.queryByText("Ver ahorro y metas")).toBeNull();
 		expect(view.queryByText("first_cycle_closed")).toBeNull();
 	});
@@ -82,7 +81,6 @@ describe("ProgressScreen", () => {
 						],
 					} satisfies Overview,
 					progressRewards,
-					savingsOverview,
 					null,
 				)}
 			/>,
@@ -96,12 +94,12 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("DESDE MAYO")).toBeTruthy();
 	});
 
-	it("centra el vacío y abre Plan", async () => {
-		const onOpenPlan = jest.fn();
+	it("centra el vacío y abre la hoja de gasto", async () => {
+		const onRegisterExpense = jest.fn();
 		const view = await render(
 			<ProgressScreen
 				{...screenProps}
-				onOpenPlan={onOpenPlan}
+				onRegisterExpense={onRegisterExpense}
 				model={presentProgress(
 					{
 						...progressOverview,
@@ -120,18 +118,17 @@ describe("ProgressScreen", () => {
 					} satisfies Overview,
 					{ ...progressRewards, rewards: [] } satisfies Rewards,
 					null,
-					null,
 				)}
 			/>,
 		);
 
 		expect(view.getByText("Aún no cierras un ciclo.")).toBeTruthy();
 		expect(view.queryByLabelText("Ciclo en curso")).toBeNull();
-		expect(view.queryByText("CICLOS CERRADOS EN VERDE")).toBeNull();
+		expect(view.queryByText("CICLOS EN VERDE")).toBeNull();
 		expect(view.queryByText(/DESDE/)).toBeNull();
 		expect(view.queryByText("GASTOS REGISTRADOS")).toBeNull();
-		await fireEvent.press(view.getByLabelText("Ir a Plan"));
-		expect(onOpenPlan).toHaveBeenCalledTimes(1);
+		await fireEvent.press(view.getByLabelText("Registrar gasto"));
+		expect(onRegisterExpense).toHaveBeenCalledTimes(1);
 	});
 
 	it("abre el cierre destacado con borde savings y lo oculta cuando no hay reporte", async () => {
@@ -140,7 +137,7 @@ describe("ProgressScreen", () => {
 			<ProgressScreen
 				{...screenProps}
 				onOpenClose={onOpenClose}
-				model={presentProgress(progressOverview, progressRewards, savingsOverview, closeReport)}
+				model={presentProgress(progressOverview, progressRewards, closeReport)}
 			/>,
 		);
 		const card = present.getByLabelText("CICLO CERRADO · JULIO");
@@ -152,7 +149,7 @@ describe("ProgressScreen", () => {
 		const absent = await render(
 			<ProgressScreen
 				{...screenProps}
-				model={presentProgress(progressOverview, progressRewards, savingsOverview, null)}
+				model={presentProgress(progressOverview, progressRewards, null)}
 			/>,
 		);
 		expect(absent.queryByText("CICLO CERRADO · JULIO")).toBeNull();
@@ -175,7 +172,6 @@ describe("CloseScreen", () => {
 
 		expect(view.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
 		expect(view.getByText("GASTADO S/ 3,290")).toBeTruthy();
-		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.queryByText("Mover S/ 210 al Fondo")).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();

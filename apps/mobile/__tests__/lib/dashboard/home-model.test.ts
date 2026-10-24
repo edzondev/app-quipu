@@ -141,7 +141,6 @@ describe("mapDashboardHome", () => {
 			badgeTone: "stable",
 			cycleStatusLabel: "Ciclo estable",
 			dailyCents: 4230,
-			heroSubtitle: "Sin tocar tus compromisos ni tu ahorro.",
 			currencySymbol: "S/",
 			surplusCents: 154300,
 			commitments: [],
@@ -159,22 +158,6 @@ describe("mapDashboardHome", () => {
 			badgeTone: "risk",
 			cycleStatusLabel: "Ciclo en riesgo",
 		});
-		expect(
-			mapDashboardHome(
-				summary({
-					hero: {
-						...hero,
-						displayDailyCents: 0,
-						statusBadge: "starting",
-						bodyCopy: "Registra tu primer gasto.",
-					},
-				}),
-			),
-		).toMatchObject({
-			badgeTone: "starting",
-			cycleStatusLabel: "Recién empiezas",
-			heroSubtitle: "Registra tu primer gasto.",
-		});
 	});
 
 	it("pone S/ 560 en Ahorro planeado desde el snapshot, no como apartado", () => {
@@ -182,7 +165,7 @@ describe("mapDashboardHome", () => {
 		const savings = home?.envelopes.find((envelope) => envelope.tone === "savings");
 		expect(savings).toMatchObject({
 			label: "Ahorro planeado",
-			shortLabel: "Planeado",
+			shortLabel: "Ahorro",
 			remainingCents: 56_000,
 			suffix: "",
 		});
@@ -194,7 +177,7 @@ describe("mapDashboardHome", () => {
 		expect(home?.envelopes).toEqual([
 			{
 				label: "Necesidades",
-				shortLabel: "Necesid.",
+				shortLabel: "Necesidades",
 				spentCents: 113800,
 				remainingCents: 61200,
 				remainingPercent: 35,
@@ -222,7 +205,7 @@ describe("mapDashboardHome", () => {
 			},
 			{
 				label: "Ahorro planeado",
-				shortLabel: "Planeado",
+				shortLabel: "Ahorro",
 				spentCents: 70000,
 				remainingCents: 0,
 				remainingPercent: 100,

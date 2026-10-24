@@ -24,10 +24,9 @@ tags:
 - extendedWaitUntil:
     visible: "Aún no cierras un ciclo."
     timeout: 15000
-- assertVisible: "La constancia aparece cuando el primero queda cerrado. Sin medallas ni apuro."
-- tapOn: "Ir a Plan"
+- assertVisible: "Tu racha empieza al cerrar el primero."
+- tapOn: "Registrar gasto"
 - extendedWaitUntil:
-    visible: "Dónde está tu dinero antes de que lo gastes."
+    visible:
+      id: expense-sheet
     timeout: 10000
-- assertVisible:
-    text: "Plan"

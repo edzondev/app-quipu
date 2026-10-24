@@ -27,7 +27,7 @@ jest.mock("@/lib/auth-client", () => ({
 	},
 }));
 
-const SENT_COPY = /Vence en 1 hora/;
+const SENT_COPY = /vence en 1 hora/;
 
 describe("RecuperarScreen", () => {
 	beforeEach(() => {

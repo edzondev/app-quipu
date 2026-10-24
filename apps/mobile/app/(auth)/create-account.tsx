@@ -178,9 +178,6 @@ export default function CreateAccountScreen() {
 
 							<View className="gap-1">
 								<Text className="font-newsreader text-[28px] text-foreground">Crea tu cuenta.</Text>
-								<Text className="font-hanken text-[14px] text-foreground/55">
-									Tres pasos y entras con tu llave.
-								</Text>
 							</View>
 
 							<View className="gap-3">
@@ -266,8 +263,7 @@ export default function CreateAccountScreen() {
 								footer={
 									<View className="rounded-xl border border-line bg-background px-4 py-3">
 										<Text className="font-hanken text-[13px] text-foreground/55">
-											También puedes abrir el enlace del correo desde este teléfono; Quipu continúa
-											solo.
+											O abre el enlace del correo en este teléfono.
 										</Text>
 									</View>
 								}
@@ -286,11 +282,7 @@ export default function CreateAccountScreen() {
 							</View>
 
 							<View className="gap-3">
-								{[
-									"La llave nunca sale de tu teléfono",
-									"Se sincroniza cifrada con tu cuenta de Apple o Google",
-									"Puedes agregar otra en cualquier momento",
-								].map((line) => (
+								{["La llave nunca sale de tu teléfono"].map((line) => (
 									<View key={line} className="flex-row items-start gap-3">
 										<Check size={16} colorClassName="accent-foreground" />
 										<Text className="font-hanken-semibold text-[15px] text-foreground">{line}</Text>
@@ -328,12 +320,6 @@ export default function CreateAccountScreen() {
 								<View className="h-14 w-14 items-center justify-center rounded-full bg-line">
 									<Check size={28} colorClassName="accent-foreground" />
 								</View>
-							</View>
-
-							<View className="gap-1">
-								<Text className="text-center font-newsreader text-[28px] text-foreground">
-									Ya puedes entrar con tu llave.
-								</Text>
 							</View>
 
 							<View className="gap-3">

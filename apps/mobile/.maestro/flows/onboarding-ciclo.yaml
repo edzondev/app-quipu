@@ -72,10 +72,10 @@ tags:
 - assertVisible: "S/ 960\\.00"
 - assertNotVisible: "Saldo que quedó.*"
 - assertVisible: "Agua.*"
-- assertVisible: "Necesid\\."
+- assertVisible: "Necesidades"
 - assertVisible: "Gustos"
 - assertVisible: "Ahorro"
 - tapOn: "Ver todos"
 - extendedWaitUntil:
-    visible: "Todavía no hay nada registrado en este ciclo."
+    visible: "Aún no hay movimientos."
     timeout: 15000

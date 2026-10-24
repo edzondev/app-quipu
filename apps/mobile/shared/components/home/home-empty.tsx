@@ -43,7 +43,7 @@ export function HomeEmpty({
 					Aún no hay ciclo
 				</Text>
 				<Text className="mt-2 max-w-[280px] text-center font-hanken text-[14px] leading-5 text-foreground/55">
-					Registra tu primer ingreso para ver cuánto puedes gastar hoy.
+					Registra tu ingreso para ver cuánto puedes gastar hoy.
 				</Text>
 				<Pressable
 					testID="home-register-income"

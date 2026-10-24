@@ -78,15 +78,12 @@ describe("Step4Commitments — compromisos", () => {
 		await renderStep4();
 		expect(screen.getByText("TU SISTEMA · 04/05")).toBeTruthy();
 		expect(screen.getByText("¿Qué pagas todos los meses?")).toBeTruthy();
-		expect(
-			screen.getByText("Los reservamos de Necesidades para que nunca aparezcan como sorpresa."),
-		).toBeTruthy();
+		expect(screen.getByText("Los reservamos de Necesidades.")).toBeTruthy();
 		expect(screen.getByTestId("chip-agua")).toBeTruthy();
 		expect(screen.getByTestId("chip-celular")).toBeTruthy();
 		expect(screen.getByTestId("chip-gimnasio")).toBeTruthy();
 		expect(screen.getByTestId("chip-streaming")).toBeTruthy();
 		expect(screen.getByTestId("chip-otro")).toBeTruthy();
-		expect(screen.getByText("Se reserva de Necesidades")).toBeTruthy();
 		expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
 	});
 
@@ -134,7 +131,7 @@ describe("Step4Commitments — compromisos", () => {
 		expect(screen.queryByTestId("commitment-row-1")).toBeNull();
 	});
 
-	it("suma solo filas válidas: Se reserva de Necesidades S/ 1,265", async () => {
+	it("suma solo filas válidas: S/ 1,265", async () => {
 		await renderStep4();
 
 		await pressChip("Agua");

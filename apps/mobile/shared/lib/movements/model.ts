@@ -27,7 +27,7 @@ export type MovementDayGroup = {
 };
 
 export type MovementsListModel = {
-	cycleLine: string;
+	cycleLine: string | null;
 	groups: MovementDayGroup[];
 	isEmpty: boolean;
 	isFilterEmpty: boolean;
@@ -84,7 +84,7 @@ export function presentMovementList(
 
 	const cycle = readCycle(data);
 	return {
-		cycleLine: formatCycleLine(cycle, built.length),
+		cycleLine: formatCycleLine(cycle),
 		groups: groupByDay(visible, symbol, nowStamp.key, yesterdayKey),
 		isEmpty: built.length === 0,
 		isFilterEmpty: built.length > 0 && visible.length === 0,
@@ -247,13 +247,9 @@ function formatSigned(cents: number, symbol: string, trim: boolean): string {
 	return body;
 }
 
-function formatCycleLine(
-	cycle: { startDate: number; endDate: number } | null,
-	count: number,
-): string {
-	const records = count === 1 ? "1 REGISTRO" : `${count} REGISTROS`;
-	if (!cycle) return records;
-	return `CICLO ${cycleRange(cycle.startDate, cycle.endDate)} · ${records}`;
+function formatCycleLine(cycle: { startDate: number; endDate: number } | null): string | null {
+	if (!cycle) return null;
+	return cycleRange(cycle.startDate, cycle.endDate);
 }
 
 function cycleRange(startDate: number, endDate: number): string {
@@ -285,8 +281,8 @@ function readSymbol(data: CycleMovementsResult | null): string {
 function dayTitle(stamp: LimaStamp, todayKey: string, yesterdayKey: string): string {
 	const month = LIMA_MONTHS[stamp.monthIndex] ?? "";
 	const date = `${stamp.day} ${month}`;
-	if (stamp.key === todayKey) return `HOY · ${date}`;
-	if (stamp.key === yesterdayKey) return `AYER · ${date}`;
+	if (stamp.key === todayKey) return "HOY";
+	if (stamp.key === yesterdayKey) return "AYER";
 	return date;
 }
 

@@ -10,7 +10,7 @@ export function cyclePreview(frequency: PayFrequency): string {
 	const paydays = PAYDAYS_BY_FREQUENCY[frequency];
 	const cycleDays = CYCLE_DAYS_BY_FREQUENCY[frequency];
 	if (frequency === "monthly") {
-		return `${MONTH_START} – ${cycleDays} de cada mes · ${cycleDays} DÍAS`;
+		return `Ciclo: ${MONTH_START} – ${cycleDays} de cada mes`;
 	}
 	if (frequency === "biweekly") {
 		return `${MONTH_START} – ${paydays[0]} / ${paydays[0] + 1} – ${paydays[1]} · ${cycleDays} DÍAS`;

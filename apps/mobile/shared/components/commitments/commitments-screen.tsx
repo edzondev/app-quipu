@@ -53,15 +53,11 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 
 				{isEmpty ? (
 					<View className="mt-10">
-						<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/35">
-							SIN COMPROMISOS
-						</Text>
-						<Text className="mt-3.5 font-newsreader text-[23px] leading-8 text-foreground">
+						<Text className="font-newsreader text-[23px] leading-8 text-foreground">
 							Aún no registras tus pagos fijos.
 						</Text>
 						<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-foreground/55">
-							Alquiler, servicios y suscripciones. Los registras una vez y Quipu los tiene en cuenta
-							cada ciclo.
+							Alquiler, servicios, suscripciones: los anotas una vez.
 						</Text>
 						<Pressable
 							accessibilityRole="button"
@@ -106,7 +102,7 @@ function ReservedBlock({ model, empty }: { model: CommitmentsScreenModel; empty:
 		<View className="mt-6 border-y border-line py-[18px]">
 			<View className="flex-row items-baseline justify-between">
 				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
-					RESERVADO ESTE CICLO
+					ESTE CICLO
 				</Text>
 				<Text
 					className={`font-newsreader text-[22px] tabular-nums ${
@@ -162,9 +158,11 @@ function CommitmentLine({ row, isLast }: { row: CommitmentRowView; isLast: boole
 				>
 					{row.amountLabel}
 				</Text>
-				<Text className={`mt-1.5 font-hanken text-[12px] ${STATUS_TEXT[row.statusTone]}`}>
-					{row.statusLabel}
-				</Text>
+				{row.statusLabel ? (
+					<Text className={`mt-1.5 font-hanken text-[12px] ${STATUS_TEXT[row.statusTone]}`}>
+						{row.statusLabel}
+					</Text>
+				) : null}
 			</View>
 		</View>
 	);

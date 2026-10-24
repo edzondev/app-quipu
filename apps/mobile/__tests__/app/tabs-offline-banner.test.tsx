@@ -52,7 +52,6 @@ jest.mock("@/shared/hooks/use-dashboard", () => ({
 			badgeTone: "stable",
 			cycleStatusLabel: "Ciclo estable",
 			dailyCents: 100,
-			heroSubtitle: "",
 			currencySymbol: "S/",
 			envelopes: [],
 			envelopesBalanceCents: 0,
@@ -116,6 +115,6 @@ describe("franja offline en el layout de pestañas", () => {
 		await advance();
 
 		expect(view.queryByText("Sin conexión")).toBeNull();
-		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
 	});
 });

@@ -22,7 +22,7 @@ export type CommitmentRowView = {
 	metaTone: "soon" | "muted";
 	amountLabel: string;
 	amountMuted: boolean;
-	statusLabel: string;
+	statusLabel: string | null;
 	statusTone: CommitmentStatusTone;
 };
 
@@ -112,11 +112,11 @@ export function parseDueDay(raw: string): number | null {
 
 /** Aviso bajo el campo de día: mismo cálculo que el servidor para el próximo vencimiento. */
 export function dueDayHint(raw: string, now: number): string {
-	const base = "Se repite cada mes.";
 	const day = parseDueDay(raw);
-	if (day == null) return base;
-	const short = day > 28 ? " En meses cortos vence el último día." : "";
-	return `${base} Próximo: ${nextDueLabel(day, now)}.${short}`;
+	if (day == null) return "Cada mes";
+	const date = `Cada mes · próximo ${nextDueLabel(day, now).toLowerCase()}`;
+	if (day <= 28) return date;
+	return `${date}. En meses cortos vence el último día.`;
 }
 
 function nextDueLabel(dueDay: number, now: number): string {
@@ -144,12 +144,12 @@ function toRow(row: CoverageRow, symbol: string): CommitmentRowView {
 }
 
 function rowStatus(row: CoverageRow): {
-	label: string;
+	label: string | null;
 	tone: CommitmentStatusTone;
 } {
-	if (row.paymentStatus === "paid") return { label: "Pagado", tone: "muted" };
+	if (row.paymentStatus === "paid") return { label: null, tone: "muted" };
 	if (row.paymentStatus === "overdue") return { label: "Vencido", tone: "fast" };
-	if (row.coverageStatus === "covered") return { label: "Cubierto", tone: "calm" };
+	if (row.coverageStatus === "covered") return { label: null, tone: "calm" };
 	if (row.coverageStatus === "partial") return { label: "Parcial", tone: "fast" };
 	return { label: "Sin cubrir", tone: "muted" };
 }
@@ -162,12 +162,12 @@ function rowMeta(row: CoverageRow): { label: string; tone: "soon" | "muted" } {
 	const stamp = limaDayLabel(row.nextDueAt);
 	if (row.daysUntilDue < 0) return { label: `VENCIDO · ${stamp}`, tone: "soon" };
 	if (row.daysUntilDue === 0) {
-		return { label: `VENCE HOY · ${stamp}`, tone: "soon" };
+		return { label: "VENCE HOY", tone: "soon" };
 	}
 	if (row.daysUntilDue === 1) {
-		return { label: `VENCE MAÑANA · ${stamp}`, tone: "soon" };
+		return { label: "VENCE MAÑANA", tone: "soon" };
 	}
-	return { label: `${stamp} · MENSUAL`, tone: "muted" };
+	return { label: stamp, tone: "muted" };
 }
 
 function clampPercent(value: number): number {

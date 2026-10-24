@@ -15,15 +15,15 @@ export const FIXED_FREQUENCIES = exhaustive<FixedPayFrequency>()(["monthly", "bi
 const INCOME_COPY = {
 	fixed: {
 		title: "Fijo",
-		description: "Sueldo en planilla, siempre el mismo monto y la misma fecha.",
+		description: "Mismo monto, misma fecha",
 	},
 	variable: {
 		title: "Variable",
-		description: "Recibos por honorarios, negocio propio o ingresos por proyecto.",
+		description: "Honorarios, negocio o proyectos",
 	},
 	mixed: {
 		title: "Mixto",
-		description: "Un sueldo base más trabajos extra que aparecen de vez en cuando.",
+		description: "Sueldo base + extras",
 	},
 } satisfies Record<IncomeModel, { title: string; description: string }>;
 
@@ -43,18 +43,18 @@ export const INCOME_AMOUNT_COPY = {
 	/** Saldo con el que abre el primer ciclo. */
 	today: {
 		label: "¿Cuánto dinero tienes hoy?",
-		hint: "Suma lo que tienes ahora en cuentas y efectivo. Desde aquí empieza tu ciclo.",
+		hint: "Cuentas + efectivo",
 	},
 } as const;
 
 export const PAY_FREQUENCY_LABEL = "¿CADA CUÁNTO TE PAGAN?";
 export const CYCLE_DURATION_COPY = {
 	label: "DURACIÓN DEL CICLO",
-	hint: "Un ciclo es el periodo en que repartes tu dinero. Elige cada cuántos días lo reiniciamos.",
+	hint: "Cada cuántos días reinicias tu reparto.",
 } as const;
 export const INCOME_SOURCES_COPY = {
 	label: "¿DE DÓNDE LLEGA TU DINERO?",
-	hint: "Escribe cada fuente y toca Agregar. Por ejemplo: recibos por honorarios o ventas.",
+	hint: "Ej. honorarios, ventas",
 } as const;
 
 export const ONBOARDING_DEFAULTS: OnboardingState = {

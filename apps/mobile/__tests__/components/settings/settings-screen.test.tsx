@@ -89,16 +89,21 @@ describe("SettingsScreen", () => {
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.getByText("Edzon Perez")).toBeTruthy();
 		expect(view.getByText("edzon@correo.com · Perú")).toBeTruthy();
-		expect(view.getByText("CUENTA")).toBeTruthy();
+		expect(view.queryByText("Perfil y datos")).toBeNull();
+		expect(view.queryByText("CUENTA")).toBeNull();
 		expect(view.getByText("Seguridad y Passkeys")).toBeTruthy();
 		expect(view.getByText("2 llaves")).toBeTruthy();
 		expect(view.queryByText("EN ESTE TELÉFONO")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
 		expect(view.queryByText("Apariencia")).toBeNull();
-		expect(view.getByText("LEGAL")).toBeTruthy();
+		expect(view.queryByRole("button", { name: "Perfil y datos" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Plan y suscripción" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Reparto" })).toBeNull();
+		expect(view.queryByRole("button", { name: "Ciclo e ingresos" })).toBeNull();
+		expect(view.queryByText("LEGAL")).toBeNull();
+		expect(view.queryByText("SESIÓN")).toBeNull();
 		expect(view.getByRole("button", { name: "Política de privacidad" })).toBeTruthy();
 		expect(view.getByRole("button", { name: "Términos y condiciones" })).toBeTruthy();
-		expect(view.getByText("SESIÓN")).toBeTruthy();
 		expect(view.getByRole("button", { name: "Eliminar cuenta" })).toBeTruthy();
 
 		await act(async () => {
@@ -146,15 +151,15 @@ describe("SettingsScreen", () => {
 			fireEvent.press(view.getByRole("button", { name: "Cerrar sesión" }));
 		});
 		expect(mockClear).not.toHaveBeenCalled();
-		expect(view.getByText("Vas a salir de este teléfono.")).toBeTruthy();
-		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(1);
+		expect(view.getByText("¿Cerrar sesión?")).toBeTruthy();
+		expect(view.getByRole("button", { name: "Confirmar cierre de sesión" })).toBeTruthy();
 
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Cancelar" }));
 		});
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
-		expect(view.queryByText("Vas a salir de este teléfono.")).toBeNull();
+		expect(view.queryByText("¿Cerrar sesión?")).toBeNull();
 	});
 
 	it("confirmar cierra sesión, limpia el teléfono y va a la entrada, una sola vez", async () => {
@@ -239,7 +244,6 @@ describe("SettingsScreen", () => {
 		expect(view.getByText("Cargando…")).toBeTruthy();
 		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(1);
 		expect(view.getByRole("button", { name: "Eliminar cuenta" })).toBeTruthy();
-		expect(view.getByText("LEGAL")).toBeTruthy();
 		expect(view.queryByText("EN ESTE TELÉFONO")).toBeNull();
 	});
 
@@ -283,7 +287,6 @@ describe("SettingsScreen", () => {
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Eliminar cuenta" }));
 		});
-		expect(view.getByText("ELIMINAR CUENTA")).toBeTruthy();
 		expect(view.getByText("¿Eliminar tu cuenta?")).toBeTruthy();
 		expect(mockClear).not.toHaveBeenCalled();
 
@@ -308,17 +311,14 @@ describe("SettingsScreen", () => {
 		);
 		const labels = view
 			.getAllByText(
-				/^(CUENTA|Seguridad y Passkeys|Detección de gastos|LEGAL|Política de privacidad|Términos y condiciones|SESIÓN|Cerrar sesión|Eliminar cuenta|TU SISTEMA|Perfil y datos|Plan y suscripción|Reparto|Ciclo e ingresos)$/,
+				/^(Seguridad y Passkeys|Detección de gastos|Política de privacidad|Términos y condiciones|Cerrar sesión|Eliminar cuenta)$/,
 			)
 			.map((node) => node.props.children);
 		expect(labels).toEqual([
-			"CUENTA",
 			"Seguridad y Passkeys",
 			"Detección de gastos",
-			"LEGAL",
 			"Política de privacidad",
 			"Términos y condiciones",
-			"SESIÓN",
 			"Cerrar sesión",
 			"Eliminar cuenta",
 		]);

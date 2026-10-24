@@ -70,11 +70,10 @@ jest.mock("@expo/ui", () => {
 	};
 });
 
-const WITH_SURPLUS =
-	"Tu ciclo del 1 AGO al 30 AGO terminó. Te quedaron S/ 210 y se suman a tu próximo ingreso. Tus movimientos siguen guardados.";
-const NEUTRAL = "Tu ciclo del 1 AGO al 30 AGO terminó. Tus movimientos siguen guardados.";
+const WITH_SURPLUS = "CICLO 1 AGO–30 AGO · CERRADO\nTe quedaron S/ 210\nPasan a tu próximo ciclo.";
+const NEUTRAL = "CICLO 1 AGO–30 AGO · CERRADO";
 const OVERSPENT =
-	"Tu ciclo del 1 AGO al 30 AGO terminó. Te pasaste por S/ 15 y se descuenta de tu próximo ingreso. Tus movimientos siguen guardados.";
+	"CICLO 1 AGO–30 AGO · CERRADO\nTe pasaste por S/ 15\nSe descuenta de tu próximo ingreso.";
 
 function summaryFor(surplusCents: number) {
 	return summaryAfterClose({ ...closedCycleOnSummary, surplusCents });
@@ -114,13 +113,11 @@ describe("Inicio con ciclo cerrado", () => {
 	it("muestra el monto y que se suma al próximo ingreso, sin el dibujo de vacío", async () => {
 		const view = await renderHome();
 		expect(view.getByText("E")).toBeTruthy();
-		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
 		expect(view.getByText(WITH_SURPLUS)).toBeTruthy();
-		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar ingreso" })).toBeTruthy();
 		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
-		expect(
-			view.queryByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
-		).toBeNull();
+		expect(view.queryByText("Registra tu ingreso para ver cuánto puedes gastar hoy.")).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
 		expect(view.queryByRole("button", { name: "Mover al Fondo" })).toBeNull();
 	});
@@ -129,7 +126,7 @@ describe("Inicio con ciclo cerrado", () => {
 		mockSummary(summaryFor(0));
 		const view = await renderHome();
 		expect(view.getByText(NEUTRAL)).toBeTruthy();
-		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar ingreso" })).toBeTruthy();
 		expect(view.queryByText(/Te quedaron/)).toBeNull();
 		expect(view.queryByText(/Te pasaste/)).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
@@ -139,7 +136,7 @@ describe("Inicio con ciclo cerrado", () => {
 		mockSummary(summaryFor(-1500));
 		const view = await renderHome();
 		expect(view.getByText(OVERSPENT)).toBeTruthy();
-		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar ingreso" })).toBeTruthy();
 		expect(view.queryByText(NEUTRAL)).toBeNull();
 		expect(view.queryByText(/Te quedaron/)).toBeNull();
 		expect(view.queryByText(/S\/ -/)).toBeNull();
@@ -147,10 +144,9 @@ describe("Inicio con ciclo cerrado", () => {
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});
 
-	it("Registrar nuevo ingreso abre el sheet en Ingreso", async () => {
+	it("Registrar ingreso abre el sheet en Ingreso", async () => {
 		const view = await renderHome();
-		await fireEvent.press(view.getByRole("button", { name: "Registrar nuevo ingreso" }));
-		expect(view.getByText("REGISTRAR INGRESO")).toBeTruthy();
+		await fireEvent.press(view.getByRole("button", { name: "Registrar ingreso" }));
 		expect(view.getByRole("button", { name: "Ingreso" }).props.accessibilityState.selected).toBe(
 			true,
 		);
@@ -175,8 +171,8 @@ describe("Inicio con ciclo cerrado", () => {
 	it("muestra la tarjeta de ciclo cerrado en Inicio cuando el ciclo ya venció", async () => {
 		mockSummary(summaryAfterClose(closedCycleOnSummary));
 		const view = await renderHome();
-		expect(view.getByText(/Tu ciclo del 1 AGO al 30 AGO terminó/)).toBeTruthy();
-		expect(view.getByRole("button", { name: "Registrar nuevo ingreso" })).toBeTruthy();
+		expect(view.getByText(/CICLO 1 AGO–30 AGO · CERRADO/)).toBeTruthy();
+		expect(view.getByRole("button", { name: "Registrar ingreso" })).toBeTruthy();
 		expect(view.queryByText("Aún no hay ciclo")).toBeNull();
 		expect(view.queryByText("Ciclo agosto")).toBeNull();
 	});
@@ -200,9 +196,7 @@ describe("Inicio con ciclo cerrado", () => {
 		mockSummary(summaryWithoutCycle);
 		const view = await renderHome();
 		expect(view.getByText("Aún no hay ciclo")).toBeTruthy();
-		expect(
-			view.getByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
-		).toBeTruthy();
+		expect(view.getByText("Registra tu ingreso para ver cuánto puedes gastar hoy.")).toBeTruthy();
 		expect(view.queryByText(/Tu ciclo del/)).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();
 	});

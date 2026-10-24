@@ -6,7 +6,7 @@ import { assertCreateIncomeEventArgs } from "@/test-support/assert-create-income
 const OCCURRED_AT = Date.parse("2026-10-09T05:00:00.000Z");
 
 describe("toCreateIncomeEventArgs", () => {
-	it("Empieza un nuevo ciclo manda el payload habitual completo", () => {
+	it("Nuevo ciclo manda el payload habitual completo", () => {
 		const args = toCreateIncomeEventArgs({
 			amountCents: 350000,
 			occurredAt: OCCURRED_AT,

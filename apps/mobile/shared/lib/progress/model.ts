@@ -45,7 +45,6 @@ export type ProgressScreenModel = {
 	streakLabel: string;
 	sinceLabel: string | null;
 	bars: ProgressBarView[];
-	savedLabel: string | null;
 	registeredExpenseLabel: string | null;
 	daysWithoutSkippingLabel: string | null;
 	achievements: AchievementRowView[];
@@ -72,7 +71,6 @@ export type CloseScreenModel = {
 	title: string;
 	subtitle: string | null;
 	spentLabel: string;
-	surplusLabel: string | null;
 	segments: CloseSegmentView[];
 	rows: CloseRowView[];
 };
@@ -80,7 +78,6 @@ export type CloseScreenModel = {
 export function presentProgress(
 	overview: ProgressOverview,
 	rewards: ProgressRewards,
-	savings: SavingsOverview,
 	closeReport: CloseReportResult,
 ): ProgressScreenModel {
 	const bars = overview == null ? [] : toBars(overview.chartBars);
@@ -93,7 +90,6 @@ export function presentProgress(
 		streakLabel: String(streak),
 		sinceLabel: empty || overview == null ? null : sinceLabelFromBars(overview.chartBars),
 		bars,
-		savedLabel: savedLabel(savings),
 		registeredExpenseLabel: overview == null ? null : countLabel(overview.registeredExpenseCount),
 		daysWithoutSkippingLabel: overview == null ? null : countLabel(overview.daysWithoutSkipping),
 		achievements: overview == null ? [] : toAchievements(overview.achievements),
@@ -122,7 +118,6 @@ export function presentClose(
 				: `Cerraste ${month} con ${formatCentsTrimmed(surplusCents, symbol)} de sobra.`,
 		subtitle: report.streakEvaluated ? streakSubtitle(report.streak) : null,
 		spentLabel: `GASTADO ${formatCentsTrimmed(spentCents, symbol)}`,
-		surplusLabel: surplusCents == null ? null : `SOBRÓ ${formatCentsTrimmed(surplusCents, symbol)}`,
 		segments: toSegments(report, spentCents, surplusCents),
 		rows: toRows(report.spendByEnvelope, symbol),
 	};
@@ -159,11 +154,6 @@ function countLabel(
 	value: Overview["registeredExpenseCount"] | Overview["daysWithoutSkipping"],
 ): string {
 	return String(value);
-}
-
-function savedLabel(savings: SavingsOverview): string | null {
-	if (savings == null) return null;
-	return formatCentsTrimmed(savings.totalSavedCents, currencySymbol(savings.profile.currencyCode));
 }
 
 function toAchievements(achievements: Overview["achievements"]): AchievementRowView[] {

@@ -18,8 +18,6 @@ const TONE = {
 	muted: "text-foreground/45",
 } as const;
 
-const SUBTITLE = "Dónde está tu dinero antes de que lo gastes.";
-
 type Props = {
 	status: "loading" | "empty" | "ready";
 	model: PlanHubModel | null;
@@ -51,9 +49,6 @@ export function PlanHub({
 					</Text>
 				) : null}
 			</View>
-			<Text className="mt-2 font-hanken text-[14px] leading-[21px] text-foreground/55">
-				{SUBTITLE}
-			</Text>
 			{status === "loading" ? <InlineLoading /> : null}
 			{model ? (
 				<>
@@ -100,8 +95,7 @@ export function PlanHub({
 						<ListRow
 							testID="plan-row-ahorro-guardado"
 							dotClass={DOT.savings}
-							label="Ahorro ya guardado"
-							subtitle="Fondo de emergencia y metas"
+							label="Ahorro"
 							value={ahorro?.totalLabel ?? null}
 							onPress={onOpenAhorro}
 							isLast
@@ -117,7 +111,7 @@ function TotalBlock({ label, segments }: { label: string; segments: PlanSegment[
 	return (
 		<View className="mt-6 border-y border-line py-[18px]">
 			<View className="flex-row items-baseline justify-between">
-				<SectionLabel>TOTAL REPARTIDO</SectionLabel>
+				<SectionLabel>EN TUS SOBRES</SectionLabel>
 				<Text className="font-newsreader text-[22px] text-foreground tabular-nums" selectable>
 					{label}
 				</Text>

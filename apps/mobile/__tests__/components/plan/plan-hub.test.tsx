@@ -57,9 +57,8 @@ describe("PlanHub", () => {
 	it("muestra el copy de 3i, el total, la barra y navega cada fila", async () => {
 		const { view, onOpenSobres, onOpenCommitments, onOpenAhorro } = await renderHub();
 		expect(view.getByText("Plan")).toBeTruthy();
-		expect(view.getByText("Dónde está tu dinero antes de que lo gastes.")).toBeTruthy();
 		expect(view.getByText("CICLO AGOSTO")).toBeTruthy();
-		expect(view.getByText("TOTAL REPARTIDO")).toBeTruthy();
+		expect(view.getByText("EN TUS SOBRES")).toBeTruthy();
 		expect(view.getByText("S/ 2,069")).toBeTruthy();
 		expect(view.getByLabelText("Tramo needs")).toHaveStyle({ width: "55%" });
 		expect(view.getByLabelText("Tramo wants")).toHaveStyle({ width: "11%" });
@@ -70,22 +69,21 @@ describe("PlanHub", () => {
 		expect(view.getByText("S/ 1,265")).toBeTruthy();
 		expect(view.getByText("Ahorro planeado")).toBeTruthy();
 		expect(view.getByText("S/ 700")).toBeTruthy();
-		expect(view.getByText("Ahorro ya guardado")).toBeTruthy();
-		expect(view.getByText("Fondo de emergencia y metas")).toBeTruthy();
+		expect(view.getByText("Ahorro")).toBeTruthy();
 		expect(view.getByText("S/ 4,320")).toBeTruthy();
 		expect(view.queryByText("Ahorro y metas")).toBeNull();
 		expect(view.queryByText("Fondo + 2 metas activas")).toBeNull();
 		expect(view.queryByText("Te pasaste")).toBeNull();
 		expect(view.queryByText("Reparto del ciclo")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
-		expect(rowClassName(view.getByText("Ahorro ya guardado"))).not.toContain("border-b");
+		expect(rowClassName(view.getByText("Ahorro"))).not.toContain("border-b");
 		expect(rowClassName(view.getByText("Ahorro planeado"))).toContain("border-b");
 		expect(view.queryByText("Cubrir el exceso")).toBeNull();
 
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Sobres" }));
 			fireEvent.press(view.getByRole("button", { name: "Compromisos" }));
-			fireEvent.press(view.getByRole("button", { name: "Ahorro ya guardado" }));
+			fireEvent.press(view.getByRole("button", { name: "Ahorro" }));
 		});
 		expect(onOpenSobres).toHaveBeenCalledTimes(1);
 		expect(onOpenCommitments).toHaveBeenCalledTimes(1);
@@ -106,11 +104,11 @@ describe("PlanHub", () => {
 				commitmentsTotal: "S/ 0",
 			},
 		});
-		expect(view.queryByText("TOTAL REPARTIDO")).toBeNull();
+		expect(view.queryByText("EN TUS SOBRES")).toBeNull();
 		expect(view.queryByText("CICLO AGOSTO")).toBeNull();
 		expect(view.queryByText("3")).toBeNull();
 		expect(view.queryByText("Ahorro planeado")).toBeNull();
-		expect(view.getByText("Ahorro ya guardado")).toBeTruthy();
+		expect(view.getByText("Ahorro")).toBeTruthy();
 		expect(view.getByText("Sin compromisos")).toBeTruthy();
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Sobres" }));
@@ -121,13 +119,13 @@ describe("PlanHub", () => {
 	it("cargando y vacío no inventan cifras", async () => {
 		const loading = await renderHub({ status: "loading", model: null, ahorro: null });
 		expect(loading.view.getByText("Cargando…")).toBeTruthy();
-		expect(loading.view.queryByText("TOTAL REPARTIDO")).toBeNull();
+		expect(loading.view.queryByText("EN TUS SOBRES")).toBeNull();
 		expect(loading.view.queryByText("Sobres")).toBeNull();
 
 		await loading.view.unmount();
 		const empty = await renderHub({ status: "empty", model: null, ahorro: null });
 		expect(empty.view.getByText("Plan")).toBeTruthy();
-		expect(empty.view.queryByText("TOTAL REPARTIDO")).toBeNull();
+		expect(empty.view.queryByText("EN TUS SOBRES")).toBeNull();
 		expect(empty.view.queryByText("S/ 2,069")).toBeNull();
 		expect(empty.view.queryByText("Sobres")).toBeNull();
 	});

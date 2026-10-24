@@ -19,7 +19,8 @@ tags:
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: "NUEVO GASTO"
+    visible:
+      id: expense-sheet
     timeout: 10000
 - tapOn:
     text: "2"
@@ -33,21 +34,23 @@ tags:
 # ya está cerrado, cierra la hoja. Uno solo, justo después de escribir.
 - tapOn:
     text: "Necesidades"
-    below: "NUEVO GASTO"
+    below:
+      id: expense-sheet
 - tapOn:
     text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
-    notVisible: "NUEVO GASTO"
+    notVisible:
+      id: expense-sheet
     timeout: 20000
 - runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:
     visible: ${output.merchant}
     timeout: 15000
 - assertVisible: "CICLO .*"
-- assertVisible: "HOY · .*"
+- assertVisible: "HOY"
 - assertVisible: "Todos"
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"

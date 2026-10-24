@@ -142,10 +142,6 @@ export function Step1IncomeProfile() {
 		>
 			<View className="gap-1">
 				<Text className="font-newsreader text-[28px] text-foreground">¿Cómo entra tu dinero?</Text>
-				<Text className="font-hanken text-[14px] text-foreground/55">
-					Elige cómo recibes tu dinero. Ya dejamos marcado Fijo y mensual; cámbialo si no es tu
-					caso.
-				</Text>
 			</View>
 
 			<View className="mt-6 gap-3">
@@ -240,8 +236,7 @@ export function Step1IncomeProfile() {
 			) : (
 				<View className="mt-6 gap-4">
 					<Text className="font-hanken text-[13px] text-foreground/55">
-						Con ingresos variables, Quipu calcula el disponible sobre lo que ya recibiste, nunca
-						sobre lo que esperas recibir.
+						Calculamos con lo que ya recibiste, no con lo que esperas.
 					</Text>
 					<View className="gap-1">
 						<MonoLabel>{CYCLE_DURATION_COPY.label}</MonoLabel>

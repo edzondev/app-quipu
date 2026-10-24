@@ -62,7 +62,7 @@ export function SavingsScreen({
 					) : null}
 				</View>
 
-				{model ? (
+				{model?.cycleSubtitle ? (
 					<Text className="mt-2 max-w-[300px] font-hanken text-[14px] leading-[21px] text-foreground/55">
 						{model.cycleSubtitle}
 					</Text>
@@ -119,9 +119,6 @@ function FundCard({ fund }: { fund: FundView }) {
 			<View className="flex-row items-center gap-[9px]">
 				<Lock size={17} colorClassName="accent-savings" />
 				<Text className="font-hanken-semibold text-[15px] text-foreground">{fund.label}</Text>
-				<Text className="ml-auto font-geist-mono text-[10.5px] tracking-[0.1em] text-primary">
-					PRIORIDAD
-				</Text>
 			</View>
 			<Amount amountBody={fund.amountBody} symbol={fund.symbol} muted={false} />
 			{fund.targetLine ? (
@@ -199,7 +196,7 @@ function SurplusBanner({
 	return (
 		<View className="mt-[22px] border-l-2 border-savings pl-[14px]">
 			<Text className="font-newsreader text-[15px] leading-[22px] text-foreground">
-				{`Tienes ~${amountLabel} de ingreso extra este ciclo. ¿Los mando al Fondo?`}
+				{`¿Mandas ${amountLabel} de ingreso extra al Fondo?`}
 			</Text>
 			<View className="mt-2.5 flex-row gap-[18px]">
 				<Pressable
@@ -262,15 +259,11 @@ function GoalsSection({
 
 			{goals.length === 0 ? (
 				<View className="mt-[30px]">
-					<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/35">
-						SIN METAS
-					</Text>
 					<Text className="mt-3.5 font-newsreader text-[23px] leading-8 text-foreground">
-						Tus metas vivirán aquí.
+						Aún no tienes metas.
 					</Text>
 					<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-foreground/55">
-						Un viaje, una laptop, la inicial del depa. Primero dale tracción al Fondo; las metas
-						vienen después.
+						Un viaje, una laptop, la inicial del depa.
 					</Text>
 					{canCreateGoal ? (
 						<Pressable
@@ -321,9 +314,6 @@ function GoalRow({ goal }: { goal: GoalView }) {
 					trackClass="mt-3 h-1 bg-foreground/5"
 				/>
 			) : null}
-			<Text className="mt-[9px] font-geist-mono text-[11.5px] text-foreground/45">
-				{goal.footer}
-			</Text>
 		</View>
 	);
 }

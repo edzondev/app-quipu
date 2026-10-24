@@ -17,7 +17,8 @@ tags:
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: "NUEVO GASTO"
+    visible:
+      id: expense-sheet
     timeout: 10000
 - tapOn:
     text: "2"
@@ -29,14 +30,16 @@ tags:
     text: "0"
 - tapOn:
     text: "Gustos"
-    below: "NUEVO GASTO"
+    below:
+      id: expense-sheet
 - tapOn:
     text: "Comercio"
 - inputText: ${output.merchant}
 - hideKeyboard
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
-    notVisible: "NUEVO GASTO"
+    notVisible:
+      id: expense-sheet
     timeout: 20000
 - runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:

@@ -23,9 +23,9 @@ function emailFromRoute(value: string | string[] | undefined): string {
 }
 
 const RESET_STEPS = [
-	"Abre el enlace desde este teléfono",
-	"Define tu contraseña de respaldo",
-	"Crea una Passkey nueva y olvídala otra vez",
+	"Ábrelo en este teléfono",
+	"Define tu contraseña",
+	"Crea una Passkey nueva",
 ] as const;
 
 async function requestReset(email: string) {
@@ -87,9 +87,6 @@ export default function RecuperarScreen() {
 							<View className="gap-1">
 								<Text className="font-newsreader text-[28px] text-foreground">
 									¿Cuál es tu correo?
-								</Text>
-								<Text className="font-hanken text-[14px] text-foreground/55">
-									Te mandamos un enlace para definir una contraseña nueva.
 								</Text>
 							</View>
 							<form.Field
@@ -158,10 +155,7 @@ function ResetSent({
 				<Text className="font-newsreader text-[28px] text-foreground">Revisa tu correo.</Text>
 				<Text className="font-hanken text-[14.5px] leading-[22px] text-foreground/55">
 					Enviamos un enlace a <Text className="font-hanken-semibold text-foreground">{email}</Text>{" "}
-					para que definas una contraseña nueva.
-				</Text>
-				<Text className="font-hanken text-[14.5px] leading-[22px] text-foreground/55">
-					Vence en 1 hora.
+					para que definas una contraseña nueva · vence en 1 hora.
 				</Text>
 			</View>
 			<View className="mt-8 gap-3 border-y border-line py-4">

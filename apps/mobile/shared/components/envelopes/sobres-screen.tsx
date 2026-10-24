@@ -10,7 +10,6 @@ import type {
 } from "@/shared/lib/dashboard/sobres-model";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
-const SUBTITLE = "Tu sueldo ya está dividido. Esto es lo que queda.";
 const EMPTY = "Todavía no hay sobres en el ciclo activo.";
 
 const DOT: Record<SobresTone, string> = {
@@ -63,21 +62,16 @@ export function SobresScreen({ status, screen, onBack, onRegisterExpense }: Prop
 				) : null}
 
 				{screen ? (
-					<>
-						<Text className="mt-2 font-hanken text-[14px] leading-5.25 text-foreground/55">
-							{SUBTITLE}
-						</Text>
-						<View>
-							{screen.envelopes.map((envelope, index) => (
-								<EnvelopeBlock
-									key={envelope.tone}
-									envelope={envelope}
-									isFirst={index === 0}
-									isLast={index === screen.envelopes.length - 1}
-								/>
-							))}
-						</View>
-					</>
+					<View>
+						{screen.envelopes.map((envelope, index) => (
+							<EnvelopeBlock
+								key={envelope.tone}
+								envelope={envelope}
+								isFirst={index === 0}
+								isLast={index === screen.envelopes.length - 1}
+							/>
+						))}
+					</View>
 				) : null}
 			</ScrollView>
 

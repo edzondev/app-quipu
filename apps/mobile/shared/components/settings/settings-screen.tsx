@@ -8,7 +8,6 @@ import { signOutAndClearLocalData } from "@/lib/device-sign-out";
 import { AuthLabeledField } from "@/shared/components/auth/auth-labeled-field";
 import { ErrorText } from "@/shared/components/forms/field-error";
 import { ListRow } from "@/shared/components/list-row";
-import { SectionLabel } from "@/shared/components/section-label";
 import { BottomSheet } from "@/shared/components/ui/bottom-sheet";
 import { InlineLoading } from "@/shared/components/ui/inline-loading";
 import { ArrowUpRight, X } from "@/shared/components/ui/reicon";
@@ -156,7 +155,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 							</View>
 						</View>
 						<View className="mt-5">
-							<SectionLabel className="mb-1">CUENTA</SectionLabel>
 							<ListRow
 								label="Seguridad y Passkeys"
 								value={model.passkeysLabel}
@@ -172,7 +170,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 					</View>
 				) : null}
 				<View className="mt-[18px] border-t border-line pt-4">
-					<SectionLabel className="mb-1">LEGAL</SectionLabel>
 					<ListRow
 						label="Política de privacidad"
 						external
@@ -190,7 +187,6 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 					/>
 				</View>
 				<View className="mt-[18px] border-t border-line pt-4">
-					<SectionLabel className="mb-1">SESIÓN</SectionLabel>
 					<Pressable
 						accessibilityRole="button"
 						accessibilityLabel="Cerrar sesión"
@@ -226,17 +222,15 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 					{sheet === "signOut" ? (
 						<View className="bg-background px-5.5 pb-8 pt-3">
 							<View className="border-l-2 border-danger pl-3.5">
-								<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-danger">
-									CERRAR SESIÓN
-								</Text>
-								<Text className="mt-3 font-newsreader text-[23px] leading-8 text-foreground">
-									Vas a salir de este teléfono.
+								<Text className="font-newsreader text-[23px] leading-8 text-foreground">
+									¿Cerrar sesión?
 								</Text>
 							</View>
 							<Text className="mt-3.5 font-hanken text-[14.5px] leading-6 text-foreground/55">
-								Se cierra tu sesión y se borra lo que quedó guardado aquí.
+								Se borra lo guardado en este teléfono.
 							</Text>
 							<Pressable
+								testID="sign-out-confirm"
 								accessibilityRole="button"
 								accessibilityLabel="Confirmar cierre de sesión"
 								accessibilityState={{ disabled: closing }}
@@ -262,10 +256,7 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 					) : sheet === "deleteAccount" ? (
 						<View className="bg-background px-5.5 pb-8 pt-3">
 							<View className="border-l-2 border-danger pl-3.5">
-								<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-danger">
-									ELIMINAR CUENTA
-								</Text>
-								<Text className="mt-3 font-newsreader text-[23px] leading-8 text-foreground">
+								<Text className="font-newsreader text-[23px] leading-8 text-foreground">
 									¿Eliminar tu cuenta?
 								</Text>
 							</View>
