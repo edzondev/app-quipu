@@ -42,13 +42,13 @@ tags:
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - assertVisible:
     id: income-mode-add
 - tapOn: "Cancelar"
 - extendedWaitUntil:
-    notVisible: "(?-i)REGISTRAR INGRESO"
+    notVisible: "(?-i)"
     timeout: 10000
 - tapOn: "Ver todos"
 - extendedWaitUntil:

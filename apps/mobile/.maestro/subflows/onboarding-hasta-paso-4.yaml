@@ -15,7 +15,7 @@ appId: com.quipu.finance
     visible: "¿Cuándo cobras?"
     timeout: 10000
 - assertVisible: "TU SISTEMA · 02/05"
-- assertVisible: "Toca la fecha y elige tu próximo día de cobro. Puede ser desde mañana hasta dentro de 31 días."
+- assertVisible: "Entre mañana y 31 días."
 - assertVisible:
     id: pay-date-field
 - tapOn:

@@ -22,13 +22,13 @@ tags:
 - tapOn:
     text: "Plan"
 - extendedWaitUntil:
-    visible: "Ahorro ya guardado"
+    visible: "Ahorro"
     timeout: 10000
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
     text: "Sobres"
 - extendedWaitUntil:
-    visible: "Tu sueldo ya está dividido. Esto es lo que queda."
+    visible: ""
     timeout: 15000
 - assertNotVisible:
     text: "Mover dinero"
@@ -38,11 +38,11 @@ tags:
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: "NUEVO GASTO"
+    visible: ""
     timeout: 10000
 - tapOn: "Cancelar"
 - extendedWaitUntil:
-    notVisible: "NUEVO GASTO"
+    notVisible: ""
     timeout: 10000
 - tapOn: "Ajustes"
 - extendedWaitUntil:

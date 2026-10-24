@@ -24,7 +24,7 @@ export function HomeIdentity({
 				<Text className="font-newsreader text-[16px] text-primary">{initial}</Text>
 			</Pressable>
 			<Text className="flex-1 font-hanken-semibold text-[16px] text-foreground" numberOfLines={1}>
-				{first ? `Hola, ${first}` : "Hola"}
+				{first || name}
 			</Text>
 		</View>
 	);

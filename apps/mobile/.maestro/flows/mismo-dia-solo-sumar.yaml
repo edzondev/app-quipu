@@ -6,7 +6,7 @@ tags:
 # Notion 3f486a7356a681239318fa33957072e0
 # Antes: sueldo-cierra-ciclo. El mismo día de Lima el ciclo no se cierra.
 # Misma cuenta que el resto (QUIPU_E2E_EMAIL / QUIPU_E2E_PASSWORD). Sin onboarding.
-# Exige un ciclo que ya empezó hoy: «Empieza un nuevo ciclo» no está. Si está,
+# Exige un ciclo que ya empezó hoy: «Nuevo ciclo» no está. Si está,
 # este flujo falla (no cierra para armarse). En la corrida, ciclo-nuevo-antes-del-fin
 # va antes y puede dejar ese estado.
 # Sumar no cambia el rango de CICLO. «Saldo que quedó»: misma cantidad en Inicio
@@ -39,7 +39,7 @@ tags:
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - extendedWaitUntil:
     visible:

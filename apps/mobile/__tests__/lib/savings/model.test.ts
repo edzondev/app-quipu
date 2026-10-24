@@ -84,14 +84,14 @@ describe("presentAhorro", () => {
 
 		expect(model.totalLabel).toBe("S/ 3,050");
 		expect(model.totalMuted).toBe(false);
-		expect(model.cycleSubtitle).toBe("Guardas S/ 700 cada ciclo. Con calma, se nota.");
+		expect(model.cycleSubtitle).toBe("");
 		expect(model.fund).toMatchObject({
 			pending: false,
 			label: "Fondo de emergencia",
 			symbol: "S/",
 			amountBody: "1,850",
 			targetLine: "de S/ 4,500 · meta de 3 meses de gastos",
-			monthsLine: "1.2 DE 3 MESES CUBIERTOS",
+			monthsLine: "1.2 DE 3 MESES",
 			cycleLine: "+S/ 500 / CICLO",
 			percent: 41,
 		});
@@ -190,7 +190,7 @@ describe("presentAhorro", () => {
 		expect(model.fund.pending).toBe(true);
 		expect(model.fund.amountBody).toBe("0");
 		expect(model.fund.targetLine).toBe(
-			"Tu primera meta es cubrir 3 meses de gastos. Quipu la calcula cuando conozca tu ciclo.",
+			"Meta: 3 meses de gastos. Se calcula con tu primer ingreso.",
 		);
 		expect(model.goals).toEqual([]);
 	});

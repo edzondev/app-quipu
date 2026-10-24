@@ -41,7 +41,7 @@ function isInvalidPasswordError(error: AuthClientError): boolean {
 }
 
 export const DELETE_ACCOUNT_PASSWORD_LABEL = "Contraseña (si usas una)";
-export const DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = "Opcional si acabas de entrar";
+export const DELETE_ACCOUNT_PASSWORD_PLACEHOLDER = " si acabas de entrar";
 
 /** Match Polar by error.code only — never by message text. */
 export function isPolarSubscriptionActiveCode(code?: string): boolean {

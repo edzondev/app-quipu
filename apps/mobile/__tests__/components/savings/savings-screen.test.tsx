@@ -92,24 +92,19 @@ describe("SavingsScreen", () => {
 
 		expect(view.getByText("Ahorro")).toBeTruthy();
 		expect(view.getByText("TOTAL S/ 3,050")).toBeTruthy();
-		expect(view.getByText("Guardas S/ 700 cada ciclo. Con calma, se nota.")).toBeTruthy();
-		expect(view.getByText("PRIORIDAD")).toBeTruthy();
 		expect(view.getByText("Fondo de emergencia")).toBeTruthy();
 		expect(view.getByText("1,850")).toBeTruthy();
 		expect(view.getByText("de S/ 4,500 · meta de 3 meses de gastos")).toBeTruthy();
-		expect(view.getByText("1.2 DE 3 MESES CUBIERTOS")).toBeTruthy();
+		expect(view.getByText("1.2 DE 3 MESES")).toBeTruthy();
 		expect(view.getByText("+S/ 500 / CICLO")).toBeTruthy();
 		expect(view.getByText("TUS METAS")).toBeTruthy();
 		expect(view.getByText("Viaje")).toBeTruthy();
 		expect(view.getByText("S/ 1,200")).toBeTruthy();
 		expect(view.getByText("de 2,000")).toBeTruthy();
-		expect(view.getByText("SIN APORTE AUTOMÁTICO")).toBeTruthy();
 		expect(view.queryByText("ACTIVAR")).toBeNull();
 		expect(view.queryByText("goal-secret")).toBeNull();
 		expect(view.queryByText("fund-secret")).toBeNull();
-		expect(
-			view.getByText("Tienes ~S/ 96 de ingreso extra este ciclo. ¿Los mando al Fondo?"),
-		).toBeTruthy();
+		expect(view.getByText("¿Mandas S/ 96 de ingreso extra al Fondo?")).toBeTruthy();
 
 		expect(fillWidth(view.getByLabelText("Avance del fondo, 41 por ciento"))).toBe("41%");
 		expect(fillWidth(view.getByLabelText("Avance de Viaje, 60 por ciento"))).toBe("60%");
@@ -178,11 +173,8 @@ describe("SavingsScreen", () => {
 
 		expect(view.getByText("TOTAL S/ 0")).toBeTruthy();
 		expect(view.getByText("Tu 20% empieza a acumularse con el primer ingreso.")).toBeTruthy();
-		expect(view.queryByText("PRIORIDAD")).toBeNull();
 		expect(
-			view.getByText(
-				"Tu primera meta es cubrir 3 meses de gastos. Quipu la calcula cuando conozca tu ciclo.",
-			),
+			view.getByText("Meta: 3 meses de gastos. Se calcula con tu primer ingreso."),
 		).toBeTruthy();
 		expect(view.getByText("TUS METAS")).toBeTruthy();
 		expect(view.getByText("SIN METAS")).toBeTruthy();

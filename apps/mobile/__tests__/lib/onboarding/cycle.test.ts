@@ -2,7 +2,7 @@ import { cyclePreview } from "@/shared/lib/onboarding/cycle";
 
 describe("cyclePreview", () => {
 	it("mensual", () => {
-		expect(cyclePreview("monthly")).toBe("1 – 30 de cada mes · 30 DÍAS");
+		expect(cyclePreview("monthly")).toBe("Ciclo: 1 – 30 de cada mes");
 	});
 
 	it("quincenal", () => {

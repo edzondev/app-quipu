@@ -3,7 +3,7 @@ tags:
   - p0
   - registrar
 ---
-# «Sumar al ciclo actual» entra al ciclo abierto y no lo cierra.
+# «Sumar a este ciclo» entra al ciclo abierto y no lo cierra.
 # Misma cuenta que el resto (QUIPU_E2E_EMAIL). El rango de CICLO no cambia.
 - runFlow:
     file: ../subflows/entrar.yaml

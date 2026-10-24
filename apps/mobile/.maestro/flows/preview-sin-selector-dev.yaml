@@ -17,7 +17,7 @@ tags:
 - tapOn:
     text: "Progreso"
 - extendedWaitUntil:
-    visible: "(Aún no cierras un ciclo\\.|CICLOS CERRADOS EN VERDE)"
+    visible: "(Aún no cierras un ciclo\\.|CICLOS EN VERDE)"
     timeout: 20000
 - assertNotVisible: "Vista de prueba · solo desarrollo"
 - assertNotVisible: "Datos reales"

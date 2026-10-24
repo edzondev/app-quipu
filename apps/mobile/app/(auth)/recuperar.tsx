@@ -88,9 +88,7 @@ export default function RecuperarScreen() {
 								<Text className="font-newsreader text-[28px] text-foreground">
 									¿Cuál es tu correo?
 								</Text>
-								<Text className="font-hanken text-[14px] text-foreground/55">
-									Te mandamos un enlace para definir una contraseña nueva.
-								</Text>
+								<Text className="font-hanken text-[14px] text-foreground/55"></Text>
 							</View>
 							<form.Field
 								name="email"

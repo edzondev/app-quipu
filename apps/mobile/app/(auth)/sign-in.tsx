@@ -248,9 +248,7 @@ function Welcome({
 				<Text className="font-newsreader text-[28px] text-foreground">
 					Divide tu dinero antes de gastarlo.
 				</Text>
-				<Text className="font-hanken text-[14px] text-foreground/55">
-					Entra con la seguridad de tu propio teléfono. Sin contraseñas que recordar.
-				</Text>
+				<Text className="font-hanken text-[14px] text-foreground/55"></Text>
 			</View>
 			<AuthButton label="Continuar con Passkey" onPress={onPasskey} loading={loading} />
 			<Text className="text-center font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
@@ -258,9 +256,7 @@ function Welcome({
 			</Text>
 			<View className="flex-row items-center gap-3">
 				<View className="h-px flex-1 bg-line" />
-				<Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-					O bien
-				</Text>
+				<Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase"></Text>
 				<View className="h-px flex-1 bg-line" />
 			</View>
 			<AuthButton
@@ -297,10 +293,8 @@ function Backup({
 		<View className="flex-1 gap-6 pb-8">
 			{notice ? <AuthNotice {...notice} /> : null}
 			<View className="gap-1">
-				<Text className="font-newsreader text-[28px] text-foreground">Entra con tu respaldo.</Text>
-				<Text className="font-hanken text-[14px] text-foreground/55">
-					Usa la contraseña que definiste al crear la cuenta.
-				</Text>
+				<Text className="font-newsreader text-[28px] text-foreground">Entra con tu correo.</Text>
+				<Text className="font-hanken text-[14px] text-foreground/55"></Text>
 			</View>
 			<View className="gap-6">
 				<form.Field

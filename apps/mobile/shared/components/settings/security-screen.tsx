@@ -16,7 +16,7 @@ import {
 	type SecuritySessionRow,
 } from "@/shared/lib/settings/security-model";
 
-const INTRO = "Cada dispositivo tiene su propia llave. Puedes quitar la que ya no uses.";
+const INTRO = "";
 const UNAVAILABLE = "No disponible";
 
 const SHEET = {

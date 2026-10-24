@@ -2,7 +2,6 @@ import { useForm, useSelector } from "@tanstack/react-form";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CommitmentRow } from "@/modules/onboarding/components/commitment-row";
-import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
@@ -78,7 +77,7 @@ export function Step4Commitments() {
 						¿Qué pagas todos los meses?
 					</Text>
 					<Text className="font-hanken text-[14px] text-foreground/55">
-						Los reservamos de Necesidades para que nunca aparezcan como sorpresa.
+						Los reservamos de Necesidades.
 					</Text>
 				</View>
 
@@ -130,13 +129,7 @@ export function Step4Commitments() {
 					}
 				</form.Field>
 
-				<Text className="font-hanken text-[13px] text-foreground/55">
-					Cada compromiso necesita nombre, monto y el día del mes en que vence (del 1 al 31). Los
-					completos llevan una marca verde.
-				</Text>
-
-				<View className="flex-row items-center justify-between">
-					<MonoLabel>Se reserva de Necesidades</MonoLabel>
+				<View className="flex-row items-center justify-end">
 					<Text
 						testID="commitments-total"
 						className="font-hanken-semibold text-[13px] text-foreground"

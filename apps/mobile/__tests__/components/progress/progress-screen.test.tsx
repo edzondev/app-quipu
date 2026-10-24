@@ -42,15 +42,14 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("MAY")).toBeTruthy();
 		expect(view.getByText("SEP")).toBeTruthy();
 		expect(view.getByText("MAYO")).toBeTruthy();
-		expect(view.getByText("AHORRADO\nTOTAL")).toBeTruthy();
-		expect(view.getByText("S/ 4,320")).toBeTruthy();
+		expect(view.queryByText("AHORRADO\nTOTAL")).toBeNull();
+		expect(view.queryByText("S/ 4,320")).toBeNull();
 		expect(view.getByText("GASTOS\nREGISTRADOS").parent?.props.className ?? "").toContain("flex-1");
 		expect(view.getByText("GASTOS\nREGISTRADOS")).toBeTruthy();
 		expect(view.getByText("312")).toBeTruthy();
 		expect(view.getByText("DÍAS SIN\nSALTAR")).toBeTruthy();
 		expect(view.getByText("46")).toBeTruthy();
 		expect(view.getByText("Primer ciclo cerrado")).toBeTruthy();
-		expect(view.getByText("RECOMPENSA")).toBeTruthy();
 		expect(view.queryByText("Ver ahorro y metas")).toBeNull();
 		expect(view.queryByText("first_cycle_closed")).toBeNull();
 	});
@@ -127,10 +126,10 @@ describe("ProgressScreen", () => {
 
 		expect(view.getByText("Aún no cierras un ciclo.")).toBeTruthy();
 		expect(view.queryByLabelText("Ciclo en curso")).toBeNull();
-		expect(view.queryByText("CICLOS CERRADOS EN VERDE")).toBeNull();
+		expect(view.queryByText("CICLOS EN VERDE")).toBeNull();
 		expect(view.queryByText(/DESDE/)).toBeNull();
 		expect(view.queryByText("GASTOS REGISTRADOS")).toBeNull();
-		await fireEvent.press(view.getByLabelText("Ir a Plan"));
+		await fireEvent.press(view.getByLabelText("Registrar gasto"));
 		expect(onOpenPlan).toHaveBeenCalledTimes(1);
 	});
 
@@ -175,7 +174,6 @@ describe("CloseScreen", () => {
 
 		expect(view.getByText("Cerraste julio con S/ 210 de sobra.")).toBeTruthy();
 		expect(view.getByText("GASTADO S/ 3,290")).toBeTruthy();
-		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.queryByText("Mover S/ 210 al Fondo")).toBeNull();
 		expect(view.queryByText("Mover al Fondo")).toBeNull();

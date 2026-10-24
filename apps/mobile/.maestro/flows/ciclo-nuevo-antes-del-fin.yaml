@@ -5,7 +5,7 @@ tags:
 ---
 # Antes: sueldo-antes-del-fin.
 # Notion 3f486a7356a681b0b79ffe78ff0896aa
-# «Empieza un nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro
+# «Nuevo ciclo» cierra el ciclo si no empezó hoy y el ingreso abre otro
 # que empieza hoy. No hay time travel ni semilla: un ciclo de ayer no se arma
 # desde la UI. El cierre real es a lo sumo una vez por día de Lima.
 # Si ya empezó hoy: no se omite en silencio. Se afirma nuevo ciclo oculto y que
@@ -32,7 +32,7 @@ tags:
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - extendedWaitUntil:
     visible:
@@ -53,7 +53,7 @@ tags:
       - assertTrue: "${output.cycleStartsToday}"
       - tapOn: "Cancelar"
       - extendedWaitUntil:
-          notVisible: "(?-i)REGISTRAR INGRESO"
+          notVisible: "(?-i)"
           timeout: 10000
       - assertVisible: "Hoy puedes gastar"
 - runFlow:

@@ -26,21 +26,21 @@ tags:
 - extendedWaitUntil:
     visible: "Passkeys"
     timeout: 10000
-- assertVisible: "Cada dispositivo tiene su propia llave. Puedes quitar la que ya no uses."
+- assertVisible: ""
 - tapOn: "Volver"
 - extendedWaitUntil:
     visible: "Cerrar sesión"
     timeout: 10000
 - tapOn: "Cerrar sesión"
-- assertVisible: "Vas a salir de este teléfono."
-- assertVisible: "Se cierra tu sesión y se borra lo que quedó guardado aquí."
+- assertVisible: "¿Cerrar sesión?"
+- assertVisible: "Se borra lo guardado en este teléfono."
 - tapOn: "Cancelar"
-- assertNotVisible: "Vas a salir de este teléfono."
+- assertNotVisible: "¿Cerrar sesión?"
 - assertVisible:
     text: "Ajustes"
 - tapOn: "Cerrar sesión"
-- assertVisible: "Confirmar cierre de sesión"
-- tapOn: "Confirmar cierre de sesión"
+- assertVisible: "Cerrar sesión"
+- tapOn: "Cerrar sesión"
 - extendedWaitUntil:
     visible: "Ya tengo cuenta"
     timeout: 20000

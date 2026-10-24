@@ -105,10 +105,12 @@ describe("signOut HTTP error", () => {
 			/>,
 		);
 		await act(async () => {
-			fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+			const signOutButtons = ajustes.getAllByRole("button", { name: "Cerrar sesión" });
+			fireEvent.press(signOutButtons[0]);
 		});
 		await act(async () => {
-			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+			const signOutButtons = ajustes.getAllByRole("button", { name: "Cerrar sesión" });
+			fireEvent.press(signOutButtons[1]);
 		});
 
 		expect(session.data).toBeNull();
@@ -141,10 +143,12 @@ describe("signOut HTTP error", () => {
 				/>,
 			);
 			await act(async () => {
-				fireEvent.press(ajustes.getByRole("button", { name: "Cerrar sesión" }));
+				const signOutButtons = ajustes.getAllByRole("button", { name: "Cerrar sesión" });
+				fireEvent.press(signOutButtons[0]);
 			});
 			await act(async () => {
-				fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
+				const signOutButtons = ajustes.getAllByRole("button", { name: "Cerrar sesión" });
+				fireEvent.press(signOutButtons[1]);
 				await jest.advanceTimersByTimeAsync(SERVER_SIGN_OUT_WAIT_MS);
 			});
 

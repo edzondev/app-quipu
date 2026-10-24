@@ -231,7 +231,7 @@ describe("presentClose", () => {
 		expect(model?.title).toBe("Cerraste julio con S/ 210 de sobra.");
 		expect(model?.subtitle).toBe("3 ciclos seguidos.");
 		expect(model?.spentLabel).toBe("GASTADO S/ 3,290");
-		expect(model?.surplusLabel).toBe("SOBRÓ S/ 210");
+		expect(model?.surplusLabel).toBeNull();
 		expect(model?.rows.map((row) => row.amountLabel)).toEqual(["S/ 2,000", "S/ 1,000", "S/ 290"]);
 		expect(model?.segments.map((segment) => segment.percent)).toEqual([57, 29, 8, 6]);
 		expect(model?.segments.map((segment) => segment.label)).toEqual([

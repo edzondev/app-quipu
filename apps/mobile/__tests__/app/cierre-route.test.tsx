@@ -32,7 +32,7 @@ describe("cierre", () => {
 	it("muestra cuánto sobró sin la tarjeta SOBRANTE", async () => {
 		const view = await render(<ClosePage />);
 
-		expect(view.getByText("SOBRÓ S/ 210")).toBeTruthy();
+		expect(view.queryByText(/SOBRÓ/i)).toBeNull();
 		expect(view.queryByText("SOBRANTE")).toBeNull();
 		expect(view.getAllByText("Necesidades")).toHaveLength(1);
 		expect(mockUseQuery).not.toHaveBeenCalled();

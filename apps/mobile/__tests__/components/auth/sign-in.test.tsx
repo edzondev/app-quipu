@@ -79,7 +79,7 @@ describe("SignInScreen", () => {
 
 		await fireEvent.press(view.getByText("Continuar con Passkey"));
 
-		expect(await view.findByText("Entra con tu respaldo.")).toBeTruthy();
+		expect(await view.findByText("Entra con tu correo.")).toBeTruthy();
 		expect(
 			view.getByText("Cancelaste la verificación. Puedes reintentar o usar tu respaldo."),
 		).toBeTruthy();

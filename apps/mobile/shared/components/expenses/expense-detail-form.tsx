@@ -123,7 +123,7 @@ export function ExpenseDetailForm({
 									value={field.state.value}
 									onChangeText={field.handleChange}
 									onBlur={field.handleBlur}
-									placeholder="Opcional"
+									placeholder=""
 									placeholderTextColorClassName="accent-foreground/45"
 									maxLength={120}
 									accessibilityLabel="Comercio"
@@ -137,7 +137,7 @@ export function ExpenseDetailForm({
 					<DetailRow label="Sobre">
 						<Pressable
 							accessibilityRole="button"
-							accessibilityLabel="Cambiar sobre"
+							accessibilityLabel="Sobre"
 							hitSlop={HIT_SLOP}
 							className="flex-row items-center gap-2"
 							onPress={() => setEnvelopeOpen((open) => !open)}

@@ -26,12 +26,12 @@ const mockHome: HomeModel = {
 	badgeTone: "stable",
 	cycleStatusLabel: "Ciclo estable",
 	dailyCents: 4230,
-	heroSubtitle: "Sin tocar tus compromisos ni tu ahorro.",
+	heroSubtitle: "",
 	currencySymbol: "S/",
 	envelopes: [
 		{
 			label: "Necesidades",
-			shortLabel: "Necesid.",
+			shortLabel: "Necesidades",
 			spentCents: 113800,
 			remainingCents: 61200,
 			remainingPercent: 35,
@@ -59,7 +59,7 @@ const mockHome: HomeModel = {
 		},
 		{
 			label: "Ahorro planeado",
-			shortLabel: "Planeado",
+			shortLabel: "Ahorro",
 			spentCents: 70000,
 			remainingCents: 70000,
 			remainingPercent: 100,
@@ -127,16 +127,14 @@ describe("Home 1d", () => {
 			/>,
 		);
 		expect(view.getByText("Aún no hay ciclo")).toBeTruthy();
-		expect(
-			view.getByText("Registra tu primer ingreso para ver cuánto puedes gastar hoy."),
-		).toBeTruthy();
-		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("Registra tu ingreso para ver cuánto puedes gastar hoy.")).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
 		expect(view.getByText("E")).toBeTruthy();
 		expect(view.queryByText("+ Ingreso")).toBeNull();
 		expect(view.getByText("Registrar ingreso")).toBeTruthy();
 		expect(view.queryByText("Salir")).toBeNull();
 		expect(view.queryByText("—")).toBeNull();
-		expect(view.queryByText("Necesid.")).toBeNull();
+		expect(view.queryByText("Necesidades")).toBeNull();
 
 		await fireEvent.press(view.getByRole("button", { name: "Ajustes" }));
 		expect(onOpenSettings).toHaveBeenCalledTimes(1);
@@ -154,7 +152,7 @@ describe("Home 1d", () => {
 				onViewAllMovements={jest.fn()}
 			/>,
 		);
-		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
 		expect(view.queryByText(/Quispe/)).toBeNull();
 		expect(view.queryByText("+ Ingreso")).toBeNull();
 	});
@@ -172,20 +170,19 @@ describe("Home 1d", () => {
 		);
 
 		expect(view.getByText("Hoy puedes gastar")).toBeTruthy();
-		expect(view.getByText("Sin tocar tus compromisos ni tu ahorro.")).toBeTruthy();
 		expect(view.getByText(/Día 15\/30/)).toBeTruthy();
-		expect(view.getByText("Ciclo estable")).toBeTruthy();
+		expect(view.queryByText("Ciclo estable")).toBeNull();
 		expect(view.getByText(/Sobra S\/ 1,543/)).toBeTruthy();
 		expect(view.getByText("42")).toBeTruthy();
 		expect(view.getByText(".30")).toBeTruthy();
-		expect(view.getByText("Sobres · queda")).toBeTruthy();
-		expect(view.getByText("Necesid.")).toBeTruthy();
+		expect(view.getByText("Sobres  ›")).toBeTruthy();
+		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.getByText("S/ 612")).toBeTruthy();
 		expect(view.getByText("S/ 231")).toBeTruthy();
 		expect(view.getByText("S/ 700")).toBeTruthy();
-		expect(view.getByText("Planeado")).toBeTruthy();
+		expect(view.getByText("Ahorro")).toBeTruthy();
 		expect(view.queryByText("apartado")).toBeNull();
-		expect(view.getByText("Próximos compromisos")).toBeTruthy();
+		expect(view.getByText("Por pagar")).toBeTruthy();
 		expect(view.getByText(/Alquiler/)).toBeTruthy();
 		expect(view.getByText(/mañana/)).toBeTruthy();
 		expect(view.getByText("S/ 1,100")).toBeTruthy();
@@ -199,7 +196,7 @@ describe("Home 1d", () => {
 		expect(onViewAllMovements).toHaveBeenCalledTimes(1);
 	});
 
-	it("en Inicio el S/ 560 del snapshot se lee como Planeado, no apartado", async () => {
+	it("en Inicio el S/ 560 del snapshot se lee como Ahorro, no apartado", async () => {
 		const base = summaryWithCycle();
 		const home = mapDashboardHome({
 			...base,
@@ -218,10 +215,10 @@ describe("Home 1d", () => {
 				onViewAllMovements={jest.fn()}
 			/>,
 		);
-		expect(view.getByText("Planeado")).toBeTruthy();
+		expect(view.getByText("Ahorro")).toBeTruthy();
 		expect(view.getByText("S/ 560")).toBeTruthy();
 		expect(view.queryByText("apartado")).toBeNull();
-		expect(view.queryByText(/^Ahorro$/)).toBeNull();
+		expect(view.getAllByText("Ahorro").length).toBeGreaterThan(0);
 	});
 
 	it("con «Sobra» negativa dice cuánto se pasó, no S/ 0", async () => {
@@ -327,8 +324,8 @@ describe("Home 1d", () => {
 				onViewAllMovements={jest.fn()}
 			/>,
 		);
-		expect(view.getByText("Sin compromisos próximos.")).toBeTruthy();
-		expect(view.getByText("Sin movimientos en este ciclo.")).toBeTruthy();
+		expect(view.queryByText("Por pagar")).toBeNull();
+		expect(view.queryByText("Movimientos")).toBeNull();
 		expect(view.queryByText("—")).toBeNull();
 	});
 
@@ -336,7 +333,7 @@ describe("Home 1d", () => {
 		mockPush.mockClear();
 		const view = await render(<HomePage />);
 		expect(view.getByText("E")).toBeTruthy();
-		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
 		expect(view.queryByText("+ Ingreso")).toBeNull();
 		expect(view.queryByText("Salir")).toBeNull();
 		expect(view.queryByText("Cerrar sesión")).toBeNull();

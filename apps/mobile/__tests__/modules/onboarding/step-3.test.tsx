@@ -94,8 +94,8 @@ describe("Step3Allocation — reparto 50/30/20", () => {
 	it("explica qué entra en cada sobre", async () => {
 		await renderStep3(null);
 		expect(screen.getByText(/Renta, comida, transporte/)).toBeTruthy();
-		expect(screen.getByText(/Salidas, compras y antojos/)).toBeTruthy();
-		expect(screen.getByText(/Lo que queda\. Se aparta primero/)).toBeTruthy();
+		expect(screen.getByText(/Salidas, compras, antojos/)).toBeTruthy();
+		expect(screen.getByText(/Se aparta primero/)).toBeTruthy();
 	});
 
 	it("muestra montos S/ junto al % con referencia 350000 (defaults)", async () => {

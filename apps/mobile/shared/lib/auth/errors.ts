@@ -6,7 +6,7 @@ export type AuthNoticeCopy = {
 
 const PASSKEY_CANCELLED = "Cancelaste la verificación. Puedes reintentar o usar tu respaldo.";
 const PASSKEY_UNAVAILABLE = "Este teléfono no admite Passkeys";
-const PASSKEY_FAILED = "No pudimos usar la Passkey. Entra con tu respaldo.";
+const PASSKEY_FAILED = "No pudimos usar la Passkey. Entra con tu correo.";
 const OTP_MISMATCH = "El código no coincide.";
 const OTP_EXPIRED = "El código expiró. Pide uno nuevo.";
 const OTP_TOO_MANY = "Demasiados intentos. Pide un código nuevo.";

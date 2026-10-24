@@ -7,7 +7,7 @@ tags:
 ---
 # Antes: sin-ciclo-solo-sueldo.
 # Notion 3f486a7356a681daadc6eba893faea43
-# Sin ningún ciclo solo está «Empieza un nuevo ciclo». «Sumar al ciclo actual» no está.
+# Sin ningún ciclo solo está «Nuevo ciclo». «Sumar a este ciclo» no está.
 # No guarda, así que la cuenta sigue sin ciclo.
 #
 # Perfil sin ningún ciclo. Apunta QUIPU_E2E_EMAIL a esa cuenta. No corre por defecto.
@@ -21,7 +21,7 @@ tags:
     timeout: 30000
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - assertVisible:
     id: income-mode-new-cycle

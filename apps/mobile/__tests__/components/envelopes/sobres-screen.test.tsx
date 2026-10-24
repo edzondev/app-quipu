@@ -81,7 +81,6 @@ describe("SobresScreen", () => {
 
 		expect(view.getByText("Sobres")).toBeTruthy();
 		expect(view.getByText("DÍA 15 / 30")).toBeTruthy();
-		expect(view.getByText("Tu sueldo ya está dividido. Esto es lo que queda.")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.getByText("Al día")).toBeTruthy();
 		expect(view.getByText("1,138")).toBeTruthy();

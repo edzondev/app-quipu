@@ -11,11 +11,11 @@ const filled: CommitmentsScreenModel = {
 		{
 			id: "rent-secret",
 			name: "Alquiler",
-			meta: "VENCE MAÑANA · 16 AGO",
+			meta: "VENCE MAÑANA16 AGO",
 			metaTone: "soon",
 			amountLabel: "S/ 1,100",
 			amountMuted: false,
-			statusLabel: "Cubierto",
+			statusLabel: "",
 			statusTone: "calm",
 		},
 		{
@@ -25,7 +25,7 @@ const filled: CommitmentsScreenModel = {
 			metaTone: "muted",
 			amountLabel: "S/ 59",
 			amountMuted: true,
-			statusLabel: "Pagado",
+			statusLabel: "",
 			statusTone: "muted",
 		},
 	],
@@ -46,14 +46,12 @@ describe("CommitmentsScreen", () => {
 		expect(
 			view.getByText("Quipu los reserva de Necesidades antes de calcular tu disponible."),
 		).toBeTruthy();
-		expect(view.getByText("RESERVADO ESTE CICLO")).toBeTruthy();
+		expect(view.getByText("ESTE CICLO")).toBeTruthy();
 		expect(view.getByText("S/ 1,265")).toBeTruthy();
 		expect(view.getByText("PAGADO S/ 165")).toBeTruthy();
 		expect(view.getByText("PENDIENTE S/ 1,100")).toBeTruthy();
-		expect(view.getByText("VENCE MAÑANA · 16 AGO")).toBeTruthy();
-		expect(view.getByText("Cubierto")).toBeTruthy();
+		expect(view.getByText("VENCE MAÑANA16 AGO")).toBeTruthy();
 		expect(view.getByText("PAGADO 6 AGO")).toBeTruthy();
-		expect(view.getByText("Pagado")).toBeTruthy();
 		expect(view.queryByText("rent-secret")).toBeNull();
 		expect(view.queryByText("phone-secret")).toBeNull();
 
@@ -78,7 +76,6 @@ describe("CommitmentsScreen", () => {
 			/>,
 		);
 
-		expect(view.getByText("SIN COMPROMISOS")).toBeTruthy();
 		expect(view.getByText("Aún no registras tus pagos fijos.")).toBeTruthy();
 		expect(view.getByText("S/ 0")).toBeTruthy();
 		expect(view.queryByText("PAGADO S/ 0")).toBeNull();

@@ -24,9 +24,7 @@ export function Welcome() {
 					>
 						{WELCOME_EXAMPLE}
 					</Text>
-					<Text className="mt-2 font-hanken text-[13px] text-foreground/55">
-						Es un ejemplo. Tu número sale del dinero que tienes hoy.
-					</Text>
+					<Text className="mt-2 font-hanken text-[13px] text-foreground/55"></Text>
 				</View>
 			</View>
 			<View className="gap-2">

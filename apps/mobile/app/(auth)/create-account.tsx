@@ -178,9 +178,7 @@ export default function CreateAccountScreen() {
 
 							<View className="gap-1">
 								<Text className="font-newsreader text-[28px] text-foreground">Crea tu cuenta.</Text>
-								<Text className="font-hanken text-[14px] text-foreground/55">
-									Tres pasos y entras con tu llave.
-								</Text>
+								<Text className="font-hanken text-[14px] text-foreground/55"></Text>
 							</View>
 
 							<View className="gap-3">
@@ -323,7 +321,7 @@ export default function CreateAccountScreen() {
 						<View className="flex-1 justify-center gap-6 pb-14">
 							<View className="items-center gap-4">
 								<Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-									CUENTA LISTA
+									LISTA
 								</Text>
 								<View className="h-14 w-14 items-center justify-center rounded-full bg-line">
 									<Check size={28} colorClassName="accent-foreground" />
@@ -331,9 +329,7 @@ export default function CreateAccountScreen() {
 							</View>
 
 							<View className="gap-1">
-								<Text className="text-center font-newsreader text-[28px] text-foreground">
-									Ya puedes entrar con tu llave.
-								</Text>
+								<Text className="text-center font-newsreader text-[28px] text-foreground"></Text>
 							</View>
 
 							<View className="gap-3">

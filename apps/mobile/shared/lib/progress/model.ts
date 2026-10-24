@@ -122,7 +122,7 @@ export function presentClose(
 				: `Cerraste ${month} con ${formatCentsTrimmed(surplusCents, symbol)} de sobra.`,
 		subtitle: report.streakEvaluated ? streakSubtitle(report.streak) : null,
 		spentLabel: `GASTADO ${formatCentsTrimmed(spentCents, symbol)}`,
-		surplusLabel: surplusCents == null ? null : `SOBRÓ ${formatCentsTrimmed(surplusCents, symbol)}`,
+		surplusLabel: null,
 		segments: toSegments(report, spentCents, surplusCents),
 		rows: toRows(report.spendByEnvelope, symbol),
 	};

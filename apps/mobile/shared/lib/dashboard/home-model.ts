@@ -81,9 +81,9 @@ const CYCLE_STATUS_LABEL: Record<BadgeTone, string> = {
 };
 
 const SHORT_ENVELOPE_LABEL = {
-	needs: "Necesid.",
+	needs: "Necesidades",
 	wants: "Gustos",
-	savings: "Planeado",
+	savings: "Ahorro",
 } as const;
 
 const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
@@ -92,7 +92,7 @@ const TONE_BY_ENVELOPE_LABEL: Record<string, HomeTone> = {
 	Ahorro: "savings",
 };
 
-const DEFAULT_HERO_SUBTITLE = "Sin tocar tus compromisos ni tu ahorro.";
+const DEFAULT_HERO_SUBTITLE = "";
 const LIMA = "America/Lima";
 
 export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
@@ -112,7 +112,7 @@ export function mapDashboardHome(summary: DashboardSummary): HomeModel | null {
 		badgeTone: tone,
 		cycleStatusLabel: CYCLE_STATUS_LABEL[tone],
 		dailyCents,
-		heroSubtitle: summary.hero.bodyCopy?.trim() || DEFAULT_HERO_SUBTITLE,
+		heroSubtitle: DEFAULT_HERO_SUBTITLE,
 		currencySymbol: symbol,
 		envelopes,
 		surplusCents: summary.surplusCents,

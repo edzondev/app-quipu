@@ -4,10 +4,10 @@ tags:
   - registrar
 ---
 # Notion 3f486a7356a6815e9dfcf8f2dd7c1ce4
-# Ciclo abierto: «Sumar al ciclo actual» está y viene marcada (startedToday o no).
+# Ciclo abierto: «Sumar a este ciclo» está y viene marcada (startedToday o no).
 # Si el ciclo empezó hoy, nuevo ciclo no está; este flujo no lo afirma: suma S/ 10
 # y no cierra. Misma cuenta que el resto.
-# (?-i) separa el título «REGISTRAR INGRESO» del botón «Registrar ingreso».
+# (?-i) separa el título «» del botón «Registrar ingreso».
 - runFlow:
     file: ../subflows/entrar.yaml
     env:
@@ -19,12 +19,12 @@ tags:
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: "NUEVO GASTO"
+    visible: ""
     timeout: 10000
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - extendedWaitUntil:
     visible:
@@ -35,11 +35,11 @@ tags:
     selected: true
 - tapOn:
     text: "Gasto"
-- assertVisible: "NUEVO GASTO"
+- assertVisible: ""
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - tapOn:
     id: income-mode-add
@@ -73,7 +73,7 @@ tags:
     id: income-submit
     enabled: true
 - extendedWaitUntil:
-    notVisible: "(?-i)REGISTRAR INGRESO"
+    notVisible: "(?-i)"
     timeout: 20000
 - runFlow: ../subflows/abrir-movimientos.yaml
 # Los ingresos se muestran sin decimales si son soles enteros: «+ S/ 10»

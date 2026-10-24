@@ -119,9 +119,6 @@ function FundCard({ fund }: { fund: FundView }) {
 			<View className="flex-row items-center gap-[9px]">
 				<Lock size={17} colorClassName="accent-savings" />
 				<Text className="font-hanken-semibold text-[15px] text-foreground">{fund.label}</Text>
-				<Text className="ml-auto font-geist-mono text-[10.5px] tracking-[0.1em] text-primary">
-					PRIORIDAD
-				</Text>
 			</View>
 			<Amount amountBody={fund.amountBody} symbol={fund.symbol} muted={false} />
 			{fund.targetLine ? (
@@ -199,7 +196,7 @@ function SurplusBanner({
 	return (
 		<View className="mt-[22px] border-l-2 border-savings pl-[14px]">
 			<Text className="font-newsreader text-[15px] leading-[22px] text-foreground">
-				{`Tienes ~${amountLabel} de ingreso extra este ciclo. ¿Los mando al Fondo?`}
+				{`¿Mandas ${amountLabel} de ingreso extra al Fondo?`}
 			</Text>
 			<View className="mt-2.5 flex-row gap-[18px]">
 				<Pressable

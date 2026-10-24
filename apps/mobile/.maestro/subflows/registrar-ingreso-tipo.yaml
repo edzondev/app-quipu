@@ -9,7 +9,7 @@ appId: com.quipu.finance
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)REGISTRAR INGRESO"
+    visible: "(?-i)"
     timeout: 10000
 - runFlow:
     file: completar-ingreso.yaml

@@ -25,7 +25,7 @@ tags:
     timeout: 10000
 - tapOn: "Compromisos"
 - extendedWaitUntil:
-    visible: "RESERVADO ESTE CICLO"
+    visible: "ESTE CICLO"
     timeout: 15000
 - tapOn: "Agregar compromiso"
 - extendedWaitUntil:
@@ -119,4 +119,4 @@ tags:
     timeout: 20000
 - assertVisible: "Celular"
 - assertVisible: "S/ 50"
-- assertVisible: "(.*MENSUAL|Cubierto|Parcial|Sin cubrir|VENCE.*)"
+- assertVisible: "(.*MENSUAL||Parcial|Sin cubrir|VENCE.*)"

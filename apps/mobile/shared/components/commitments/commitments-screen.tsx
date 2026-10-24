@@ -53,9 +53,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 
 				{isEmpty ? (
 					<View className="mt-10">
-						<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/35">
-							SIN COMPROMISOS
-						</Text>
+						<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/35"></Text>
 						<Text className="mt-3.5 font-newsreader text-[23px] leading-8 text-foreground">
 							Aún no registras tus pagos fijos.
 						</Text>
@@ -106,7 +104,7 @@ function ReservedBlock({ model, empty }: { model: CommitmentsScreenModel; empty:
 		<View className="mt-6 border-y border-line py-[18px]">
 			<View className="flex-row items-baseline justify-between">
 				<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/55">
-					RESERVADO ESTE CICLO
+					ESTE CICLO
 				</Text>
 				<Text
 					className={`font-newsreader text-[22px] tabular-nums ${

@@ -55,14 +55,14 @@ describe("CommitmentForm", () => {
 		const view = await render(<CommitmentForm onSubmit={jest.fn()} onCancel={jest.fn()} />);
 		const dayInput = view.getByLabelText("Día de vencimiento");
 
-		expect(view.getByText("Se repite cada mes.")).toBeTruthy();
+		expect(view.getByText("Cada mes.")).toBeTruthy();
 
 		await fireEvent.changeText(dayInput, "64");
 		expect(view.getByText("El día de vencimiento va del 1 al 31.")).toBeTruthy();
 
 		await fireEvent.changeText(dayInput, "21");
 		expect(view.queryByText("El día de vencimiento va del 1 al 31.")).toBeNull();
-		expect(view.getByText(/^Se repite cada mes\. Próximo: 21 [A-Z]{3}\.$/)).toBeTruthy();
+		expect(view.getByText(/^Cada mes · próximo 21 [a-z]{3}$/)).toBeTruthy();
 	});
 
 	it("muestra el error del servidor si no se pudo guardar", async () => {

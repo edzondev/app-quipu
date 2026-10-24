@@ -116,6 +116,6 @@ describe("franja offline en el layout de pestañas", () => {
 		await advance();
 
 		expect(view.queryByText("Sin conexión")).toBeNull();
-		expect(view.getByText("Hola, Edzon")).toBeTruthy();
+		expect(view.getByText("Edzon")).toBeTruthy();
 	});
 });

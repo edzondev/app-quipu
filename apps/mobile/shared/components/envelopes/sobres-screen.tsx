@@ -10,7 +10,7 @@ import type {
 } from "@/shared/lib/dashboard/sobres-model";
 import { HIT_SLOP } from "@/shared/lib/hit-slop";
 
-const SUBTITLE = "Tu sueldo ya está dividido. Esto es lo que queda.";
+const SUBTITLE = "";
 const EMPTY = "Todavía no hay sobres en el ciclo activo.";
 
 const DOT: Record<SobresTone, string> = {

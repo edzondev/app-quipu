@@ -18,20 +18,20 @@ tags:
 - tapOn:
     text: "Plan"
 - extendedWaitUntil:
-    visible: "Dónde está tu dinero antes de que lo gastes."
+    visible: ""
     timeout: 10000
-- assertVisible: "TOTAL REPARTIDO"
+- assertVisible: "EN TUS SOBRES  ›"
 - assertVisible: "Sobres"
 - assertVisible: "Necesidades, Gustos y Ahorro"
 - assertVisible: "Compromisos"
 - assertVisible: "Ahorro planeado"
-- assertVisible: "Ahorro ya guardado"
-- assertVisible: "Fondo de emergencia y metas"
+- assertVisible: "Ahorro"
+- assertVisible: ""
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
     text: "Sobres"
 - extendedWaitUntil:
-    visible: "Tu sueldo ya está dividido. Esto es lo que queda."
+    visible: ""
     timeout: 15000
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"
@@ -41,4 +41,4 @@ tags:
 - assertNotVisible: "Mover dinero"
 - assertVisible: "(Al día|Va rápido|Intacto)"
 - tapOn: "Volver"
-- assertVisible: "Ahorro ya guardado"
+- assertVisible: "Ahorro"

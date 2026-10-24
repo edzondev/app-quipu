@@ -24,14 +24,14 @@ const CYCLE_CHOICES = [
 	{
 		kind: "habitual",
 		testID: "income-mode-new-cycle",
-		label: "Empieza un nuevo ciclo",
-		hint: "Abre un período nuevo",
+		label: "Nuevo ciclo",
+		hint: "",
 	},
 	{
 		kind: "extraordinary",
 		testID: "income-mode-add",
-		label: "Sumar al ciclo actual",
-		hint: "Sin cerrar este período",
+		label: "Sumar a este ciclo",
+		hint: "",
 	},
 ] as const satisfies ReadonlyArray<{
 	kind: IncomeKind;
@@ -125,9 +125,7 @@ export function IncomeSheetForm({
 	return (
 		<View testID="income-sheet" className="px-[22px] pb-8">
 			<View className="mt-4 flex-row items-center justify-between">
-				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55">
-					REGISTRAR INGRESO
-				</Text>
+				<Text className="font-geist-mono text-[10.5px] uppercase tracking-[0.14em] text-foreground/55"></Text>
 				<Pressable
 					accessibilityRole="button"
 					accessibilityLabel="Cancelar"
