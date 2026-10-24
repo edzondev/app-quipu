@@ -21,7 +21,8 @@ tags:
     timeout: 30000
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)"
+    visible:
+      id: income-sheet
     timeout: 10000
 - assertVisible:
     id: income-mode-new-cycle

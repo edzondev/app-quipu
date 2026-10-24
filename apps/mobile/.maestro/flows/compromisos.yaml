@@ -119,4 +119,4 @@ tags:
     timeout: 20000
 - assertVisible: "Celular"
 - assertVisible: "S/ 50"
-- assertVisible: "(.*MENSUAL||Parcial|Sin cubrir|VENCE.*)"
+- assertVisible: "(.*MENSUAL|Cubierto|Parcial|Sin cubrir|VENCE.*)"

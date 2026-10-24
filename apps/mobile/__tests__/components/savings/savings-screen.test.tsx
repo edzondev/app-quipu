@@ -177,13 +177,8 @@ describe("SavingsScreen", () => {
 			view.getByText("Meta: 3 meses de gastos. Se calcula con tu primer ingreso."),
 		).toBeTruthy();
 		expect(view.getByText("TUS METAS")).toBeTruthy();
-		expect(view.getByText("SIN METAS")).toBeTruthy();
-		expect(view.getByText("Tus metas vivirán aquí.")).toBeTruthy();
-		expect(
-			view.getByText(
-				"Un viaje, una laptop, la inicial del depa. Primero dale tracción al Fondo; las metas vienen después.",
-			),
-		).toBeTruthy();
+		expect(view.getByText("Aún no tienes metas.")).toBeTruthy();
+		expect(view.getByText("Un viaje, una laptop, la inicial del depa.")).toBeTruthy();
 		expect(view.getByText("+ Nueva meta")).toBeTruthy();
 		expect(view.queryByLabelText(/por ciento/)).toBeNull();
 

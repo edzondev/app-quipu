@@ -19,7 +19,7 @@ const SEP = Date.parse("2026-09-15T17:00:00.000Z");
 const screenProps = {
 	status: "ready" as const,
 	onOpenClose: jest.fn(),
-	onOpenPlan: jest.fn(),
+	onRegisterExpense: jest.fn(),
 };
 
 describe("ProgressScreen", () => {
@@ -95,12 +95,12 @@ describe("ProgressScreen", () => {
 		expect(view.getByText("DESDE MAYO")).toBeTruthy();
 	});
 
-	it("centra el vacío y abre Plan", async () => {
-		const onOpenPlan = jest.fn();
+	it("centra el vacío y abre la hoja de gasto", async () => {
+		const onRegisterExpense = jest.fn();
 		const view = await render(
 			<ProgressScreen
 				{...screenProps}
-				onOpenPlan={onOpenPlan}
+				onRegisterExpense={onRegisterExpense}
 				model={presentProgress(
 					{
 						...progressOverview,
@@ -130,7 +130,7 @@ describe("ProgressScreen", () => {
 		expect(view.queryByText(/DESDE/)).toBeNull();
 		expect(view.queryByText("GASTOS REGISTRADOS")).toBeNull();
 		await fireEvent.press(view.getByLabelText("Registrar gasto"));
-		expect(onOpenPlan).toHaveBeenCalledTimes(1);
+		expect(onRegisterExpense).toHaveBeenCalledTimes(1);
 	});
 
 	it("abre el cierre destacado con borde savings y lo oculta cuando no hay reporte", async () => {

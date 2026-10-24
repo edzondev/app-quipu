@@ -19,7 +19,8 @@ tags:
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: ""
+    visible:
+      id: expense-sheet
     timeout: 10000
 - assertVisible:
     text: "Gasto"
@@ -40,7 +41,8 @@ tags:
 # en Android es Back y cierra la hoja si el teclado ya no está.
 - tapOn:
     text: "Gustos"
-    below: ""
+    below:
+      id: expense-sheet
 - assertVisible: "DESPUÉS DE ESTE GASTO.*"
 - tapOn:
     text: "Comercio"
@@ -48,7 +50,8 @@ tags:
 - hideKeyboard
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
-    notVisible: ""
+    notVisible:
+      id: expense-sheet
     timeout: 20000
 - runFlow: ../subflows/abrir-movimientos.yaml
 - extendedWaitUntil:

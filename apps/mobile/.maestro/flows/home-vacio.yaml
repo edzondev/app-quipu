@@ -24,19 +24,24 @@ tags:
 - assertVisible: "Registrar ingreso"
 - tapOn: "Registrar ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)"
+    visible:
+      id: income-sheet
     timeout: 10000
 - tapOn:
     text: "Gasto"
-- assertVisible: "(?-i)"
-- assertNotVisible: ""
+- assertVisible:
+    id: expense-sheet
+- assertNotVisible:
+    id: income-sheet
 - tapOn: "Cancelar"
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: "(?-i)"
+    visible:
+      id: income-sheet
     timeout: 10000
-- assertNotVisible: ""
+- assertNotVisible:
+      id: expense-sheet
 - tapOn: "Cancelar"
 - tapOn:
     text: "Movimientos"
@@ -50,12 +55,12 @@ tags:
 - tapOn:
     text: "Plan"
 - extendedWaitUntil:
-    visible: ""
+    visible: "Plan"
     timeout: 10000
-- assertNotVisible: "EN TUS SOBRES  ›"
+- assertNotVisible: "EN TUS SOBRES"
 - tapOn: "Compromisos"
 - extendedWaitUntil:
-    visible: ""
+    visible: "Aún no registras tus pagos fijos."
     timeout: 15000
 - assertVisible: "Aún no registras tus pagos fijos."
 - tapOn: "Volver"

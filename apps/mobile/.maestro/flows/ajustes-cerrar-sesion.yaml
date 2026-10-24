@@ -26,7 +26,6 @@ tags:
 - extendedWaitUntil:
     visible: "Passkeys"
     timeout: 10000
-- assertVisible: ""
 - tapOn: "Volver"
 - extendedWaitUntil:
     visible: "Cerrar sesión"
@@ -39,8 +38,8 @@ tags:
 - assertVisible:
     text: "Ajustes"
 - tapOn: "Cerrar sesión"
-- assertVisible: "Cerrar sesión"
-- tapOn: "Cerrar sesión"
+- assertVisible: "Confirmar cierre de sesión"
+- tapOn: "Confirmar cierre de sesión"
 - extendedWaitUntil:
     visible: "Ya tengo cuenta"
     timeout: 20000

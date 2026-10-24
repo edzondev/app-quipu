@@ -18,20 +18,19 @@ tags:
 - tapOn:
     text: "Plan"
 - extendedWaitUntil:
-    visible: ""
+    visible: "Plan"
     timeout: 10000
-- assertVisible: "EN TUS SOBRES  ›"
+- assertVisible: "EN TUS SOBRES"
 - assertVisible: "Sobres"
 - assertVisible: "Necesidades, Gustos y Ahorro"
 - assertVisible: "Compromisos"
 - assertVisible: "Ahorro planeado"
 - assertVisible: "Ahorro"
-- assertVisible: ""
 - assertNotVisible: "Reparto del ciclo"
 - tapOn:
     text: "Sobres"
 - extendedWaitUntil:
-    visible: ""
+    visible: "Sobres"
     timeout: 15000
 - assertVisible: "Necesidades"
 - assertVisible: "Gustos"

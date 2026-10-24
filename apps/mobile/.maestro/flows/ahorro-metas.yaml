@@ -87,7 +87,6 @@ tags:
           notVisible: "(?-i)NUEVA META"
           timeout: 20000
 - assertVisible: "Meta E2E"
-- assertVisible: ""
 - assertVisible: ".*de 2,000"
 - runFlow:
     when:

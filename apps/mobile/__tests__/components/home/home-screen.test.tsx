@@ -142,6 +142,34 @@ describe("Home 1d", () => {
 		expect(onRegisterIncome).toHaveBeenCalledTimes(1);
 	});
 
+	it("muestra Ciclo en atención con color de advertencia", async () => {
+		const view = await render(
+			<HomeDense
+				home={{ ...mockHome, badgeTone: "attention", cycleStatusLabel: "Ciclo en atención" }}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+			/>,
+		);
+		const status = view.getByText("Ciclo en atención");
+		expect(status.props.className).toContain("text-warning");
+	});
+
+	it("muestra Ciclo en riesgo con color de peligro", async () => {
+		const view = await render(
+			<HomeDense
+				home={{ ...mockHome, badgeTone: "risk", cycleStatusLabel: "Ciclo en riesgo" }}
+				profileInitial="E"
+				profileName="Edzon"
+				onOpenSettings={jest.fn()}
+				onViewAllMovements={jest.fn()}
+			/>,
+		);
+		const status = view.getByText("Ciclo en riesgo");
+		expect(status.props.className).toContain("text-danger");
+	});
+
 	it("saluda solo con el primer nombre para que uno largo no tape la cabecera", async () => {
 		const view = await render(
 			<HomeDense
@@ -175,7 +203,7 @@ describe("Home 1d", () => {
 		expect(view.getByText(/Sobra S\/ 1,543/)).toBeTruthy();
 		expect(view.getByText("42")).toBeTruthy();
 		expect(view.getByText(".30")).toBeTruthy();
-		expect(view.getByText("Sobres  ›")).toBeTruthy();
+		expect(view.getByText("Sobres")).toBeTruthy();
 		expect(view.getByText("Necesidades")).toBeTruthy();
 		expect(view.getByText("S/ 612")).toBeTruthy();
 		expect(view.getByText("S/ 231")).toBeTruthy();

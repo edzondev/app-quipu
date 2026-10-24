@@ -216,20 +216,20 @@ describe("parseDueDay", () => {
 
 describe("dueDayHint", () => {
 	const at = (day: string) => Date.parse(`${day}T12:00:00-05:00`);
-	const SHORT = " En meses cortos vence el último día.";
+	const shortMonth = " En meses cortos vence el último día.";
 
 	it("anuncia este mes si el día no pasó y el siguiente si ya pasó", () => {
-		expect(dueDayHint("21", at("2026-10-07"))).toBe("Cada mes · próximo 21 oct");
-		expect(dueDayHint("5", at("2026-10-07"))).toBe("Cada mes · próximo 5 nov");
-		expect(dueDayHint("5", at("2026-12-30"))).toBe("Cada mes · próximo 5 ene");
+		expect(dueDayHint("21", at("2026-10-07"))).toBe("Cada mes · próximo 21 oct.");
+		expect(dueDayHint("5", at("2026-10-07"))).toBe("Cada mes · próximo 5 nov.");
+		expect(dueDayHint("5", at("2026-12-30"))).toBe("Cada mes · próximo 5 ene.");
 	});
 
 	it("lleva los días 29 a 31 al último día de los meses cortos", () => {
-		expect(dueDayHint("31", at("2026-02-10"))).toBe("Cada mes · próximo 28 feb");
-		expect(dueDayHint("31", at("2028-02-10"))).toBe("Cada mes · próximo 29 feb");
-		expect(dueDayHint("31", at("2026-04-10"))).toBe("Cada mes · próximo 30 abr");
-		expect(dueDayHint("30", at("2026-01-31"))).toBe("Cada mes · próximo 28 feb");
-		expect(dueDayHint("31", at("2026-03-10"))).toBe("Cada mes · próximo 31 mar");
+		expect(dueDayHint("31", at("2026-02-10"))).toBe(`Cada mes · próximo 28 feb.${shortMonth}`);
+		expect(dueDayHint("31", at("2028-02-10"))).toBe(`Cada mes · próximo 29 feb.${shortMonth}`);
+		expect(dueDayHint("31", at("2026-04-10"))).toBe(`Cada mes · próximo 30 abr.${shortMonth}`);
+		expect(dueDayHint("30", at("2026-01-31"))).toBe(`Cada mes · próximo 28 feb.${shortMonth}`);
+		expect(dueDayHint("31", at("2026-03-10"))).toBe(`Cada mes · próximo 31 mar.${shortMonth}`);
 	});
 
 	it("no promete fecha mientras el día no sea válido", () => {

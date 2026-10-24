@@ -96,7 +96,7 @@ describe("SecurityScreen", () => {
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "MacBook" }));
 		});
-		expect(view.getByText("Vas a quitar la llave de MacBook.")).toBeTruthy();
+		expect(view.getByText("¿Quitar la llave de MacBook?")).toBeTruthy();
 		expect(
 			view.getByText(
 				"Te quedará 1 Passkey. Si la pierdes, entrarás con tu contraseña de respaldo.",

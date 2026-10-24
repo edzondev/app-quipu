@@ -22,8 +22,8 @@ const UNAVAILABLE = "No disponible";
 const SHEET = {
 	passkey: {
 		eyebrow: "ELIMINAR PASSKEY",
-		title: (name: string) => `Vas a quitar la llave de ${name}.`,
-		body: "Ese dispositivo dejará de entrar con esta Passkey. Podrás volver a crearla cuando quieras.",
+		title: (name: string) => `¿Quitar la llave de ${name}?`,
+		body: "Ese dispositivo ya no entrará con ella.",
 		confirm: "Eliminar Passkey",
 		error: SECURITY_ERROR.remove,
 	},

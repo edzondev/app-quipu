@@ -2,6 +2,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { EnvelopeCarryLine } from "@/shared/components/envelope-carry-line";
 import { SectionLabel } from "@/shared/components/section-label";
 import {
+	type BadgeTone,
 	envelopeCarryLabel,
 	type HomeModel,
 	type HomeTone,
@@ -13,6 +14,13 @@ const TONE_FILL: Record<"needs" | "wants" | "savings", string> = {
 	needs: "bg-needs",
 	wants: "bg-wants",
 	savings: "bg-savings",
+};
+
+const STATUS_TEXT: Record<BadgeTone, string> = {
+	stable: "text-stable",
+	attention: "text-warning",
+	risk: "text-danger",
+	starting: "text-foreground/55",
 };
 
 const MOVEMENT_DOT: Record<HomeTone, string> = {
@@ -58,6 +66,8 @@ export function HomeDense({
 	onViewAllMovements: () => void;
 }) {
 	const commitments = home.commitments.slice(0, VISIBLE_COMMITMENTS);
+	const statusClass = STATUS_TEXT[home.badgeTone];
+	const showCycleStatus = home.badgeTone !== "stable";
 
 	return (
 		<ScrollView
@@ -84,6 +94,14 @@ export function HomeDense({
 					className="mt-2.5 font-hanken text-[13px] leading-[18px] text-foreground/45"
 				>
 					Día {home.cycleDay}/{home.cycleTotal}
+					{showCycleStatus ? (
+						<>
+							{" · "}
+							<Text className={`font-hanken-semibold text-[13px] ${statusClass}`}>
+								{home.cycleStatusLabel}
+							</Text>
+						</>
+					) : null}
 					{" · "}
 					{home.surplusCents < 0
 						? overspentByLabel(home.surplusCents, home.currencySymbol)
@@ -92,7 +110,7 @@ export function HomeDense({
 			</View>
 
 			<View className="border-b border-line pb-4 pt-5">
-				<SectionLabel>Sobres ›</SectionLabel>
+				<SectionLabel>Sobres</SectionLabel>
 				<View className="mt-3.5 gap-3">
 					{home.envelopes.map((envelope) => {
 						const carry = envelopeCarryLabel(

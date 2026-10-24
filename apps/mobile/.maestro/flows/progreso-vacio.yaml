@@ -27,7 +27,8 @@ tags:
 - assertVisible: "Tu racha empieza al cerrar el primero."
 - tapOn: "Registrar gasto"
 - extendedWaitUntil:
-    visible: ""
+    visible:
+      id: expense-sheet
     timeout: 10000
 - assertVisible:
     text: "Plan"

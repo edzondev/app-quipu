@@ -115,7 +115,8 @@ export function dueDayHint(raw: string, now: number): string {
 	const base = "Cada mes";
 	const day = parseDueDay(raw);
 	if (day == null) return `${base}.`;
-	return `${base} · próximo ${nextDueLabel(day, now).toLowerCase()}`;
+	const short = day > 28 ? " En meses cortos vence el último día." : "";
+	return `${base} · próximo ${nextDueLabel(day, now).toLowerCase()}.${short}`;
 }
 
 function nextDueLabel(dueDay: number, now: number): string {

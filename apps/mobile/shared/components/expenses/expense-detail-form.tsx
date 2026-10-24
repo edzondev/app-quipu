@@ -137,7 +137,7 @@ export function ExpenseDetailForm({
 					<DetailRow label="Sobre">
 						<Pressable
 							accessibilityRole="button"
-							accessibilityLabel="Sobre"
+							accessibilityLabel="Cambiar sobre"
 							hitSlop={HIT_SLOP}
 							className="flex-row items-center gap-2"
 							onPress={() => setEnvelopeOpen((open) => !open)}

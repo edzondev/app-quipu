@@ -32,7 +32,8 @@ tags:
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)"
+    visible:
+      id: income-sheet
     timeout: 10000
 - extendedWaitUntil:
     visible:
@@ -53,7 +54,8 @@ tags:
       - assertTrue: "${output.cycleStartsToday}"
       - tapOn: "Cancelar"
       - extendedWaitUntil:
-          notVisible: "(?-i)"
+          notVisible:
+      id: income-sheet
           timeout: 10000
       - assertVisible: "Hoy puedes gastar"
 - runFlow:

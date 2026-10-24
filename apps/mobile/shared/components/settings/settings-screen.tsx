@@ -252,8 +252,9 @@ export function SettingsScreen({ status, model, onClose, onOpenSecurity, onOpenD
 								Se borra lo guardado en este teléfono.
 							</Text>
 							<Pressable
+								testID="sign-out-confirm"
 								accessibilityRole="button"
-								accessibilityLabel="Cerrar sesión"
+								accessibilityLabel="Confirmar cierre de sesión"
 								accessibilityState={{ disabled: closing }}
 								disabled={closing}
 								onPress={() => {

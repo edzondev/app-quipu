@@ -264,8 +264,7 @@ export default function CreateAccountScreen() {
 								footer={
 									<View className="rounded-xl border border-line bg-background px-4 py-3">
 										<Text className="font-hanken text-[13px] text-foreground/55">
-											También puedes abrir el enlace del correo desde este teléfono; Quipu continúa
-											solo.
+											O abre el enlace del correo en este teléfono.
 										</Text>
 									</View>
 								}
@@ -284,11 +283,7 @@ export default function CreateAccountScreen() {
 							</View>
 
 							<View className="gap-3">
-								{[
-									"La llave nunca sale de tu teléfono",
-									"Se sincroniza cifrada con tu cuenta de Apple o Google",
-									"Puedes agregar otra en cualquier momento",
-								].map((line) => (
+								{["La llave nunca sale de tu teléfono"].map((line) => (
 									<View key={line} className="flex-row items-start gap-3">
 										<Check size={16} colorClassName="accent-foreground" />
 										<Text className="font-hanken-semibold text-[15px] text-foreground">{line}</Text>
@@ -321,7 +316,7 @@ export default function CreateAccountScreen() {
 						<View className="flex-1 justify-center gap-6 pb-14">
 							<View className="items-center gap-4">
 								<Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-									LISTA
+									CUENTA LISTA
 								</Text>
 								<View className="h-14 w-14 items-center justify-center rounded-full bg-line">
 									<Check size={28} colorClassName="accent-foreground" />

@@ -148,7 +148,7 @@ describe("SettingsScreen", () => {
 		});
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(view.getByText("¿Cerrar sesión?")).toBeTruthy();
-		expect(view.getAllByRole("button", { name: "Cerrar sesión" })).toHaveLength(2);
+		expect(view.getByRole("button", { name: "Confirmar cierre de sesión" })).toBeTruthy();
 
 		await act(async () => {
 			fireEvent.press(view.getByRole("button", { name: "Cancelar" }));
@@ -178,7 +178,7 @@ describe("SettingsScreen", () => {
 		await act(async () => {
 			fireEvent.press(view.getAllByRole("button", { name: "Cerrar sesión" })[0]);
 		});
-		const confirm = view.getAllByRole("button", { name: "Cerrar sesión" })[1];
+		const confirm = view.getByRole("button", { name: "Confirmar cierre de sesión" });
 		await act(async () => {
 			fireEvent.press(confirm);
 		});
@@ -209,7 +209,7 @@ describe("SettingsScreen", () => {
 			fireEvent.press(ajustes.getAllByRole("button", { name: "Cerrar sesión" })[0]);
 		});
 		await act(async () => {
-			fireEvent.press(ajustes.getAllByRole("button", { name: "Cerrar sesión" })[1]);
+			fireEvent.press(ajustes.getByRole("button", { name: "Confirmar cierre de sesión" }));
 		});
 		expect(mockReplace).toHaveBeenCalledWith({
 			pathname: "/(onboarding)",

@@ -48,7 +48,7 @@ describe("PlanHub", () => {
 		const { view, onOpenSobres, onOpenCommitments, onOpenAhorro } = await renderHub();
 		expect(view.getByText("Plan")).toBeTruthy();
 		expect(view.getByText("CICLO AGOSTO")).toBeTruthy();
-		expect(view.getByText("EN TUS SOBRES  ›")).toBeTruthy();
+		expect(view.getByText("EN TUS SOBRES")).toBeTruthy();
 		expect(view.getByText("S/ 2,069")).toBeTruthy();
 		expect(view.getByLabelText("Tramo needs")).toHaveStyle({ width: "55%" });
 		expect(view.getByLabelText("Tramo wants")).toHaveStyle({ width: "11%" });
@@ -95,7 +95,7 @@ describe("PlanHub", () => {
 				commitmentsTotal: "S/ 0",
 			},
 		});
-		expect(view.queryByText("EN TUS SOBRES  ›")).toBeNull();
+		expect(view.queryByText("EN TUS SOBRES")).toBeNull();
 		expect(view.queryByText("CICLO AGOSTO")).toBeNull();
 		expect(view.queryByText("3")).toBeNull();
 		expect(view.queryByText("Ahorro planeado")).toBeNull();
@@ -110,13 +110,13 @@ describe("PlanHub", () => {
 	it("cargando y vacío no inventan cifras", async () => {
 		const loading = await renderHub({ status: "loading", model: null, ahorro: null });
 		expect(loading.view.getByText("Cargando…")).toBeTruthy();
-		expect(loading.view.queryByText("EN TUS SOBRES  ›")).toBeNull();
+		expect(loading.view.queryByText("EN TUS SOBRES")).toBeNull();
 		expect(loading.view.queryByText("Sobres")).toBeNull();
 
 		await loading.view.unmount();
 		const empty = await renderHub({ status: "empty", model: null, ahorro: null });
 		expect(empty.view.getByText("Plan")).toBeTruthy();
-		expect(empty.view.queryByText("EN TUS SOBRES  ›")).toBeNull();
+		expect(empty.view.queryByText("EN TUS SOBRES")).toBeNull();
 		expect(empty.view.queryByText("S/ 2,069")).toBeNull();
 		expect(empty.view.queryByText("Sobres")).toBeNull();
 	});

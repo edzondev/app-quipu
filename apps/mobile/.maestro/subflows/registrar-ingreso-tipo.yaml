@@ -9,7 +9,8 @@ appId: com.quipu.finance
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)"
+    visible:
+      id: income-sheet
     timeout: 10000
 - runFlow:
     file: completar-ingreso.yaml

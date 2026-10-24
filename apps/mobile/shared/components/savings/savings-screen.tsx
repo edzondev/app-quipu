@@ -259,15 +259,11 @@ function GoalsSection({
 
 			{goals.length === 0 ? (
 				<View className="mt-[30px]">
-					<Text className="font-geist-mono text-[10.5px] tracking-[0.14em] text-foreground/35">
-						SIN METAS
-					</Text>
 					<Text className="mt-3.5 font-newsreader text-[23px] leading-8 text-foreground">
-						Tus metas vivirán aquí.
+						Aún no tienes metas.
 					</Text>
 					<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-foreground/55">
-						Un viaje, una laptop, la inicial del depa. Primero dale tracción al Fondo; las metas
-						vienen después.
+						Un viaje, una laptop, la inicial del depa.
 					</Text>
 					{canCreateGoal ? (
 						<Pressable

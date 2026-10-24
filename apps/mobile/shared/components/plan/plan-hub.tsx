@@ -129,7 +129,7 @@ function TotalBlock({ label, segments }: { label: string; segments: PlanSegment[
 	return (
 		<View className="mt-6 border-y border-line py-[18px]">
 			<View className="flex-row items-baseline justify-between">
-				<SectionLabel>EN TUS SOBRES ›</SectionLabel>
+				<SectionLabel>EN TUS SOBRES</SectionLabel>
 				<Text className="font-newsreader text-[22px] text-foreground tabular-nums" selectable>
 					{label}
 				</Text>

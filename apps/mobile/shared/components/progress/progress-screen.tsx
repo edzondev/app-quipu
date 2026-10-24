@@ -19,10 +19,10 @@ type Props = {
 	status: "loading" | "ready";
 	model: ProgressScreenModel | null;
 	onOpenClose: () => void;
-	onOpenPlan: () => void;
+	onRegisterExpense: () => void;
 };
 
-export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props) {
+export function ProgressScreen({ status, model, onOpenClose, onRegisterExpense }: Props) {
 	return (
 		<View className="flex-1">
 			<ScrollView
@@ -62,7 +62,7 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 					</Pressable>
 				) : null}
 
-				{model?.empty ? <EmptyProgress onOpenPlan={onOpenPlan} /> : null}
+				{model?.empty ? <EmptyProgress onRegisterExpense={onRegisterExpense} /> : null}
 
 				{model && !model.empty ? <FilledProgress model={model} /> : null}
 			</ScrollView>
@@ -70,7 +70,7 @@ export function ProgressScreen({ status, model, onOpenClose, onOpenPlan }: Props
 	);
 }
 
-function EmptyProgress({ onOpenPlan }: { onOpenPlan: () => void }) {
+function EmptyProgress({ onRegisterExpense }: { onRegisterExpense: () => void }) {
 	return (
 		<View className="flex-1 items-center justify-center">
 			<Text className="text-center font-newsreader text-[23px] leading-8 text-foreground">
@@ -82,7 +82,7 @@ function EmptyProgress({ onOpenPlan }: { onOpenPlan: () => void }) {
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Registrar gasto"
-				onPress={onOpenPlan}
+				onPress={onRegisterExpense}
 				className="mt-[22px] rounded-xl border border-line px-[22px] py-3.5 active:opacity-60"
 			>
 				<Text className="font-hanken-semibold text-[14px] text-foreground">Registrar gasto</Text>

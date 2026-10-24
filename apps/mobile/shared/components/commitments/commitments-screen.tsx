@@ -58,8 +58,7 @@ export function CommitmentsScreen({ status, model, onBack, onAdd }: Props) {
 							Aún no registras tus pagos fijos.
 						</Text>
 						<Text className="mt-3 max-w-[300px] font-hanken text-[14.5px] leading-6 text-foreground/55">
-							Alquiler, servicios y suscripciones. Los registras una vez y Quipu los tiene en cuenta
-							cada ciclo.
+							Alquiler, servicios, suscripciones: los anotas una vez.
 						</Text>
 						<Pressable
 							accessibilityRole="button"

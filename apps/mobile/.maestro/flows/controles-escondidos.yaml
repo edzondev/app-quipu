@@ -28,7 +28,7 @@ tags:
 - tapOn:
     text: "Sobres"
 - extendedWaitUntil:
-    visible: ""
+    visible: "Sobres"
     timeout: 15000
 - assertNotVisible:
     text: "Mover dinero"
@@ -38,11 +38,13 @@ tags:
 - tapOn:
     text: "Registrar"
 - extendedWaitUntil:
-    visible: ""
+    visible:
+      id: expense-sheet
     timeout: 10000
 - tapOn: "Cancelar"
 - extendedWaitUntil:
-    notVisible: ""
+    notVisible:
+      id: expense-sheet
     timeout: 10000
 - tapOn: "Ajustes"
 - extendedWaitUntil:

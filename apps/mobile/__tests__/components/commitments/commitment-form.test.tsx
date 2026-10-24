@@ -62,7 +62,7 @@ describe("CommitmentForm", () => {
 
 		await fireEvent.changeText(dayInput, "21");
 		expect(view.queryByText("El día de vencimiento va del 1 al 31.")).toBeNull();
-		expect(view.getByText(/^Cada mes · próximo 21 [a-z]{3}$/)).toBeTruthy();
+		expect(view.getByText(/^Cada mes · próximo 21 [a-z]{3}\.$/)).toBeTruthy();
 	});
 
 	it("muestra el error del servidor si no se pudo guardar", async () => {

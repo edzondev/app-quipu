@@ -28,7 +28,7 @@ tags:
 - assertVisible: "Divide tu dinero antes de gastarlo"
 - assertVisible: "EJEMPLO · PUEDES GASTAR HOY"
 - assertVisible: "S/ 42\\.30"
-- assertVisible: ""
+- assertVisible: "Es un ejemplo. Tu número sale del dinero que tienes hoy."
 - assertVisible:
     text: "Crear cuenta"
 - tapOn:
@@ -36,7 +36,7 @@ tags:
 - extendedWaitUntil:
     visible: "Crea tu cuenta."
     timeout: 10000
-- assertVisible: "CREAR  · 01/03"
+- assertVisible: "CREAR CUENTA · 01/03"
 - tapOn: "Volver"
 - extendedWaitUntil:
     visible: "S/ 42\\.30"

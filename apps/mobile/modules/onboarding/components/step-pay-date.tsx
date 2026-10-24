@@ -47,10 +47,7 @@ export function StepPayDate() {
 		>
 			<View className="gap-1">
 				<Text className="font-newsreader text-[28px] text-foreground">¿Cuándo cobras?</Text>
-				<Text className="font-hanken text-[14px] text-foreground/55">
-					Toca la fecha y elige tu próximo día de cobro. Puede ser desde mañana hasta dentro de 31
-					días.
-				</Text>
+				<Text className="font-hanken text-[14px] text-foreground/55">Entre mañana y 31 días.</Text>
 			</View>
 			<form.Field name="nextPayDate">
 				{(field) => {
@@ -75,12 +72,7 @@ export function StepPayDate() {
 								>
 									{message}
 								</Text>
-							) : (
-								<Text className="font-hanken text-[13px] text-foreground/55">
-									Si tu pago real llega antes o después, el ciclo se ajusta cuando registres tu
-									ingreso.
-								</Text>
-							)}
+							) : null}
 						</View>
 					);
 				}}

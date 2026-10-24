@@ -81,7 +81,7 @@ describe("ExpenseDetailForm", () => {
 		expect(view.getByText("HOY QUEDARÍA S/ 42.30")).toBeTruthy();
 		expect(view.queryByText("FRECUENTES")).toBeNull();
 
-		await fireEvent.press(view.getByLabelText("Sobre"));
+		await fireEvent.press(view.getByLabelText("Cambiar sobre"));
 		await fireEvent.press(view.getByText("Necesidades"));
 		await fireEvent.press(view.getByText("Guardar"));
 		expect(onSubmit).toHaveBeenCalledWith({

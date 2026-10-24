@@ -42,13 +42,15 @@ tags:
 - tapOn:
     text: "Ingreso"
 - extendedWaitUntil:
-    visible: "(?-i)"
+    visible:
+      id: income-sheet
     timeout: 10000
 - assertVisible:
     id: income-mode-add
 - tapOn: "Cancelar"
 - extendedWaitUntil:
-    notVisible: "(?-i)"
+    notVisible:
+      id: income-sheet
     timeout: 10000
 - tapOn: "Ver todos"
 - extendedWaitUntil:
