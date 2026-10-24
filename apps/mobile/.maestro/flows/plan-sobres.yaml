@@ -38,7 +38,6 @@ tags:
 - assertVisible: "Ahorro"
 - assertVisible: "GASTADO.*"
 - assertVisible: "apartado este ciclo"
-- assertNotVisible: "Mover dinero"
 - assertVisible: "(Al día|Va rápido|Intacto)"
 - tapOn: "Volver"
 - assertVisible: "Ahorro ya guardado"

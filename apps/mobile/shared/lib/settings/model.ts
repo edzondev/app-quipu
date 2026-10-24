@@ -11,9 +11,6 @@ export type SettingsScreenModel = {
 	name: string;
 	meta: string | null;
 	passkeysLabel: string | null;
-	planLabel: string;
-	repartoLabel: string;
-	scheduleCopy: string;
 	hasPassword: boolean;
 	deleteBlockedBySubscription: boolean;
 };
@@ -28,11 +25,6 @@ export function firstName(name: string): string {
 	return name.trim().split(/\s+/)[0] ?? "";
 }
 
-export function repartoLabel(settings: SettingsOverview): string {
-	const { needs, wants, savings } = settings.allocations;
-	return `${needs} / ${wants} / ${savings}`;
-}
-
 export function presentSettings(settings: SettingsOverview): SettingsScreenModel {
 	const country = marketFromCurrencyCode(settings.account.currencyCode)?.country ?? null;
 	const email = settings.account.email;
@@ -45,9 +37,6 @@ export function presentSettings(settings: SettingsOverview): SettingsScreenModel
 		name: settings.account.name,
 		meta: email && country ? `${email} · ${country}` : (email ?? country),
 		passkeysLabel,
-		planLabel: settings.account.plan.tier === "free" ? "Gratis" : "Plus",
-		repartoLabel: repartoLabel(settings),
-		scheduleCopy: settings.cycle.scheduleCopy,
 		hasPassword: settings.security.hasPassword,
 		deleteBlockedBySubscription: settings.billing.deleteBlockedBySubscription,
 	};

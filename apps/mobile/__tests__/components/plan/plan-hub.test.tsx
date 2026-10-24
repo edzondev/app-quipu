@@ -1,4 +1,5 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
+import type { TestInstance } from "test-renderer";
 import { PlanHub } from "@/shared/components/plan/plan-hub";
 import type { PlanHubModel } from "@/shared/lib/plan/model";
 
@@ -20,8 +21,17 @@ const model: PlanHubModel = {
 	commitmentsSubtitle: "Alquiler vence mañana",
 	commitmentsTone: "warning",
 	commitmentsTotal: "S/ 1,265",
-	repartoSubtitle: "50 / 30 / 20 · Mensual · día 1",
 };
+
+function rowClassName(node: TestInstance): string {
+	let current: TestInstance | null = node;
+	while (current) {
+		const className = current.props.className;
+		if (typeof className === "string" && className.includes("justify-between")) return className;
+		current = current.parent;
+	}
+	throw new Error("row class missing");
+}
 
 const ahorro = { subtitle: "Fondo + 2 metas activas", totalLabel: "S/ 4,320" };
 
@@ -67,10 +77,9 @@ describe("PlanHub", () => {
 		expect(view.queryByText("Fondo + 2 metas activas")).toBeNull();
 		expect(view.queryByText("Te pasaste")).toBeNull();
 		expect(view.queryByText("Reparto del ciclo")).toBeNull();
-		expect(view.queryByText("50 / 30 / 20 · Mensual · día 1")).toBeNull();
-		expect(view.queryByText("Mover dinero entre sobres")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
-		expect(view.queryByRole("button", { name: "Reparto del ciclo" })).toBeNull();
+		expect(rowClassName(view.getByText("Ahorro ya guardado"))).not.toContain("border-b");
+		expect(rowClassName(view.getByText("Ahorro planeado"))).toContain("border-b");
 		expect(view.queryByText("Cubrir el exceso")).toBeNull();
 
 		await act(async () => {

@@ -3,8 +3,7 @@ tags:
   - p1
   - hidden
 ---
-# H1 y H4–H8, flags de shared/hidden-until-ready.ts. Selección por texto visible.
-# H1 Mover dinero          envelopes/sobres-screen.tsx
+# H4–H8. Selección por texto visible.
 # H2 Nota y H3 Adjuntar boleta estaban en la pantalla que abría la cámara (#123).
 # H4 Perfil y datos        settings/settings-screen.tsx
 # H5 Plan y suscripción    settings/settings-screen.tsx
@@ -30,8 +29,6 @@ tags:
 - extendedWaitUntil:
     visible: "Tu sueldo ya está dividido. Esto es lo que queda."
     timeout: 15000
-- assertNotVisible:
-    text: "Mover dinero"
 - tapOn: "Volver"
 - tapOn:
     text: "Inicio"

@@ -2,7 +2,7 @@ import { render } from "@testing-library/react-native";
 import { getFunctionName } from "convex/server";
 import { Text } from "react-native";
 import { summaryWithCycle } from "@/__fixtures__/dashboard-summary";
-import { settingsOverview } from "@/__fixtures__/settings-overview";
+import { savingsOverview } from "@/__fixtures__/savings-overview";
 import { PlanHub } from "@/shared/components/plan/plan-hub";
 import { useAhorroPlanRow } from "@/shared/hooks/use-ahorro";
 import { usePlanHub } from "@/shared/hooks/use-plan-hub";
@@ -61,7 +61,6 @@ describe("usePlanHub mientras Ahorro carga", () => {
 			const name = queryName(query);
 			if (name === "savings:getOverview") return overview;
 			if (name === "dashboard:getSummary") return summaryWithCycle();
-			if (name === "settings:getSettingsOverview") return settingsOverview();
 			return { name: "Edzon" };
 		});
 	});
@@ -83,5 +82,26 @@ describe("usePlanHub mientras Ahorro carga", () => {
 		expect(view.queryByText("Ahorro planeado")).toBeNull();
 		expect(view.queryByText("Ahorro ya guardado")).toBeNull();
 		expect(view.queryByText("Sobres")).toBeNull();
+	});
+
+	it("no consulta getSettingsOverview y sigue cargando si el resumen no llegó", async () => {
+		overview = savingsOverview;
+		const ready = await render(<HubProbe />);
+		expect(ready.getByText("Sobres")).toBeTruthy();
+		const names = mockUseQuery.mock.calls.map((call) => queryName(call[0]));
+		expect(names).toContain("dashboard:getSummary");
+		expect(names).not.toContain("settings:getSettingsOverview");
+		await ready.unmount();
+
+		mockUseQuery.mockImplementation((query: unknown, args: unknown) => {
+			if (args === "skip") return undefined;
+			const name = queryName(query);
+			if (name === "savings:getOverview") return savingsOverview;
+			if (name === "dashboard:getSummary") return undefined;
+			return { name: "Edzon" };
+		});
+		const loading = await render(<HubProbe />);
+		expect(loading.getByText("Cargando…")).toBeTruthy();
+		expect(loading.queryByText("Sobres")).toBeNull();
 	});
 });
