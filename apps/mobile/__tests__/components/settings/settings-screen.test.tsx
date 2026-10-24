@@ -1,6 +1,7 @@
 import { act, fireEvent, render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import { Platform } from "react-native";
+import type { TestInstance } from "test-renderer";
 import OnboardingIndexScreen from "@/app/(onboarding)/index";
 import { SettingsScreen } from "@/shared/components/settings/settings-screen";
 import { OFFLINE_SIGN_OUT_MESSAGE } from "@/shared/lib/auth/device-session";
@@ -53,20 +54,27 @@ jest.mock("@/shared/components/ui/reicon", () => ({
 	ArrowUpRight: () => null,
 }));
 
+function rowClassName(node: TestInstance): string {
+	let current: TestInstance | null = node;
+	while (current) {
+		const className = current.props.className;
+		if (typeof className === "string" && className.includes("justify-between")) return className;
+		current = current.parent;
+	}
+	throw new Error("row class missing");
+}
+
 const model: SettingsScreenModel = {
 	initial: "E",
 	name: "Edzon Perez",
 	meta: "edzon@correo.com · Perú",
 	passkeysLabel: "2 llaves",
-	planLabel: "Gratis",
-	repartoLabel: "50 / 30 / 20",
-	scheduleCopy: "Mensual · día 1",
 	hasPassword: false,
 	deleteBlockedBySubscription: false,
 };
 
 describe("SettingsScreen", () => {
-	it("muestra cuenta y sistema, y la X cierra", async () => {
+	it("muestra la cuenta y la X cierra", async () => {
 		const onClose = jest.fn();
 		const onOpenSecurity = jest.fn();
 		const view = await render(
@@ -82,23 +90,11 @@ describe("SettingsScreen", () => {
 		expect(view.getByText("Edzon Perez")).toBeTruthy();
 		expect(view.getByText("edzon@correo.com · Perú")).toBeTruthy();
 		expect(view.getByText("CUENTA")).toBeTruthy();
-		expect(view.queryByText("Perfil y datos")).toBeNull();
 		expect(view.getByText("Seguridad y Passkeys")).toBeTruthy();
 		expect(view.getByText("2 llaves")).toBeTruthy();
-		expect(view.queryByText("Plan y suscripción")).toBeNull();
-		expect(view.queryByText("Gratis")).toBeNull();
-		expect(view.queryByText("TU SISTEMA")).toBeNull();
-		expect(view.queryByText("Reparto")).toBeNull();
-		expect(view.queryByText("50 / 30 / 20")).toBeNull();
-		expect(view.queryByText("Ciclo e ingresos")).toBeNull();
-		expect(view.queryByText("Mensual · día 1")).toBeNull();
 		expect(view.queryByText("EN ESTE TELÉFONO")).toBeNull();
 		expect(view.queryByText("Automatizaciones")).toBeNull();
 		expect(view.queryByText("Apariencia")).toBeNull();
-		expect(view.queryByRole("button", { name: "Perfil y datos" })).toBeNull();
-		expect(view.queryByRole("button", { name: "Plan y suscripción" })).toBeNull();
-		expect(view.queryByRole("button", { name: "Reparto" })).toBeNull();
-		expect(view.queryByRole("button", { name: "Ciclo e ingresos" })).toBeNull();
 		expect(view.getByText("LEGAL")).toBeTruthy();
 		expect(view.getByRole("button", { name: "Política de privacidad" })).toBeTruthy();
 		expect(view.getByRole("button", { name: "Términos y condiciones" })).toBeTruthy();
@@ -297,6 +293,41 @@ describe("SettingsScreen", () => {
 		expect(view.queryByText("¿Eliminar tu cuenta?")).toBeNull();
 		expect(mockClear).not.toHaveBeenCalled();
 		expect(mockReplace).not.toHaveBeenCalled();
+	});
+
+	it("conserva el orden, cierra cada grupo y no deja una sección vacía", async () => {
+		const os = jest.replaceProperty(Platform, "OS", "android");
+		const view = await render(
+			<SettingsScreen
+				status="ready"
+				model={model}
+				onClose={jest.fn()}
+				onOpenSecurity={jest.fn()}
+				onOpenDetection={jest.fn()}
+			/>,
+		);
+		const labels = view
+			.getAllByText(
+				/^(CUENTA|Seguridad y Passkeys|Detección de gastos|LEGAL|Política de privacidad|Términos y condiciones|SESIÓN|Cerrar sesión|Eliminar cuenta|TU SISTEMA|Perfil y datos|Plan y suscripción|Reparto|Ciclo e ingresos)$/,
+			)
+			.map((node) => node.props.children);
+		expect(labels).toEqual([
+			"CUENTA",
+			"Seguridad y Passkeys",
+			"Detección de gastos",
+			"LEGAL",
+			"Política de privacidad",
+			"Términos y condiciones",
+			"SESIÓN",
+			"Cerrar sesión",
+			"Eliminar cuenta",
+		]);
+		expect(rowClassName(view.getByText("Seguridad y Passkeys"))).not.toContain("border-b");
+		expect(rowClassName(view.getByText("Detección de gastos"))).not.toContain("border-b");
+		expect(rowClassName(view.getByText("Política de privacidad"))).toContain("border-b");
+		expect(rowClassName(view.getByText("Términos y condiciones"))).not.toContain("border-b");
+		os.restore();
+		await view.unmount();
 	});
 
 	it("en Android, Detección de gastos abre el flujo", async () => {

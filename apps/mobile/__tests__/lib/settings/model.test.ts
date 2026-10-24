@@ -1,23 +1,14 @@
 import { settingsOverview } from "@/__fixtures__/settings-overview";
-import {
-	firstName,
-	presentSettings,
-	profileInitial,
-	repartoLabel,
-} from "@/shared/lib/settings/model";
+import { firstName, presentSettings, profileInitial } from "@/shared/lib/settings/model";
 
 describe("presentSettings", () => {
-	it("arma reparto, plan y llaves", () => {
+	it("arma la cuenta y las llaves", () => {
 		const free = settingsOverview();
-		expect(repartoLabel(free)).toBe("50 / 30 / 20");
 		expect(presentSettings(free)).toMatchObject({
 			initial: "E",
 			name: "Edzon Perez",
 			meta: "edzon@correo.com · Perú",
 			passkeysLabel: "2 llaves",
-			planLabel: "Gratis",
-			repartoLabel: "50 / 30 / 20",
-			scheduleCopy: "Mensual · día 1",
 			hasPassword: true,
 			deleteBlockedBySubscription: false,
 		});
@@ -25,7 +16,6 @@ describe("presentSettings", () => {
 			deleteBlockedBySubscription: false,
 		});
 		expect(presentSettings(settingsOverview({ hasPassword: false })).hasPassword).toBe(false);
-		expect(presentSettings(settingsOverview({ tier: "premium" })).planLabel).toBe("Plus");
 		expect(presentSettings(settingsOverview({ passkeyCount: 1 })).passkeysLabel).toBe("1 llave");
 		expect(
 			presentSettings(settingsOverview({ passkeysSource: "unavailable", passkeyCount: 2 }))
