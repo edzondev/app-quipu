@@ -17,7 +17,7 @@ const LIST = "mt-2 list-disc space-y-1 pl-5";
 
 export default function PrivacidadPage() {
 	return (
-		<LegalShell title="Política de privacidad" updatedAt="16 de octubre de 2026">
+		<LegalShell title="Política de privacidad" updatedAt="23 de octubre de 2026">
 			<section>
 				<h2 className={SECTION_HEADING}>1. Responsable del tratamiento</h2>
 				<p className={SECTION_BODY}>
@@ -47,6 +47,19 @@ export default function PrivacidadPage() {
 						rendimiento (PostHog). La grabación de sesión enmascara los textos del área privada,
 						incluidos tus saldos.
 					</li>
+					<li>
+						<strong className="font-semibold text-ink">De notificaciones bancarias:</strong> en
+						Android agregas cada banco pegando el enlace de Play Store de ese banco. Con tu permiso
+						de acceso a las notificaciones, Quipu lee en tu teléfono solo las notificaciones de los
+						bancos que agregaste, para detectar un gasto, su monto y el comercio. Quipu muestra su
+						propio aviso, sin botones, con el banco, el monto y el comercio. Si tocas el aviso, se
+						abre la app con el gasto prellenado. Solo se guarda en tu cuenta si lo confirmas: el
+						monto, el sobre, una descripción con el nombre del comercio que ves y confirmas, y una
+						referencia técnica del aviso para no registrarlo dos veces. El resto del texto de las
+						notificaciones no se envía a nuestros servidores. Si descartas el aviso, Quipu no guarda
+						nada. La lista de bancos agregados se queda solo en tu teléfono: al cerrar sesión se
+						pausa la detección, y la lista se borra al eliminar tu cuenta.
+					</li>
 				</ul>
 			</section>
 
@@ -74,7 +87,7 @@ export default function PrivacidadPage() {
 					<li>Polar.sh — procesamiento de pagos de Quipu Plus.</li>
 					<li>PostHog — analítica de uso con enmascaramiento.</li>
 					<li>Resend — correos transaccionales (verificación y recuperación).</li>
-					<li>Sentry — monitoreo de errores en la aplicación.</li>
+					<li>Sentry — monitoreo de errores en la versión web.</li>
 				</ul>
 				<p className={SECTION_BODY}>
 					Al crear una cuenta consientes estas transferencias, necesarias para prestar el servicio.
