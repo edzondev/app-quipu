@@ -1,4 +1,4 @@
-import { currentMonthLabel, cyclePreview } from "@/shared/lib/onboarding/cycle";
+import { cyclePreview } from "@/shared/lib/onboarding/cycle";
 
 describe("cyclePreview", () => {
 	it("mensual", () => {
@@ -11,25 +11,5 @@ describe("cyclePreview", () => {
 
 	it("semanal", () => {
 		expect(cyclePreview("weekly")).toBe("7 DÍAS");
-	});
-});
-
-describe("currentMonthLabel", () => {
-	it("devuelve el mes actual capitalizado", () => {
-		const months = [
-			"Enero",
-			"Febrero",
-			"Marzo",
-			"Abril",
-			"Mayo",
-			"Junio",
-			"Julio",
-			"Agosto",
-			"Septiembre",
-			"Octubre",
-			"Noviembre",
-			"Diciembre",
-		];
-		expect(months).toContain(currentMonthLabel());
 	});
 });

@@ -9,12 +9,6 @@ function exhaustive<T extends string>() {
 
 /** Literales de `profiles.createProfile`. Si Convex agrega uno, esto no compila. */
 export const INCOME_MODELS = exhaustive<IncomeModel>()(["fixed", "variable", "mixed"]);
-export const PAY_FREQUENCIES = exhaustive<PayFrequency>()([
-	"monthly",
-	"biweekly",
-	"weekly",
-	"variable",
-]);
 /** Fijo y Mixto: el schema no acepta payFrequency "variable". */
 export const FIXED_FREQUENCIES = exhaustive<FixedPayFrequency>()(["monthly", "biweekly", "weekly"]);
 
@@ -94,11 +88,6 @@ const FREQ_LABEL = {
 	weekly: "Semanal",
 	variable: "Variable",
 } satisfies Record<PayFrequency, string>;
-
-export const FREQ_OPTIONS = PAY_FREQUENCIES.map((value) => ({
-	value,
-	label: FREQ_LABEL[value],
-}));
 
 export const FIXED_FREQ_OPTIONS = FIXED_FREQUENCIES.map((value) => ({
 	value,

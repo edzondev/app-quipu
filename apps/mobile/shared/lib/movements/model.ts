@@ -3,21 +3,6 @@ import { inclusiveEndDate, LIMA_MONTHS, type LimaStamp, limaStamp } from "@/shar
 import { formatCents, formatCentsTrimmed } from "@/shared/lib/money";
 import { marketFromCurrencyCode } from "@/shared/lib/onboarding/markets";
 
-export type EditableExpense = {
-	id: string;
-	amountCents: number;
-	description: string;
-	envelopeType: "needs" | "wants";
-};
-
-export type RecentExpense = {
-	_id: string;
-	amount: number;
-	description: string;
-	timestamp: number;
-	envelopeType?: "needs" | "wants" | "savings";
-};
-
 export type MovementFilter = (typeof MOVEMENT_FILTERS)[number]["id"];
 export type MovementTone = "needs" | "wants" | "savings" | "income";
 export type MovementMetaTone = "detected" | "note" | "muted";
@@ -104,47 +89,6 @@ export function presentMovementList(
 		isEmpty: built.length === 0,
 		isFilterEmpty: built.length > 0 && visible.length === 0,
 		hasCycle: cycle != null,
-	};
-}
-
-export function readRecentExpenses(value: unknown): RecentExpense[] {
-	if (!Array.isArray(value)) return [];
-	return value.flatMap((item) => {
-		if (!item || typeof item !== "object") return [];
-		const row = item as Record<string, unknown>;
-		if (typeof row._id !== "string" || typeof row.amount !== "number") {
-			return [];
-		}
-		const envelopeType = row.envelopeType;
-		return [
-			{
-				_id: row._id,
-				amount: row.amount,
-				description: typeof row.description === "string" ? row.description : "",
-				timestamp: typeof row.timestamp === "number" ? row.timestamp : 0,
-				envelopeType:
-					envelopeType === "needs" || envelopeType === "wants" || envelopeType === "savings"
-						? envelopeType
-						: undefined,
-			},
-		];
-	});
-}
-
-export function editableFromRecentExpense(expense: {
-	_id: string;
-	amount: number;
-	description: string;
-	envelopeType?: "needs" | "wants" | "savings";
-}): EditableExpense | null {
-	if (expense.envelopeType !== "needs" && expense.envelopeType !== "wants") {
-		return null;
-	}
-	return {
-		id: expense._id,
-		amountCents: expense.amount,
-		description: expense.description,
-		envelopeType: expense.envelopeType,
 	};
 }
 

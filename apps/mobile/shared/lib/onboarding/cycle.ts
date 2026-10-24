@@ -4,21 +4,6 @@ import type { PayFrequency } from "./types";
 
 const MONTH_START = PAYDAYS_BY_FREQUENCY.monthly[0];
 
-const MONTHS = [
-	"enero",
-	"febrero",
-	"marzo",
-	"abril",
-	"mayo",
-	"junio",
-	"julio",
-	"agosto",
-	"septiembre",
-	"octubre",
-	"noviembre",
-	"diciembre",
-];
-
 /** Preview "TU CICLO SERÍA" según frecuencia. */
 export function cyclePreview(frequency: PayFrequency): string {
 	if (frequency === "variable") return "Sin ciclo fijo";
@@ -31,10 +16,4 @@ export function cyclePreview(frequency: PayFrequency): string {
 		return `${MONTH_START} – ${paydays[0]} / ${paydays[0] + 1} – ${paydays[1]} · ${cycleDays} DÍAS`;
 	}
 	return `${cycleDays} DÍAS`;
-}
-
-/** "enero" → "Enero" según el mes actual (título de la confirmación). */
-export function currentMonthLabel(): string {
-	const name = MONTHS[new Date().getMonth()];
-	return name.charAt(0).toUpperCase() + name.slice(1);
 }

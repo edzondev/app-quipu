@@ -2,7 +2,6 @@ import { render } from "@testing-library/react-native";
 import { getFunctionName } from "convex/server";
 import { useAhorro } from "@/shared/hooks/use-ahorro";
 import { useDashboardSummary } from "@/shared/hooks/use-dashboard";
-import { useRecentExpenses } from "@/shared/hooks/use-expenses";
 import { useMovements } from "@/shared/hooks/use-movements";
 
 const mockUseQuery = jest.fn();
@@ -24,7 +23,6 @@ function Host() {
 	useDashboardSummary();
 	useMovements();
 	useAhorro();
-	useRecentExpenses();
 	return null;
 }
 
@@ -51,7 +49,7 @@ describe("consultas en vivo", () => {
 		expect(live).toHaveLength(0);
 	});
 
-	it("pide dashboard, movimientos, ahorro y gastos recientes; solo el resumen lleva el día de Lima", async () => {
+	it("pide dashboard, movimientos y ahorro; solo el resumen lleva el día de Lima", async () => {
 		mockUseConvexAuth.mockReturnValue({
 			isAuthenticated: true,
 			isLoading: false,
@@ -67,7 +65,6 @@ describe("consultas en vivo", () => {
 		expect(names).toEqual(
 			[
 				"dashboard:getSummary",
-				"expenses:getRecentExpenses",
 				"movements:listForActiveCycle",
 				"profiles:getMyProfile",
 				"savings:getMoveSurplusContext",

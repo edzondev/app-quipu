@@ -29,14 +29,6 @@ export function parseAmountToCents(raw: string): number | null {
 	return wholeToCents(integer || "0", fraction.padEnd(2, "0"));
 }
 
-export function centsToAmountRaw(cents: number): string {
-	const safe = Math.max(0, Math.trunc(cents));
-	const whole = Math.floor(safe / 100);
-	const fraction = safe % 100;
-	if (fraction === 0) return String(whole);
-	return `${whole}.${String(fraction).padStart(2, "0")}`;
-}
-
 function wholeToCents(integer: string, fraction = "00"): number | null {
 	if (!/^\d+$/.test(integer) || !/^\d{2}$/.test(fraction)) return null;
 	const cents = Number(integer) * 100 + Number(fraction);
