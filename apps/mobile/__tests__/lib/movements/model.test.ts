@@ -1,8 +1,4 @@
-import {
-	editableFromRecentExpense,
-	presentMovementList,
-	readRecentExpenses,
-} from "@/shared/lib/movements/model";
+import { presentMovementList } from "@/shared/lib/movements/model";
 
 const DAY = 24 * 60 * 60 * 1000;
 const START = Date.parse("2026-08-01T00:00:00-05:00");
@@ -237,66 +233,5 @@ describe("presentMovementList", () => {
 			isEmpty: true,
 			groups: [],
 		});
-	});
-});
-
-describe("editableFromRecentExpense", () => {
-	it("convierte un gasto reciente de gustos en borrador editable", () => {
-		expect(
-			editableFromRecentExpense({
-				_id: "exp1",
-				amount: 1550,
-				description: "Café",
-				envelopeType: "wants",
-			}),
-		).toEqual({
-			id: "exp1",
-			amountCents: 1550,
-			description: "Café",
-			envelopeType: "wants",
-		});
-	});
-
-	it("lee gastos recientes y descarta filas incompletas", () => {
-		expect(
-			readRecentExpenses([
-				{
-					_id: "exp1",
-					amount: 500,
-					description: "Bus",
-					timestamp: 10,
-					envelopeType: "needs",
-				},
-				{ amount: 100 },
-				null,
-			]),
-		).toEqual([
-			{
-				_id: "exp1",
-				amount: 500,
-				description: "Bus",
-				timestamp: 10,
-				envelopeType: "needs",
-			},
-		]);
-		expect(readRecentExpenses(null)).toEqual([]);
-	});
-
-	it("ignora gastos sin sobre de necesidades o gustos", () => {
-		expect(
-			editableFromRecentExpense({
-				_id: "exp2",
-				amount: 100,
-				description: "Ahorro",
-				envelopeType: "savings",
-			}),
-		).toBeNull();
-		expect(
-			editableFromRecentExpense({
-				_id: "exp3",
-				amount: 100,
-				description: "Sin sobre",
-			}),
-		).toBeNull();
 	});
 });
