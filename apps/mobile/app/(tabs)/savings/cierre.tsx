@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
 import { CloseScreen } from "@/shared/components/progress/close-screen";
-import { ClosedCycleSurplusCard } from "@/shared/components/progress/closed-cycle-surplus-card";
 import { useProgress } from "@/shared/hooks/use-progress";
 
 export default function ClosePage() {
@@ -8,11 +7,6 @@ export default function ClosePage() {
 	const progress = useProgress();
 
 	return (
-		<CloseScreen
-			status={progress.status}
-			model={progress.close}
-			onBack={() => router.back()}
-			footer={<ClosedCycleSurplusCard />}
-		/>
+		<CloseScreen status={progress.status} model={progress.close} onBack={() => router.back()} />
 	);
 }
